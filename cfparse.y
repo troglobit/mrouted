@@ -14,6 +14,7 @@
 #endif
 #include "defs.h"
 #include <netdb.h>
+#include <ifaddrs.h>
 
 /*
  * Local function declarations
@@ -24,7 +25,7 @@ static void		yyerror __P((char *s));
 static char *		next_word __P((void));
 static int		yylex __P((void));
 static u_int32		valid_if __P((char *s));
-static struct ifreq *	ifconfaddr __P((struct ifconf *ifcp, u_int32 a));
+static const char *	ifconfaddr(u_int32_t a);
 int			yyparse __P((void));
 
 static FILE *f;
@@ -33,9 +34,6 @@ char *configfilename = _PATH_MROUTED_CONF;
 
 extern int cache_lifetime;
 extern int prune_lifetime;
-
-/* imported from config.c, with slight memory leak */
-extern struct ifconf ifc;
 
 int allow_black_holes = 0;
 
@@ -127,15 +125,14 @@ stmt	: error
 					}
 		ifmods
 	| TUNNEL interface addrname	{
-
-			struct ifreq *ifr;
+			const char *ifname;
 			struct ifreq ffr;
 			vifi_t vifi;
 
 			order++;
 
-			ifr = ifconfaddr(&ifc, $2);
-			if (ifr == 0)
+			ifname = ifconfaddr($2);
+			if (ifname == 0)
 			    fatal("Tunnel local address %s is not mine",
 				inet_fmt($2, s1));
 
@@ -144,7 +141,7 @@ stmt	: error
 			    fatal("Tunnel local address %s is a loopback address",
 				inet_fmt($2, s1));
 
-			if (ifconfaddr(&ifc, $3) != 0)
+			if (ifconfaddr($3) != 0)
 			    fatal("Tunnel remote address %s is one of mine",
 				inet_fmt($3, s1));
 
@@ -164,7 +161,7 @@ stmt	: error
 			if (numvifs == MAXVIFS)
 			    fatal("too many vifs");
 
-			strncpy(ffr.ifr_name, ifr->ifr_name, IFNAMSIZ);
+			strncpy(ffr.ifr_name, ifname, sizeof(ffr.ifr_name));
 			if (ioctl(udp_socket, SIOCGIFFLAGS, (char *)&ffr)<0)
 			    fatal("ioctl SIOCGIFFLAGS on %s", ffr.ifr_name);
 
@@ -175,7 +172,7 @@ stmt	: error
 			v->uv_lcl_addr	= $2;
 			v->uv_rmt_addr	= $3;
 			v->uv_dst_addr	= $3;
-			strncpy(v->uv_name, ffr.ifr_name, IFNAMSIZ);
+			strncpy(v->uv_name, ffr.ifr_name, sizeof(v->uv_name));
 
 			if (!(ffr.ifr_flags & IFF_UP)) {
 			    v->uv_flags |= VIFF_DOWN;
@@ -577,7 +574,8 @@ interface	: ADDR		{ $$ = $1; }
 addrname	: ADDR		{ $$ = $1; }
 	| STRING		{ struct hostent *hp;
 
-				  if ((hp = gethostbyname($1)) == NULL)
+				  if ((hp = gethostbyname($1)) == NULL ||
+					hp->h_length != sizeof($$))
 				    fatal("No such host %s", $1);
 
 				  if (hp->h_addr_list[1])
@@ -654,7 +652,7 @@ static void
 fatal(char *fmt, ...)
 {
 	va_list ap;
-	char buf[200];
+	char buf[MAXHOSTNAMELEN + 100];
 
 	va_start(ap, fmt);
 #else
@@ -665,11 +663,11 @@ char *fmt;
 va_dcl
 {
 	va_list ap;
-	char buf[200];
+	char buf[MAXHOSTNAMELEN + 100];
 
 	va_start(ap);
 #endif
-	vsprintf(buf, fmt, ap);
+	vsnprintf(buf, sizeof(buf), fmt, ap);
 	va_end(ap);
 
 	logit(LOG_ERR,0,"%s: %s near line %d", configfilename, buf, lineno);
@@ -695,7 +693,7 @@ va_dcl
 
 	va_start(ap);
 #endif
-	vsprintf(buf, fmt, ap);
+	vsnprintf(buf, sizeof(buf), fmt, ap);
 	va_end(ap);
 
 	logit(LOG_WARNING,0,"%s: %s near line %d", configfilename, buf, lineno);
@@ -901,28 +899,24 @@ char *s;
 	return 0;
 }
 
-static struct ifreq *
-ifconfaddr(ifcp, a)
-    struct ifconf *ifcp;
-    u_int32 a;
+static const char *
+ifconfaddr(u_int32_t a)
 {
-    int n;
-    struct ifreq *ifrp = (struct ifreq *)ifcp->ifc_buf;
-    struct ifreq *ifend = (struct ifreq *)((char *)ifrp + ifcp->ifc_len);
+    static char ifname[IFNAMSIZ];
+    struct ifaddrs *ifap, *ifa;
 
-    while (ifrp < ifend) {
-	    if (ifrp->ifr_addr.sa_family == AF_INET &&
-		((struct sockaddr_in *)&ifrp->ifr_addr)->sin_addr.s_addr == a)
-		    return (ifrp);
-#ifdef HAVE_SA_LEN
-		n = ifrp->ifr_addr.sa_len + sizeof(ifrp->ifr_name);
-		if (n < sizeof(*ifrp))
-			++ifrp;
-		else
-			ifrp = (struct ifreq *)((char *)ifrp + n);
-#else
-		++ifrp;
-#endif
+    if (getifaddrs(&ifap) != 0)
+	return (NULL);
+
+    for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
+	if (ifa->ifa_addr->sa_family == AF_INET &&
+	    ((struct sockaddr_in *)ifa->ifa_addr)->sin_addr.s_addr == a) {
+	    strncpy(ifname, ifa->ifa_name, sizeof(ifname));
+	    freeifaddrs(ifap);
+	    return (ifname);
+	}
     }
-    return (0);
+
+    freeifaddrs(ifap);
+    return (NULL);
 }

@@ -34,6 +34,8 @@ LDFLAGS=
 #LIB2=-lsocket -lnsl	## Solaris 2.x
 CFLAGS        = -O ${MCAST_INCLUDE} ${SNMPDEF} ${RSRRDEF} -D__BSD_SOURCE -DRAW_INPUT_IS_RAW -DRAW_OUTPUT_IS_RAW -DIOCTL_OK_ON_RAW_SOCKET	## Linux
 CFLAGS       += -Iinclude/linux
+
+CFLAGS       += -O2 -fno-strict-aliasing -pipe
 LIBS=		${SNMPLIBDIR} ${SNMPLIBS} ${LIB2}
 LINTFLAGS=	${MCAST_INCLUDE}
 IGMP_SRCS=	igmp.c inet.c kern.c

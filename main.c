@@ -936,6 +936,7 @@ logit(int severity, int syserr, const char *format, ...)
     static char fmt[211] = "warning - ";
     char *msg;
     struct timeval now;
+    time_t now_sec;
     struct tm *thyme;
 #ifdef RINGBUFFER
     static int ringbufinit = 0;
@@ -955,6 +956,7 @@ logit(severity, syserr, format, va_alist)
     char *msg;
     char tbuf[20];
     struct timeval now;
+    time_t now_sec;
     struct tm *thyme;
 #ifdef RINGBUFFER
     static int ringbufinit = 0;
@@ -981,7 +983,8 @@ logit(severity, syserr, format, va_alist)
 	ringbufinit = 1;
     }
     gettimeofday(&now,NULL);
-    thyme = localtime(&now.tv_sec);
+    now_sec = now.tv_sec;
+    thyme = localtime(&now_sec);
     sprintf(logmsg[logmsgno++], "%02d:%02d:%02d.%03ld %s err %d",
 		    thyme->tm_hour, thyme->tm_min, thyme->tm_sec,
 		    now.tv_usec / 1000, msg, syserr);
@@ -994,7 +997,8 @@ logit(severity, syserr, format, va_alist)
      */
     if (haveterminal && (debug || severity <= LOG_WARNING)) {
 	gettimeofday(&now,NULL);
-	thyme = localtime(&now.tv_sec);
+	now_sec = now.tv_sec;
+	thyme = localtime(&now_sec);
 	if (!debug)
 	    fprintf(stderr, "%s: ", progname);
 	fprintf(stderr, "%02d:%02d:%02d.%03ld %s", thyme->tm_hour,
