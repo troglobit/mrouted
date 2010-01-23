@@ -30,7 +30,7 @@ binary-arch: checkroot build
 #	$(MAKE) install prefix=`pwd`/debian/tmp/usr
 	install -s mrouted map-mbone mrinfo debian/tmp/usr/sbin/
 	install -m 0644 mrouted.conf debian/tmp/etc/
-	debstd README-3.9-beta3.mrouted
+	debstd README
 	dpkg-gencontrol -isp
 	chown -R root.root debian/tmp
 	chmod -R go=rX debian/tmp

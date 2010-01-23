@@ -1,34 +1,30 @@
-README-3.9-beta3.mrouted,v 1.1.2.1.4.2 1999/04/26 19:23:52 fenner Exp
 
 	IP Multicast Extensions for BSD-Derived Unix Systems
 	Multicast Routing Daemon
 
-	Release 3.9-beta3+IOS12
-	April 26, 1999
-
-	available from ftp.research.att.com
-ftp://ftp.research.att.com/dist/fenner/mrouted/mrouted-3.9-beta3+IOS12.tar.Z
-	binaries (not all available immediately):
-		mrouted3.9-beta3+IOS12-sparc-sunos41x.tar.Z
-		mrouted3.9-beta3+IOS12-sparc-solaris2.tar.Z
-		mrouted3.9-beta3+IOS12-i386-freebsd3.tar.Z
-		mrouted3.9-beta3+IOS12-alpha-osf1.tar.Z
-		mrouted3.9-beta3+IOS12-sgi-irix6.tar.Z
+	Release 3.9
+	January 23, 2010
 
 Note: The 3.9 release is mrouted-only, and will run on top of a 3.5 kernel.
 It is a drop-in replacement for mrouted 3.5, 3.6, 3.7 or 3.8.
 
-NOTE WELL: This is a beta-test release of mrouted.  The basic
+NOTE WELL: This is  a beta-test release of mrouted.  The basic
 functionality has been extensively tested in CAIRN and other
 testbeds, but it is expected to have bugs.  Please report bugs to Bill
 Fenner <fenner@parc.xerox.com>.
 
-The 3.9-beta3+IOS12 release is identical to 3.9-beta3 except that
-it updates the hacks to recognize IOS's pseudo-DVMRP implementation
-to yield all "DVMRP" versions of 10 and higher to IOS.  Previous
-versions of mrouted 3.9 made the assumption that the IOS bug that
-causes it to use the IOS version number instead of the DVMRP version
-number would be fixed by the time 12.0 was out.
+The 3.9 release contains "hacks" to recognize Cisco IOS's pseudo-DVMRP
+implementation to yield all "DVMRP" versions of 10 and higher to IOS.
+Previous pre-release versions of mrouted 3.9 made the assumption that
+the IOS bug that causes it to use the IOS version number instead of the
+DVMRP version number would be fixed by the time 12.0 was out.
+
+The 3.9 release includes patches from:
+  o Debian, build fixes for GNU/Linux.
+  o FreeBSD ports collection, major API cleanups.
+  o Buildroot, some minor cleanups of old deprecated APIs
+  o Philippe Troin <phil at fifi.org>, added more compiler warnings and
+    fixed the problems uncovered by that.
 
 The 3.9-beta3 release fixes the following bugs:
   o There was a bug handling routing updates which caused random black
