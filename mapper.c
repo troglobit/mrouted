@@ -241,8 +241,8 @@ void ask2(dst)
  * Process an incoming group membership report.
  */
 void accept_group_report(src, dst, group, r_type)
-    u_int32_t src, dst, group;
-    int r_type;
+    u_int32_t src, dst, UNUSED group;
+    int UNUSED r_type;
 {
     logit(LOG_INFO, 0, "ignoring IGMP group membership report from %s to %s",
 	inet_fmt(src, s1), inet_fmt(dst, s2));
@@ -253,9 +253,9 @@ void accept_group_report(src, dst, group, r_type)
  * Process an incoming neighbor probe message.
  */
 void accept_probe(src, dst, p, datalen, level)
-    u_int32_t src, dst, level;
-    char *p;
-    int datalen;
+    u_int32_t src, dst, UNUSED level;
+    char UNUSED *p;
+    int UNUSED datalen;
 {
     logit(LOG_INFO, 0, "ignoring DVMRP probe from %s to %s",
 	inet_fmt(src, s1), inet_fmt(dst, s2));
@@ -266,9 +266,9 @@ void accept_probe(src, dst, p, datalen, level)
  * Process an incoming route report message.
  */
 void accept_report(src, dst, p, datalen, level)
-    u_int32_t src, dst, level;
-    char *p;
-    int datalen;
+    u_int32_t src, dst, UNUSED level;
+    char UNUSED *p;
+    int UNUSED datalen;
 {
     logit(LOG_INFO, 0, "ignoring DVMRP routing report from %s to %s",
 	inet_fmt(src, s1), inet_fmt(dst, s2));
@@ -301,7 +301,7 @@ void accept_neighbor_request2(src, dst)
  * Process an incoming neighbor-list message.
  */
 void accept_neighbors(src, dst, p, datalen, level)
-    u_int32_t src, dst, level;
+    u_int32_t src, UNUSED dst, level;
     u_char *p;
     int datalen;
 {
@@ -462,7 +462,7 @@ void accept_neighbors(src, dst, p, datalen, level)
 }
 
 void accept_neighbors2(src, dst, p, datalen, level)
-    u_int32_t src, dst, level;
+    u_int32_t src, UNUSED dst, level;
     u_char *p;
     int datalen;
 {
@@ -999,53 +999,53 @@ int main(argc, argv)
 
 /* dummies */
 void accept_prune(src, dst, p, datalen)
-	u_int32_t src, dst;
-	char *p;
-	int datalen;
+	u_int32_t UNUSED src, UNUSED dst;
+	char UNUSED *p;
+	int UNUSED datalen;
 {
 }
 void accept_graft(src, dst, p, datalen)
-	u_int32_t src, dst;
-	char *p;
-	int datalen;
+	u_int32_t UNUSED src, UNUSED dst;
+	char UNUSED *p;
+	int UNUSED datalen;
 {
 }
 void accept_g_ack(src, dst, p, datalen)
-	u_int32_t src, dst;
-	char *p;
-	int datalen;
+	u_int32_t UNUSED src, UNUSED dst;
+	char UNUSED *p;
+	int UNUSED datalen;
 {
 }
 void add_table_entry(origin, mcastgrp)
-	u_int32_t origin, mcastgrp;
+	u_int32_t UNUSED origin, UNUSED mcastgrp;
 {
 }
 void accept_leave_message(src, dst, group)
-	u_int32_t src, dst, group;
+	u_int32_t UNUSED src, UNUSED dst, UNUSED group;
 {
 }
 void accept_mtrace(src, dst, group, data, no, datalen)
-	u_int32_t src, dst, group;
-	char *data;
-	u_int no;
-	int datalen;
+	u_int32_t UNUSED src, UNUSED dst, UNUSED group;
+	char UNUSED *data;
+	u_int UNUSED no;
+	int UNUSED datalen;
 {
 }
 void accept_membership_query(src, dst, group, tmo)
-	u_int32_t src, dst, group;
-	int tmo;
+	u_int32_t UNUSED src, UNUSED dst, UNUSED group;
+	int UNUSED tmo;
 {
 }
 void accept_info_request(src, dst, p, datalen)
-	u_int32_t src, dst;
-	u_char *p;
-	int datalen;
+	u_int32_t UNUSED src, UNUSED dst;
+	u_char UNUSED *p;
+	int UNUSED datalen;
 {
 }
 void accept_info_reply(src, dst, p, datalen)
-	u_int32_t src, dst;
-	u_char *p;
-	int datalen;
+	u_int32_t UNUSED src, UNUSED dst;
+	u_char UNUSED *p;
+	int UNUSED datalen;
 {
 }
 

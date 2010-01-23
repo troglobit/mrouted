@@ -26,7 +26,7 @@
 #ifdef SYSV
 #include <sys/sockio.h>
 #endif
-#ifdef _AIX
+#if defined(_AIX) || defined(__linux__)
 #include <time.h>
 #endif
 #include <sys/time.h>
@@ -61,7 +61,7 @@ typedef u_int u_int32;
 #endif
 #endif
 
-typedef void (*cfunc_t) __P((void *));
+typedef void (*cfunc_t) __P((void*));
 typedef void (*ihfunc_t) __P((int, fd_set *));
 
 #include "dvmrp.h"
@@ -175,7 +175,7 @@ extern char		s2[];
 extern char		s3[];
 extern char		s4[];
 
-#if !(defined(BSD) && (BSD >= 199103))
+#if !(defined(BSD) && (BSD >= 199103)) && !defined(__linux__)
 extern int		errno;
 #endif
 
@@ -403,3 +403,9 @@ extern void		rsrr_clean __P((void));
 extern void		rsrr_cache_send __P((struct gtable *, int));
 extern void		rsrr_cache_clean __P((struct gtable *));
 #endif /* RSRR */
+
+#ifdef __GNUC__
+# define UNUSED __attribute__((unused))
+#else
+# define UNUSED /*empty*/
+#endif

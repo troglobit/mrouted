@@ -62,66 +62,61 @@ DISTFILES=	README-3.9-beta3.mrouted ${SRCS} ${HDRS} VERSION LICENSE \
 all: mrouted map-mbone mrinfo ${MSTAT}
 
 mrouted: ${IGMP_OBJS} ${ROUTER_OBJS} vers.o ${CMULIBS}
-	rm -f $@
-	${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${IGMP_OBJS} ${ROUTER_OBJS} vers.o ${LIBS}
+	@${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${IGMP_OBJS} ${ROUTER_OBJS} vers.o ${LIBS}
 
 vers.c:	VERSION
-	rm -f $@
-	sed -e 's/.*/char todaysversion[]="&";/' < VERSION > vers.c
+	@sed -e 's/.*/char todaysversion[]="&";/' < VERSION > vers.c
 
 map-mbone: ${IGMP_OBJS} ${MAPPER_OBJS}
-	rm -f $@
-	${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${IGMP_OBJS} ${MAPPER_OBJS} ${LIB2}
+	@${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${IGMP_OBJS} ${MAPPER_OBJS} ${LIB2}
 
 mrinfo: ${IGMP_OBJS} ${MRINFO_OBJS}
-	rm -f $@
-	${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${IGMP_OBJS} ${MRINFO_OBJS} ${LIB2}
+	@${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${IGMP_OBJS} ${MRINFO_OBJS} ${LIB2}
 
 mstat: ${MSTAT_OBJS} snmplib/libsnmp.a
-	rm -f $@
-	${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${MSTAT_OBJS} -Lsnmplib -lsnmp
+	@${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${MSTAT_OBJS} -Lsnmplib -lsnmp
 
 clean: FRC ${SNMPCLEAN}
-	rm -f ${OBJS} vers.o core mrouted map-mbone mrinfo mstat tags TAGS
+	-@rm -f ${OBJS} vers.c vers.o core mrouted map-mbone mrinfo mstat tags TAGS
 
 snmpclean:	FRC
 	-(cd snmpd; make clean)
 	-(cd snmplib; make clean)
 
 depend: FRC
-	mkdep ${CFLAGS} ${SRCS}
+	@mkdep ${CFLAGS} ${SRCS}
 
 lint: FRC
-	lint ${LINTFLAGS} ${SRCS}
+	@lint ${LINTFLAGS} ${SRCS}
 
 tags: ${IGMP_SRCS} ${ROUTER_SRCS}
-	ctags ${IGMP_SRCS} ${ROUTER_SRCS}
+	@ctags ${IGMP_SRCS} ${ROUTER_SRCS}
 
 cflow:	FRC
-	cflow ${MCAST_INCLUDE} ${IGMP_SRCS} ${ROUTER_SRCS} > cflow.out
+	@cflow ${MCAST_INCLUDE} ${IGMP_SRCS} ${ROUTER_SRCS} > cflow.out
 
 cflow2:	FRC
-	cflow -ix ${MCAST_INCLUDE} ${IGMP_SRCS} ${ROUTER_SRCS} > cflow2.out
+	@cflow -ix ${MCAST_INCLUDE} ${IGMP_SRCS} ${ROUTER_SRCS} > cflow2.out
 
 rcflow:	FRC
-	cflow -r ${MCAST_INCLUDE} ${IGMP_SRCS} ${ROUTER_SRCS} > rcflow.out
+	@cflow -r ${MCAST_INCLUDE} ${IGMP_SRCS} ${ROUTER_SRCS} > rcflow.out
 
 rcflow2:	FRC
-	cflow -r -ix ${MCAST_INCLUDE} ${IGMP_SRCS} ${ROUTER_SRCS} > rcflow2.out
+	@cflow -r -ix ${MCAST_INCLUDE} ${IGMP_SRCS} ${ROUTER_SRCS} > rcflow2.out
 
 TAGS: FRC
-	etags ${SRCS}
+	@etags ${SRCS}
 
 dist: ${DISTFILES}
-	sed -e '/^# DO NOT PUT ANYTHING/,$$d' \
-	    -e '/^MCAST_INCLUDE=/s/=.*$$/=/' \
-	    -e '/^LDFLAGS=/s/=.*$$/=/' \
+	@sed -e '/^# DO NOT PUT ANYTHING/,$$d'	\
+	     -e '/^MCAST_INCLUDE=/s/=.*$$/=/'	\
+	     -e '/^LDFLAGS=/s/=.*$$/=/'		\
 		< Makefile > Makefile.dist
-	mv Makefile Makefile.save
-	cp Makefile.dist Makefile
-	rm -f mrouted.tar.gz
-	tar cvf - ${DISTFILES} | gzip -9 > mrouted.tar.gz
-	mv Makefile.save Makefile
+	@mv Makefile Makefile.save
+	@cp Makefile.dist Makefile
+	@rm -f mrouted.tar.gz
+	@tar cvf - ${DISTFILES} | gzip -9 > mrouted.tar.gz
+	@mv Makefile.save Makefile
 
 FRC:
 

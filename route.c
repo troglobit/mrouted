@@ -14,7 +14,7 @@
 #include "defs.h"
 
 #ifndef lint
-static char rcsid[] = "@(#) $Id: \
+static char UNUSED rcsid[] = "@(#) $Id: \
 route.c,v 3.8.4.41 1998/01/15 00:08:34 fenner Exp $";
 #endif
 
@@ -1053,13 +1053,14 @@ accept_report(src, dst, p, datalen, level)
 	return;
     }
 
-    if (uvifs[vifi].uv_flags & VIFF_BLASTER)
+    if (uvifs[vifi].uv_flags & VIFF_BLASTER) {
 	if (datalen > 0) {
 	    queue_blaster_report(vifi, src, dst, p, datalen, level);
 	    return;
 	} else {
 	    datalen = -datalen;
 	}
+    }
 
     if (!(nbr = update_neighbor(vifi, src, DVMRP_REPORT, NULL, 0, level)))
 	return;
@@ -1250,7 +1251,7 @@ report_chunk(which_routes, start_rt, vifi, dst)
     int which_routes;
     register struct rtentry *start_rt;
     vifi_t vifi;
-    u_int32 dst;
+    u_int32 UNUSED dst;
 {
     register struct rtentry *r;
     register char *p;

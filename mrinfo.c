@@ -59,14 +59,15 @@
  * These notices must be retained in any copies of any part of this software.
  */
 
+#include "defs.h"
+
 #ifndef lint
-static char rcsid[] = "@(#) $Id: \
+static char UNUSED rcsid[] = "@(#) $Id: \
 mrinfo.c,v 3.8.4.7 1998/03/01 03:05:20 fenner Exp $";
 #endif
 
 #include <netdb.h>
 #include <sys/time.h>
-#include "defs.h"
 #include <arpa/inet.h>
 #ifdef __STDC__
 #include <stdarg.h>
@@ -191,7 +192,7 @@ ask2(dst)
  */
 void 
 accept_neighbors(src, dst, p, datalen, level)
-	u_int32	src, dst, level;
+	u_int32	src, UNUSED dst, UNUSED level;
 	u_char	*p;
 	int     datalen;
 {
@@ -224,7 +225,7 @@ accept_neighbors(src, dst, p, datalen, level)
 
 void 
 accept_neighbors2(src, dst, p, datalen, level)
-	u_int32	src, dst, level;
+	u_int32	src, UNUSED dst, level;
 	u_char	*p;
 	int     datalen;
 {
@@ -556,80 +557,80 @@ main(argc, argv)
 
 /* dummies */
 void accept_probe(src, dst, p, datalen, level)
-	u_int32 src, dst, level;
-	char *p;
-	int datalen;
+	u_int32 UNUSED src, UNUSED dst, UNUSED level;
+	char UNUSED *p;
+	int UNUSED datalen;
 {
 }
 void accept_group_report(src, dst, group, r_type)
-	u_int32 src, dst, group;
-	int r_type;
+	u_int32 UNUSED src, UNUSED dst, UNUSED group;
+	int UNUSED r_type;
 {
 }
 void accept_neighbor_request2(src, dst)
-	u_int32 src, dst;
+	u_int32 UNUSED src, UNUSED dst;
 {
 }
 void accept_report(src, dst, p, datalen, level)
-	u_int32 src, dst, level;
-	char *p;
-	int datalen;
+	u_int32 UNUSED src, UNUSED dst, UNUSED level;
+	char UNUSED *p;
+	int UNUSED datalen;
 {
 }
 void accept_neighbor_request(src, dst)
-	u_int32 src, dst;
+	u_int32 UNUSED src, UNUSED dst;
 {
 }
 void accept_prune(src, dst, p, datalen)
-	u_int32 src, dst;
-	char *p;
-	int datalen;
+	u_int32 UNUSED src, UNUSED dst;
+	char UNUSED *p;
+	int UNUSED datalen;
 {
 }
 void accept_graft(src, dst, p, datalen)
-	u_int32 src, dst;
-	char *p;
-	int datalen;
+	u_int32 UNUSED src, UNUSED dst;
+	char UNUSED *p;
+	int UNUSED datalen;
 {
 }
 void accept_g_ack(src, dst, p, datalen)
-	u_int32 src, dst;
-	char *p;
-	int datalen;
+	u_int32 UNUSED src, UNUSED dst;
+	char UNUSED *p;
+	int UNUSED datalen;
 {
 }
 void add_table_entry(origin, mcastgrp)
-	u_int32 origin, mcastgrp;
+	u_int32 UNUSED origin, UNUSED mcastgrp;
 {
 }
 void check_vif_state()
 {
 }
 void accept_leave_message(src, dst, group)
-	u_int32 src, dst, group;
+	u_int32 UNUSED src, UNUSED dst, UNUSED group;
 {
 }
 void accept_mtrace(src, dst, group, data, no, datalen)
-	u_int32 src, dst, group;
-	char *data;
-	u_int no;
-	int datalen;
+	u_int32 UNUSED src, UNUSED dst, UNUSED group;
+	char UNUSED *data;
+	u_int UNUSED no;
+	int UNUSED datalen;
 {
 }
 void accept_membership_query(src, dst, group, tmo)
-	u_int32 src, dst, group;
-	int tmo;
+	u_int32 UNUSED src, UNUSED dst, UNUSED group;
+	int UNUSED tmo;
 {
 }
 void accept_info_request(src, dst, p, datalen)
-	u_int32 src, dst;
-	u_char *p;
-	int datalen;
+	u_int32 UNUSED src, UNUSED dst;
+	u_char UNUSED *p;
+	int UNUSED datalen;
 {
 }
 void accept_info_reply(src, dst, p, datalen)
-	u_int32 src, dst;
-	u_char *p;
-	int datalen;
+	u_int32 UNUSED src, UNUSED dst;
+	u_char UNUSED *p;
+	int UNUSED datalen;
 {
 }

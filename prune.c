@@ -14,7 +14,7 @@
 #include "defs.h"
 
 #ifndef lint
-static char rcsid[] = "@(#) $Id: \
+static char UNUSED rcsid[] = "@(#) $Id: \
 prune.c,v 3.8.4.59 1998/03/01 02:06:32 fenner Exp $";
 #endif
 
@@ -546,13 +546,14 @@ send_graft_ack(src, dst, origin, grp, vifi)
 	send_on_vif(&uvifs[vifi], dst, DVMRP_GRAFT_ACK, datalen);
     }
 
-    IF_DEBUG(DEBUG_PRUNE)
+    IF_DEBUG(DEBUG_PRUNE) {
     if (vifi == NO_VIF)
 	logit(LOG_DEBUG, 0, "sent graft ack for (%s, %s) to %s",
 	    inet_fmt(origin, s1), inet_fmt(grp, s2), inet_fmt(dst, s3));
     else
 	logit(LOG_DEBUG, 0, "sent graft ack for (%s, %s) to %s on vif %d",
 	    inet_fmt(origin, s1), inet_fmt(grp, s2), inet_fmt(dst, s3), vifi);
+    }
 }
 
 /*
@@ -2371,7 +2372,7 @@ accept_mtrace(src, dst, group, data, no, datalen)
 
     /* determine the routing table entry for this traceroute */
     rt = determine_route(qry->tr_src);
-    IF_DEBUG(DEBUG_TRACE)
+    IF_DEBUG(DEBUG_TRACE) {
     if (rt) {
 	logit(LOG_DEBUG, 0, "rt parent vif: %d rtr: %s metric: %d",
 		rt->rt_parent, inet_fmt(rt->rt_gateway, s1), rt->rt_metric);
@@ -2379,6 +2380,7 @@ accept_mtrace(src, dst, group, data, no, datalen)
 		RT_FMT(rt, s1));
     } else
 	logit(LOG_DEBUG, 0, "...no route");
+    }
 
     /*
      * Query type packet - check if rte exists 
@@ -2519,13 +2521,14 @@ accept_mtrace(src, dst, group, data, no, datalen)
 	    resp->tr_rflags = TR_SCOPED;
 	else if (gt->gt_prsent_timer)
 	    resp->tr_rflags = TR_PRUNED;
-	else if (!VIFM_ISSET(vifi, gt->gt_grpmems))
+	else if (!VIFM_ISSET(vifi, gt->gt_grpmems)) {
 	    if (!NBRM_ISEMPTY(uvifs[vifi].uv_nbrmap) &&
 		SUBS_ARE_PRUNED(rt->rt_subordinates,
 				uvifs[vifi].uv_nbrmap, gt->gt_prunes))
 		resp->tr_rflags = TR_OPRUNED;
 	    else
 		resp->tr_rflags = TR_NO_FWD;
+	}
     } else {
 	if ((vifi != NO_VIF && scoped_addr(vifi, group)) ||
 	    (rt && scoped_addr(rt->rt_parent, group)))

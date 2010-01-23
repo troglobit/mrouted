@@ -35,7 +35,7 @@
 #include <time.h>
 
 #ifndef lint
-static char rcsid[] = "@(#) $Id: \
+static char UNUSED rcsid[] = "@(#) $Id: \
 main.c,v 3.8.4.29 1998/03/01 01:49:00 fenner Exp $";
 #endif
 
@@ -109,9 +109,9 @@ static struct debugname {
  * Forward declarations.
  */
 static void final_init __P((void *));
-static void fasttimer __P((void *));
-static void timer __P((void *));
-static void dump __P((void));
+static void fasttimer __P((void*));
+static void timer __P((void*));
+static void dump __P((void)) UNUSED;
 static void dump_version __P((FILE *));
 static void fdump __P((void));
 static void cdump __P((void));
@@ -283,8 +283,8 @@ usage:	fprintf(stderr,
 
     fp = fopen(genidfilename, "r");
     if (fp != NULL) {
-	fscanf(fp, "%d", &prev_genid);
-	if (prev_genid == dvmrp_genid)
+	int ret = fscanf(fp, "%d", &prev_genid);
+	if (ret == 1 && prev_genid == dvmrp_genid)
 	    dvmrp_genid++;
 	(void) fclose(fp);
     }
@@ -377,7 +377,6 @@ usage:	fprintf(stderr,
 	/*
 	 * Detach from the terminal
 	 */
-	int t;
 
 	haveterminal = 0;
 	if (fork()) exit(0);
@@ -586,8 +585,8 @@ final_init(i)
  * do all the other time-based processing.
  */
 static void
-fasttimer(i)
-    void *i;
+fasttimer(p)
+    void UNUSED *p;
 {
     static unsigned int tlast;
     static unsigned int nsent;
@@ -646,8 +645,8 @@ u_long virtual_time = 0;
  * virtual interface data structures.
  */
 static void
-timer(i)
-    void *i;
+timer(p)
+    void UNUSED *p;
 {
     age_routes();	/* Advance the timers in the route entries     */
     age_vifs();		/* Advance the timers for neighbors */
@@ -699,7 +698,7 @@ timer(i)
 static void
 cleanup()
 {
-    static in_cleanup = 0;
+    static int in_cleanup = 0;
 
     if (!in_cleanup) {
 	in_cleanup++;

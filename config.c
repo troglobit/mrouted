@@ -11,8 +11,8 @@
  */
 
 #ifndef lint
-static const char rcsid[] =
-  "$FreeBSD: ports/net/mrouted/files/patch-config.c,v 1.1 2008/03/31 10:13:37 bms Exp $";
+static char const rcsid[] = "@(#) $Id: \
+ config.c,v 3.8.4.10 1998/01/06 01:57:41 fenner Exp $";
 #endif /* not lint */
 
 #include "defs.h"

@@ -15,7 +15,7 @@
 #include <fcntl.h>
 
 #ifndef lint
-static char rcsid[] = "@(#) $Id: \
+static char UNUSED rcsid[] = "@(#) $Id: \
 vif.c,v 3.8.4.56.2.1 1999/01/20 05:18:50 fenner Exp $";
 #endif
 
@@ -901,7 +901,7 @@ probe_for_neighbors()
  */
 void
 accept_neighbor_request(src, dst)
-    u_int32 src, dst;
+    u_int32 src, UNUSED dst;
 {
     vifi_t vifi;
     struct uvif *v;
@@ -962,7 +962,7 @@ accept_neighbor_request(src, dst)
  */
 void
 accept_neighbor_request2(src, dst)
-    u_int32 src, dst;
+    u_int32 src, UNUSED dst;
 {
     vifi_t vifi;
     struct uvif *v;
@@ -1060,7 +1060,7 @@ accept_neighbor_request2(src, dst)
 
 void
 accept_info_request(src, dst, p, datalen)
-    u_int32 src, dst;
+    u_int32 src, UNUSED dst;
     u_char *p;
     int datalen;
 {
@@ -1126,9 +1126,9 @@ info_version(p)
  */
 void
 accept_neighbors(src, dst, p, datalen, level)
-    u_int32 src, dst, level;
-    u_char *p;
-    int datalen;
+    u_int32 src, dst, UNUSED level;
+    u_char UNUSED *p;
+    int UNUSED datalen;
 {
     logit(LOG_INFO, 0, "ignoring spurious DVMRP neighbor list from %s to %s",
 	inet_fmt(src, s1), inet_fmt(dst, s2));
@@ -1140,9 +1140,9 @@ accept_neighbors(src, dst, p, datalen, level)
  */
 void
 accept_neighbors2(src, dst, p, datalen, level)
-    u_int32 src, dst, level;
-    u_char *p;
-    int datalen;
+    u_int32 src, dst, UNUSED level;
+    u_char UNUSED *p;
+    int UNUSED datalen;
 {
     IF_DEBUG(DEBUG_PKT)
     logit(LOG_DEBUG, 0, "ignoring spurious DVMRP neighbor list2 from %s to %s",
@@ -1155,8 +1155,8 @@ accept_neighbors2(src, dst, p, datalen, level)
 void
 accept_info_reply(src, dst, p, datalen)
     u_int32 src, dst;
-    u_char *p;
-    int datalen;
+    u_char UNUSED *p;
+    int UNUSED datalen;
 {
     IF_DEBUG(DEBUG_PKT)
     logit(LOG_DEBUG, 0, "ignoring spurious DVMRP info reply from %s to %s",
@@ -1749,7 +1749,7 @@ dump_vifs(fp)
 					    v->uv_prune_lifetime);
 
 	v_req.vifi = vifi;
-	if (did_final_init)
+	if (did_final_init) {
 	    if (ioctl(udp_socket, SIOCGETVIFCNT, (char *)&v_req) < 0) {
 		logit(LOG_WARNING, errno,
 		    "SIOCGETVIFCNT fails on vif %d", vifi);
@@ -1759,6 +1759,7 @@ dump_vifs(fp)
 		fprintf(fp, "                   pkts/bytes out: %lu/%lu\n",
 			v_req.ocount, v_req.obytes);
 	    }
+	}
 	fprintf(fp, "\n");
     }
     fprintf(fp, "\n");

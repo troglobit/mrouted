@@ -14,7 +14,7 @@
 #include "defs.h"
 
 #ifndef lint
-static char rcsid[] = "@(#) $Id: \
+static char UNUSED rcsid[] = "@(#) $Id: \
 ipip.c,v 3.8.4.6 1998/01/06 01:57:45 fenner Exp $";
 #endif
 
