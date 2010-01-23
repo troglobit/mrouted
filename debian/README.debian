@@ -1,0 +1,17 @@
+mrouted for Debian
+----------------------
+
+You need to enable multicast and multicast-routing in your kernel:
+
+CONFIG_IP_MULTICAST=y
+CONFIG_IP_MROUTE=y
+
+If you want to build a multicast tunnel via an unicast connection, you
+have to enable ip-tunneling to:
+
+CONFIG_NET_IPIP=m (or =y)
+
+The default configuration of mrouted is to route between two and more
+interfaces. For more details see the manpage.
+
+Christoph Martin <christoph.martin@uni-mainz.de>, Mon,  1 Mar 1999 21:36:23 +0100

@@ -1,0 +1,34 @@
+mrouted (3.9-beta3-3) unstable; urgency=low
+
+  * New maintainer (close: #121397)
+  * Added mrouted.conf installation
+  * Added man pages
+
+ -- Jean-Francois Dive <jef@linuxbe.org>  Wed, 20 Feb 2002 18:39:57 +1100
+
+mrouted (3.9-beta3-2) unstable; urgency=low
+
+  * add support for RSRR (closes: #94509)
+  * add builddepends for yacc (closes: #102782)
+  * try to load module ipip for tunneling (closes: #39668)
+  * include NMU fixes (Closes: Bug#91018, Bug#91597, Bug#93844)
+
+ -- Christoph Martin <christoph.martin@uni-mainz.de>  Sat, 10 Nov 2001 17:29:52 +0100
+
+mrouted (3.9-beta3-1.1) unstable; urgency=low
+
+  * Non-Maintainer upload
+  * Rebuilt with latest debmake (Closes: Bug#91018, Bug#91597)
+  * Added missing #include (Closes: Bug#93844)
+  * Bumped standards-version, and added build-deps
+
+ -- Gergely Nagy <8@free.bsd.hu>  Fri, 13 Apr 2001 16:17:17 +0200
+
+mrouted (3.9-beta3-1) unstable; urgency=low
+
+  * Initial Release.
+  * Move package to nonfree
+
+ -- Christoph Martin <christoph.martin@uni-mainz.de>  Mon,  1 Mar 1999 21:36:23 +0100
+
+

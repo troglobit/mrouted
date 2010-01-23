@@ -24,15 +24,16 @@
 #
 # Uncomment the following three lines if you want to use RSRR (Routing
 # Support for Resource Reservations), currently used by RSVP.
-#RSRRDEF=	-DRSRR
-#RSRRC=		rsrr.c
-#RSRRO=		rsrr.o
+RSRRDEF=	-DRSRR
+RSRRC=		rsrr.c
+RSRRO=		rsrr.o
 #
 LDFLAGS=
-CFLAGS=		-O ${MCAST_INCLUDE} ${SNMPDEF} ${RSRRDEF}	## SunOS, OSF1, FreeBSD, IRIX
+#CFLAGS=		-O ${MCAST_INCLUDE} ${SNMPDEF} ${RSRRDEF}	## SunOS, OSF1, FreeBSD, IRIX
 #CFLAGS=		-O ${MCAST_INCLUDE} ${SNMPDEF} ${RSRRDEF} -DSYSV -DSUNOS5	## Solaris 2.x
 #LIB2=-lsocket -lnsl	## Solaris 2.x
-#CFLAGS=		-O ${MCAST_INCLUDE} ${SNMPDEF} ${RSRRDEF} -D__BSD_SOURCE -DRAW_INPUT_IS_RAW -DRAW_OUTPUT_IS_RAW -DIOCTL_OK_ON_RAW_SOCKET	## Linux
+CFLAGS        = -O ${MCAST_INCLUDE} ${SNMPDEF} ${RSRRDEF} -D__BSD_SOURCE -DRAW_INPUT_IS_RAW -DRAW_OUTPUT_IS_RAW -DIOCTL_OK_ON_RAW_SOCKET	## Linux
+CFLAGS       += -Iinclude/linux
 LIBS=		${SNMPLIBDIR} ${SNMPLIBS} ${LIB2}
 LINTFLAGS=	${MCAST_INCLUDE}
 IGMP_SRCS=	igmp.c inet.c kern.c
@@ -79,7 +80,7 @@ mstat: ${MSTAT_OBJS} snmplib/libsnmp.a
 	${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${MSTAT_OBJS} -Lsnmplib -lsnmp
 
 clean: FRC ${SNMPCLEAN}
-	rm -f ${OBJS} core mrouted map-mbone mrinfo mstat tags TAGS
+	rm -f ${OBJS} vers.o core mrouted map-mbone mrinfo mstat tags TAGS
 
 snmpclean:	FRC
 	-(cd snmpd; make clean)

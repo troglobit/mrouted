@@ -32,6 +32,8 @@
 #include "snmp.h"
 #endif
 
+#include <time.h>
+
 #ifndef lint
 static char rcsid[] = "@(#) $Id: \
 main.c,v 3.8.4.29 1998/03/01 01:49:00 fenner Exp $";

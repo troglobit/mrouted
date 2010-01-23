@@ -1,0 +1,18 @@
+Source: mrouted
+Section: non-free/net
+Priority: optional
+Maintainer: Jean-Francois Dive <jef@linuxbe.org>
+Standards-Version: 3.5.2
+Build-Depends: debmake (>= 3.6), bison | byacc | btyacc
+
+Package: mrouted
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Multicast routing daemon to connect MBone to your subnet
+ Mrouted is an implementation of the Distance-Vector Multicast Routing
+ Protocol (DVMRP), an earlier version of which is specified in
+ RFC-1075.  In order to support multicasting among subnets that are
+ separated by (unicast) routers that do not support IP multicasting,
+ mrouted includes support for "tunnels", which are virtual
+ point-to-point links between pairs of mrouteds located anywhere in an
+ internet.
