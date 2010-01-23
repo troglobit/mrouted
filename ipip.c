@@ -45,7 +45,7 @@ init_ipip()
 {
 #ifdef notyet
     if ((raw_socket = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0)
-	log(LOG_ERR, errno, "Raw IP socket");
+	logit(LOG_ERR, errno, "Raw IP socket");
 #endif
 }
 
@@ -60,7 +60,7 @@ init_ipip_on_vif(v)
 
     ip = v->uv_encap_hdr = (struct ip *)malloc(sizeof(struct ip));
     if (ip == NULL)
-	log(LOG_ERR, 0, "out of memory");
+	logit(LOG_ERR, 0, "out of memory");
     bzero(ip, sizeof(struct ip));
     /*
      * Fields zeroed that aren't filled in later:
@@ -132,13 +132,13 @@ send_ipip(src, dst, type, code, group, datalen, v)
 	if (errno == ENETDOWN)
 	    check_vif_state();
 	else
-	    log(LOG_WARNING, errno,
+	    logit(LOG_WARNING, errno,
 		"sendmsg to %s on %s",
 		inet_fmt(sdst.sin_addr.s_addr, s1), inet_fmt(src, s2));
     }
 
     IF_DEBUG(DEBUG_PKT|igmp_debug_kind(type, code))
-    log(LOG_DEBUG, 0, "SENT %s from %-15s to %s encaped to %s",
+    logit(LOG_DEBUG, 0, "SENT %s from %-15s to %s encaped to %s",
 	igmp_packet_kind(type, code), src == INADDR_ANY ? "INADDR_ANY" :
 				 inet_fmt(src, s1), inet_fmt(dst, s2),
 				 inet_fmt(sdst.sin_addr.s_addr, s3));

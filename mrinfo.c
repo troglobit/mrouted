@@ -123,7 +123,7 @@ inet_name(addr)
  */
 #ifdef __STDC__
 void
-log(int severity, int syserr, const char *format, ...)
+logit(int severity, int syserr, const char *format, ...)
 {
 	va_list ap;
 	char    fmt[100];
@@ -131,7 +131,7 @@ log(int severity, int syserr, const char *format, ...)
 	va_start(ap, format);
 #else
 void 
-log(severity, syserr, format, va_alist)
+logit(severity, syserr, format, va_alist)
 	int     severity, syserr;
 	char   *format;
 	va_dcl
@@ -456,7 +456,7 @@ main(argc, argv)
 				perror("select");
 			continue;
 		} else if (count == 0) {
-			log(LOG_DEBUG, 0, "Timed out receiving neighbor lists");
+			logit(LOG_DEBUG, 0, "Timed out receiving neighbor lists");
 			if (++tries > retries)
 				break;
 			/* If we've tried ASK_NEIGHBORS2 twice with
@@ -481,7 +481,7 @@ main(argc, argv)
 		}
 
 		if (recvlen < sizeof(struct ip)) {
-			log(LOG_WARNING, 0,
+			logit(LOG_WARNING, 0,
 			    "packet too short (%u bytes) for IP header",
 			    recvlen);
 			continue;
@@ -498,7 +498,7 @@ main(argc, argv)
 		ipdatalen = ip->ip_len;
 #endif
 		if (iphdrlen + ipdatalen != recvlen) {
-		    log(LOG_WARNING, 0,
+		    logit(LOG_WARNING, 0,
 		      "packet shorter (%u bytes) than hdr+data length (%u+%u)",
 		      recvlen, iphdrlen, ipdatalen);
 		    continue;
@@ -507,7 +507,7 @@ main(argc, argv)
 		group = igmp->igmp_group.s_addr;
 		igmpdatalen = ipdatalen - IGMP_MINLEN;
 		if (igmpdatalen < 0) {
-		    log(LOG_WARNING, 0,
+		    logit(LOG_WARNING, 0,
 			"IP data field too short (%u bytes) for IGMP, from %s",
 			ipdatalen, inet_fmt(src, s1));
 		    continue;

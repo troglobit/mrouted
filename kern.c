@@ -51,13 +51,13 @@ void k_set_rcvbuf(bufsize, minsize)
 	    }
 	}
 	if (bufsize < minsize) {
-	    log(LOG_ERR, 0, "OS-allowed buffer size %u < app min %u",
+	    logit(LOG_ERR, 0, "OS-allowed buffer size %u < app min %u",
 		bufsize, minsize);
 	    /*NOTREACHED*/
 	}
     }
     IF_DEBUG(DEBUG_KERN)
-    log(LOG_DEBUG, 0, "Got %d byte buffer size in %d iterations",
+    logit(LOG_DEBUG, 0, "Got %d byte buffer size in %d iterations",
 	    bufsize, iter);
 }
 
@@ -68,7 +68,7 @@ void k_hdr_include(bool)
 #ifdef IP_HDRINCL
     if (setsockopt(igmp_socket, IPPROTO_IP, IP_HDRINCL,
 		   (char *)&bool, sizeof(bool)) < 0)
-	log(LOG_ERR, errno, "setsockopt IP_HDRINCL %u", bool);
+	logit(LOG_ERR, errno, "setsockopt IP_HDRINCL %u", bool);
 #endif
 }
 
@@ -82,7 +82,7 @@ void k_set_ttl(t)
     ttl = t;
     if (setsockopt(igmp_socket, IPPROTO_IP, IP_MULTICAST_TTL,
 		   (char *)&ttl, sizeof(ttl)) < 0)
-	log(LOG_ERR, errno, "setsockopt IP_MULTICAST_TTL %u", ttl);
+	logit(LOG_ERR, errno, "setsockopt IP_MULTICAST_TTL %u", ttl);
 #endif
     curttl = t;
 }
@@ -96,7 +96,7 @@ void k_set_loop(l)
     loop = l;
     if (setsockopt(igmp_socket, IPPROTO_IP, IP_MULTICAST_LOOP,
 		   (char *)&loop, sizeof(loop)) < 0)
-	log(LOG_ERR, errno, "setsockopt IP_MULTICAST_LOOP %u", loop);
+	logit(LOG_ERR, errno, "setsockopt IP_MULTICAST_LOOP %u", loop);
 }
 
 
@@ -108,7 +108,7 @@ void k_set_if(ifa)
     adr.s_addr = ifa;
     if (setsockopt(igmp_socket, IPPROTO_IP, IP_MULTICAST_IF,
 		   (char *)&adr, sizeof(adr)) < 0)
-	log(LOG_ERR, errno, "setsockopt IP_MULTICAST_IF %s",
+	logit(LOG_ERR, errno, "setsockopt IP_MULTICAST_IF %s",
 	    		    inet_fmt(ifa, s1));
 }
 
@@ -124,7 +124,7 @@ void k_join(grp, ifa)
 
     if (setsockopt(igmp_socket, IPPROTO_IP, IP_ADD_MEMBERSHIP,
 		   (char *)&mreq, sizeof(mreq)) < 0)
-	log(LOG_WARNING, errno, "can't join group %s on interface %s",
+	logit(LOG_WARNING, errno, "can't join group %s on interface %s",
 				inet_fmt(grp, s1), inet_fmt(ifa, s2));
 }
 
@@ -140,7 +140,7 @@ void k_leave(grp, ifa)
 
     if (setsockopt(igmp_socket, IPPROTO_IP, IP_DROP_MEMBERSHIP,
 		   (char *)&mreq, sizeof(mreq)) < 0)
-	log(LOG_WARNING, errno, "can't leave group %s on interface %s",
+	logit(LOG_WARNING, errno, "can't leave group %s on interface %s",
 				inet_fmt(grp, s1), inet_fmt(ifa, s2));
 }
 
@@ -156,7 +156,7 @@ void k_init_dvmrp()
     if (setsockopt(igmp_socket, IPPROTO_IP, MRT_INIT,
 		   (char *)&v, sizeof(int)) < 0)
 #endif
-	log(LOG_ERR, errno, "can't enable Multicast routing in kernel");
+	logit(LOG_ERR, errno, "can't enable Multicast routing in kernel");
 }
 
 
@@ -164,7 +164,7 @@ void k_stop_dvmrp()
 {
     if (setsockopt(igmp_socket, IPPROTO_IP, MRT_DONE,
 		   (char *)NULL, 0) < 0)
-	log(LOG_WARNING, errno, "can't disable Multicast routing in kernel");
+	logit(LOG_WARNING, errno, "can't disable Multicast routing in kernel");
 }
 
 
@@ -183,7 +183,7 @@ void k_add_vif(vifi, v)
 
     if (setsockopt(igmp_socket, IPPROTO_IP, MRT_ADD_VIF,
 		   (char *)&vc, sizeof(vc)) < 0)
-	log(LOG_ERR, errno, "setsockopt MRT_ADD_VIF on vif %d", vifi);
+	logit(LOG_ERR, errno, "setsockopt MRT_ADD_VIF on vif %d", vifi);
 }
 
 
@@ -192,7 +192,7 @@ void k_del_vif(vifi)
 {
     if (setsockopt(igmp_socket, IPPROTO_IP, MRT_DEL_VIF,
 		   (char *)&vifi, sizeof(vifi)) < 0)
-	log(LOG_ERR, errno, "setsockopt MRT_DEL_VIF on vif %d", vifi);
+	logit(LOG_ERR, errno, "setsockopt MRT_DEL_VIF on vif %d", vifi);
 }
 
 
@@ -225,7 +225,7 @@ void k_add_rg(origin, g)
 #ifdef DEBUG_MFC
 	md_log(MD_ADD_FAIL, origin, g->gt_mcastgrp);
 #endif
-	log(LOG_WARNING, errno, "setsockopt MRT_ADD_MFC",
+	logit(LOG_WARNING, errno, "setsockopt MRT_ADD_MFC",
 		inet_fmt(origin, s1), inet_fmt(g->gt_mcastgrp, s2));
     }
 }
@@ -257,7 +257,7 @@ int k_del_rg(origin, g)
 #ifdef DEBUG_MFC
 	md_log(MD_DEL_FAIL, origin, g->gt_mcastgrp);
 #endif
-	log(LOG_WARNING, errno, "setsockopt MRT_DEL_MFC of (%s %s)",
+	logit(LOG_WARNING, errno, "setsockopt MRT_DEL_MFC of (%s %s)",
 		inet_fmt(origin, s1), inet_fmt(g->gt_mcastgrp, s2));
     }
 
@@ -277,7 +277,7 @@ int k_get_version()
 
     if (getsockopt(igmp_socket, IPPROTO_IP, MRT_VERSION,
 			(char *)&vers, &len) < 0)
-	log(LOG_ERR, errno,
+	logit(LOG_ERR, errno,
 		"getsockopt MRT_VERSION: perhaps your kernel is too old");
 
     return vers;
@@ -298,7 +298,7 @@ k_get_vif_count(vifi, icount, ocount, ibytes, obytes)
 
     vreq.vifi = vifi;
     if (ioctl(udp_socket, SIOCGETVIFCNT, (char *)&vreq) < 0) {
-	log(LOG_WARNING, errno, "SIOCGETVIFCNT on vif %d", vifi);
+	logit(LOG_WARNING, errno, "SIOCGETVIFCNT on vif %d", vifi);
 	vreq.icount = vreq.ocount = vreq.ibytes =
 		vreq.obytes = 0xffffffff;
 	retval = 1;
@@ -329,7 +329,7 @@ k_get_sg_count(src, grp, pktcnt, bytecnt, wrong_if)
     sgreq.src.s_addr = src;
     sgreq.grp.s_addr = grp;
     if (ioctl(udp_socket, SIOCGETSGCNT, (char *)&sgreq) < 0) {
-	log(LOG_WARNING, errno, "SIOCGETSGCNT on (%s %s)",
+	logit(LOG_WARNING, errno, "SIOCGETSGCNT on (%s %s)",
 	    inet_fmt(src, s1), inet_fmt(grp, s2));
 	sgreq.pktcnt = sgreq.bytecnt = sgreq.wrong_if = 0xffffffff;
 	return 1;

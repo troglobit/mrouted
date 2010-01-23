@@ -88,11 +88,11 @@ init_vifs()
     udp_socket = igmp_socket;
 #else
     if ((udp_socket = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
-	log(LOG_ERR, errno, "UDP socket");
+	logit(LOG_ERR, errno, "UDP socket");
 #endif
-    log(LOG_INFO,0,"Getting vifs from kernel interfaces");
+    logit(LOG_INFO,0,"Getting vifs from kernel interfaces");
     config_vifs_from_kernel();
-    log(LOG_INFO,0,"Getting vifs from %s",configfilename);
+    logit(LOG_INFO,0,"Getting vifs from %s",configfilename);
     config_vifs_from_file();
 
     /*
@@ -112,26 +112,26 @@ init_vifs()
 	}
     }
     if (enabled_vifs < 2)
-	log(LOG_ERR, 0, "can't forward: %s",
+	logit(LOG_ERR, 0, "can't forward: %s",
 	    enabled_vifs == 0 ? "no enabled vifs" : "only one enabled vif");
 
     if (enabled_phyints == 0)
-	log(LOG_WARNING, 0,
+	logit(LOG_WARNING, 0,
 	    "no enabled interfaces, forwarding via tunnels only");
 
-    log(LOG_INFO, 0, "Installing vifs in mrouted...");
+    logit(LOG_INFO, 0, "Installing vifs in mrouted...");
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
 	if (!(v->uv_flags & VIFF_DISABLED)) {
 	    if (!(v->uv_flags & VIFF_DOWN)) {
 		if (v->uv_flags & VIFF_TUNNEL)
-		    log(LOG_INFO, 0, "vif #%d, tunnel %s -> %s", vifi,
+		    logit(LOG_INFO, 0, "vif #%d, tunnel %s -> %s", vifi,
 				inet_fmt(v->uv_lcl_addr, s1),
 				inet_fmt(v->uv_rmt_addr, s2));
 		else
-		    log(LOG_INFO, 0, "vif #%d, phyint %s", vifi,
+		    logit(LOG_INFO, 0, "vif #%d, phyint %s", vifi,
 				inet_fmt(v->uv_lcl_addr, s1));
 		start_vif2(vifi);
-	    } else log(LOG_INFO, 0,
+	    } else logit(LOG_INFO, 0,
 		     "%s is not yet up; vif #%u not in service",
 		     v->uv_name, vifi);
 	}
@@ -189,19 +189,19 @@ init_installvifs()
     vifi_t vifi;
     struct uvif *v;
 
-    log(LOG_INFO, 0, "Installing vifs in kernel...");
+    logit(LOG_INFO, 0, "Installing vifs in kernel...");
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
 	if (!(v->uv_flags & VIFF_DISABLED)) {
 	    if (!(v->uv_flags & VIFF_DOWN)) {
 		if (v->uv_flags & VIFF_TUNNEL)
-		    log(LOG_INFO, 0, "vif #%d, tunnel %s -> %s", vifi,
+		    logit(LOG_INFO, 0, "vif #%d, tunnel %s -> %s", vifi,
 				inet_fmt(v->uv_lcl_addr, s1),
 				inet_fmt(v->uv_rmt_addr, s2));
 		else
-		    log(LOG_INFO, 0, "vif #%d, phyint %s", vifi,
+		    logit(LOG_INFO, 0, "vif #%d, phyint %s", vifi,
 				inet_fmt(v->uv_lcl_addr, s1));
 		k_add_vif(vifi, &uvifs[vifi]);
-	    } else log(LOG_INFO, 0,
+	    } else logit(LOG_INFO, 0,
 		     "%s is not yet up; vif #%u not in service",
 		     v->uv_name, vifi);
 	}
@@ -238,12 +238,12 @@ check_vif_state()
 
 	strncpy(ifr.ifr_name, v->uv_name, IFNAMSIZ);
 	if (ioctl(udp_socket, SIOCGIFFLAGS, (char *)&ifr) < 0)
-	    log(LOG_ERR, errno,
+	    logit(LOG_ERR, errno,
 		"ioctl SIOCGIFFLAGS for %s", ifr.ifr_name);
 
 	if (v->uv_flags & VIFF_DOWN) {
 	    if (ifr.ifr_flags & IFF_UP) {
-		log(LOG_NOTICE, 0,
+		logit(LOG_NOTICE, 0,
 		    "%s has come up; vif #%u now in service",
 		    v->uv_name, vifi);
 		v->uv_flags &= ~VIFF_DOWN;
@@ -253,7 +253,7 @@ check_vif_state()
 	}
 	else {
 	    if (!(ifr.ifr_flags & IFF_UP)) {
-		log(LOG_NOTICE, 0,
+		logit(LOG_NOTICE, 0,
 		    "%s has gone down; vif #%u taken out of service",
 		    v->uv_name, vifi);
 		stop_vif(vifi);
@@ -338,7 +338,7 @@ send_query(v)
     register struct uvif *v;
 {
     IF_DEBUG(DEBUG_IGMP)
-    log(LOG_DEBUG, 0, "sending %squery on vif %d",
+    logit(LOG_DEBUG, 0, "sending %squery on vif %d",
 		(v->uv_flags & VIFF_IGMPV1) ? "v1 " : "",
 		v - uvifs);
     send_igmp(v->uv_lcl_addr, allhosts_group,
@@ -417,7 +417,7 @@ start_vif2(vifi)
 	 */
 	v->uv_flags |= VIFF_QUERIER;
 	IF_DEBUG(DEBUG_IGMP)
-	log(LOG_DEBUG, 0, "assuming querier duties on vif %d", vifi);
+	logit(LOG_DEBUG, 0, "assuming querier duties on vif %d", vifi);
 	send_query(v);
     }
 
@@ -476,7 +476,7 @@ stop_vif(vifi)
 	}
 
 	IF_DEBUG(DEBUG_IGMP)
-	log(LOG_DEBUG, 0, "releasing querier duties on vif %d", vifi);
+	logit(LOG_DEBUG, 0, "releasing querier duties on vif %d", vifi);
 	v->uv_flags &= ~VIFF_QUERIER;
     }
 
@@ -632,7 +632,7 @@ accept_membership_query(src, dst, group, tmo)
 
     if ((vifi = find_vif(src, dst)) == NO_VIF ||
 	(uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
-	log(LOG_INFO, 0,
+	logit(LOG_INFO, 0,
 	    "ignoring group membership query from non-adjacent host %s",
 	    inet_fmt(src, s1));
 	return;
@@ -651,7 +651,7 @@ accept_membership_query(src, dst, group, tmo)
 	while (i && !(i & 1))
 	    i >>= 1;
 	if (i == 1)
-	    log(LOG_WARNING, 0, "%s %s on vif %d, %s",
+	    logit(LOG_WARNING, 0, "%s %s on vif %d, %s",
 		tmo == 0 ? "Received IGMPv1 report from"
 			 : "Received IGMPv2 report from",
 		inet_fmt(src, s1),
@@ -671,7 +671,7 @@ accept_membership_query(src, dst, group, tmo)
 	if (ntohl(src) < (v->uv_querier ? ntohl(v->uv_querier->al_addr)
 				   : ntohl(v->uv_lcl_addr))) {
 	    IF_DEBUG(DEBUG_IGMP)
-	    log(LOG_DEBUG, 0, "new querier %s (was %s) on vif %d",
+	    logit(LOG_DEBUG, 0, "new querier %s (was %s) on vif %d",
 		       inet_fmt(src, s1),
 		       v->uv_querier ? inet_fmt(v->uv_querier->al_addr, s2) :
 		       "me", vifi);
@@ -684,7 +684,7 @@ accept_membership_query(src, dst, group, tmo)
 	    v->uv_querier->al_addr = src;
 	} else {
 	    IF_DEBUG(DEBUG_IGMP)
-	    log(LOG_DEBUG, 0, "ignoring query from %s; querier on vif %d is still %s",
+	    logit(LOG_DEBUG, 0, "ignoring query from %s; querier on vif %d is still %s",
 		       inet_fmt(src, s1), vifi,
 		       v->uv_querier ? inet_fmt(v->uv_querier->al_addr, s2) :
 		       "me");
@@ -709,7 +709,7 @@ accept_membership_query(src, dst, group, tmo)
 	register struct listaddr *g;
 
 	IF_DEBUG(DEBUG_IGMP)
-	log(LOG_DEBUG, 0,
+	logit(LOG_DEBUG, 0,
 	    "%s for %s from %s on vif %d, timer %d",
 	    "Group-specific membership query",
 	    inet_fmt(group, s2), inet_fmt(src, s1), vifi, tmo);
@@ -725,7 +725,7 @@ accept_membership_query(src, dst, group, tmo)
 		g->al_query = -1;
 		g->al_timerid = SetTimer(vifi, g);
 		IF_DEBUG(DEBUG_IGMP)
-		log(LOG_DEBUG, 0,
+		logit(LOG_DEBUG, 0,
 		    "timer for grp %s on vif %d set to %d",
 		    inet_fmt(group, s2), vifi, g->al_timer);
 		break;
@@ -748,7 +748,7 @@ accept_group_report(src, dst, group, r_type)
 
     if ((vifi = find_vif(src, dst)) == NO_VIF ||
 	(uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
-	log(LOG_INFO, 0,
+	logit(LOG_INFO, 0,
 	    "ignoring group membership report from non-adjacent host %s",
 	    inet_fmt(src, s1));
 	return;
@@ -783,7 +783,7 @@ accept_group_report(src, dst, group, r_type)
     if (g == NULL) {
 	g = (struct listaddr *)malloc(sizeof(struct listaddr));
 	if (g == NULL)
-	    log(LOG_ERR, 0, "ran out of memory");    /* fatal */
+	    logit(LOG_ERR, 0, "ran out of memory");    /* fatal */
 
 	g->al_addr   = group;
 	if (r_type == IGMP_V1_MEMBERSHIP_REPORT)
@@ -822,7 +822,7 @@ accept_leave_message(src, dst, group)
 
     if ((vifi = find_vif(src, dst)) == NO_VIF ||
 	(uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
-	log(LOG_INFO, 0,
+	logit(LOG_INFO, 0,
 	    "ignoring group leave report from non-adjacent host %s",
 	    inet_fmt(src, s1));
 	return;
@@ -840,7 +840,7 @@ accept_leave_message(src, dst, group)
     for (g = v->uv_groups; g != NULL; g = g->al_next) {
 	if (group == g->al_addr) {
 	    IF_DEBUG(DEBUG_IGMP)
-	    log(LOG_DEBUG, 0,
+	    logit(LOG_DEBUG, 0,
 		"[vif.c, _accept_leave_message] %d %d \n",
 		g->al_old, g->al_query);
 
@@ -1085,7 +1085,7 @@ accept_info_request(src, dst, p, datalen)
 
 	    case DVMRP_INFO_NEIGHBORS:
 	    default:
-		log(LOG_INFO, 0, "ignoring unknown info type %d", *p);
+		logit(LOG_INFO, 0, "ignoring unknown info type %d", *p);
 		break;
 	}
 	*(q+1) = len++;
@@ -1130,7 +1130,7 @@ accept_neighbors(src, dst, p, datalen, level)
     u_char *p;
     int datalen;
 {
-    log(LOG_INFO, 0, "ignoring spurious DVMRP neighbor list from %s to %s",
+    logit(LOG_INFO, 0, "ignoring spurious DVMRP neighbor list from %s to %s",
 	inet_fmt(src, s1), inet_fmt(dst, s2));
 }
 
@@ -1145,7 +1145,7 @@ accept_neighbors2(src, dst, p, datalen, level)
     int datalen;
 {
     IF_DEBUG(DEBUG_PKT)
-    log(LOG_DEBUG, 0, "ignoring spurious DVMRP neighbor list2 from %s to %s",
+    logit(LOG_DEBUG, 0, "ignoring spurious DVMRP neighbor list2 from %s to %s",
 	inet_fmt(src, s1), inet_fmt(dst, s2));
 }
 
@@ -1159,7 +1159,7 @@ accept_info_reply(src, dst, p, datalen)
     int datalen;
 {
     IF_DEBUG(DEBUG_PKT)
-    log(LOG_DEBUG, 0, "ignoring spurious DVMRP info reply from %s to %s",
+    logit(LOG_DEBUG, 0, "ignoring spurious DVMRP info reply from %s to %s",
 	inet_fmt(src, s1), inet_fmt(dst, s2));
 }
 
@@ -1206,7 +1206,7 @@ update_neighbor(vifi, addr, msgtype, p, datalen, level)
     if (!(v->uv_flags & VIFF_TUNNEL) &&
 	(addr == v->uv_lcl_addr ||
 	 addr == v->uv_subnet )) {
-	log(LOG_WARNING, 0,
+	logit(LOG_WARNING, 0,
 	    "received DVMRP message from %s: %s",
 	    (addr == v->uv_lcl_addr) ? "self (check device loopback)" :
 				       "'the unknown host'",
@@ -1230,11 +1230,11 @@ update_neighbor(vifi, addr, msgtype, p, datalen, level)
 	u_int32 router;
 
 	IF_DEBUG(DEBUG_PEER)
-	log(LOG_DEBUG, 0, "checking probe from %s (%d.%d) on vif %d",
+	logit(LOG_DEBUG, 0, "checking probe from %s (%d.%d) on vif %d",
 	    inet_fmt(addr, s1), pv, mv, vifi);
 
 	if (datalen < 4) {
-	    log(LOG_WARNING, 0,
+	    logit(LOG_WARNING, 0,
 		"received truncated probe message from %s (len %d)",
 		inet_fmt(addr, s1), datalen);
 	    return NULL;
@@ -1248,7 +1248,7 @@ update_neighbor(vifi, addr, msgtype, p, datalen, level)
 
 	while (datalen > 0) {
 	    if (datalen < 4) {
-		log(LOG_WARNING, 0,
+		logit(LOG_WARNING, 0,
 		    "received truncated probe message from %s (len %d)",
 		    inet_fmt(addr, s1), datalen);
 		return NULL;
@@ -1294,7 +1294,7 @@ update_neighbor(vifi, addr, msgtype, p, datalen, level)
 	if (i == MAXNBRS) {
 	    /* XXX This is a severe new restriction. */
 	    /* XXX want extensible bitmaps! */
-	    log(LOG_ERR, 0, "Can't handle %dth neighbor %s on vif %d!",
+	    logit(LOG_ERR, 0, "Can't handle %dth neighbor %s on vif %d!",
 		MAXNBRS, inet_fmt(addr, s1), vifi);
 	    /*NOTREACHED*/
 	}
@@ -1303,13 +1303,13 @@ update_neighbor(vifi, addr, msgtype, p, datalen, level)
 	 * Add it to our list of neighbors.
 	 */
 	IF_DEBUG(DEBUG_PEER)
-	log(LOG_DEBUG, 0, "New neighbor %s on vif %d v%d.%d nf 0x%02x idx %d",
+	logit(LOG_DEBUG, 0, "New neighbor %s on vif %d v%d.%d nf 0x%02x idx %d",
 	    inet_fmt(addr, s1), vifi, level & 0xff, (level >> 8) & 0xff,
 	    (level >> 16) & 0xff, i);
 
 	n = (struct listaddr *)malloc(sizeof(struct listaddr));
 	if (n == NULL)
-	    log(LOG_ERR, 0, "ran out of memory");    /* fatal */
+	    logit(LOG_ERR, 0, "ran out of memory");    /* fatal */
 
 	n->al_addr      = addr;
 	n->al_pv	= pv;
@@ -1342,7 +1342,7 @@ update_neighbor(vifi, addr, msgtype, p, datalen, level)
 	if (dvmrpspec) {
 	    if (!in_router_list) {
 		IF_DEBUG(DEBUG_PEER)
-		log(LOG_DEBUG, 0, "waiting for probe from %s with my addr",
+		logit(LOG_DEBUG, 0, "waiting for probe from %s with my addr",
 		    inet_fmt(addr, s1));
 		n->al_flags |= NBRF_WAITING;
 		return NULL;
@@ -1351,7 +1351,7 @@ update_neighbor(vifi, addr, msgtype, p, datalen, level)
 
 	if (n->al_flags & NBRF_DONTPEER) {
 	    IF_DEBUG(DEBUG_PEER)
-	    log(LOG_DEBUG, 0, "not peering with %s on vif %d because %x",
+	    logit(LOG_DEBUG, 0, "not peering with %s on vif %d because %x",
 		inet_fmt(addr, s1), vifi, n->al_flags & NBRF_DONTPEER);
 	    return NULL;
 	}
@@ -1380,7 +1380,7 @@ update_neighbor(vifi, addr, msgtype, p, datalen, level)
 	if (n->al_flags & NBRF_WAITING && msgtype == DVMRP_PROBE) {
 	    n->al_flags &= ~NBRF_WAITING;
 	    if (!in_router_list) {
-		log(LOG_WARNING, 0, "possible one-way peering with %s on vif %d",
+		logit(LOG_WARNING, 0, "possible one-way peering with %s on vif %d",
 		    inet_fmt(addr, s1), vifi);
 		n->al_flags |= NBRF_ONEWAY;
 		return NULL;
@@ -1394,7 +1394,7 @@ update_neighbor(vifi, addr, msgtype, p, datalen, level)
 		NBRM_SET(n->al_index, v->uv_nbrmap);
 		add_neighbor_to_routes(vifi, n->al_index);
 		IF_DEBUG(DEBUG_PEER)
-		log(LOG_DEBUG, 0, "%s on vif %d exits WAITING",
+		logit(LOG_DEBUG, 0, "%s on vif %d exits WAITING",
 		    inet_fmt(addr, s1), vifi);
 	    }
 	}
@@ -1405,13 +1405,13 @@ update_neighbor(vifi, addr, msgtype, p, datalen, level)
 		    vifs_with_neighbors++;
 		NBRM_SET(n->al_index, v->uv_nbrmap);
 		add_neighbor_to_routes(vifi, n->al_index);
-		log(LOG_NOTICE, 0, "peering with %s on vif %d is no longer one-way",
+		logit(LOG_NOTICE, 0, "peering with %s on vif %d is no longer one-way",
 			inet_fmt(addr, s1), vifi);
 		n->al_flags &= ~NBRF_ONEWAY;
 	    } else {
 		/* XXX rate-limited warning message? */
 		IF_DEBUG(DEBUG_PEER)
-		log(LOG_DEBUG, 0, "%s on vif %d is still ONEWAY",
+		logit(LOG_DEBUG, 0, "%s on vif %d is still ONEWAY",
 		    inet_fmt(addr, s1), vifi);
 	    }
 	}
@@ -1438,7 +1438,7 @@ update_neighbor(vifi, addr, msgtype, p, datalen, level)
 
 	    do_reset = TRUE;
 	    IF_DEBUG(DEBUG_PEER)
-	    log(LOG_DEBUG, 0,
+	    logit(LOG_DEBUG, 0,
 		"version/genid change neighbor %s [old:%d.%d/%8x, new:%d.%d/%8x]",
 		inet_fmt(addr, s1),
 		n->al_pv, n->al_mv, n->al_genid, pv, mv, genid);
@@ -1459,7 +1459,7 @@ update_neighbor(vifi, addr, msgtype, p, datalen, level)
 		}
 		delete_neighbor_from_routes(addr, vifi, n->al_index);
 		reset_neighbor_state(vifi, addr);
-		log(LOG_WARNING, 0, "peering with %s on vif %d is one-way",
+		logit(LOG_WARNING, 0, "peering with %s on vif %d is one-way",
 			inet_fmt(addr, s1), vifi);
 		n->al_flags |= NBRF_ONEWAY;
 	    }
@@ -1467,7 +1467,7 @@ update_neighbor(vifi, addr, msgtype, p, datalen, level)
 
 	if (n->al_flags & NBRF_DONTPEER) {
 	    IF_DEBUG(DEBUG_PEER)
-	    log(LOG_DEBUG, 0, "not peering with %s on vif %d because %x",
+	    logit(LOG_DEBUG, 0, "not peering with %s on vif %d because %x",
 		inet_fmt(addr, s1), vifi, n->al_flags & NBRF_DONTPEER);
 	    return NULL;
 	}
@@ -1524,7 +1524,7 @@ age_vifs()
 		continue;
 
 	    IF_DEBUG(DEBUG_PEER)
-	    log(LOG_DEBUG, 0, "Neighbor %s (%d.%d) expired after %d seconds",
+	    logit(LOG_DEBUG, 0, "Neighbor %s (%d.%d) expired after %d seconds",
 		    inet_fmt(a->al_addr, s1), a->al_pv, a->al_mv, exp_time);
 
 	    /*
@@ -1557,7 +1557,7 @@ age_vifs()
 	     * querier.
 	     */
 	    IF_DEBUG(DEBUG_IGMP)
-	    log(LOG_DEBUG, 0, "querier %s timed out",
+	    logit(LOG_DEBUG, 0, "querier %s timed out",
 		    inet_fmt(v->uv_querier->al_addr, s1));
 	    free(v->uv_querier);
 	    v->uv_querier = NULL;
@@ -1751,7 +1751,7 @@ dump_vifs(fp)
 	v_req.vifi = vifi;
 	if (did_final_init)
 	    if (ioctl(udp_socket, SIOCGETVIFCNT, (char *)&v_req) < 0) {
-		log(LOG_WARNING, errno,
+		logit(LOG_WARNING, errno,
 		    "SIOCGETVIFCNT fails on vif %d", vifi);
 	    } else {
 		fprintf(fp, "                   pkts/bytes in : %lu/%lu\n",

@@ -26,12 +26,12 @@ void
 init_icmp()
 {
     if ((icmp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) < 0)
-	log(LOG_ERR, errno, "ICMP socket");
+	logit(LOG_ERR, errno, "ICMP socket");
 
     register_input_handler(icmp_socket, icmp_handler);
 
     IF_DEBUG(DEBUG_ICMP)
-    log(LOG_DEBUG, 0, "registering icmp socket fd %d\n", icmp_socket);
+    logit(LOG_DEBUG, 0, "registering icmp socket fd %d\n", icmp_socket);
 }
 
 static void
@@ -53,7 +53,7 @@ icmp_handler(fd, rfds)
 			    (struct sockaddr *)&from, &fromlen);
     if (recvlen < 0) {
 	if (errno != EINTR)
-	    log(LOG_WARNING, errno, "icmp_socket recvfrom");
+	    logit(LOG_WARNING, errno, "icmp_socket recvfrom");
 	return;
     }
     ip = (struct ip *)icmp_buf;
@@ -65,7 +65,7 @@ icmp_handler(fd, rfds)
 #endif
     if (iphdrlen + ipdatalen != recvlen) {
 	IF_DEBUG(DEBUG_ICMP)
-	log(LOG_DEBUG, 0, "hdr %d data %d != rcv %d", iphdrlen, ipdatalen, recvlen);
+	logit(LOG_DEBUG, 0, "hdr %d data %d != rcv %d", iphdrlen, ipdatalen, recvlen);
 	/* Malformed ICMP, just return. */
 	return;
     }
@@ -76,7 +76,7 @@ icmp_handler(fd, rfds)
     src = ip->ip_src.s_addr;
     icmp = (struct icmp *)(icmp_buf + iphdrlen);
     IF_DEBUG(DEBUG_ICMP)
-    log(LOG_DEBUG, 0, "got ICMP type %d from %s",
+    logit(LOG_DEBUG, 0, "got ICMP type %d from %s",
 	icmp->icmp_type, inet_fmt(src, s1));
     /*
      * Eventually:
@@ -104,7 +104,7 @@ icmp_handler(fd, rfds)
 		    while (n && !(n & 1))
 			n >>= 1;
 		    if (n == 1 && ((p = icmp_name(icmp)) != NULL))
-			log(LOG_WARNING, 0, "Received ICMP %s from %s %s %s on vif %d",
+			logit(LOG_WARNING, 0, "Received ICMP %s from %s %s %s on vif %d",
 			    p, inet_fmt(src, s1), "for traffic sent to",
 			    inet_fmt(ip->ip_dst.s_addr, s2),
 			    i);

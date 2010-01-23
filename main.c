@@ -221,7 +221,7 @@ main(argc, argv)
 	    } else
 		goto usage;
 	} else if (strcmp(*argv, "-p") == 0) {
-	    log(LOG_WARNING, 0, "disabling pruning is no longer supported");
+	    logit(LOG_WARNING, 0, "disabling pruning is no longer supported");
 #ifdef SNMP
    } else if (strcmp(*argv, "-P") == 0) {
 	    if (argc > 1 && isdigit(*(argv + 1)[0])) {
@@ -267,7 +267,7 @@ usage:	fprintf(stderr,
 #endif
     sprintf(versionstring, "mrouted version %s", todaysversion);
 
-    log(LOG_DEBUG, 0, "%s starting", versionstring);
+    logit(LOG_DEBUG, 0, "%s starting", versionstring);
 
 #ifdef SYSV
     srand48(time(NULL));
@@ -321,7 +321,7 @@ usage:	fprintf(stderr,
      */
     if ((((vers >> 8) & 0xff) != 3) ||
 	 ((vers & 0xff) != 5))
-	log(LOG_ERR, 0, "kernel (v%d.%d)/mrouted (v%d.%d) version mismatch",
+	logit(LOG_ERR, 0, "kernel (v%d.%d)/mrouted (v%d.%d) version mismatch",
 		(vers >> 8) & 0xff, vers & 0xff,
 		PROTOCOL_VERSION, MROUTED_VERSION);
 #endif
@@ -483,7 +483,7 @@ usage:	fprintf(stderr,
 	}
 	if ((n = select(nfds, &rfds, NULL, NULL, timeout)) < 0) {
             if (errno != EINTR)
-                log(LOG_WARNING, errno, "select failed");
+                logit(LOG_WARNING, errno, "select failed");
             continue;
         }
 
@@ -492,7 +492,7 @@ usage:	fprintf(stderr,
 		recvlen = recvfrom(igmp_socket, recv_buf, RECV_BUF_SIZE,
 				   0, NULL, &dummy);
 		if (recvlen < 0) {
-		    if (errno != EINTR) log(LOG_ERR, errno, "recvfrom");
+		    if (errno != EINTR) logit(LOG_ERR, errno, "recvfrom");
 		    continue;
 		}
 		accept_igmp(recvlen);
@@ -551,7 +551,7 @@ usage:	fprintf(stderr,
 	    secs = -1;
 	} while (difftime.tv_sec > 0);
     }
-    log(LOG_NOTICE, 0, "%s exiting", versionstring);
+    logit(LOG_NOTICE, 0, "%s exiting", versionstring);
     cleanup();
     exit(0);
 }
@@ -562,7 +562,7 @@ final_init(i)
 {
     char *s = (char *)i;
 
-    log(LOG_NOTICE, 0, "%s%s", versionstring, s ? s : "");
+    logit(LOG_NOTICE, 0, "%s%s", versionstring, s ? s : "");
     if (s)
 	free(s);
 
@@ -813,7 +813,7 @@ restart()
 
     s = (char *)malloc(sizeof(" restart"));
     if (s == NULL)
-	log(LOG_ERR, 0, "out of memory");
+	logit(LOG_ERR, 0, "out of memory");
     strcpy(s, " restart");
 
     /*
@@ -904,7 +904,7 @@ printringbuf()
 
     f = fopen("/var/tmp/mrouted.log", "a");
     if (f == NULL) {
-	log(LOG_ERR, errno, "can't open /var/tmp/mrouted.log");
+	logit(LOG_ERR, errno, "can't open /var/tmp/mrouted.log");
 	/*NOTREACHED*/
     }
     fprintf(f, "--------------------------------------------\n");
@@ -930,7 +930,7 @@ printringbuf()
  */
 #ifdef __STDC__
 void
-log(int severity, int syserr, const char *format, ...)
+logit(int severity, int syserr, const char *format, ...)
 {
     va_list ap;
     static char fmt[211] = "warning - ";
@@ -945,7 +945,7 @@ log(int severity, int syserr, const char *format, ...)
 #else
 /*VARARGS3*/
 void
-log(severity, syserr, format, va_alist)
+logit(severity, syserr, format, va_alist)
     int severity, syserr;
     char *format;
     va_dcl
@@ -1040,7 +1040,7 @@ md_log(what, origin, mcastgrp)
 
     if (!f) {
 	if ((f = fopen("/tmp/mrouted.clog", "w")) == NULL) {
-	    log(LOG_ERR, errno, "open /tmp/mrouted.clog");
+	    logit(LOG_ERR, errno, "open /tmp/mrouted.clog");
 	}
     }
 

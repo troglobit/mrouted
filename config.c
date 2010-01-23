@@ -39,7 +39,7 @@ config_vifs_from_kernel()
     ifc.ifc_buf = malloc(ifc.ifc_len);
     while (ifc.ifc_buf) {
 	if (ioctl(udp_socket, SIOCGIFCONF, (char *)&ifc) < 0)
-	    log(LOG_ERR, errno, "ioctl SIOCGIFCONF");
+	    logit(LOG_ERR, errno, "ioctl SIOCGIFCONF");
 
 	/*
 	 * If the buffer was large enough to hold all the addresses
@@ -59,7 +59,7 @@ config_vifs_from_kernel()
 	ifc.ifc_buf = realloc(ifc.ifc_buf, ifc.ifc_len);
     }
     if (ifc.ifc_buf == NULL)
-	log(LOG_ERR, 0, "config_vifs_from_kernel: ran out of memory");
+	logit(LOG_ERR, 0, "config_vifs_from_kernel: ran out of memory");
 
     ifrp = (struct ifreq *)ifc.ifc_buf;
     ifend = (struct ifreq *)(ifc.ifc_buf + ifc.ifc_len);
@@ -96,7 +96,7 @@ config_vifs_from_kernel()
 	 * multicast.
 	 */
 	if (ioctl(udp_socket, SIOCGIFFLAGS, (char *)&ifr) < 0)
-	    log(LOG_ERR, errno, "ioctl SIOCGIFFLAGS for %s", ifr.ifr_name);
+	    logit(LOG_ERR, errno, "ioctl SIOCGIFFLAGS for %s", ifr.ifr_name);
 	flags = ifr.ifr_flags;
 	if ((flags & (IFF_LOOPBACK|IFF_MULTICAST)) != IFF_MULTICAST) continue;
 
@@ -106,13 +106,13 @@ config_vifs_from_kernel()
 	 * or {subnet,-1}.
 	 */
 	if (ioctl(udp_socket, SIOCGIFNETMASK, (char *)&ifr) < 0)
-	    log(LOG_ERR, errno, "ioctl SIOCGIFNETMASK for %s", ifr.ifr_name);
+	    logit(LOG_ERR, errno, "ioctl SIOCGIFNETMASK for %s", ifr.ifr_name);
 	mask = ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr;
 	subnet = addr & mask;
 	if (!inet_valid_subnet(subnet, mask) ||
 	    addr == subnet ||
 	    addr == (subnet | ~mask)) {
-	    log(LOG_WARNING, 0,
+	    logit(LOG_WARNING, 0,
 		"ignoring %s, has invalid address (%s) and/or mask (%s)",
 		ifr.ifr_name, inet_fmt(addr, s1), inet_fmt(mask, s2));
 	    continue;
@@ -124,14 +124,14 @@ config_vifs_from_kernel()
 	 */
 	for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
 	    if (strcmp(v->uv_name, ifr.ifr_name) == 0) {
-		log(LOG_DEBUG, 0, "skipping %s (%s on subnet %s) (alias for vif#%u?)",
+		logit(LOG_DEBUG, 0, "skipping %s (%s on subnet %s) (alias for vif#%u?)",
 			v->uv_name, inet_fmt(addr, s1),
 			inet_fmts(subnet, mask, s2), vifi);
 		break;
 	    }
 	    if ((addr & v->uv_subnetmask) == v->uv_subnet ||
 		(v->uv_subnet & mask) == subnet) {
-		log(LOG_WARNING, 0, "ignoring %s, same subnet as %s",
+		logit(LOG_WARNING, 0, "ignoring %s, same subnet as %s",
 					ifr.ifr_name, v->uv_name);
 		break;
 	    }
@@ -142,7 +142,7 @@ config_vifs_from_kernel()
 	 * If there is room in the uvifs array, install this interface.
 	 */
 	if (numvifs == MAXVIFS) {
-	    log(LOG_WARNING, 0, "too many vifs, ignoring %s", ifr.ifr_name);
+	    logit(LOG_WARNING, 0, "too many vifs, ignoring %s", ifr.ifr_name);
 	    continue;
 	}
 	v  = &uvifs[numvifs];
@@ -156,7 +156,7 @@ config_vifs_from_kernel()
 	if (flags & IFF_POINTOPOINT)
 	    v->uv_flags |= VIFF_REXMIT_PRUNES;
 
-	log(LOG_INFO,0,"installing %s (%s on subnet %s) as vif #%u - rate=%d",
+	logit(LOG_INFO,0,"installing %s (%s on subnet %s) as vif #%u - rate=%d",
 	    v->uv_name, inet_fmt(addr, s1), inet_fmts(subnet, mask, s2),
 	    numvifs, v->uv_rate_limit);
 

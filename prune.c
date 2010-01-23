@@ -292,7 +292,7 @@ remove_sources(gt)
 	if (st->st_ctime == 0)
 	    continue;
 	IF_DEBUG(DEBUG_PRUNE)
-	log(LOG_DEBUG, 0, "rexmit_prune deleting (%s %s) (next is %d sec)",
+	logit(LOG_DEBUG, 0, "rexmit_prune deleting (%s %s) (next is %d sec)",
 		inet_fmt(st->st_origin, s1),
 		inet_fmt(gt->gt_mcastgrp, s2),
 		gt->gt_prune_rexmit);
@@ -327,7 +327,7 @@ rexmit_prune(arg)
     /* Make sure we're still not forwarding traffic */
     if (!VIFM_ISEMPTY(gt->gt_grpmems)) {
 	IF_DEBUG(DEBUG_PRUNE)
-	log(LOG_DEBUG, 0, "rexmit_prune (%s %s): gm:%x",
+	logit(LOG_DEBUG, 0, "rexmit_prune (%s %s): gm:%x",
 		RT_FMT(gt->gt_route, s1), inet_fmt(gt->gt_mcastgrp, s2),
 		gt->gt_grpmems);
 	return;
@@ -397,7 +397,7 @@ send_prune(gt)
 		gt->gt_prsent_timer = pt->pt_timer;
     } else if (gt->gt_prsent_timer < 0) {
 	IF_DEBUG(DEBUG_PRUNE)
-	log(LOG_DEBUG, 0, "asked to rexmit? (%s,%s)/%d on vif %d to %s with negative time",
+	logit(LOG_DEBUG, 0, "asked to rexmit? (%s,%s)/%d on vif %d to %s with negative time",
 	    RT_FMT(gt->gt_route, s1), inet_fmt(gt->gt_mcastgrp, s2),
 	    gt->gt_prsent_timer, gt->gt_route->rt_parent,
 	    inet_fmt(gt->gt_route->rt_gateway, s3));
@@ -407,7 +407,7 @@ send_prune(gt)
 
     if (rexmitting && !(v->uv_flags & VIFF_REXMIT_PRUNES)) {
 	IF_DEBUG(DEBUG_PRUNE)
-	log(LOG_DEBUG, 0, "not rexmitting prune for (%s %s)/%d on vif %d to %s",
+	logit(LOG_DEBUG, 0, "not rexmitting prune for (%s %s)/%d on vif %d to %s",
 	    RT_FMT(gt->gt_route, s1), inet_fmt(gt->gt_mcastgrp, s2),
 	    gt->gt_prsent_timer, gt->gt_route->rt_parent,
 	    inet_fmt(gt->gt_route->rt_gateway, s3));
@@ -415,7 +415,7 @@ send_prune(gt)
     }
     if (gt->gt_prsent_timer <= MIN_PRUNE_LIFE) {
 	IF_DEBUG(DEBUG_PRUNE)
-	log(LOG_DEBUG, 0, "not bothering to send prune for (%s,%s)/%d on vif %d to %s because it's too short",
+	logit(LOG_DEBUG, 0, "not bothering to send prune for (%s,%s)/%d on vif %d to %s because it's too short",
 	    RT_FMT(gt->gt_route, s1), inet_fmt(gt->gt_mcastgrp, s2),
 	    gt->gt_prsent_timer, gt->gt_route->rt_parent,
 	    inet_fmt(gt->gt_route->rt_gateway, s3));
@@ -439,7 +439,7 @@ send_prune(gt)
     send_on_vif(v, dst, DVMRP_PRUNE, datalen);
     
     IF_DEBUG(DEBUG_PRUNE)
-    log(LOG_DEBUG, 0, "%s prune for (%s %s)/%d on vif %d to %s",
+    logit(LOG_DEBUG, 0, "%s prune for (%s %s)/%d on vif %d to %s",
       rexmitting ? "rexmitted" : "sent",
       RT_FMT(gt->gt_route, s1), inet_fmt(gt->gt_mcastgrp, s2),
       gt->gt_prsent_timer, gt->gt_route->rt_parent,
@@ -506,7 +506,7 @@ send_graft(gt)
     
     send_on_vif(&uvifs[gt->gt_route->rt_parent], dst, DVMRP_GRAFT, datalen);
     IF_DEBUG(DEBUG_PRUNE)
-    log(LOG_DEBUG, 0, "sent graft for (%s %s) to %s on vif %d",
+    logit(LOG_DEBUG, 0, "sent graft for (%s %s) to %s on vif %d",
 	RT_FMT(gt->gt_route, s1), inet_fmt(gt->gt_mcastgrp, s2),
 	inet_fmt(gt->gt_route->rt_gateway, s3), gt->gt_route->rt_parent);
 }
@@ -548,10 +548,10 @@ send_graft_ack(src, dst, origin, grp, vifi)
 
     IF_DEBUG(DEBUG_PRUNE)
     if (vifi == NO_VIF)
-	log(LOG_DEBUG, 0, "sent graft ack for (%s, %s) to %s",
+	logit(LOG_DEBUG, 0, "sent graft ack for (%s, %s) to %s",
 	    inet_fmt(origin, s1), inet_fmt(grp, s2), inet_fmt(dst, s3));
     else
-	log(LOG_DEBUG, 0, "sent graft ack for (%s, %s) to %s on vif %d",
+	logit(LOG_DEBUG, 0, "sent graft ack for (%s, %s) to %s on vif %d",
 	    inet_fmt(origin, s1), inet_fmt(grp, s2), inet_fmt(dst, s3), vifi);
 }
 
@@ -780,7 +780,7 @@ add_table_entry(origin, mcastgrp)
     if (gt == NULL || gt->gt_mcastgrp != mcastgrp) {
 	gt = (struct gtable *)malloc(sizeof(struct gtable));
 	if (gt == NULL)
-	    log(LOG_ERR, 0, "ran out of memory");
+	    logit(LOG_ERR, 0, "ran out of memory");
 
 	gt->gt_mcastgrp	    = mcastgrp;
 	gt->gt_timer   	    = CACHE_LIFETIME(cache_lifetime);
@@ -814,7 +814,7 @@ add_table_entry(origin, mcastgrp)
 		struct gtable *g;
 
 		g = gtp ? gtp->gt_gnext : kernel_table;
-		log(LOG_WARNING, 0, "Entry for (%s %s) (rt:%x) exists (rt:%x)",
+		logit(LOG_WARNING, 0, "Entry for (%s %s) (rt:%x) exists (rt:%x)",
 		    RT_FMT(r, s1), inet_fmt(g->gt_mcastgrp, s2),
 		    r, g->gt_route);
 	    } else {
@@ -845,7 +845,7 @@ add_table_entry(origin, mcastgrp)
     if (st == NULL || st->st_origin != origin) {
 	st = (struct stable *)malloc(sizeof(struct stable));
 	if (st == NULL)
-	    log(LOG_ERR, 0, "ran out of memory");
+	    logit(LOG_ERR, 0, "ran out of memory");
 
 	st->st_origin = origin;
 	st->st_pktcnt = 0;
@@ -863,7 +863,7 @@ add_table_entry(origin, mcastgrp)
 #endif
 	    /* Ignore kernel->mrouted retransmissions */
 	    if (time(0) - st->st_ctime > 5)
-		log(LOG_WARNING, 0, "kernel entry already exists for (%s %s)",
+		logit(LOG_WARNING, 0, "kernel entry already exists for (%s %s)",
 			inet_fmt(origin, s1), inet_fmt(mcastgrp, s2));
 	    k_add_rg(origin, gt);
 	    return;
@@ -874,7 +874,7 @@ add_table_entry(origin, mcastgrp)
     k_add_rg(origin, gt);
 
     IF_DEBUG(DEBUG_CACHE)
-    log(LOG_DEBUG, 0, "add cache entry (%s %s) gm:%x, parent-vif:%d",
+    logit(LOG_DEBUG, 0, "add cache entry (%s %s) gm:%x, parent-vif:%d",
 	inet_fmt(origin, s1),
 	inet_fmt(mcastgrp, s2),
 	gt->gt_grpmems, r ? r->rt_parent : -1);
@@ -911,7 +911,7 @@ reset_neighbor_state(vifi, addr)
 	if (vifi == r->rt_parent) {
 	    if (addr == r->rt_gateway) {
 		IF_DEBUG(DEBUG_PEER)
-		log(LOG_DEBUG, 0, "reset_neighbor_state parent reset (%s %s)",
+		logit(LOG_DEBUG, 0, "reset_neighbor_state parent reset (%s %s)",
 		    RT_FMT(r, s1), inet_fmt(g->gt_mcastgrp, s2));
 
 		g->gt_prsent_timer = 0;
@@ -963,7 +963,7 @@ reset_neighbor_state(vifi, addr)
 		    send_graft(g);
 
 		IF_DEBUG(DEBUG_PEER)
-		log(LOG_DEBUG, 0, "reset neighbor state (%s %s) gm:%x",
+		logit(LOG_DEBUG, 0, "reset neighbor state (%s %s) gm:%x",
 		    RT_FMT(r, s1),
 		    inet_fmt(g->gt_mcastgrp, s2), g->gt_grpmems);
 	    }
@@ -989,13 +989,13 @@ del_table_entry(r, mcastgrp, del_flag)
 	g = r->rt_groups;
 	while (g) {
 	    IF_DEBUG(DEBUG_CACHE)
-	    log(LOG_DEBUG, 0, "del_table_entry deleting (%s %s)",
+	    logit(LOG_DEBUG, 0, "del_table_entry deleting (%s %s)",
 		RT_FMT(r, s1), inet_fmt(g->gt_mcastgrp, s2));
 	    st = g->gt_srctbl;
 	    while (st) {
 		if (st->st_ctime != 0) {
 		    if (k_del_rg(st->st_origin, g) < 0) {
-			log(LOG_WARNING, errno,
+			logit(LOG_WARNING, errno,
 			    "del_table_entry trying to delete (%s, %s)",
 			    inet_fmt(st->st_origin, s1),
 			    inet_fmt(g->gt_mcastgrp, s2));
@@ -1046,13 +1046,13 @@ del_table_entry(r, mcastgrp, del_flag)
 	for (g = r->rt_groups; g; g = g->gt_next) {
 	    if (g->gt_mcastgrp == mcastgrp) {
 		IF_DEBUG(DEBUG_CACHE)
-		log(LOG_DEBUG, 0, "del_table_entry deleting (%s %s)",
+		logit(LOG_DEBUG, 0, "del_table_entry deleting (%s %s)",
 		    RT_FMT(r, s1), inet_fmt(g->gt_mcastgrp, s2));
 		st = g->gt_srctbl;
 		while (st) {
 		    if (st->st_ctime != 0) {
 			if (k_del_rg(st->st_origin, g) < 0) {
-			    log(LOG_WARNING, errno,
+			    logit(LOG_WARNING, errno,
 				"del_table_entry trying to delete (%s, %s)",
 				inet_fmt(st->st_origin, s1),
 				inet_fmt(g->gt_mcastgrp, s2));
@@ -1123,14 +1123,14 @@ update_table_entry(r, old_parent_gw)
 		!NBRM_ISSET(pt->pt_index, r->rt_subordinates)) {
 
 		IF_DEBUG(DEBUG_PRUNE)
-		log(LOG_DEBUG, 0, "update_table_entry deleting prune for (%s %s) from %s on vif %d -%s%s",
+		logit(LOG_DEBUG, 0, "update_table_entry deleting prune for (%s %s) from %s on vif %d -%s%s",
 			RT_FMT(r, s1), inet_fmt(g->gt_mcastgrp, s2),
 			inet_fmt(pt->pt_router, s3), pt->pt_vifi,
 			VIFM_ISSET(pt->pt_vifi, r->rt_children) ? "" : " not a child",
 			NBRM_ISSET(pt->pt_index, r->rt_subordinates) ? "" : " not a subordinate");
 
 		if (!NBRM_ISSET(pt->pt_index, g->gt_prunes)) {
-		    log(LOG_WARNING, 0,
+		    logit(LOG_WARNING, 0,
 			"gt_prunes lost track of (%s %s) from %s on vif %d",
 			RT_FMT(r, s1), inet_fmt(g->gt_mcastgrp, s2),
 			inet_fmt(pt->pt_router, s3), pt->pt_vifi);
@@ -1145,7 +1145,7 @@ update_table_entry(r, old_parent_gw)
 	}
 
 	IF_DEBUG(DEBUG_CACHE)
-	log(LOG_DEBUG, 0, "updating cache entries (%s %s) old gm:%x",
+	logit(LOG_DEBUG, 0, "updating cache entries (%s %s) old gm:%x",
 	    RT_FMT(r, s1), inet_fmt(g->gt_mcastgrp, s2),
 	    g->gt_grpmems);
 
@@ -1166,7 +1166,7 @@ update_table_entry(r, old_parent_gw)
 	send_prune_or_graft(g);
 
 	IF_DEBUG(DEBUG_CACHE)
-	log(LOG_DEBUG, 0, "updating cache entries (%s %s) new gm:%x",
+	logit(LOG_DEBUG, 0, "updating cache entries (%s %s) new gm:%x",
 	    RT_FMT(r, s1), inet_fmt(g->gt_mcastgrp, s2),
 	    g->gt_grpmems);
 
@@ -1192,7 +1192,7 @@ update_lclgrp(vifi, mcastgrp)
     struct gtable *g;
     
     IF_DEBUG(DEBUG_MEMBER)
-    log(LOG_DEBUG, 0, "group %s joined on vif %d",
+    logit(LOG_DEBUG, 0, "group %s joined on vif %d",
 	inet_fmt(mcastgrp, s1), vifi);
     
     for (g = kernel_table; g; g = g->gt_gnext) {
@@ -1210,7 +1210,7 @@ update_lclgrp(vifi, mcastgrp)
 
 	    prun_add_ttls(g);
 	    IF_DEBUG(DEBUG_CACHE)
-	    log(LOG_DEBUG, 0, "update lclgrp (%s %s) gm:%x",
+	    logit(LOG_DEBUG, 0, "update lclgrp (%s %s) gm:%x",
 		RT_FMT(r, s1),
 		inet_fmt(g->gt_mcastgrp, s2), g->gt_grpmems);
 
@@ -1234,7 +1234,7 @@ delete_lclgrp(vifi, mcastgrp)
     struct gtable *g;
     
     IF_DEBUG(DEBUG_MEMBER)
-    log(LOG_DEBUG, 0, "group %s left on vif %d",
+    logit(LOG_DEBUG, 0, "group %s left on vif %d",
 	inet_fmt(mcastgrp, s1), vifi);
     
     for (g = kernel_table; g; g = g->gt_gnext) {
@@ -1247,7 +1247,7 @@ delete_lclgrp(vifi, mcastgrp)
 			uvifs[vifi].uv_nbrmap, g->gt_prunes)) {
 		VIFM_CLR(vifi, g->gt_grpmems);
 		IF_DEBUG(DEBUG_CACHE)
-		log(LOG_DEBUG, 0, "delete lclgrp (%s %s) gm:%x",
+		logit(LOG_DEBUG, 0, "delete lclgrp (%s %s) gm:%x",
 		    RT_FMT(g->gt_route, s1),
 		    inet_fmt(g->gt_mcastgrp, s2), g->gt_grpmems);
 
@@ -1296,7 +1296,7 @@ accept_prune(src, dst, p, datalen)
     struct ptable *pt;
     
     if ((vifi = find_vif(src, dst)) == NO_VIF) {
-	log(LOG_INFO, 0,
+	logit(LOG_INFO, 0,
     	    "ignoring prune report from non-neighbor %s",
 	    inet_fmt(src, s1));
 	return;
@@ -1305,7 +1305,7 @@ accept_prune(src, dst, p, datalen)
     /* Check if enough data is present */
     if (datalen < 12)
 	{
-	    log(LOG_WARNING, 0,
+	    logit(LOG_WARNING, 0,
 		"non-decipherable prune from %s",
 		inet_fmt(src, s1));
 	    return;
@@ -1321,14 +1321,14 @@ accept_prune(src, dst, p, datalen)
     
     if (prun_tmr <= MIN_PRUNE_LIFE) {
 	IF_DEBUG(DEBUG_PRUNE)
-	log(LOG_DEBUG, 0, "ignoring prune from %s on vif %d for (%s %s)/%d because its lifetime is too short",
+	logit(LOG_DEBUG, 0, "ignoring prune from %s on vif %d for (%s %s)/%d because its lifetime is too short",
 	inet_fmt(src, s1), vifi,
 	inet_fmt(prun_src, s2), inet_fmt(prun_grp, s3), prun_tmr);
 	return;
     }
 
     IF_DEBUG(DEBUG_PRUNE)
-    log(LOG_DEBUG, 0, "%s on vif %d prunes (%s %s)/%d",
+    logit(LOG_DEBUG, 0, "%s on vif %d prunes (%s %s)/%d",
 	inet_fmt(src, s1), vifi,
 	inet_fmt(prun_src, s2), inet_fmt(prun_grp, s3), prun_tmr);
 
@@ -1340,12 +1340,12 @@ accept_prune(src, dst, p, datalen)
     	r = g->gt_route;
 
 	IF_DEBUG(DEBUG_PRUNE)
-	log(LOG_DEBUG, 0, "found grp state, (%s %s), metric is %d, children are %x, subords are %08x%08x",
+	logit(LOG_DEBUG, 0, "found grp state, (%s %s), metric is %d, children are %x, subords are %08x%08x",
 		RT_FMT(r, s1), inet_fmt(g->gt_mcastgrp, s2), r->rt_metric,
 		r->rt_children, r->rt_subordinates.hi, r->rt_subordinates.lo);
 	if (!VIFM_ISSET(vifi, r->rt_children)) {
 	    IF_DEBUG(DEBUG_PRUNE)
-	    log(LOG_WARNING, 0, "prune received from non-child %s for (%s %s) (dominant on vif %d is %s)",
+	    logit(LOG_WARNING, 0, "prune received from non-child %s for (%s %s) (dominant on vif %d is %s)",
 		inet_fmt(src, s1), inet_fmt(prun_src, s2),
 		inet_fmt(prun_grp, s3), vifi,
 		inet_fmt(r->rt_dominants[vifi], s4));
@@ -1355,14 +1355,14 @@ accept_prune(src, dst, p, datalen)
 	    return;
 	}
 	if (VIFM_ISSET(vifi, g->gt_scope)) {
-	    log(LOG_WARNING, 0, "prune received from %s on scoped grp (%s %s)",
+	    logit(LOG_WARNING, 0, "prune received from %s on scoped grp (%s %s)",
 		inet_fmt(src, s1), inet_fmt(prun_src, s2),
 		inet_fmt(prun_grp, s3));
 	    return;
 	}
 	if ((pt = find_prune_entry(src, g->gt_pruntbl)) != NULL) {
 	    IF_DEBUG(DEBUG_PRUNE)
-	    log(LOG_DEBUG, 0, "%s %d from %s for (%s %s)/%d %s %d %s %x",
+	    logit(LOG_DEBUG, 0, "%s %d from %s for (%s %s)/%d %s %d %s %x",
 		"duplicate prune received on vif",
 		vifi, inet_fmt(src, s1), inet_fmt(prun_src, s2),
 		inet_fmt(prun_grp, s3), prun_tmr,
@@ -1372,7 +1372,7 @@ accept_prune(src, dst, p, datalen)
 	    struct listaddr *n = neighbor_info(vifi, src);
 
 	    if (!n) {
-		log(LOG_WARNING, 0, "Prune from non-neighbor %s on vif %d!?",
+		logit(LOG_WARNING, 0, "Prune from non-neighbor %s on vif %d!?",
 			inet_fmt(src, s1), vifi);
 		return;
 	    }
@@ -1380,7 +1380,7 @@ accept_prune(src, dst, p, datalen)
 	    /* allocate space for the prune structure */
 	    pt = (struct ptable *)(malloc(sizeof(struct ptable)));
 	    if (pt == NULL)
-	      log(LOG_ERR, 0, "pt: ran out of memory");
+	      logit(LOG_ERR, 0, "pt: ran out of memory");
 		
 	    pt->pt_vifi = vifi;
 	    pt->pt_router = src;
@@ -1406,7 +1406,7 @@ accept_prune(src, dst, p, datalen)
 
 	    VIFM_CLR(vifi, g->gt_grpmems);
 	    IF_DEBUG(DEBUG_PRUNE)
-	    log(LOG_DEBUG, 0, "vifnbrs=0x%08x%08x, subord=0x%08x%08x prunes=0x%08x%08x",
+	    logit(LOG_DEBUG, 0, "vifnbrs=0x%08x%08x, subord=0x%08x%08x prunes=0x%08x%08x",
 		uvifs[vifi].uv_nbrmap.hi,uvifs[vifi].uv_nbrmap.lo,
 		r->rt_subordinates.hi, r->rt_subordinates.lo,
 		g->gt_prunes.hi, g->gt_prunes.lo);
@@ -1414,10 +1414,10 @@ accept_prune(src, dst, p, datalen)
 	    NBRM_COPY(r->rt_subordinates, tmp);
 	    NBRM_MASK(tmp, uvifs[vifi].uv_nbrmap);
 	    if (!NBRM_ISSETALLMASK(g->gt_prunes, tmp))
-		log(LOG_WARNING, 0, "subordinate error");
+		logit(LOG_WARNING, 0, "subordinate error");
 	    /* XXX end debugging */
 	    IF_DEBUG(DEBUG_PRUNE|DEBUG_CACHE)
-	    log(LOG_DEBUG, 0, "prune (%s %s), stop sending on vif %d, gm:%x",
+	    logit(LOG_DEBUG, 0, "prune (%s %s), stop sending on vif %d, gm:%x",
 		RT_FMT(r, s1),
 		inet_fmt(g->gt_mcastgrp, s2), vifi, g->gt_grpmems);
 
@@ -1445,7 +1445,7 @@ accept_prune(src, dst, p, datalen)
 	 * downstream.
 	 */
 	IF_DEBUG(DEBUG_PRUNE|DEBUG_CACHE)
-	log(LOG_DEBUG, 0, "%s (%s %s)/%d from %s",
+	logit(LOG_DEBUG, 0, "%s (%s %s)/%d from %s",
 	    "prune message received with no kernel entry for",
 	    inet_fmt(prun_src, s1), inet_fmt(prun_grp, s2),
 	    prun_tmr, inet_fmt(src, s3));
@@ -1489,7 +1489,7 @@ chkgrp_graft(vifi, mcastgrp)
 		g->gt_timer = CACHE_LIFETIME(cache_lifetime);
 	    
 		IF_DEBUG(DEBUG_PRUNE|DEBUG_CACHE)
-		log(LOG_DEBUG, 0, "chkgrp graft (%s %s) gm:%x",
+		logit(LOG_DEBUG, 0, "chkgrp graft (%s %s) gm:%x",
 		    RT_FMT(r, s1),
 		    inet_fmt(g->gt_mcastgrp, s2), g->gt_grpmems);
 
@@ -1531,7 +1531,7 @@ accept_graft(src, dst, p, datalen)
     struct ptable *pt, **ptnp;
     
     if (datalen < 8) {
-	log(LOG_WARNING, 0,
+	logit(LOG_WARNING, 0,
 	    "received non-decipherable graft from %s",
 	    inet_fmt(src, s1));
 	return;
@@ -1546,7 +1546,7 @@ accept_graft(src, dst, p, datalen)
     send_graft_ack(dst, src, graft_src, graft_grp, vifi);
 
     if (vifi == NO_VIF) {
-	log(LOG_INFO, 0,
+	logit(LOG_INFO, 0,
     	    "ignoring graft for (%s %s) from non-neighbor %s",
 	    inet_fmt(graft_src, s2), inet_fmt(graft_grp, s3),
 	    inet_fmt(src, s1));
@@ -1554,7 +1554,7 @@ accept_graft(src, dst, p, datalen)
     }
 
     IF_DEBUG(DEBUG_PRUNE)
-    log(LOG_DEBUG, 0, "%s on vif %d grafts (%s %s)",
+    logit(LOG_DEBUG, 0, "%s on vif %d grafts (%s %s)",
 	inet_fmt(src, s1), vifi,
 	inet_fmt(graft_src, s2), inet_fmt(graft_grp, s3));
     
@@ -1566,7 +1566,7 @@ accept_graft(src, dst, p, datalen)
 	r = g->gt_route;
 
 	if (VIFM_ISSET(vifi, g->gt_scope)) {
-	    log(LOG_WARNING, 0, "graft received from %s on scoped grp (%s %s)",
+	    logit(LOG_WARNING, 0, "graft received from %s on scoped grp (%s %s)",
 		inet_fmt(src, s1), inet_fmt(graft_src, s2),
 		inet_fmt(graft_grp, s3));
 	    return;
@@ -1581,7 +1581,7 @@ accept_graft(src, dst, p, datalen)
 
 		VIFM_SET(vifi, g->gt_grpmems);
 		IF_DEBUG(DEBUG_PRUNE|DEBUG_CACHE)
-		log(LOG_DEBUG, 0, "accept graft (%s %s) gm:%x",
+		logit(LOG_DEBUG, 0, "accept graft (%s %s) gm:%x",
 		    RT_FMT(r, s1),
 		    inet_fmt(g->gt_mcastgrp, s2), g->gt_grpmems);
 
@@ -1609,7 +1609,7 @@ accept_graft(src, dst, p, datalen)
 	 * grafts are requests to remove prune state.
 	 */
 	IF_DEBUG(DEBUG_PRUNE)
-	log(LOG_DEBUG, 0, "%s (%s %s) from %s",
+	logit(LOG_DEBUG, 0, "%s (%s %s) from %s",
 	    "graft received with no kernel entry for",
 	    inet_fmt(graft_src, s1), inet_fmt(graft_grp, s2),
 	    inet_fmt(src, s3));
@@ -1639,14 +1639,14 @@ accept_g_ack(src, dst, p, datalen)
     int 	i;
     
     if ((vifi = find_vif(src, dst)) == NO_VIF) {
-	log(LOG_INFO, 0,
+	logit(LOG_INFO, 0,
     	    "ignoring graft ack from non-neighbor %s",
 	    inet_fmt(src, s1));
 	return;
     }
     
     if (datalen < 0  || datalen > 8) {
-	log(LOG_WARNING, 0,
+	logit(LOG_WARNING, 0,
 	    "received non-decipherable graft ack from %s",
 	    inet_fmt(src, s1));
 	return;
@@ -1658,7 +1658,7 @@ accept_g_ack(src, dst, p, datalen)
 	((char *)&grft_grp)[i] = *p++;
     
     IF_DEBUG(DEBUG_PRUNE)
-    log(LOG_DEBUG, 0, "%s on vif %d acks graft (%s, %s)",
+    logit(LOG_DEBUG, 0, "%s on vif %d acks graft (%s, %s)",
 	inet_fmt(src, s1), vifi,
 	inet_fmt(grft_src, s2), inet_fmt(grft_grp, s3));
     
@@ -1669,7 +1669,7 @@ accept_g_ack(src, dst, p, datalen)
 	g = gtp ? gtp->gt_gnext : kernel_table;
 	g->gt_grftsnt = 0;
     } else {
-	log(LOG_WARNING, 0, "%s (%s, %s) from %s",
+	logit(LOG_WARNING, 0, "%s (%s, %s) from %s",
 	    "rcvd graft ack with no kernel entry for",
 	    inet_fmt(grft_src, s1), inet_fmt(grft_grp, s2),
 	    inet_fmt(src, s3));
@@ -1758,21 +1758,21 @@ steal_sources(rt)
 	    continue;
 	if ((rt->rt_origin & rp->rt_originmask) == rp->rt_origin) {
 	    IF_DEBUG(DEBUG_ROUTE)
-	    log(LOG_DEBUG, 0, "Route for %s stealing sources from %s",
+	    logit(LOG_DEBUG, 0, "Route for %s stealing sources from %s",
 		RT_FMT(rt, s1), RT_FMT(rp, s2));
 	    for (gt = rp->rt_groups; gt; gt = gt->gt_next) {
 		stnp = &gt->gt_srctbl;
 		while ((st = *stnp) != NULL) {
 		    if ((st->st_origin & rt->rt_originmask) == rt->rt_origin) {
 			IF_DEBUG(DEBUG_ROUTE)
-			log(LOG_DEBUG, 0, "%s stealing (%s %s) from %s",
+			logit(LOG_DEBUG, 0, "%s stealing (%s %s) from %s",
 			    RT_FMT(rt, s1),
 			    inet_fmt(st->st_origin, s3),
 			    inet_fmt(gt->gt_mcastgrp, s4),
 			    RT_FMT(rp, s2));
 			if (st->st_ctime != 0) {
 			    if (k_del_rg(st->st_origin, gt) < 0) {
-				log(LOG_WARNING, errno, "%s (%s, %s)",
+				logit(LOG_WARNING, errno, "%s (%s, %s)",
 				    "steal_sources trying to delete",
 				    inet_fmt(st->st_origin, s1),
 				    inet_fmt(gt->gt_mcastgrp, s2));
@@ -1794,14 +1794,14 @@ steal_sources(rt)
 	if (gt->gt_srctbl && ((gt->gt_srctbl->st_origin & rt->rt_originmask)
 				    == rt->rt_origin)) {
 	    IF_DEBUG(DEBUG_ROUTE)
-	    log(LOG_DEBUG, 0, "%s stealing (%s %s) from %s",
+	    logit(LOG_DEBUG, 0, "%s stealing (%s %s) from %s",
 		RT_FMT(rt, s1),
 		inet_fmt(gt->gt_srctbl->st_origin, s3),
 		inet_fmt(gt->gt_mcastgrp, s4),
 		"no_route table");
 	    if (gt->gt_srctbl->st_ctime != 0) {
 		if (k_del_rg(gt->gt_srctbl->st_origin, gt) < 0) {
-		    log(LOG_WARNING, errno, "%s (%s %s)",
+		    logit(LOG_WARNING, errno, "%s (%s %s)",
 			"steal_sources trying to delete",
 			inet_fmt(gt->gt_srctbl->st_origin, s1),
 			inet_fmt(gt->gt_mcastgrp, s2));
@@ -1836,7 +1836,7 @@ age_table_entry()
     struct sioc_sg_req sg_req;
     
     IF_DEBUG(DEBUG_PRUNE|DEBUG_CACHE)
-    log(LOG_DEBUG, 0, "aging forwarding cache entries");
+    logit(LOG_DEBUG, 0, "aging forwarding cache entries");
     
     gtnptr = &kernel_table;
     while ((gt = *gtnptr) != NULL) {
@@ -1861,17 +1861,17 @@ age_table_entry()
 		VIFM_ISSET(i, r->rt_children) &&
 		NBRM_ISSETMASK(uvifs[i].uv_nbrmap, r->rt_subordinates) &&
 		!SUBS_ARE_PRUNED(r->rt_subordinates, uvifs[i].uv_nbrmap, gt->gt_prunes)) {
-		log(LOG_WARNING, 0, "(%s %s) is blackholing on vif %d",
+		logit(LOG_WARNING, 0, "(%s %s) is blackholing on vif %d",
 		    RT_FMT(r, s1), inet_fmt(gt->gt_mcastgrp, s2), i);
 		fixit = 1;
 	    }
 	}
 	if (fixit) {
-	    log(LOG_WARNING, 0, "fixing membership for (%s %s) gm:%x",
+	    logit(LOG_WARNING, 0, "fixing membership for (%s %s) gm:%x",
 		RT_FMT(r, s1), inet_fmt(gt->gt_mcastgrp, s2), gt->gt_grpmems);
 	    determine_forwvifs(gt);
 	    send_prune_or_graft(gt);
-	    log(LOG_WARNING, 0, "fixed  membership for (%s %s) gm:%x",
+	    logit(LOG_WARNING, 0, "fixed  membership for (%s %s) gm:%x",
 		RT_FMT(r, s1), inet_fmt(gt->gt_mcastgrp, s2), gt->gt_grpmems);
 #ifdef RINGBUFFER
 	    printringbuf();
@@ -1893,7 +1893,7 @@ age_table_entry()
 		if (st->st_ctime != 0)
 		    break;
 	    if (st != NULL) {
-		log(LOG_WARNING, 0, "grpmems for (%s %s) is empty but no prune state!", RT_FMT(r, s1), inet_fmt(gt->gt_mcastgrp, s2));
+		logit(LOG_WARNING, 0, "grpmems for (%s %s) is empty but no prune state!", RT_FMT(r, s1), inet_fmt(gt->gt_mcastgrp, s2));
 		send_prune_or_graft(gt);
 #ifdef RINGBUFFER
 		printringbuf();
@@ -1910,7 +1910,7 @@ age_table_entry()
 	    gt->gt_prsent_timer -= TIMER_INTERVAL;
 	    if (gt->gt_prsent_timer <= 0) {
 		IF_DEBUG(DEBUG_PRUNE)
-		log(LOG_DEBUG, 0, "upstream prune tmo (%s %s)",
+		logit(LOG_DEBUG, 0, "upstream prune tmo (%s %s)",
 		    RT_FMT(r, s1),
 		    inet_fmt(gt->gt_mcastgrp, s2));
 		gt->gt_prsent_timer = -1;
@@ -1939,13 +1939,13 @@ age_table_entry()
 	while ((pt = *ptnp) != NULL) {
 	    if ((pt->pt_timer -= TIMER_INTERVAL) <= 0) {
 		IF_DEBUG(DEBUG_PRUNE)
-		log(LOG_DEBUG, 0, "expire prune (%s %s) from %s on vif %d", 
+		logit(LOG_DEBUG, 0, "expire prune (%s %s) from %s on vif %d", 
 		    RT_FMT(r, s1),
 		    inet_fmt(gt->gt_mcastgrp, s2),
 		    inet_fmt(pt->pt_router, s3),
 		    pt->pt_vifi);
 		if (gt->gt_prsent_timer > 0) {
-		    log(LOG_WARNING, 0, "prune (%s %s) from %s on vif %d expires with %d left on prsent timer",
+		    logit(LOG_WARNING, 0, "prune (%s %s) from %s on vif %d expires with %d left on prsent timer",
 			RT_FMT(r, s1),
 			inet_fmt(gt->gt_mcastgrp, s2),
 			inet_fmt(pt->pt_router, s3),
@@ -1973,7 +1973,7 @@ age_table_entry()
 	 */
 	if (gt->gt_timer <= 0) {
 	    IF_DEBUG(DEBUG_CACHE)
-	    log(LOG_DEBUG, 0, "(%s %s) timed out, checking for traffic",
+	    logit(LOG_DEBUG, 0, "(%s %s) timed out, checking for traffic",
 		RT_FMT(gt->gt_route, s1),
 		inet_fmt(gt->gt_mcastgrp, s2));
 	    /* Check for traffic before deleting source entries */
@@ -1988,7 +1988,7 @@ age_table_entry()
 		if (st->st_ctime) {
 		    sg_req.src.s_addr = st->st_origin;
 		    if (ioctl(udp_socket, SIOCGETSGCNT, (char *)&sg_req) < 0) {
-			log(LOG_WARNING, errno, "%s (%s %s)",
+			logit(LOG_WARNING, errno, "%s (%s %s)",
 			    "age_table_entry: SIOCGETSGCNT failing for",
 			    inet_fmt(st->st_origin, s1),
 			    inet_fmt(gt->gt_mcastgrp, s2));
@@ -2001,12 +2001,12 @@ age_table_entry()
 		if (sg_req.pktcnt == st->st_pktcnt) {
 		    *stnp = st->st_next;
 		    IF_DEBUG(DEBUG_CACHE)
-		    log(LOG_DEBUG, 0, "age_table_entry deleting (%s %s)",
+		    logit(LOG_DEBUG, 0, "age_table_entry deleting (%s %s)",
 			inet_fmt(st->st_origin, s1),
 			inet_fmt(gt->gt_mcastgrp, s2));
 		    if (st->st_ctime != 0) {
 			if (k_del_rg(st->st_origin, gt) < 0) {
-			    log(LOG_WARNING, errno,
+			    logit(LOG_WARNING, errno,
 				"age_table_entry trying to delete (%s %s)",
 				inet_fmt(st->st_origin, s1),
 				inet_fmt(gt->gt_mcastgrp, s2));
@@ -2029,7 +2029,7 @@ age_table_entry()
 	    if (gt->gt_pruntbl != NULL || gt->gt_srctbl != NULL ||
 		gt->gt_prsent_timer > 0 || gt->gt_grftsnt > 0) {
 		IF_DEBUG(DEBUG_CACHE)
-		log(LOG_DEBUG, 0, "refresh lifetim of cache entry %s%s%s%s(%s, %s)",
+		logit(LOG_DEBUG, 0, "refresh lifetim of cache entry %s%s%s%s(%s, %s)",
 			gt->gt_pruntbl ? "(dstrm prunes) " : "",
 			gt->gt_srctbl ? "(trfc flow) " : "",
 			gt->gt_prsent_timer > 0 ? "(upstrm prune) " : "",
@@ -2044,7 +2044,7 @@ age_table_entry()
 		     */
 		    gt->gt_prsent_timer = 0;
 		    if (gt->gt_pruntbl) {
-			log(LOG_WARNING, 0, "upstream prune for (%s %s) expires with downstream prunes active",
+			logit(LOG_WARNING, 0, "upstream prune for (%s %s) expires with downstream prunes active",
 				RT_FMT(r, s1), inet_fmt(gt->gt_mcastgrp, s2));
 		    }
 		    remove_sources(gt);
@@ -2054,7 +2054,7 @@ age_table_entry()
 	    }
 
 	    IF_DEBUG(DEBUG_CACHE)
-	    log(LOG_DEBUG, 0, "timeout cache entry (%s, %s)",
+	    logit(LOG_DEBUG, 0, "timeout cache entry (%s, %s)",
 		RT_FMT(r, s1),
 		inet_fmt(gt->gt_mcastgrp, s2));
 	    
@@ -2092,7 +2092,7 @@ age_table_entry()
 		 */
 		gt->gt_prsent_timer = 0;
 		if (gt->gt_pruntbl) {
-		    log(LOG_WARNING, 0, "upstream prune for (%s %s) expires with downstream prunes active",
+		    logit(LOG_WARNING, 0, "upstream prune for (%s %s) expires with downstream prunes active",
 			    RT_FMT(r, s1), inet_fmt(gt->gt_mcastgrp, s2));
 		}
 		remove_sources(gt);
@@ -2114,7 +2114,7 @@ age_table_entry()
 	    if (gt->gt_srctbl) {
 		if (gt->gt_srctbl->st_ctime != 0) {
 		    if (k_del_rg(gt->gt_srctbl->st_origin, gt) < 0) {
-			log(LOG_WARNING, errno, "%s (%s %s)",
+			logit(LOG_WARNING, errno, "%s (%s %s)",
 			    "age_table_entry trying to delete no-route",
 			    inet_fmt(gt->gt_srctbl->st_origin, s1),
 			    inet_fmt(gt->gt_mcastgrp, s2));
@@ -2155,7 +2155,7 @@ expire_prune(vifi, gt)
      */
     if (gt->gt_prsent_timer >= MIN_PRUNE_LIFE) {
 	IF_DEBUG(DEBUG_PRUNE)
-        log(LOG_DEBUG, 0, "prune expired with %d left on %s",
+        logit(LOG_DEBUG, 0, "prune expired with %d left on %s",
 		gt->gt_prsent_timer, "prsent_timer");
         gt->gt_prsent_timer = 0;
 	send_graft(gt);
@@ -2166,7 +2166,7 @@ expire_prune(vifi, gt)
         struct rtentry *rt = gt->gt_route;
         VIFM_SET(vifi, gt->gt_grpmems);
 	IF_DEBUG(DEBUG_CACHE)
-        log(LOG_DEBUG, 0, "forw again (%s %s) gm:%x vif:%d",
+        logit(LOG_DEBUG, 0, "forw again (%s %s) gm:%x vif:%d",
 	RT_FMT(rt, s1),
 	inet_fmt(gt->gt_mcastgrp, s2), gt->gt_grpmems, vifi);
 
@@ -2277,7 +2277,7 @@ dump_cache(fp2)
 		sg_req.src.s_addr = st->st_origin;
 		sg_req.grp.s_addr = gt->gt_mcastgrp;
 		if (ioctl(udp_socket, SIOCGETSGCNT, (char *)&sg_req) < 0) {
-		    log(LOG_WARNING, errno, "SIOCGETSGCNT on (%s %s)",
+		    logit(LOG_WARNING, errno, "SIOCGETSGCNT on (%s %s)",
 			inet_fmt(st->st_origin, s1),
 			inet_fmt(gt->gt_mcastgrp, s2));
 		} else {
@@ -2329,22 +2329,22 @@ accept_mtrace(src, dst, group, data, no, datalen)
     if (datalen == QLEN) {
 	type = QUERY;
 	IF_DEBUG(DEBUG_TRACE)
-	log(LOG_DEBUG, 0, "Initial traceroute query rcvd from %s to %s",
+	logit(LOG_DEBUG, 0, "Initial traceroute query rcvd from %s to %s",
 	    inet_fmt(src, s1), inet_fmt(dst, s2));
     }
     else if ((datalen - QLEN) % RLEN == 0) {
 	type = RESP;
 	IF_DEBUG(DEBUG_TRACE)
-	log(LOG_DEBUG, 0, "In-transit traceroute query rcvd from %s to %s",
+	logit(LOG_DEBUG, 0, "In-transit traceroute query rcvd from %s to %s",
 	    inet_fmt(src, s1), inet_fmt(dst, s2));
 	if (IN_MULTICAST(ntohl(dst))) {
 	    IF_DEBUG(DEBUG_TRACE)
-	    log(LOG_DEBUG, 0, "Dropping multicast response");
+	    logit(LOG_DEBUG, 0, "Dropping multicast response");
 	    return;
 	}
     }
     else {
-	log(LOG_WARNING, 0, "%s from %s to %s",
+	logit(LOG_WARNING, 0, "%s from %s to %s",
 	    "Non decipherable traceroute request recieved",
 	    inet_fmt(src, s1), inet_fmt(dst, s2));
 	return;
@@ -2357,28 +2357,28 @@ accept_mtrace(src, dst, group, data, no, datalen)
      */
     if ((rcount = (datalen - QLEN)/RLEN) == no) {
 	IF_DEBUG(DEBUG_TRACE)
-	log(LOG_DEBUG, 0, "packet with all reports filled in");
+	logit(LOG_DEBUG, 0, "packet with all reports filled in");
 	return;
     }
 
     IF_DEBUG(DEBUG_TRACE) {
-    log(LOG_DEBUG, 0, "s: %s g: %s d: %s ", inet_fmt(qry->tr_src, s1),
+    logit(LOG_DEBUG, 0, "s: %s g: %s d: %s ", inet_fmt(qry->tr_src, s1),
 	    inet_fmt(group, s2), inet_fmt(qry->tr_dst, s3));
-    log(LOG_DEBUG, 0, "rttl: %d rd: %s", qry->tr_rttl,
+    logit(LOG_DEBUG, 0, "rttl: %d rd: %s", qry->tr_rttl,
 	    inet_fmt(qry->tr_raddr, s1));
-    log(LOG_DEBUG, 0, "rcount:%d, qid:%06x", rcount, qry->tr_qid);
+    logit(LOG_DEBUG, 0, "rcount:%d, qid:%06x", rcount, qry->tr_qid);
     }
 
     /* determine the routing table entry for this traceroute */
     rt = determine_route(qry->tr_src);
     IF_DEBUG(DEBUG_TRACE)
     if (rt) {
-	log(LOG_DEBUG, 0, "rt parent vif: %d rtr: %s metric: %d",
+	logit(LOG_DEBUG, 0, "rt parent vif: %d rtr: %s metric: %d",
 		rt->rt_parent, inet_fmt(rt->rt_gateway, s1), rt->rt_metric);
-	log(LOG_DEBUG, 0, "rt origin %s",
+	logit(LOG_DEBUG, 0, "rt origin %s",
 		RT_FMT(rt, s1));
     } else
-	log(LOG_DEBUG, 0, "...no route");
+	logit(LOG_DEBUG, 0, "...no route");
 
     /*
      * Query type packet - check if rte exists 
@@ -2398,13 +2398,13 @@ accept_mtrace(src, dst, group, data, no, datalen)
 	     * it is not fatal.
 	     */
 	    IF_DEBUG(DEBUG_TRACE)
-	    log(LOG_DEBUG, 0, "ignoring duplicate traceroute packet");
+	    logit(LOG_DEBUG, 0, "ignoring duplicate traceroute packet");
 	    return;
 	}
 
 	if (rt == NULL) {
 	    IF_DEBUG(DEBUG_TRACE)
-	    log(LOG_DEBUG, 0, "Mcast traceroute: no route entry %s",
+	    logit(LOG_DEBUG, 0, "Mcast traceroute: no route entry %s",
 		   inet_fmt(qry->tr_src, s1));
 	    if (IN_MULTICAST(ntohl(dst)))
 		return;
@@ -2414,14 +2414,14 @@ accept_mtrace(src, dst, group, data, no, datalen)
 	if (vifi == NO_VIF) {
 	    /* The traceroute destination is not on one of my subnet vifs. */
 	    IF_DEBUG(DEBUG_TRACE)
-	    log(LOG_DEBUG, 0, "Destination %s not an interface",
+	    logit(LOG_DEBUG, 0, "Destination %s not an interface",
 		   inet_fmt(qry->tr_dst, s1));
 	    if (IN_MULTICAST(ntohl(dst)))
 		return;
 	    errcode = TR_WRONG_IF;
 	} else if (rt != NULL && !VIFM_ISSET(vifi, rt->rt_children)) {
 	    IF_DEBUG(DEBUG_TRACE)
-	    log(LOG_DEBUG, 0, "Destination %s not on forwarding tree for src %s",
+	    logit(LOG_DEBUG, 0, "Destination %s not on forwarding tree for src %s",
 		   inet_fmt(qry->tr_dst, s1), inet_fmt(qry->tr_src, s2));
 	    if (IN_MULTICAST(ntohl(dst)))
 		return;
@@ -2436,7 +2436,7 @@ accept_mtrace(src, dst, group, data, no, datalen)
 	 */
 	if ((vifi = find_vif(src, dst)) == NO_VIF) {
 	    IF_DEBUG(DEBUG_TRACE)
-	    log(LOG_DEBUG, 0, "Wrong interface for packet");
+	    logit(LOG_DEBUG, 0, "Wrong interface for packet");
 	    errcode = TR_WRONG_IF;
 	}
     }   
@@ -2445,7 +2445,7 @@ accept_mtrace(src, dst, group, data, no, datalen)
     oqid = qry->tr_qid;
 
     IF_DEBUG(DEBUG_TRACE)
-    log(LOG_DEBUG, 0, "Sending traceroute response");
+    logit(LOG_DEBUG, 0, "Sending traceroute response");
     
     /* copy the packet to the sending buffer */
     p = send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN;
@@ -2556,7 +2556,7 @@ accept_mtrace(src, dst, group, data, no, datalen)
 	resp->tr_rmtaddr = rt->rt_gateway;
 	if (!VIFM_ISSET(vifi, rt->rt_children)) {
 	    IF_DEBUG(DEBUG_TRACE)
-	    log(LOG_DEBUG, 0, "Destination %s not on forwarding tree for src %s",
+	    logit(LOG_DEBUG, 0, "Destination %s not on forwarding tree for src %s",
 		   inet_fmt(qry->tr_dst, s1), inet_fmt(qry->tr_src, s2));
 	    resp->tr_rflags = TR_WRONG_IF;
 	}
@@ -2574,7 +2574,7 @@ sendit:
      * mtrace, set an error code and send to requestor anyway.
      */
     IF_DEBUG(DEBUG_TRACE)
-    log(LOG_DEBUG, 0, "rcount:%d, no:%d", rcount, no);
+    logit(LOG_DEBUG, 0, "rcount:%d, no:%d", rcount, no);
 
     if ((rcount + 1 == no) || (rt == NULL) || (rt->rt_metric == 1)) {
 	resptype = IGMP_MTRACE_RESP;
@@ -2596,7 +2596,7 @@ sendit:
 	 */
 	if (phys_vif != -1) {
 	    IF_DEBUG(DEBUG_TRACE)
-	    log(LOG_DEBUG, 0, "Sending reply to %s from %s",
+	    logit(LOG_DEBUG, 0, "Sending reply to %s from %s",
 		inet_fmt(dst, s1), inet_fmt(uvifs[phys_vif].uv_lcl_addr, s2));
 	    k_set_ttl(qry->tr_rttl);
 	    send_igmp(uvifs[phys_vif].uv_lcl_addr, dst,
@@ -2604,11 +2604,11 @@ sendit:
 		      datalen);
 	    k_set_ttl(1);
 	} else
-	    log(LOG_INFO, 0, "No enabled phyints -- %s",
+	    logit(LOG_INFO, 0, "No enabled phyints -- %s",
 			"dropping traceroute reply");
     } else {
 	IF_DEBUG(DEBUG_TRACE)
-	log(LOG_DEBUG, 0, "Sending %s to %s from %s",
+	logit(LOG_DEBUG, 0, "Sending %s to %s from %s",
 	    resptype == IGMP_MTRACE_RESP ?  "reply" : "request on",
 	    inet_fmt(dst, s1), inet_fmt(src, s2));
 

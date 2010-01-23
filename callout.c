@@ -73,7 +73,7 @@ age_callout_queue(elapsed_time)
 	    elapsed_time -= ptr->time;
 	    Q = Q->next;
 	    IF_DEBUG(DEBUG_TIMEOUT)
-	    log(LOG_DEBUG, 0, "about to call timeout %d (#%d)", ptr->id, i);
+	    logit(LOG_DEBUG, 0, "about to call timeout %d (#%d)", ptr->id, i);
 	    if (ptr->func)
 		ptr->func(ptr->data);
 	    free(ptr);
@@ -90,7 +90,7 @@ timer_nextTimer()
 {
     if (Q) {
 	if (Q->time < 0) {
-	    log(LOG_WARNING, 0, "timer_nextTimer top of queue says %d", 
+	    logit(LOG_WARNING, 0, "timer_nextTimer top of queue says %d", 
 			Q->time);
 	    return 0;
 	}
@@ -114,7 +114,7 @@ timer_setTimer(delay, action, data)
     /* create a node */	
     node = (struct timeout_q *)malloc(sizeof(struct timeout_q));
     if (node == 0) {
-	log(LOG_WARNING, 0, "Malloc Failed in timer_settimer\n");
+	logit(LOG_WARNING, 0, "Malloc Failed in timer_settimer\n");
 	return -1;
     }
     node->func = action; 
@@ -145,7 +145,7 @@ timer_setTimer(delay, action, data)
 		ptr->time -= node->time;
 		print_Q();
 		IF_DEBUG(DEBUG_TIMEOUT)
-		log(LOG_DEBUG, 0, "created timeout %d (#%d)", node->id, i);
+		logit(LOG_DEBUG, 0, "created timeout %d (#%d)", node->id, i);
 		return node->id;
 	    } else  {
 		/* keep moving */
@@ -160,7 +160,7 @@ timer_setTimer(delay, action, data)
     }
     print_Q();
     IF_DEBUG(DEBUG_TIMEOUT)
-    log(LOG_DEBUG, 0, "created timeout %d (#%d)", node->id, i);
+    logit(LOG_DEBUG, 0, "created timeout %d (#%d)", node->id, i);
     return node->id;
 }
 
@@ -219,7 +219,7 @@ timer_clearTimer(timer_id)
 	    if (ptr->data)
 		free(ptr->data);
 	    IF_DEBUG(DEBUG_TIMEOUT)
-	    log(LOG_DEBUG, 0, "deleted timer %d (#%d)", ptr->id, i);
+	    logit(LOG_DEBUG, 0, "deleted timer %d (#%d)", ptr->id, i);
 	    free(ptr);
 	    print_Q();
 	    return 1;
@@ -229,7 +229,7 @@ timer_clearTimer(timer_id)
 	i++;
     }
     IF_DEBUG(DEBUG_TIMEOUT)
-    log(LOG_DEBUG, 0, "failed to delete timer %d (#%d)", timer_id, i);
+    logit(LOG_DEBUG, 0, "failed to delete timer %d (#%d)", timer_id, i);
     print_Q();
     return 0;
 }
@@ -245,6 +245,6 @@ print_Q()
     
     IF_DEBUG(DEBUG_TIMEOUT)
 	for (ptr = Q; ptr; ptr = ptr->next)
-	    log(LOG_DEBUG, 0, "(%d,%d) ", ptr->id, ptr->time);
+	    logit(LOG_DEBUG, 0, "(%d,%d) ", ptr->id, ptr->time);
 }
 #endif /* IGMP_DEBUG */
