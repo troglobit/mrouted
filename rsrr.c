@@ -81,7 +81,7 @@ rsrr_init()
 	logit(LOG_ERR, errno, "Can't create RSRR socket");
 
     unlink(RSRR_SERV_PATH);
-    bzero((char *) &serv_addr, sizeof(serv_addr));
+    memset((char *) &serv_addr, 0, sizeof(serv_addr));
     serv_addr.sun_family = AF_UNIX;
     strcpy(serv_addr.sun_path, RSRR_SERV_PATH);
 #ifdef HAVE_SA_LEN
@@ -107,7 +107,7 @@ rsrr_read(f, rfd)
 {
     register int rsrr_recvlen;
     
-    bzero((char *) &client_addr, sizeof(client_addr));
+    memset((char *) &client_addr, 0, sizeof(client_addr));
     rsrr_recvlen = recvfrom(rsrr_socket, rsrr_recv_buf, sizeof(rsrr_recv_buf),
 			    0, (struct sockaddr *)&client_addr, &client_length);
     if (rsrr_recvlen < 0) {	

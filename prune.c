@@ -2450,7 +2450,7 @@ accept_mtrace(src, dst, group, data, no, datalen)
     /* copy the packet to the sending buffer */
     p = send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN;
     
-    bcopy(data, p, datalen);
+    memmove	(p,	data,	datalen);
     
     p += datalen;
     
@@ -2469,7 +2469,7 @@ accept_mtrace(src, dst, group, data, no, datalen)
      * fill in initial response fields
      */
     resp = (struct tr_resp *)p;
-    bzero(resp, sizeof(struct tr_resp));
+    memset(resp, 0, sizeof(struct tr_resp));
     datalen += RLEN;
 
     resp->tr_qarr    = htonl(((tp.tv_sec + JAN_1970) << 16) + 

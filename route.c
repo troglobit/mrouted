@@ -388,7 +388,8 @@ create_route(origin, mask)
     else                              r->rt_originwidth = 1;
     r->rt_flags        = 0;
     r->rt_dominants    = (u_int32 *)(r + 1);
-    bzero(r->rt_dominants, numvifs * sizeof(u_int32));
+    memset(r->rt_dominants, 0, numvifs * sizeof(u_int32));
+
     r->rt_groups       = NULL;
     VIFM_CLRALL(r->rt_children);
     NBRM_CLRALL(r->rt_subordinates);
@@ -968,7 +969,7 @@ queue_blaster_report(vifi, src, dst, p, datalen, level)
     bh->bh_dst = dst;
     bh->bh_level = level;
     bh->bh_datalen = datalen;
-    bcopy(p, (char *)(bh + 1), datalen);
+    memmove	((char *)(bh + 1),	p,	datalen);
     v->uv_blasterend += bblen;
 
     if (v->uv_blastertimer == 0) {

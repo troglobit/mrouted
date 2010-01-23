@@ -429,7 +429,7 @@ usage:	fprintf(stderr,
     gettimeofday(&curtime, NULL);
     lasttime = curtime;
     for(;;) {
-	bcopy((char *)&readers, (char *)&rfds, sizeof(rfds));
+	memmove	((char *)&rfds,	(char *)&readers,	sizeof(rfds));
 	secs = timer_nextTimer();
 	if (secs == -1)
 	    timeout = NULL;

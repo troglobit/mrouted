@@ -61,7 +61,7 @@ init_ipip_on_vif(v)
     ip = v->uv_encap_hdr = (struct ip *)malloc(sizeof(struct ip));
     if (ip == NULL)
 	logit(LOG_ERR, 0, "out of memory");
-    bzero(ip, sizeof(struct ip));
+    memset(ip, 0, sizeof(struct ip));
     /*
      * Fields zeroed that aren't filled in later:
      * - IP ID (let the kernel fill it in)
@@ -111,7 +111,7 @@ send_ipip(src, dst, type, code, group, datalen, v)
     ip->ip_len = htons(ip->ip_len);
 #endif
 
-    bzero(&sdst, sizeof(sdst));
+    memset(&sdst, 0, sizeof(sdst));
     sdst.sin_family = AF_INET;
 #ifdef HAVE_SA_LEN
     sdst.sin_len = sizeof(sdst);
@@ -123,7 +123,7 @@ send_ipip(src, dst, type, code, group, datalen, v)
     iov[1].iov_base = (caddr_t)send_buf;
     iov[1].iov_len = MIN_IP_HEADER_LEN + IGMP_MINLEN + datalen;
 
-    bzero(&msg, sizeof(msg));
+    memset(&msg, 0, sizeof(msg));
     msg.msg_name = (caddr_t)&sdst;
     msg.msg_namelen = sizeof(sdst);
     msg.msg_iov = iov;
