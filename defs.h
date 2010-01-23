@@ -177,8 +177,6 @@ extern char		s4[];
 
 #if !(defined(BSD) && (BSD >= 199103))
 extern int		errno;
-extern int		sys_nerr;
-/*extern char *		sys_errlist[];*/
 #endif
 
 #ifdef OLD_KERNEL

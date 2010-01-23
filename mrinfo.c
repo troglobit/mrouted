@@ -159,10 +159,8 @@ logit(severity, syserr, format, va_alist)
 		vfprintf(stderr, fmt, ap);
 		if (syserr == 0)
 			fprintf(stderr, "\n");
-		else if (syserr < sys_nerr)
-			fprintf(stderr, ": %s\n", sys_errlist[syserr]);
 		else
-			fprintf(stderr, ": errno %d\n", syserr);
+			fprintf(stderr, ": %s\n", strerror(syserr));
 	}
 
 	if (severity <= LOG_ERR)
