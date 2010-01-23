@@ -1,25 +1,37 @@
 /* Mapper for connections between MRouteD multicast routers.
- * Written by Pavel Curtis <Pavel@PARC.Xerox.Com>
- *
- * mapper.c,v 3.8.4.3 1998/01/06 01:57:47 fenner Exp
+ * Written by Pavel Curtis 
  */
 
+
 /*
- * Copyright (c) Xerox Corporation 1992. All rights reserved.
- *  
- * License is granted to copy, to use, and to make and to use derivative
- * works for research and evaluation purposes, provided that Xerox is
- * acknowledged in all documentation pertaining to any such copy or derivative
- * work. Xerox grants no other licenses expressed or implied. The Xerox trade
- * name should not be used in any advertising without its written permission.
- *  
- * XEROX CORPORATION MAKES NO REPRESENTATIONS CONCERNING EITHER THE
- * MERCHANTABILITY OF THIS SOFTWARE OR THE SUITABILITY OF THIS SOFTWARE
- * FOR ANY PARTICULAR PURPOSE.  The software is provided "as is" without
- * express or implied warranty of any kind.
- *  
- * These notices must be retained in any copies of any part of this software.
- */
+ * Copyright (c) 1992, 2001 Xerox Corporation.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, 
+ * are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+
+ * Neither name of the Xerox, PARC, nor the names of its contributors may be used
+ * to endorse or promote products derived from this software 
+ * without specific prior written permission. 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' 
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, 
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE XEROX CORPORATION OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+*/
 
 #include <string.h>
 #include <netdb.h>
@@ -32,11 +44,6 @@
 #include <varargs.h>
 #endif
 
-#ifndef lint
-static char rcsid[] = "@(#) $Id: \
-mapper.c,v 3.8.4.3 1998/01/06 01:57:47 fenner Exp $";
-#endif
-
 #define DEFAULT_TIMEOUT	2	/* How long to wait before retrying requests */
 #define DEFAULT_RETRIES 1	/* How many times to ask each router */
 
@@ -45,7 +52,7 @@ mapper.c,v 3.8.4.3 1998/01/06 01:57:47 fenner Exp $";
 
 typedef struct neighbor {
     struct neighbor    *next;
-    u_int32		addr;		/* IP address in NET order */
+    u_int32_t		addr;		/* IP address in NET order */
     u_char		metric;		/* TTL cost of forwarding */
     u_char		threshold;	/* TTL threshold to forward */
     u_short		flags;		/* flags on connection */
@@ -54,13 +61,14 @@ typedef struct neighbor {
 
 typedef struct interface {
     struct interface *next;
-    u_int32	addr;		/* IP address of the interface in NET order */
+    u_int32_t	addr;		/* IP address of the interface in NET order */
     Neighbor   *neighbors;	/* List of neighbors' IP addresses */
 } Interface;
 
 typedef struct node {
-    u_int32	addr;		/* IP address of this entry in NET order */
-    u_int32	version;	/* which mrouted version is running */
+    u_int32_t	addr;		/* IP address of this entry in NET order 
+*/
+    u_int32_t	version;	/* which mrouted version is running */
     int		tries;		/* How many requests sent?  -1 for aliases */
     union {
 	struct node *alias;		/* If alias, to what? */
@@ -71,7 +79,7 @@ typedef struct node {
 
 
 Node   *routers = 0;
-u_int32	our_addr, target_addr = 0;		/* in NET order */
+u_int32_t	our_addr, target_addr = 0;		/* in NET order */
 int	debug = 0;
 int	retries = DEFAULT_RETRIES;
 int	timeout = DEFAULT_TIMEOUT;
@@ -79,26 +87,30 @@ int	show_names = TRUE;
 vifi_t  numvifs;		/* to keep loader happy */
 				/* (see COPY_TABLES macro called in kern.c) */
 
-Node *			find_node __P((u_int32 addr, Node **ptr));
-Interface *		find_interface __P((u_int32 addr, Node *node));
-Neighbor *		find_neighbor __P((u_int32 addr, Node *node));
+Node *			find_node __P((u_int32_t addr, Node **ptr));
+Interface *		find_interface __P((u_int32_t addr, Node *node));
+Neighbor *		find_neighbor __P((u_int32_t addr, Node *node));
 int			main __P((int argc, char *argv[]));
-void			ask __P((u_int32 dst));
-void			ask2 __P((u_int32 dst));
+void			ask __P((u_int32_t dst));
+void			ask2 __P((u_int32_t dst));
 int			retry_requests __P((Node *node));
-char *			inet_name __P((u_int32 addr));
+char *			inet_name __P((u_int32_t addr));
 void			print_map __P((Node *node));
-char *			graph_name __P((u_int32 addr, char *buf));
+char *			graph_name __P((u_int32_t addr, char *buf));
 void			graph_edges __P((Node *node));
 void			elide_aliases __P((Node *node));
 void			graph_map __P((void));
 int			get_number __P((int *var, int deflt, char ***pargv,
 						int *pargc));
-u_int32			host_addr __P((char *name));
+u_int32_t			host_addr __P((char *name));
 
+#ifdef __STDC__
+void log(int severity, int syserr, const char *format, ...)
+	__attribute__((__format__(__printf__, 3, 4)));
+#endif
 
 Node *find_node(addr, ptr)
-    u_int32 addr;
+    u_int32_t addr;
     Node **ptr;
 {
     Node *n = *ptr;
@@ -121,7 +133,7 @@ Node *find_node(addr, ptr)
 
 
 Interface *find_interface(addr, node)
-    u_int32 addr;
+    u_int32_t addr;
     Node *node;
 {
     Interface *ifc;
@@ -141,7 +153,7 @@ Interface *find_interface(addr, node)
 
 
 Neighbor *find_neighbor(addr, node)
-    u_int32 addr;
+    u_int32_t addr;
     Node *node;
 {
     Interface *ifc;
@@ -165,7 +177,7 @@ Neighbor *find_neighbor(addr, node)
  */
 #ifdef __STDC__
 void
-log(int severity, int syserr, char *format, ...)
+log(int severity, int syserr, const char *format, ...)
 {
 	va_list ap;
 	char    fmt[100];
@@ -194,17 +206,16 @@ log(severity, syserr, format, va_alist)
 	    if (severity == LOG_WARNING)
 		strcat(fmt, "warning - ");
 	    strncat(fmt, format, 80);
-	    vfprintf(stderr, fmt, ap);
+	    format = fmt;
+	    vfprintf(stderr, format, ap);
 	    if (syserr == 0)
 		fprintf(stderr, "\n");
-	    else if (syserr < sys_nerr)
-		fprintf(stderr, ": %s\n", sys_errlist[syserr]);
 	    else
-		fprintf(stderr, ": errno %d\n", syserr);
+		fprintf(stderr, ": %s\n", strerror(syserr));
     }
 
     if (severity <= LOG_ERR)
-	exit(-1);
+	exit(1);
 }
 
 
@@ -212,14 +223,14 @@ log(severity, syserr, format, va_alist)
  * Send a neighbors-list request.
  */
 void ask(dst)
-    u_int32 dst;
+    u_int32_t dst;
 {
     send_igmp(our_addr, dst, IGMP_DVMRP, DVMRP_ASK_NEIGHBORS,
 		htonl(MROUTED_LEVEL), 0);
 }
 
 void ask2(dst)
-    u_int32 dst;
+    u_int32_t dst;
 {
     send_igmp(our_addr, dst, IGMP_DVMRP, DVMRP_ASK_NEIGHBORS2,
 		htonl(MROUTED_LEVEL), 0);
@@ -230,7 +241,7 @@ void ask2(dst)
  * Process an incoming group membership report.
  */
 void accept_group_report(src, dst, group, r_type)
-    u_int32 src, dst, group;
+    u_int32_t src, dst, group;
     int r_type;
 {
     log(LOG_INFO, 0, "ignoring IGMP group membership report from %s to %s",
@@ -242,7 +253,7 @@ void accept_group_report(src, dst, group, r_type)
  * Process an incoming neighbor probe message.
  */
 void accept_probe(src, dst, p, datalen, level)
-    u_int32 src, dst, level;
+    u_int32_t src, dst, level;
     char *p;
     int datalen;
 {
@@ -255,7 +266,7 @@ void accept_probe(src, dst, p, datalen, level)
  * Process an incoming route report message.
  */
 void accept_report(src, dst, p, datalen, level)
-    u_int32 src, dst, level;
+    u_int32_t src, dst, level;
     char *p;
     int datalen;
 {
@@ -268,7 +279,7 @@ void accept_report(src, dst, p, datalen, level)
  * Process an incoming neighbor-list request message.
  */
 void accept_neighbor_request(src, dst)
-    u_int32 src, dst;
+    u_int32_t src, dst;
 {
     if (src != our_addr)
 	log(LOG_INFO, 0,
@@ -277,7 +288,7 @@ void accept_neighbor_request(src, dst)
 }
 
 void accept_neighbor_request2(src, dst)
-    u_int32 src, dst;
+    u_int32_t src, dst;
 {
     if (src != our_addr)
 	log(LOG_INFO, 0,
@@ -290,7 +301,7 @@ void accept_neighbor_request2(src, dst)
  * Process an incoming neighbor-list message.
  */
 void accept_neighbors(src, dst, p, datalen, level)
-    u_int32 src, dst, level;
+    u_int32_t src, dst, level;
     u_char *p;
     int datalen;
 {
@@ -301,8 +312,8 @@ void accept_neighbors(src, dst, p, datalen, level)
     else if (node->tries == -1)	/* follow alias link */
 	node = node->u.alias;
 
-#define GET_ADDR(a) (a = ((u_int32)*p++ << 24), a += ((u_int32)*p++ << 16),\
-		     a += ((u_int32)*p++ << 8), a += *p++)
+#define GET_ADDR(a) (a = ((u_int32_t)*p++ << 24), a += ((u_int32_t)*p++ << 16),\
+		     a += ((u_int32_t)*p++ << 8), a += *p++)
 
     /* if node is running a recent mrouted, ask for additional info */
     if (level != 0) {
@@ -328,7 +339,7 @@ void accept_neighbors(src, dst, p, datalen, level)
     }
 
     while (datalen > 0) {	/* loop through interfaces */
-	u_int32		ifc_addr;
+	u_int32_t		ifc_addr;
 	u_char		metric, threshold, ncount;
 	Node   	       *ifc_node;
 	Interface      *ifc;
@@ -407,7 +418,7 @@ void accept_neighbors(src, dst, p, datalen, level)
 	
 	/* Add the neighbors for this interface */
 	while (ncount--) {
-	    u_int32 	neighbor;
+	    u_int32_t 	neighbor;
 	    Neighbor   *nb;
 	    Node       *n_node;
 
@@ -451,7 +462,7 @@ void accept_neighbors(src, dst, p, datalen, level)
 }
 
 void accept_neighbors2(src, dst, p, datalen, level)
-    u_int32 src, dst, level;
+    u_int32_t src, dst, level;
     u_char *p;
     int datalen;
 {
@@ -465,7 +476,7 @@ void accept_neighbors2(src, dst, p, datalen, level)
 	node = node->u.alias;
 
     while (datalen > 0) {	/* loop through interfaces */
-	u_int32		ifc_addr;
+	u_int32_t		ifc_addr;
 	u_char		metric, threshold, ncount, flags;
 	Node   	       *ifc_node;
 	Interface      *ifc;
@@ -477,7 +488,7 @@ void accept_neighbors2(src, dst, p, datalen, level)
 	    return;
 	}
 
-	ifc_addr = *(u_int32*)p;
+	ifc_addr = *(u_int32_t*)p;
 	p += 4;
 	metric = *p++;
 	threshold = *p++;
@@ -550,7 +561,7 @@ void accept_neighbors2(src, dst, p, datalen, level)
 	
 	/* Add the neighbors for this interface */
 	while (ncount-- && datalen > 0) {
-	    u_int32 	neighbor;
+	    u_int32_t 	neighbor;
 	    Neighbor   *nb;
 	    Node       *n_node;
 
@@ -560,7 +571,7 @@ void accept_neighbors2(src, dst, p, datalen, level)
 		return;
 	    }
 
-	    neighbor = *(u_int32*)p;
+	    neighbor = *(u_int32_t*)p;
 	    p += 4;
 	    datalen -= 4;
 	    if (neighbor == 0)
@@ -625,7 +636,7 @@ int retry_requests(node)
 
 
 char *inet_name(addr)
-    u_int32 addr;
+    u_int32_t addr;
 {
     struct hostent *e;
 
@@ -704,7 +715,7 @@ void print_map(node)
 
 
 char *graph_name(addr, buf)
-    u_int32 addr;
+    u_int32_t addr;
     char *buf;
 {
     char *name;
@@ -825,7 +836,7 @@ int get_number(var, deflt, pargv, pargc)
 }
 
 
-u_int32 host_addr(name)
+u_int32_t host_addr(name)
     char *name;
 {
     struct hostent *e = gethostbyname(name);
@@ -849,15 +860,12 @@ int main(argc, argv)
 {
     int flood = FALSE, graph = FALSE;
     
+    setlinebuf(stderr);
+
     if (geteuid() != 0) {
-	fprintf(stderr, "map-mbone: must be root\n");
+	fprintf(stderr, "must be root\n");
 	exit(1);
     }
-
-    init_igmp();
-    setuid(getuid());
-
-    setlinebuf(stderr);
 
     argv++, argc--;
     while (argc > 0 && argv[0][0] == '-') {
@@ -907,13 +915,15 @@ int main(argc, argv)
     if (debug)
 	fprintf(stderr, "Debug level %u\n", debug);
 
+    init_igmp();
+
     {				/* Find a good local address for us. */
 	int udp;
 	struct sockaddr_in addr;
 	int addrlen = sizeof(addr);
 
 	addr.sin_family = AF_INET;
-#ifdef HAVE_SA_LEN
+#if (defined(BSD) && (BSD >= 199103))
 	addr.sin_len = sizeof addr;
 #endif
 	addr.sin_addr.s_addr = dvmrp_group;
@@ -922,7 +932,7 @@ int main(argc, argv)
 	    || connect(udp, (struct sockaddr *) &addr, sizeof(addr)) < 0
 	    || getsockname(udp, (struct sockaddr *) &addr, &addrlen) < 0) {
 	    perror("Determining local address");
-	    exit(-1);
+	    exit(1);
 	}
 	close(udp);
 	our_addr = addr.sin_addr.s_addr;
@@ -989,52 +999,53 @@ int main(argc, argv)
 
 /* dummies */
 void accept_prune(src, dst, p, datalen)
-	u_int32 src, dst;
+	u_int32_t src, dst;
 	char *p;
 	int datalen;
 {
 }
 void accept_graft(src, dst, p, datalen)
-	u_int32 src, dst;
+	u_int32_t src, dst;
 	char *p;
 	int datalen;
 {
 }
 void accept_g_ack(src, dst, p, datalen)
-	u_int32 src, dst;
+	u_int32_t src, dst;
 	char *p;
 	int datalen;
 {
 }
 void add_table_entry(origin, mcastgrp)
-	u_int32 origin, mcastgrp;
+	u_int32_t origin, mcastgrp;
 {
 }
 void accept_leave_message(src, dst, group)
-	u_int32 src, dst, group;
+	u_int32_t src, dst, group;
 {
 }
 void accept_mtrace(src, dst, group, data, no, datalen)
-	u_int32 src, dst, group;
+	u_int32_t src, dst, group;
 	char *data;
 	u_int no;
 	int datalen;
 {
 }
 void accept_membership_query(src, dst, group, tmo)
-	u_int32 src, dst, group;
+	u_int32_t src, dst, group;
 	int tmo;
 {
 }
 void accept_info_request(src, dst, p, datalen)
-	u_int32 src, dst;
+	u_int32_t src, dst;
 	u_char *p;
 	int datalen;
 {
 }
 void accept_info_reply(src, dst, p, datalen)
-	u_int32 src, dst;
+	u_int32_t src, dst;
 	u_char *p;
 	int datalen;
 {
 }
+

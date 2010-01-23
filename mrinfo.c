@@ -123,7 +123,7 @@ inet_name(addr)
  */
 #ifdef __STDC__
 void
-log(int severity, int syserr, char *format, ...)
+log(int severity, int syserr, const char *format, ...)
 {
 	va_list ap;
 	char    fmt[100];
