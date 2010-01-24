@@ -44,6 +44,9 @@ CFLAGS        = -O ${MCAST_INCLUDE} ${SNMPDEF} ${RSRRDEF}
 CFLAGS       += -D__BSD_SOURCE -DRAW_INPUT_IS_RAW -DRAW_OUTPUT_IS_RAW -DIOCTL_OK_ON_RAW_SOCKET
 CFLAGS       += -Iinclude/linux
 
+# This reveals several signed/unsigned problems that should be dealt with
+# in a more thorough way -- I'm masking them out meanwhile. --Joachim
+#CFLAGS       += -W -Wall
 CFLAGS       += -O2 -fno-strict-aliasing -pipe
 CFLAGS       += $(USERCOMPILE)
 LIBS          = ${SNMPLIBDIR} ${SNMPLIBS} ${LIB2}

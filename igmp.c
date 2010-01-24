@@ -181,7 +181,7 @@ igmp_debug_kind(type, code)
  */
 void
 accept_igmp(recvlen)
-    int recvlen;
+    size_t recvlen;
 {
     register u_int32 src, dst, group;
     struct ip *ip;
@@ -217,7 +217,7 @@ accept_igmp(recvlen)
 #else
     ipdatalen = ip->ip_len;
 #endif
-    if (iphdrlen + ipdatalen != recvlen) {
+    if ((size_t)(iphdrlen + ipdatalen) != recvlen) {
 	logit(LOG_WARNING, 0,
 	    "received packet from %s shorter (%u bytes) than hdr+data length (%u+%u)",
 	    inet_fmt(src, s1), recvlen, iphdrlen, ipdatalen);
@@ -259,13 +259,11 @@ accept_igmp(recvlen)
 
 	    switch (igmp->igmp_code) {
 		case DVMRP_PROBE:
-		    accept_probe(src, dst,
-				 (char *)(igmp+1), igmpdatalen, group);
+		    accept_probe(src, dst, (char *)(igmp+1), igmpdatalen, group);
 		    return;
 
 		case DVMRP_REPORT:
- 		    accept_report(src, dst,
-				  (char *)(igmp+1), igmpdatalen, group);
+		    accept_report(src, dst, (char *)(igmp+1), igmpdatalen, group);
 		    return;
 
 		case DVMRP_ASK_NEIGHBORS:
@@ -277,13 +275,11 @@ accept_igmp(recvlen)
 		    return;
 
 		case DVMRP_NEIGHBORS:
-		    accept_neighbors(src, dst, (u_char *)(igmp+1), igmpdatalen,
-					     group);
+		    accept_neighbors(src, dst, (u_char *)(igmp+1), igmpdatalen, group);
 		    return;
 
 		case DVMRP_NEIGHBORS2:
-		    accept_neighbors2(src, dst, (u_char *)(igmp+1), igmpdatalen,
-					     group);
+		    accept_neighbors2(src, dst, (u_char *)(igmp+1), igmpdatalen, group);
 		    return;
 
 		case DVMRP_PRUNE:
@@ -299,12 +295,11 @@ accept_igmp(recvlen)
 		    return;
 
 		case DVMRP_INFO_REQUEST:
-		    accept_info_request(src, dst, (char *)(igmp+1),
-				igmpdatalen);
+		    accept_info_request(src, dst, (u_char *)(igmp+1), igmpdatalen);
 		    return;
 
 		case DVMRP_INFO_REPLY:
-		    accept_info_reply(src, dst, (char *)(igmp+1), igmpdatalen);
+		    accept_info_reply(src, dst, (u_char *)(igmp+1), igmpdatalen);
 		    return;
 
 		default:

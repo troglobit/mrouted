@@ -39,7 +39,7 @@
 #endif
 
 #ifndef lint
-static char rcsid[] = "@(#) $Id: \
+static char UNUSED rcsid[] = "@(#) $Id: \
 rsrr.c,v 3.8.4.8 1998/01/06 01:57:58 fenner Exp $";
 #endif
 
@@ -55,13 +55,13 @@ char rsrr_recv_buf[RSRR_MAX_LEN];	/* RSRR receive buffer */
 char rsrr_send_buf[RSRR_MAX_LEN];	/* RSRR send buffer */
 
 struct sockaddr_un client_addr;
-int client_length = sizeof(client_addr);
+socklen_t client_length = sizeof(client_addr);
 
 
 /*
  * Procedure definitions needed internally.
  */
-static void	rsrr_accept __P((int recvlen));
+static void	rsrr_accept __P((size_t recvlen));
 static void	rsrr_accept_iq __P((void));
 static int	rsrr_accept_rq __P((struct rsrr_rq *route_query, int flags,
 					struct gtable *gt_notify));
@@ -102,10 +102,10 @@ rsrr_init()
 /* Read a message from the RSRR socket */
 static void
 rsrr_read(f, rfd)
-	int f;
-	fd_set *rfd;
+	int UNUSED f;
+	fd_set UNUSED *rfd;
 {
-    register int rsrr_recvlen;
+    ssize_t rsrr_recvlen;
     
     memset((char *) &client_addr, 0, sizeof(client_addr));
     rsrr_recvlen = recvfrom(rsrr_socket, rsrr_recv_buf, sizeof(rsrr_recv_buf),
@@ -123,7 +123,7 @@ rsrr_read(f, rfd)
  */
 static void
 rsrr_accept(recvlen)
-    int recvlen;
+    size_t recvlen;
 {
     struct rsrr_header *rsrr;
     struct rsrr_rq *route_query;

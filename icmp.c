@@ -41,7 +41,9 @@ icmp_handler(fd, rfds)
 {
     u_char icmp_buf[RECV_BUF_SIZE];
     struct sockaddr_in from;
-    int fromlen, recvlen, iphdrlen, ipdatalen;
+    socklen_t fromlen;
+    ssize_t recvlen;
+    int iphdrlen, ipdatalen;
     struct icmp *icmp;
     struct ip *ip;
     vifi_t i;
@@ -69,7 +71,7 @@ icmp_handler(fd, rfds)
 	/* Malformed ICMP, just return. */
 	return;
     }
-    if (ipdatalen < ICMP_MINLEN + sizeof(struct ip)) {
+    if (ipdatalen < ICMP_MINLEN + (int)sizeof(struct ip)) {
 	/* Not enough data for us to be interested in it. */
 	return;
     }

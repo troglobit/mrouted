@@ -273,7 +273,7 @@ int k_get_version()
     return -1;
 #else
     int vers;
-    int len = sizeof(vers);
+    socklen_t len = sizeof(vers);
 
     if (getsockopt(igmp_socket, IPPROTO_IP, MRT_VERSION,
 			(char *)&vers, &len) < 0)

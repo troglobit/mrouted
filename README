@@ -9,18 +9,19 @@ Note: The 3.9.0 release is mrouted-only, and will run on top of a 3.5 kernel.
 It is a drop-in replacement for mrouted 3.5, 3.6, 3.7 or 3.8.
 
 NOTE WELL: The mrouted package was in beta status from 1999 to 2010, this is
-thus the first stable release in over a decade.  The patches colleced over
-the years have been integrated into this release by its new maintainer.
-This latest release has however not been thouroughly tested yet.  The basic
-functionality has been extensively tested in CAIRN and other testbeds, but
-it is expected to have bugs.  Please report bugs in the github issue tracker
-at http://github.com/troglobit/mrouted/issues
+thus the first stable release in over a decade.  The patches colleced over the
+years have been integrated into this release by the new maintainer.  This
+latest release has however not been thouroughly tested yet.
+
+The basic functionality has been extensively tested in CAIRN and other
+testbeds, but it is expected to have bugs.  Please report bugs in the github
+issue tracker at http://github.com/troglobit/mrouted/issues
 
 The 3.9.0 release contains "hacks" to recognize Cisco IOS's pseudo-DVMRP
 implementation to yield all "DVMRP" versions of 10 and higher to IOS.
-Previous pre-release versions of mrouted 3.9.0 made the assumption that
-the IOS bug that causes it to use the IOS version number instead of the
-DVMRP version number would be fixed by the time 12.0 was out.
+Previous pre-release versions of mrouted 3.9.0 made the assumption that the
+IOS bug that causes it to use the IOS version number instead of the DVMRP
+version number would be fixed by the time 12.0 was out.
 
 The 3.9.0 release includes patches from:
   o Debian, build fixes for GNU/Linux.

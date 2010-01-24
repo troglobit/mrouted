@@ -370,7 +370,7 @@ main(argc, argv)
 	else
 		host = "127.0.0.1";
 
-	if ((target_addr = inet_addr(host)) != -1) {
+	if ((target_addr = inet_addr(host)) != INADDR_NONE) {
 		hp = &bogus;
 		hp->h_length = sizeof(target_addr);
 		hp->h_addr_list = (char **)malloc(2 * sizeof(char *));
@@ -393,7 +393,7 @@ main(argc, argv)
 	    {			/* Find a good local address for us. */
 		int     udp;
 		struct sockaddr_in addr;
-		int     addrlen = sizeof(addr);
+		socklen_t addrlen = sizeof(addr);
 
 		addr.sin_family = AF_INET;
 #ifdef HAVE_SA_LEN
@@ -428,7 +428,9 @@ main(argc, argv)
 	    for (;;) {
 		fd_set  fds;
 		struct timeval tv, now;
-		int     count, recvlen, dummy = 0;
+		int     count;
+                ssize_t recvlen;
+                socklen_t dummy = 0;
 		register u_int32 src, dst, group;
 		struct ip *ip;
 		struct igmp *igmp;
@@ -479,7 +481,7 @@ main(argc, argv)
 			continue;
 		}
 
-		if (recvlen < sizeof(struct ip)) {
+		if (recvlen < (ssize_t)sizeof(struct ip)) {
 			logit(LOG_WARNING, 0,
 			    "packet too short (%u bytes) for IP header",
 			    recvlen);
@@ -613,8 +615,8 @@ void accept_leave_message(src, dst, group)
 void accept_mtrace(src, dst, group, data, no, datalen)
 	u_int32 UNUSED src, UNUSED dst, UNUSED group;
 	char UNUSED *data;
-	u_int UNUSED no;
-	int UNUSED datalen;
+	u_int8_t UNUSED no;
+	size_t UNUSED datalen;
 {
 }
 void accept_membership_query(src, dst, group, tmo)

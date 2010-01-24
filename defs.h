@@ -82,6 +82,7 @@ typedef void (*ihfunc_t) __P((int, fd_set *));
 #define TRUE		1
 
 #define EQUAL(s1, s2)	(strcmp((s1), (s2)) == 0)
+#define ARRAY_LEN(a)    (sizeof((a)) / sizeof((a)[0]))
 
 #define TIMER_INTERVAL	ROUTE_MAX_REPORT_DELAY
 
@@ -233,7 +234,7 @@ extern int		register_input_handler __P((int, ihfunc_t));
 
 /* igmp.c */
 extern void		init_igmp __P((void));
-extern void		accept_igmp __P((int));
+extern void		accept_igmp __P((size_t));
 extern void		build_igmp __P((u_int32, u_int32, int, int, u_int32,
 						int));
 extern void		send_igmp __P((u_int32, u_int32, int, int, u_int32,
@@ -278,9 +279,9 @@ extern int		report_next_chunk __P((void));
 extern void		blaster_alloc __P((vifi_t));
 extern void		add_vif_to_routes __P((vifi_t));
 extern void		delete_vif_from_routes __P((vifi_t));
-extern void		add_neighbor_to_routes __P((vifi_t, int));
+extern void		add_neighbor_to_routes __P((vifi_t, u_int));
 extern void		delete_neighbor_from_routes __P((u_int32,
-						vifi_t, int));
+						vifi_t, u_int));
 extern void		dump_routes __P((FILE *fp));
 
 /* vif.c */
@@ -354,7 +355,7 @@ extern void		accept_graft __P((u_int32, u_int32, char *, int));
 extern void 		accept_g_ack __P((u_int32, u_int32, char *, int));
 /* u_int is promoted u_char */
 extern void		accept_mtrace __P((u_int32, u_int32,
-					u_int32, char *, u_int, int));
+					u_int32, char *, u_int8_t, size_t));
 
 /* kern.c */
 extern void		k_set_rcvbuf __P((int, int));

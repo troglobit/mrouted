@@ -22,7 +22,8 @@
  * the kernel no longer uses vifbitmaps.
  */
 #ifndef VIFM_SET
-typedef	u_long vifbitmap_t;
+
+typedef	u_int32 vifbitmap_t;
 
 #define	VIFM_SET(n, m)			((m) |=  (1 << (n)))
 #define	VIFM_CLR(n, m)			((m) &= ~(1 << (n)))
@@ -34,7 +35,7 @@ typedef	u_long vifbitmap_t;
 /*
  * And <netinet/ip_mroute.h> was missing some required functions anyway
  */
-#ifndef VIFM_SETALL
+#if !defined(VIFM_SETALL)
 #define	VIFM_SETALL(m)			((m) = ~0)
 #endif
 #define	VIFM_ISSET_ONLY(n, m)		((m) == (1 << (n)))
@@ -57,11 +58,11 @@ typedef struct {
 #define	MAXNBRS		2 * NBRBITS
 #define	NO_NBR		MAXNBRS
 
-#define	NBRM_SET(n, m)		(((n) < NBRBITS) ? ((m).lo |= (1 << (n))) : \
+#define	NBRM_SET(n, m)		(((n) < NBRBITS) ? ((m).lo |= (1 << (n))) :  \
 				      ((m).hi |= (1 << (n - NBRBITS))))
 #define	NBRM_CLR(n, m)		(((n) < NBRBITS) ? ((m).lo &= ~(1 << (n))) : \
 				      ((m).hi &= ~(1 << (n - NBRBITS))))
-#define	NBRM_ISSET(n, m)	(((n) < NBRBITS) ? ((m).lo & (1 << (n))) : \
+#define	NBRM_ISSET(n, m)	(((n) < NBRBITS) ? ((m).lo & (1 << (n))) :   \
 				      ((m).hi & (1 << ((n) - NBRBITS))))
 #define	NBRM_CLRALL(m)		((m).lo = (m).hi = 0)
 #define	NBRM_COPY(mfrom, mto)	((mto).lo = (mfrom).lo, (mto).hi = (mfrom).hi)
@@ -107,7 +108,7 @@ struct uvif {
     u_int	     uv_rate_limit; /* rate limit on this vif               */
     u_int32	     uv_lcl_addr;   /* local address of this vif            */
     u_int32	     uv_rmt_addr;   /* remote end-point addr (tunnels only) */
-    u_int32	     uv_dst_addr;   /* destination for DVMRP messages       */
+    u_int32	     uv_dst_addr;   /* destination for DVMRP/PIM messages   */
     u_int32	     uv_subnet;     /* subnet number         (phyints only) */
     u_int32	     uv_subnetmask; /* subnet mask           (phyints only) */
     u_int32	     uv_subnetbcast;/* subnet broadcast addr (phyints only) */
@@ -164,6 +165,7 @@ struct phaddr {
     u_int32	     pa_subnetbcast;	/* broadcast of extra subnet	*/
 };
 
+/* The Access Control List (list with scoped addresses) member */
 struct vif_acl {
     struct vif_acl  *acl_next;	    /* next acl member         */
     u_int32	     acl_addr;	    /* Group address           */

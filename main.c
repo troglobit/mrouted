@@ -78,7 +78,7 @@ static int nhandlers = 0;
 static struct debugname {
     char	*name;
     int		 level;
-    int		 nchars;
+    size_t	 nchars;
 } debugnames[] = {
     {	"packet",	DEBUG_PKT,	2	},
     {	"pkt",		DEBUG_PKT,	3	},
@@ -143,7 +143,7 @@ main(argc, argv)
     char *argv[];
 {
     register int recvlen;
-    int dummy;
+    socklen_t dummy;
     FILE *fp;
     struct timeval tv, difftime, curtime, lasttime, *timeout;
     u_int32 prev_genid;
@@ -176,7 +176,7 @@ main(argc, argv)
 	if (strcmp(*argv, "-d") == 0) {
 	    if (argc > 1 && *(argv + 1)[0] != '-') {
 		char *p,*q;
-		int i, len;
+		size_t i, len;
 		struct debugname *d;
 
 		argv++, argc--;
@@ -187,18 +187,14 @@ main(argc, argv)
 		    if (q)
 			*q++ = '\0';
 		    len = strlen(p);
-		    for (i = 0, d = debugnames;
-				i < sizeof(debugnames) / sizeof(debugnames[0]);
-				i++, d++)
+		    for (i = 0, d = debugnames; i < ARRAY_LEN(debugnames); i++, d++)
 			if (len >= d->nchars && strncmp(d->name, p, len) == 0)
 				break;
-		    if (i == sizeof(debugnames) / sizeof(debugnames[0])) {
+		    if (i == ARRAY_LEN(debugnames)) {
 			int j = 0xffffffff;
 			int k = 0;
 			fprintf(stderr, "Valid debug levels: ");
-			for (i = 0, d = debugnames;
-				i < sizeof(debugnames) / sizeof(debugnames[0]);
-				i++, d++) {
+			for (i = 0, d = debugnames; i < ARRAY_LEN(debugnames); i++, d++) {
 			    if ((j & d->level) == d->level) {
 				if (k++)
 				    putc(',', stderr);
@@ -248,8 +244,7 @@ usage:	fprintf(stderr,
 
 	fprintf(stderr, "debug level 0x%x ", debug);
 	c = '(';
-	for (d = debugnames; d < debugnames +
-			sizeof(debugnames) / sizeof(debugnames[0]); d++) {
+	for (d = debugnames; d < debugnames + ARRAY_LEN(debugnames); d++) {
 	    if ((tmpd & d->level) == d->level) {
 		tmpd &= ~d->level;
 		fprintf(stderr, "%c%s", c, d->name);
@@ -428,7 +423,7 @@ usage:	fprintf(stderr,
     gettimeofday(&curtime, NULL);
     lasttime = curtime;
     for(;;) {
-	memmove	((char *)&rfds,	(char *)&readers,	sizeof(rfds));
+	memmove	((char *)&rfds,	(char *)&readers, sizeof(rfds));
 	secs = timer_nextTimer();
 	if (secs == -1)
 	    timeout = NULL;
@@ -488,8 +483,7 @@ usage:	fprintf(stderr,
 
 	if (n > 0) {
 	    if (FD_ISSET(igmp_socket, &rfds)) {
-		recvlen = recvfrom(igmp_socket, recv_buf, RECV_BUF_SIZE,
-				   0, NULL, &dummy);
+		recvlen = recvfrom(igmp_socket, recv_buf, RECV_BUF_SIZE, 0, NULL, &dummy);
 		if (recvlen < 0) {
 		    if (errno != EINTR) logit(LOG_ERR, errno, "recvfrom");
 		    continue;

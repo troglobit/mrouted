@@ -253,7 +253,7 @@ delete_vif_from_routes(vifi)
 void
 add_neighbor_to_routes(vifi, index)
     register vifi_t vifi;
-    register int index;
+    register u_int index;
 {
     register struct rtentry *r;
     register struct uvif *v;
@@ -281,7 +281,7 @@ void
 delete_neighbor_from_routes(addr, vifi, index)
     register u_int32 addr;
     register vifi_t vifi;
-    int index;
+    u_int index;
 {
     register struct rtentry *r;
     register struct uvif *v;
@@ -837,7 +837,7 @@ accept_probe(src, dst, p, datalen, level)
 	for (prev = &unknowns, a = *prev; a; a = *prev) {
 	    if (a->al_addr == src)
 		match = a;
-	    if (a->al_ctime + 2 * a->al_timer < now) {
+	    if (a->al_ctime + 2 * a->al_timer < (u_long)now) {
 		/* We haven't heard from it in a long time */
 		*prev = a->al_next;
 		free(a);
@@ -853,7 +853,7 @@ accept_probe(src, dst, p, datalen, level)
 	    match->al_ctime = now - match->al_timer;
 	}
 
-	if (match->al_ctime + match->al_timer <= now) {
+	if (match->al_ctime + match->al_timer <= (u_long)now) {
 	    logit(LOG_WARNING, 0,
 		"ignoring probe from non-neighbor %s, check for misconfigured tunnel or routing on %s",
 		inet_fmt(src, s1), s1);

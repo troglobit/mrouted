@@ -920,7 +920,7 @@ int main(argc, argv)
     {				/* Find a good local address for us. */
 	int udp;
 	struct sockaddr_in addr;
-	int addrlen = sizeof(addr);
+	socklen_t addrlen = sizeof(addr);
 
 	addr.sin_family = AF_INET;
 #if (defined(BSD) && (BSD >= 199103))
@@ -954,7 +954,9 @@ int main(argc, argv)
     for(;;) {
 	fd_set		fds;
 	struct timeval 	tv;
-	int 		count, recvlen, dummy = 0;
+	int 		count;
+        ssize_t         recvlen;
+        socklen_t       dummy = 0;
 
 	FD_ZERO(&fds);
 	FD_SET(igmp_socket, &fds);
@@ -976,8 +978,7 @@ int main(argc, argv)
 		break;
 	}
 
-	recvlen = recvfrom(igmp_socket, recv_buf, RECV_BUF_SIZE,
-			   0, NULL, &dummy);
+	recvlen = recvfrom(igmp_socket, recv_buf, RECV_BUF_SIZE, 0, NULL, &dummy);
 	if (recvlen >= 0)
 	    accept_igmp(recvlen);
 	else if (errno != EINTR)
@@ -1027,8 +1028,8 @@ void accept_leave_message(src, dst, group)
 void accept_mtrace(src, dst, group, data, no, datalen)
 	u_int32_t UNUSED src, UNUSED dst, UNUSED group;
 	char UNUSED *data;
-	u_int UNUSED no;
-	int UNUSED datalen;
+	u_int8_t UNUSED no;
+	size_t UNUSED datalen;
 {
 }
 void accept_membership_query(src, dst, group, tmo)

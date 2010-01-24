@@ -2301,8 +2301,8 @@ accept_mtrace(src, dst, group, data, no, datalen)
     u_int32 dst;
     u_int32 group;
     char *data;
-    u_int no;	/* promoted u_char */
-    int datalen;
+    u_int8_t no;
+    size_t datalen;
 {
     u_char type;
     struct rtentry *rt;
@@ -2311,7 +2311,7 @@ accept_mtrace(src, dst, group, data, no, datalen)
     struct tr_resp  *resp;
     int vifi;
     char *p;
-    int rcount;
+    size_t rcount;
     int errcode = TR_NO_ERR;
     int resptype;
     struct timeval tp;
@@ -2367,7 +2367,7 @@ accept_mtrace(src, dst, group, data, no, datalen)
 	    inet_fmt(group, s2), inet_fmt(qry->tr_dst, s3));
     logit(LOG_DEBUG, 0, "rttl: %d rd: %s", qry->tr_rttl,
 	    inet_fmt(qry->tr_raddr, s1));
-    logit(LOG_DEBUG, 0, "rcount:%d, qid:%06x", rcount, qry->tr_qid);
+    logit(LOG_DEBUG, 0, "rcount:%u, qid:%06x", rcount, qry->tr_qid);
     }
 
     /* determine the routing table entry for this traceroute */
@@ -2452,8 +2452,7 @@ accept_mtrace(src, dst, group, data, no, datalen)
     /* copy the packet to the sending buffer */
     p = send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN;
     
-    memmove	(p,	data,	datalen);
-    
+    memmove(p, data, datalen);
     p += datalen;
     
     /*
@@ -2577,7 +2576,7 @@ sendit:
      * mtrace, set an error code and send to requestor anyway.
      */
     IF_DEBUG(DEBUG_TRACE)
-    logit(LOG_DEBUG, 0, "rcount:%d, no:%d", rcount, no);
+    logit(LOG_DEBUG, 0, "rcount:%u, no:%u", rcount, no);
 
     if ((rcount + 1 == no) || (rt == NULL) || (rt->rt_metric == 1)) {
 	resptype = IGMP_MTRACE_RESP;
