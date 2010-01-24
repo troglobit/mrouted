@@ -40,7 +40,7 @@ config_vifs_from_kernel()
 	/*
 	 * Ignore any interface for an address family other than IP.
 	 */
-	if (ifa->ifa_addr->sa_family != AF_INET)
+	if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_INET)
 	    continue;
 
 	addr = ((struct sockaddr_in *)ifa->ifa_addr)->sin_addr.s_addr;
