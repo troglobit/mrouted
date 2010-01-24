@@ -8,8 +8,10 @@
 
 # VERSION       ?= $(shell git tag -l | tail -1)
 VERSION      ?= 3.9.0
-EXEC          = mrouted map-mbone mrinfo
-PKG           = $(EXEC)-$(VERSION)
+NAME          = mrouted
+CONFIG        = $(NAME).conf
+EXECS         = mrouted map-mbone mrinfo
+PKG           = $(NAME)-$(VERSION)
 ARCHIVE       = $(PKG).tar.bz2
 
 ROOTDIR      ?= $(dir $(shell pwd))
@@ -70,34 +72,41 @@ OBJS          = ${IGMP_OBJS} ${ROUTER_OBJS} ${MAPPER_OBJS} ${MRINFO_OBJS} \
 
 SRCS          = $(OBJS:.o=.c)
 DEPS          = $(addprefix .,$(SRCS:.c=.d))
-MANS          = $(addsuffix .8,$(EXEC))
+MANS          = $(addsuffix .8,$(EXECS))
 
-DISTFILES     = README VERSION LICENSE \
-		Makefile mrouted.conf map-mbone.8 mrinfo.8 mrouted.8
+DISTFILES     = README AUTHORS LICENSE $(CONFIG)
 
 include rules.mk
 include snmp.mk
 
-all: $(EXEC) ${MSTAT}
+all: $(EXECS) ${MSTAT}
 
-install: $(EXEC)
+install: $(EXECS)
 	$(Q)[ -n "$(DESTDIR)" -a ! -d $(DESTDIR) ] || install -d $(DESTDIR)
 	$(Q)install -d $(DESTDIR)$(prefix)/sbin
 	$(Q)install -d $(DESTDIR)$(sysconfdir)
 	$(Q)install -d $(DESTDIR)$(datadir)
 	$(Q)install -d $(DESTDIR)$(mandir)
-	$(Q)install -m 0755 $(EXEC) $(DESTDIR)$(prefix)/sbin/$(EXEC)
-	$(Q)install --backup=existing -m 0644 $(EXEC).conf $(DESTDIR)$(sysconfdir)/$(EXEC).conf
+	$(Q)for file in $(EXECS); do \
+		install -m 0755 $$file $(DESTDIR)$(prefix)/sbin/$$file; \
+	done
+	$(Q)install --backup=existing -m 0644 $(CONFIG) $(DESTDIR)$(sysconfdir)/$(CONFIG)
 	$(Q)for file in $(DISTFILES); do \
 		install -m 0644 $$file $(DESTDIR)$(datadir)/$$file; \
 	done
-	$(Q)install -m 0644 $(EXEC).1 $(DESTDIR)$(mandir)/$(EXEC).1
+	$(Q)for file in $(MANS); do \
+		install -m 0644 $$file $(DESTDIR)$(mandir)/$$file; \
+	done
 
 uninstall:
-	-$(Q)$(RM) $(DESTDIR)$(prefix)/sbin/$(EXEC)
-	-$(Q)$(RM) $(DESTDIR)$(sysconfdir)/$(EXEC).conf
+	-$(Q)for file in $(EXECS); do \
+		$(RM) $(DESTDIR)$(prefix)/sbin/$$file; \
+	done
+	-$(Q)$(RM) $(DESTDIR)$(sysconfdir)/$(CONFIG)
 	-$(Q)$(RM) -r $(DESTDIR)$(datadir)
-	-$(Q)$(RM) $(DESTDIR)$(mandir)/$(EXEC).1
+	-$(Q)for file in $(MANS); do \
+		$(RM) $(DESTDIR)$(mandir)/$$file; \
+	done
 
 mrouted: ${IGMP_OBJS} ${ROUTER_OBJS} vers.o ${CMULIBS}
 ifdef Q
@@ -127,10 +136,10 @@ endif
 	$(Q)${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${MSTAT_OBJS} -Lsnmplib -lsnmp
 
 clean: ${SNMPCLEAN}
-	-$(Q)$(RM) $(OBJS) $(EXEC)
+	-$(Q)$(RM) $(OBJS) $(EXECS)
 
 distclean:
-	-$(Q)$(RM) $(OBJS) core $(EXEC) vers.c cfparse.c tags TAGS *.o *.map .*.d *.out tags TAGS
+	-$(Q)$(RM) $(OBJS) core $(EXECS) vers.c cfparse.c tags TAGS *.o *.map .*.d *.out tags TAGS
 
 dist:
 	@echo "Building bzip2 tarball of $(PKG) in parent dir..."
@@ -162,6 +171,10 @@ snmpclean:
 	-(cd snmpd; make clean)
 	-(cd snmplib; make clean)
 
+ifneq ($(MAKECMDGOALS),dist)
 ifneq ($(MAKECMDGOALS),clean)
+ifneq ($(MAKECMDGOALS),distclean)
 -include $(DEPS)
+endif
+endif
 endif
