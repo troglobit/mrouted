@@ -1,123 +1,164 @@
+# -*-Makefile-*-
 #
 # Makefile for mrouted, a multicast router, and its auxiliary programs,
 # map-mbone and mrinfo.
 #
 # Makefile,v 3.8.4.7 1998/03/01 03:09:11 fenner Exp
 #
+
+# VERSION       ?= $(shell git tag -l | tail -1)
+VERSION      ?= 3.9.0
+EXEC          = mrouted map-mbone mrinfo
+PKG           = $(EXEC)-$(VERSION)
+ARCHIVE       = $(PKG).tar.bz2
+
+ROOTDIR      ?= $(dir $(shell pwd))
+CC            = $(CROSS)gcc
+
+prefix       ?= /usr/local
+sysconfdir   ?= /etc
+datadir       = $(prefix)/share/doc/pimd
+mandir        = $(prefix)/share/man/man8
+
 # If the multicast header files are not in the standard place on your system,
 # define MCAST_INCLUDE to be an appropriate `-I' options for the C compiler.
-#
 #MCAST_INCLUDE=	-I/sys
-#
-# Uncomment the following eight lines if you want to use David Thaler's
-# CMU SNMP daemon support.
-#
-#SNMPDEF=	-DSNMP
-#SNMPLIBDIR=	-Lsnmpd -Lsnmplib
-#SNMPLIBS=	-lsnmpd -lsnmp
-#CMULIBS= snmpd/libsnmpd.a snmplib/libsnmp.a
-#MSTAT=		mstat
-#SNMPC=		snmp.c
-#SNMPO=		snmp.o
-#SNMPCLEAN=	snmpclean
-# End SNMP support
-#
+
 # Uncomment the following three lines if you want to use RSRR (Routing
 # Support for Resource Reservations), currently used by RSVP.
-RSRRDEF=	-DRSRR
-RSRRC=		rsrr.c
-RSRRO=		rsrr.o
-#
-LDFLAGS=
-#CFLAGS=		-O ${MCAST_INCLUDE} ${SNMPDEF} ${RSRRDEF}	## SunOS, OSF1, FreeBSD, IRIX
-#CFLAGS=		-O ${MCAST_INCLUDE} ${SNMPDEF} ${RSRRDEF} -DSYSV -DSUNOS5	## Solaris 2.x
-#LIB2=-lsocket -lnsl	## Solaris 2.x
-CFLAGS        = -O ${MCAST_INCLUDE} ${SNMPDEF} ${RSRRDEF} -D__BSD_SOURCE -DRAW_INPUT_IS_RAW -DRAW_OUTPUT_IS_RAW -DIOCTL_OK_ON_RAW_SOCKET	## Linux
+RSRRDEF       = -DRSRR
+RSRRC         = rsrr.c
+RSRRO         = rsrr.o
+
+## Common
+CFLAGS        = -O ${MCAST_INCLUDE} ${SNMPDEF} ${RSRRDEF}
+
+## SunOS, OSF1, FreeBSD, IRIX
+#CFLAGS        += 
+
+## Solaris 2.x
+#CFLAGS        += -DSYSV -DSUNOS5
+#LIB2          = -lsocket -lnsl
+
+## GNU/Linux
+CFLAGS       += -D__BSD_SOURCE -DRAW_INPUT_IS_RAW -DRAW_OUTPUT_IS_RAW -DIOCTL_OK_ON_RAW_SOCKET
 CFLAGS       += -Iinclude/linux
 
 CFLAGS       += -O2 -fno-strict-aliasing -pipe
-LIBS=		${SNMPLIBDIR} ${SNMPLIBS} ${LIB2}
-LINTFLAGS=	${MCAST_INCLUDE}
-IGMP_SRCS=	igmp.c inet.c kern.c
-IGMP_OBJS=	igmp.o inet.o kern.o
-ROUTER_SRCS=	config.c cfparse.y main.c route.c vif.c prune.c callout.c \
+CFLAGS       += $(USERCOMPILE)
+LIBS          = ${SNMPLIBDIR} ${SNMPLIBS} ${LIB2}
+LINTFLAGS     = ${MCAST_INCLUDE}
+IGMP_SRCS     = igmp.c inet.c kern.c
+IGMP_OBJS     = igmp.o inet.o kern.o
+ROUTER_SRCS   = config.c cfparse.y main.c route.c vif.c prune.c callout.c \
 		icmp.c ipip.c ${SNMPC} ${RSRRC}
-ROUTER_OBJS=	config.o cfparse.o main.o route.o vif.o prune.o callout.o \
+ROUTER_OBJS   = config.o cfparse.o main.o route.o vif.o prune.o callout.o \
 		icmp.o ipip.o ${SNMPO} ${RSRRO}
-MAPPER_SRCS=	mapper.c
-MAPPER_OBJS=	mapper.o
-MRINFO_SRCS=	mrinfo.c
-MRINFO_OBJS=	mrinfo.o
-#MSTAT_SRCS=	mstat.c 
-#MSTAT_OBJS=	mstat.o
-HDRS=		defs.h dvmrp.h route.h vif.h prune.h igmpv2.h pathnames.h \
+MAPPER_SRCS   = mapper.c
+MAPPER_OBJS   = mapper.o
+MRINFO_SRCS   = mrinfo.c
+MRINFO_OBJS   = mrinfo.o
+#MSTAT_SRCS    = mstat.c 
+#MSTAT_OBJS    = mstat.o
+HDRS          = defs.h dvmrp.h route.h vif.h prune.h igmpv2.h pathnames.h \
 		rsrr.h rsrr_var.h
-SRCS= ${IGMP_SRCS} ${ROUTER_SRCS} ${MAPPER_SRCS} ${MRINFO_SRCS} \
-      ${MSTAT_SRCS}
-OBJS= ${IGMP_OBJS} ${ROUTER_OBJS} ${MAPPER_OBJS} ${MRINFO_OBJS} \
-      ${MSTAT_OBJS}
-DISTFILES=	README-3.9-beta3.mrouted ${SRCS} ${HDRS} VERSION LICENSE \
+OBJS          = ${IGMP_OBJS} ${ROUTER_OBJS} ${MAPPER_OBJS} ${MRINFO_OBJS} \
+		${MSTAT_OBJS}
+
+SRCS          = $(OBJS:.o=.c)
+DEPS          = $(addprefix .,$(SRCS:.c=.d))
+MANS          = $(addsuffix .8,$(EXEC))
+
+DISTFILES     = README VERSION LICENSE \
 		Makefile mrouted.conf map-mbone.8 mrinfo.8 mrouted.8
 
-all: mrouted map-mbone mrinfo ${MSTAT}
+include rules.mk
+include snmp.mk
+
+all: $(EXEC) ${MSTAT}
+
+install: $(EXEC)
+	$(Q)[ -n "$(DESTDIR)" -a ! -d $(DESTDIR) ] || install -d $(DESTDIR)
+	$(Q)install -d $(DESTDIR)$(prefix)/sbin
+	$(Q)install -d $(DESTDIR)$(sysconfdir)
+	$(Q)install -d $(DESTDIR)$(datadir)
+	$(Q)install -d $(DESTDIR)$(mandir)
+	$(Q)install -m 0755 $(EXEC) $(DESTDIR)$(prefix)/sbin/$(EXEC)
+	$(Q)install --backup=existing -m 0644 $(EXEC).conf $(DESTDIR)$(sysconfdir)/$(EXEC).conf
+	$(Q)for file in $(DISTFILES); do \
+		install -m 0644 $$file $(DESTDIR)$(datadir)/$$file; \
+	done
+	$(Q)install -m 0644 $(EXEC).1 $(DESTDIR)$(mandir)/$(EXEC).1
+
+uninstall:
+	-$(Q)$(RM) $(DESTDIR)$(prefix)/sbin/$(EXEC)
+	-$(Q)$(RM) $(DESTDIR)$(sysconfdir)/$(EXEC).conf
+	-$(Q)$(RM) -r $(DESTDIR)$(datadir)
+	-$(Q)$(RM) $(DESTDIR)$(mandir)/$(EXEC).1
 
 mrouted: ${IGMP_OBJS} ${ROUTER_OBJS} vers.o ${CMULIBS}
-	@${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${IGMP_OBJS} ${ROUTER_OBJS} vers.o ${LIBS}
+ifdef Q
+	@printf "  LINK    $(subst $(ROOTDIR),,$(shell pwd))/$@\n"
+endif
+	$(Q)${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${IGMP_OBJS} ${ROUTER_OBJS} vers.o ${LIBS}
 
-vers.c:	VERSION
-	@sed -e 's/.*/char todaysversion[]="&";/' < VERSION > vers.c
+vers.c: Makefile
+	@echo $(VERSION) | sed -e 's/.*/char todaysversion[]="&";/' > vers.c
 
 map-mbone: ${IGMP_OBJS} ${MAPPER_OBJS}
-	@${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${IGMP_OBJS} ${MAPPER_OBJS} ${LIB2}
+ifdef Q
+	@printf "  LINK    $(subst $(ROOTDIR),,$(shell pwd))/$@\n"
+endif
+	$(Q)${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${IGMP_OBJS} ${MAPPER_OBJS} ${LIB2}
 
 mrinfo: ${IGMP_OBJS} ${MRINFO_OBJS}
-	@${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${IGMP_OBJS} ${MRINFO_OBJS} ${LIB2}
+ifdef Q
+	@printf "  LINK    $(subst $(ROOTDIR),,$(shell pwd))/$@\n"
+endif
+	$(Q)${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${IGMP_OBJS} ${MRINFO_OBJS} ${LIB2}
 
 mstat: ${MSTAT_OBJS} snmplib/libsnmp.a
-	@${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${MSTAT_OBJS} -Lsnmplib -lsnmp
+ifdef Q
+	@printf "  LINK    $(subst $(ROOTDIR),,$(shell pwd))/$@\n"
+endif
+	$(Q)${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${MSTAT_OBJS} -Lsnmplib -lsnmp
 
-clean: FRC ${SNMPCLEAN}
-	-@rm -f ${OBJS} vers.c vers.o core mrouted map-mbone mrinfo mstat tags TAGS
+clean: ${SNMPCLEAN}
+	-$(Q)$(RM) $(OBJS) $(EXEC)
 
-snmpclean:	FRC
-	-(cd snmpd; make clean)
-	-(cd snmplib; make clean)
+distclean:
+	-$(Q)$(RM) $(OBJS) core $(EXEC) vers.c cfparse.c tags TAGS *.o *.map .*.d *.out tags TAGS
 
-depend: FRC
-	@mkdep ${CFLAGS} ${SRCS}
+dist:
+	@echo "Building bzip2 tarball of $(PKG) in parent dir..."
+	git archive --format=tar --prefix=$(PKG)/ $(VERSION) | bzip2 >../$(ARCHIVE)
+	@(cd ..; md5sum $(ARCHIVE))
 
-lint: FRC
+lint: 
 	@lint ${LINTFLAGS} ${SRCS}
 
 tags: ${IGMP_SRCS} ${ROUTER_SRCS}
 	@ctags ${IGMP_SRCS} ${ROUTER_SRCS}
 
-cflow:	FRC
+cflow:
 	@cflow ${MCAST_INCLUDE} ${IGMP_SRCS} ${ROUTER_SRCS} > cflow.out
 
-cflow2:	FRC
+cflow2:
 	@cflow -ix ${MCAST_INCLUDE} ${IGMP_SRCS} ${ROUTER_SRCS} > cflow2.out
 
-rcflow:	FRC
+rcflow:
 	@cflow -r ${MCAST_INCLUDE} ${IGMP_SRCS} ${ROUTER_SRCS} > rcflow.out
 
-rcflow2:	FRC
+rcflow2:
 	@cflow -r -ix ${MCAST_INCLUDE} ${IGMP_SRCS} ${ROUTER_SRCS} > rcflow2.out
 
-TAGS: FRC
+TAGS:
 	@etags ${SRCS}
 
-dist: ${DISTFILES}
-	@sed -e '/^# DO NOT PUT ANYTHING/,$$d'	\
-	     -e '/^MCAST_INCLUDE=/s/=.*$$/=/'	\
-	     -e '/^LDFLAGS=/s/=.*$$/=/'		\
-		< Makefile > Makefile.dist
-	@mv Makefile Makefile.save
-	@cp Makefile.dist Makefile
-	@rm -f mrouted.tar.gz
-	@tar cvf - ${DISTFILES} | gzip -9 > mrouted.tar.gz
-	@mv Makefile.save Makefile
+snmpclean:
+	-(cd snmpd; make clean)
+	-(cd snmplib; make clean)
 
-FRC:
-
-# DO NOT DELETE THIS LINE -- mkdep uses it.
+ifneq ($(MAKECMDGOALS),clean)
+-include $(DEPS)
+endif
