@@ -51,7 +51,8 @@ endif
 ifdef Q
 	@printf "  YACC    $(subst $(ROOTDIR),,$(shell pwd))/$@\n"
 endif
-	$(Q)$(YACC) $(YFLAGS) -o $@ $<
+	$(Q)$(YACC) $<
+	-$(Q)mv y.tab.c $@ || mv $(<:.y=.tab.c) $@
 
 %: %.o
 ifdef Q

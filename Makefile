@@ -71,7 +71,7 @@ OBJS          = ${IGMP_OBJS} ${ROUTER_OBJS} ${MAPPER_OBJS} ${MRINFO_OBJS} \
 		${MSTAT_OBJS}
 
 SRCS          = $(OBJS:.o=.c)
-DEPS          = $(addprefix .,$(SRCS:.c=.d))
+DEPS          = $(filter-out .cfparse.d, $(addprefix .,$(SRCS:.c=.d)))
 MANS          = $(addsuffix .8,$(EXECS))
 
 DISTFILES     = README AUTHORS LICENSE $(CONFIG)
