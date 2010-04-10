@@ -56,15 +56,23 @@ IGMP_SRCS     = igmp.c inet.c kern.c
 IGMP_OBJS     = igmp.o inet.o kern.o
 ROUTER_OBJS   = config.o cfparse.o main.o route.o vif.o prune.o callout.o \
 		icmp.o ipip.o ${RSRR_OBJS}
+ifndef HAVE_STRTONUM
+ROUTER_OBJS  += strtonum.o
+endif
 ROUTER_SRCS   = $(ROUTER_OBJS:.o=.c)
 
 MAPPER_OBJS   = mapper.o
 ifndef HAVE_STRLCPY
 MAPPER_OBJS  += strlcpy.o
 endif
+ifndef HAVE_STRTONUM
+MAPPER_OBJS  += strtonum.o
+endif
 
-MRINFO_SRCS   = mrinfo.c
 MRINFO_OBJS   = mrinfo.o
+ifndef HAVE_STRTONUM
+MRINFO_OBJS  += strtonum.o
+endif
 
 #MSTAT_SRCS    = mstat.c 
 #MSTAT_OBJS    = mstat.o

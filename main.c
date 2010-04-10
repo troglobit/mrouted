@@ -126,6 +126,39 @@ int register_input_handler(int fd, ihfunc_t func)
     return 0;
 }
 
+void usage(void)
+{
+    int i, j, k;
+    extern char *__progname;
+    struct debugname *d;
+
+    fprintf(stderr,
+	    "Usage: %s [-hp] [-c config_file] [-d [debug_level][,debug_level...]]\n\n", __progname);
+    fprintf(stderr, "\t-c  Configuration file to use, default /etc/mrouted.conf\n");
+    fprintf(stderr, "\t-d  Debug level, see below for valid levels\n");
+    fprintf(stderr, "\t-h  Show this help text\n");
+    fprintf(stderr, "\t-p  Disable pruning.  Not supported anymore, compatibility option\n");
+    fprintf(stderr, "\n");
+
+    j = 0xffffffff;
+    k = 0;
+    fprintf(stderr, "Valid debug levels:\n\t");
+    for (i = 0, d = debugnames; i < ARRAY_LEN(debugnames); i++, d++) {
+	if ((j & d->level) == d->level) {
+	    if (k++)
+		fputs(", ", stderr);
+	    if (!(k % 7))
+		fputs("\n\t", stderr);
+
+	    fputs(d->name, stderr);
+	    j &= ~d->level;
+	}
+    }
+    putc('\n', stderr);
+
+    exit(1);
+}
+
 int main(int argc, char *argv[])
 {
     register int recvlen;
@@ -135,9 +168,11 @@ int main(int argc, char *argv[])
     u_int32 prev_genid;
     int vers;
     fd_set rfds, readers;
-    int nfds, n, i, secs;
+    int nfds, n, i, secs, ch;
     extern char todaysversion[];
+    extern char *__progname;
     struct sigaction sa;
+    const char *errstr;
 #ifdef SNMP
     struct timeval  timeout, *tvp = &timeout;
     struct timeval  sched, *svp = &sched, now, *nvp = &now;
@@ -145,7 +180,7 @@ int main(int argc, char *argv[])
 #endif
 
     if (geteuid() != 0) {
-	fprintf(stderr, "mrouted: must be root\n");
+	fprintf(stderr, "%s: must be root\n", __progname);
 	exit(1);
     }
     setlinebuf(stderr);
@@ -156,17 +191,21 @@ int main(int argc, char *argv[])
     else
 	progname = argv[0];
 
-    argv++, argc--;
-    while (argc > 0 && *argv[0] == '-') {
-	if (strcmp(*argv, "-d") == 0) {
-	    if (argc > 1 && *(argv + 1)[0] != '-') {
+    while ((ch = getopt(argc, argv, "c:d::hpP::")) != -1) {
+	switch (ch) {
+	case 'c':
+	    configfilename = optarg;
+	    break;
+	case 'd':
+	    if (!optarg)
+		debug = DEFAULT_DEBUG;
+	    else {
 		char *p,*q;
 		size_t i, len;
 		struct debugname *d;
 
-		argv++, argc--;
 		debug = 0;
-		p = *argv; q = NULL;
+		p = optarg; q = NULL;
 		while (p) {
 		    q = strchr(p, ',');
 		    if (q)
@@ -174,53 +213,47 @@ int main(int argc, char *argv[])
 		    len = strlen(p);
 		    for (i = 0, d = debugnames; i < ARRAY_LEN(debugnames); i++, d++)
 			if (len >= d->nchars && strncmp(d->name, p, len) == 0)
-				break;
-		    if (i == ARRAY_LEN(debugnames)) {
-			int j = 0xffffffff;
-			int k = 0;
-			fprintf(stderr, "Valid debug levels: ");
-			for (i = 0, d = debugnames; i < ARRAY_LEN(debugnames); i++, d++) {
-			    if ((j & d->level) == d->level) {
-				if (k++)
-				    putc(',', stderr);
-				fputs(d->name, stderr);
-				j &= ~d->level;
-			    }
-			}
-			putc('\n', stderr);
-			goto usage;
-		    }
+			    break;
+
+		    if (i == ARRAY_LEN(debugnames))
+			usage();
+
 		    debug |= d->level;
 		    p = q;
 		}
-	    } else
-		debug = DEFAULT_DEBUG;
-	} else if (strcmp(*argv, "-c") == 0) {
-	    if (argc > 1) {
-		argv++, argc--;
-		configfilename = *argv;
-	    } else
-		goto usage;
-	} else if (strcmp(*argv, "-p") == 0) {
-	    logit(LOG_WARNING, 0, "disabling pruning is no longer supported");
+	    }
+	    break;
+	case 'h':
+	    usage();
+	    break;
+	case 'p':
+	    warnx("Disabling pruning is no longer supported.");
+	    break;
 #ifdef SNMP
-   } else if (strcmp(*argv, "-P") == 0) {
-	    if (argc > 1 && isdigit(*(argv + 1)[0])) {
-		argv++, argc--;
-		dest_port = atoi(*argv);
-	    } else
+	case 'P':
+	    if (!optarg)
 		dest_port = DEFAULT_PORT;
+	    else {
+		dest_port = strtonum(optarg, 1, 65535, &errstr);
+		if (errstr) {
+		    warnx("destination port %s", errstr);
+		    debug = DEFAULT_PORT;
+		}
+	    }
+#else
+	    warnx("SNMP support missing, please feel free to submit a patch.");
 #endif
-	} else
-	    goto usage;
-	argv++, argc--;
+	    break;
+	default:
+	    usage();
+	}
     }
 
-    if (argc > 0) {
-usage:	fprintf(stderr,
-		"usage: mrouted [-p] [-c config_file] [-d [debug_level][,debug_level...]]\n");
-	exit(1);
-    }
+    argc -= optind;
+    argv += optind;
+
+    if (argc > 0)
+	usage();
 
     if (debug != 0) {
 	struct debugname *d;
@@ -996,6 +1029,7 @@ void md_log(int what, u_int32 origin, u_int32 mcastgrp)
  * Local Variables:
  *  version-control: t
  *  indent-tabs-mode: t
- *  c-file-style: "stroustrup"
+ *  c-file-style: "ellemtel"
+ *  c-basic-offset: 4
  * End:
  */

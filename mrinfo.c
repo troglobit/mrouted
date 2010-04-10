@@ -69,7 +69,7 @@
  * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "defs.h"
@@ -100,12 +100,10 @@ vifi_t  numvifs;		/* to keep loader happy */
 char *	inet_name(u_int32 addr);
 void	ask(u_int32 dst);
 void	ask2(u_int32 dst);
-int	get_number(int *var, int deflt, char ***pargv, int *pargc);
 u_int32	host_addr(char *name);
 void	usage(void);
 
-char *
-inet_name(u_int32 addr)
+char *inet_name(u_int32 addr)
 {
 	struct hostent *e;
 	struct in_addr in;
@@ -126,8 +124,7 @@ inet_name(u_int32 addr)
  * message and the current debug level.  For errors of severity LOG_ERR or
  * worse, terminate the program.
  */
-void
-logit(int severity, int syserr, const char *format, ...)
+void logit(int severity, int syserr, const char *format, ...)
 {
 	va_list ap;
 
@@ -160,15 +157,13 @@ logit(int severity, int syserr, const char *format, ...)
 /*
  * Send a neighbors-list request.
  */
-void 
-ask(u_int32 dst)
+void ask(u_int32 dst)
 {
 	send_igmp(our_addr, dst, IGMP_DVMRP, DVMRP_ASK_NEIGHBORS,
 			htonl(MROUTED_LEVEL), 0);
 }
 
-void 
-ask2(u_int32 dst)
+void ask2(u_int32 dst)
 {
 	send_igmp(our_addr, dst, IGMP_DVMRP, DVMRP_ASK_NEIGHBORS2,
 			htonl(MROUTED_LEVEL), 0);
@@ -177,8 +172,7 @@ ask2(u_int32 dst)
 /*
  * Process an incoming neighbor-list message.
  */
-void 
-accept_neighbors(u_int32 src, u_int32 dst, u_char *p, size_t datalen, u_int32 level)
+void accept_neighbors(u_int32 src, u_int32 dst, u_char *p, size_t datalen, u_int32 level)
 {
 	u_char *ep = p + datalen;
 #define GET_ADDR(a) (a = ((u_int32)*p++ << 24), a += ((u_int32)*p++ << 16),\
@@ -207,8 +201,7 @@ accept_neighbors(u_int32 src, u_int32 dst, u_char *p, size_t datalen, u_int32 le
 	}
 }
 
-void 
-accept_neighbors2(u_int32 src, u_int32 dst, u_char *p, size_t datalen, u_int32 level)
+void accept_neighbors2(u_int32 src, u_int32 dst, u_char *p, size_t datalen, u_int32 level)
 {
 	u_char *ep = p + datalen;
 	u_int broken_cisco = ((level & 0xffff) == 0x020a); /* 10.2 */
@@ -222,7 +215,7 @@ accept_neighbors2(u_int32 src, u_int32 dst, u_char *p, size_t datalen, u_int32 l
 	else
 		printf("version %d.%d", majvers, minvers);
 	printf ("]:\n");
-	
+
 	while (p < ep) {
 		u_char metric;
 		u_char thresh;
@@ -264,47 +257,25 @@ accept_neighbors2(u_int32 src, u_int32 dst, u_char *p, size_t datalen, u_int32 l
 	}
 }
 
-int
-get_number(int *var, int deflt, char ***pargv, int *pargc)
+void usage(void)
 {
-	if ((*pargv)[0][2] == '\0') {
-		/* Get the value from the next argument */
-		if (*pargc > 1 && isdigit((*pargv)[1][0])) {
-			(*pargv)++, (*pargc)--;
-			*var = atoi((*pargv)[0]);
-			return 1;
-		} else if (deflt >= 0) {
-			*var = deflt;
-			return 1;
-		} else
-			return 0;
-	} else {		/* Get value from the rest of this argument */
-		if (isdigit((*pargv)[0][2])) {
-			*var = atoi((*pargv)[0] + 2);
-			return 1;
-		} else
-			return 0;
-	}
+    extern char *__progname;
+
+    fprintf(stderr,
+	    "Usage: %s [-hn] [-d [debug_level]] [-r retries] [-t timeout] [router]\n", __progname);
+
+    exit(1);
 }
 
-void
-usage(void)
+int main(int argc, char *argv[])
 {
-	fprintf(stderr,
-	    "Usage: mrinfo [-n] [-t timeout] [-r retries] [router]\n");
-	exit(1);
-}
-
-int
-main(int argc, char *argv[])
-{
-	int tries;
-	int trynew;
+	int tries, trynew, curaddr, ch;
 	struct timeval et;
 	struct hostent *hp;
 	struct hostent bogus;
 	char *host;
-	int curaddr;
+	uid_t uid;
+	const char *errstr;
 
 	if (geteuid() != 0) {
 		fprintf(stderr, "mrinfo: must be root\n");
@@ -312,34 +283,53 @@ main(int argc, char *argv[])
 	}
 
 	init_igmp();
-	seteuid(getuid());
+
+	uid = getuid();
+	if (setresuid(uid, uid, uid) == -1)
+		err(1, "setresuid");
 
 	setlinebuf(stderr);
 
-	argv++;
-	argc--;
-	while (argc > 0 && argv[0][0] == '-') {
-		switch (argv[0][1]) {
+	while ((ch = getopt(argc, argv, "d::hnr:t:")) != -1) {
+		switch (ch) {
 		case 'd':
-			if (!get_number(&debug, DEFAULT_DEBUG, &argv, &argc))
-				usage();
+			if (!optarg)
+				debug = DEFAULT_DEBUG;
+			else {
+				debug = strtonum(optarg, 0, 3, &errstr);
+				if (errstr) {
+					warnx("debug level %s", errstr);
+					debug = DEFAULT_DEBUG;
+				}
+			}
+			break;
+		case 'h':
+			usage();
 			break;
 		case 'n':
 			++nflag;
 			break;
 		case 'r':
-			if (!get_number(&retries, -1, &argv, &argc))
+			retries = strtonum(optarg, 0, INT_MAX, &errstr);
+			if (errstr) {
+				warnx("retries %s", errstr);
 				usage();
+			}
 			break;
 		case 't':
-			if (!get_number(&timeout, -1, &argv, &argc))
+			timeout = strtonum(optarg, 0, INT_MAX, &errstr);
+			if (errstr) {
+				warnx("timeout %s", errstr);
 				usage();
+			}
 			break;
 		default:
 			usage();
 		}
-		argv++, argc--;
 	}
+	argc -= optind;
+	argv += optind;
+
 	if (argc > 1)
 		usage();
 	if (argc == 1)
@@ -408,8 +398,8 @@ main(int argc, char *argv[])
 		fd_set  fds;
 		struct timeval tv, now;
 		int     count;
-                ssize_t recvlen;
-                socklen_t dummy = 0;
+		ssize_t recvlen;
+		socklen_t dummy = 0;
 		u_int32 src, dst, group;
 		struct ip *ip;
 		struct igmp *igmp;
@@ -585,6 +575,7 @@ void accept_info_reply(u_int32 src, u_int32 dst, u_char *p, size_t datalen)
  * Local Variables:
  *  version-control: t
  *  indent-tabs-mode: t
- *  c-file-style: "bsd"
+ *  c-file-style: "ellemtel"
+ *  c-basic-offset: 4
  * End:
  */

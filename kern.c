@@ -343,3 +343,12 @@ k_get_sg_count(src, grp, pktcnt, bytecnt, wrong_if)
     return retval;
 }
 #endif
+
+/**
+ * Local Variables:
+ *  version-control: t
+ *  indent-tabs-mode: t
+ *  c-file-style: "ellemtel"
+ *  c-basic-offset: 4
+ * End:
+ */

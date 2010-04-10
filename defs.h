@@ -9,7 +9,8 @@
  *
  * defs.h,v 3.8.4.15 1998/03/01 02:51:42 fenner Exp
  */
-
+#ifndef __MROUTED_DEFS_H__
+#define __MROUTED_DEFS_H__
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -378,6 +379,10 @@ extern void		rsrr_cache_clean(struct gtable *);
 #endif
 
 #ifndef HAVE_STRLCPY
-size_t                  strlcpy(char *dst, const char *src, size_t siz);
+size_t strlcpy(char *dst, const char *src, size_t siz);
+#endif
+#ifndef HAVE_STRTONUM
+long long strtonum(const char *numstr, long long minval, long long maxval, const char **errstrp);
 #endif
 
+#endif /* __MROUTED_DEFS_H__ */

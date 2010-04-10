@@ -441,3 +441,12 @@ send_igmp(src, dst, type, code, group, datalen)
 	igmp_packet_kind(type, code), src == INADDR_ANY ? "INADDR_ANY" :
 				 inet_fmt(src, s1), inet_fmt(dst, s2));
 }
+
+/**
+ * Local Variables:
+ *  version-control: t
+ *  indent-tabs-mode: t
+ *  c-file-style: "ellemtel"
+ *  c-basic-offset: 4
+ * End:
+ */

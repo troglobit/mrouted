@@ -1,12 +1,12 @@
 /* Mapper for connections between MRouteD multicast routers.
- * Written by Pavel Curtis 
+ * Written by Pavel Curtis
  */
 
 
 /*
  * Copyright (c) 1992, 2001 Xerox Corporation.  All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without modification, 
+ * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
  *
  * Redistributions of source code must retain the above copyright notice,
@@ -17,11 +17,11 @@
  * and/or other materials provided with the distribution.
 
  * Neither name of the Xerox, PARC, nor the names of its contributors may be used
- * to endorse or promote products derived from this software 
- * without specific prior written permission. 
+ * to endorse or promote products derived from this software
+ * without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
  * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE XEROX CORPORATION OR CONTRIBUTORS
  * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
@@ -30,7 +30,7 @@
  * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <string.h>
@@ -62,7 +62,7 @@ typedef struct interface {
 } Interface;
 
 typedef struct node {
-    u_int32_t	addr;		/* IP address of this entry in NET order 
+    u_int32_t	addr;		/* IP address of this entry in NET order
 */
     u_int32_t	version;	/* which mrouted version is running */
     int		tries;		/* How many requests sent?  -1 for aliases */
@@ -96,8 +96,8 @@ char *		graph_name(u_int32_t addr, char *buf, size_t len);
 void		graph_edges(Node *node);
 void		elide_aliases(Node *node);
 void		graph_map(void);
-int		get_number(int *var, int deflt, char ***pargv, int *pargc);
 u_int32_t	host_addr(char *name);
+void            usage(void);
 
 Node *find_node(u_int32_t addr, Node **ptr)
 {
@@ -367,10 +367,10 @@ void accept_neighbors(u_int32_t src, u_int32_t dst, u_char *p, size_t datalen, u
 	    ifc_node->tries = -1;
 	    ifc_node->u.alias = node;
 	}
-	
+
 	ifc = find_interface(ifc_addr, node);
 	old_neighbors = ifc->neighbors;
-	
+
 	/* Add the neighbors for this interface */
 	while (ncount--) {
 	    u_int32_t 	neighbor;
@@ -507,10 +507,10 @@ void accept_neighbors2(u_int32 src, u_int32 dst, u_char *p, size_t datalen, u_in
 	    ifc_node->tries = -1;
 	    ifc_node->u.alias = node;
 	}
-	
+
 	ifc = find_interface(ifc_addr, node);
 	old_neighbors = ifc->neighbors;
-	
+
 	/* Add the neighbors for this interface */
 	while (ncount-- && datalen > 0) {
 	    u_int32_t 	neighbor;
@@ -600,7 +600,7 @@ void print_map(Node *node)
 {
     if (node) {
 	char *name, *addr;
-	
+
 	print_map(node->left);
 
 	addr = inet_fmt(node->addr, s1);
@@ -651,7 +651,7 @@ void print_map(Node *node)
 			    if (flags & DVMRP_NF_DOWN)
 				    printf("/down");
 			}
-                        printf("]\n");
+			printf("]\n");
 			count++;
 		    }
 		}
@@ -756,29 +756,6 @@ void graph_map(void)
 }
 
 
-int get_number(int *var, int deflt, char ***pargv, int *pargc)
-{
-    if ((*pargv)[0][2] == '\0') { /* Get the value from the next argument */
-	if (*pargc > 1  &&  isdigit((*pargv)[1][0])) {
-	    (*pargv)++, (*pargc)--;
-	    *var = atoi((*pargv)[0]);
-	    return 1;
-	} else if (deflt >= 0) {
-	    *var = deflt;
-	    return 1;
-	} else
-	    return 0;
-    } else {			/* Get value from the rest of this argument */
-	if (isdigit((*pargv)[0][2])) {
-	    *var = atoi((*pargv)[0] + 2);
-	    return 1;
-	} else {
-	    return 0;
-	}
-    }
-}
-
-
 u_int32_t host_addr(char *name)
 {
     struct hostent *e = gethostbyname(name);
@@ -795,11 +772,30 @@ u_int32_t host_addr(char *name)
     return addr;
 }
 
+void usage(void)
+{
+    extern char *__progname;
+
+    fprintf(stderr,
+	    "Usage: %s [-fghn] [-d level] [-r count] [-t seconds] [starting_router]\n\n", __progname);
+    fprintf(stderr, "\t-f  Flood the routing graph with queries\n");
+    fprintf(stderr, "\t    (True by default unless `router' is given)\n");
+    fprintf(stderr, "\t-g  Generate output in GraphEd format\n");
+    fprintf(stderr, "\t-h  Show this help text\n");
+    fprintf(stderr, "\t-n  Don't look up DNS names for routers\n");
+    fprintf(stderr, "\t-d  Set debug level\n");
+    fprintf(stderr, "\t-r  Set retry count\n");
+    fprintf(stderr, "\t-t  Set timeout in seconds\n");
+
+    exit(1);
+}
 
 int main(int argc, char *argv[])
 {
     int flood = FALSE, graph = FALSE;
-    
+    int ch;
+    const char *errstr;
+
     setlinebuf(stderr);
 
     if (geteuid() != 0) {
@@ -807,47 +803,56 @@ int main(int argc, char *argv[])
 	exit(1);
     }
 
-    argv++, argc--;
-    while (argc > 0 && argv[0][0] == '-') {
-	switch (argv[0][1]) {
-	  case 'd':
-	    if (!get_number(&debug, DEFAULT_DEBUG, &argv, &argc))
-		goto usage;
-	    break;
-	  case 'f':
-	    flood = TRUE;
-	    break;
-	  case 'g':
-	    graph = TRUE;
-	    break;
-	  case 'n':
-	    show_names = FALSE;
-	    break;
-	  case 'r':
-	    if (!get_number(&retries, -1, &argv, &argc))
-		goto usage;
-	    break;
-	  case 't':
-	    if (!get_number(&timeout, -1, &argv, &argc))
-		goto usage;
-	    break;
-	  default:
-	    goto usage;
-	}
-	argv++, argc--;
+    while ((ch = getopt(argc, argv, "d::fghnr:t:")) != -1) {
+	 switch (ch) {
+	 case 'd':
+	      if (!optarg)
+		   debug = DEFAULT_DEBUG;
+	      else {
+		   debug = strtonum(optarg, 0, 3, &errstr);
+		   if (errstr) {
+			warnx("debug level %s", errstr);
+			debug = DEFAULT_DEBUG;
+		   }
+	      }
+	      break;
+	 case 'f':
+	      flood = TRUE;
+	      break;
+	 case 'g':
+	      graph = TRUE;
+	      break;
+	 case 'h':
+	      usage();
+	      break;
+	 case 'n':
+	      show_names = FALSE;
+	      break;
+	 case 'r':
+	      retries = strtonum(optarg, 0, INT_MAX, &errstr);
+	      if (errstr) {
+		   warnx("retries %s", errstr);
+		   usage();
+	      }
+	      break;
+	 case 't':
+	      timeout = strtonum(optarg, 0, INT_MAX, &errstr);
+	      if (errstr) {
+		   warnx("timeout %s", errstr);
+		   usage();
+	      }
+	      break;
+	 default:
+	      usage();
+	 }
     }
 
-    if (argc > 1) {
-      usage:	
-	fprintf(stderr,
-		"Usage: map-mbone [-f] [-g] [-n] [-t timeout] %s\n\n",
-		"[-r retries] [-d [debug-level]] [router]");
-        fprintf(stderr, "\t-f  Flood the routing graph with queries\n");
-        fprintf(stderr, "\t    (True by default unless `router' is given)\n");
-        fprintf(stderr, "\t-g  Generate output in GraphEd format\n");
-        fprintf(stderr, "\t-n  Don't look up DNS names for routers\n");
-	exit(1);
-    } else if (argc == 1 && !(target_addr = host_addr(argv[0]))) {
+    argc -= optind;
+    argv += optind;
+
+    if (argc > 1)
+	usage();
+    else if (argc == 1 && !(target_addr = host_addr(argv[0]))) {
 	fprintf(stderr, "Unknown host: %s\n", argv[0]);
 	exit(2);
     }
@@ -862,7 +867,7 @@ int main(int argc, char *argv[])
 	struct sockaddr_in addr;
 	socklen_t addrlen = sizeof(addr);
 
-        memset(&addr, 0, sizeof addr);
+	memset(&addr, 0, sizeof addr);
 	addr.sin_family = AF_INET;
 #ifdef HAVE_SA_LEN
 	addr.sin_len = sizeof(addr);
@@ -896,8 +901,8 @@ int main(int argc, char *argv[])
 	fd_set		fds;
 	struct timeval 	tv;
 	int 		count;
-        ssize_t         recvlen;
-        socklen_t       dummy = 0;
+	ssize_t         recvlen;
+	socklen_t       dummy = 0;
 
 	FD_ZERO(&fds);
 	if (igmp_socket >= FD_SETSIZE)
@@ -974,6 +979,7 @@ void accept_info_reply(u_int32 src, u_int32 dst, u_char *p, size_t datalen)
  * Local Variables:
  *  version-control: t
  *  indent-tabs-mode: t
- *  c-file-style: "bsd"
+ *  c-file-style: "ellemtel"
+ *  c-basic-offset: 4
  * End:
  */
