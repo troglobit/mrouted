@@ -130,7 +130,6 @@ void
 logit(int severity, int syserr, const char *format, ...)
 {
 	va_list ap;
-	char    fmt[100];
 
 	switch (debug) {
 	case 0:
@@ -143,12 +142,10 @@ logit(int severity, int syserr, const char *format, ...)
 		if (severity > LOG_INFO)
 			return;
 	default:
-		fmt[0] = '\0';
 		if (severity == LOG_WARNING)
-			strcat(fmt, "warning - ");
-		strncat(fmt, format, 80);
+			fprintf(stderr, "warning - ");
 		va_start(ap, format);
-		vfprintf(stderr, fmt, ap);
+		vfprintf(stderr, format, ap);
 		va_end(ap);
 		if (syserr == 0)
 			fprintf(stderr, "\n");
@@ -372,7 +369,7 @@ main(int argc, char *argv[])
 	} else
 		hp = gethostbyname(host);
 
-	if (hp == NULL) {
+	if (hp == NULL || hp->h_length != sizeof(target_addr)) {
 		fprintf(stderr, "mrinfo: %s: no such host\n", argv[0]);
 		exit(1);
 	}
@@ -430,6 +427,8 @@ main(int argc, char *argv[])
 		int     ipdatalen, iphdrlen, igmpdatalen;
 
 		FD_ZERO(&fds);
+		if (igmp_socket >= FD_SETSIZE)
+			logit(LOG_ERR, 0, "Descriptor too big");
 		FD_SET(igmp_socket, &fds);
 
 		gettimeofday(&now, 0);
