@@ -340,7 +340,7 @@ int main(int argc, char *argv[])
 	if ((target_addr = inet_addr(host)) != INADDR_NONE) {
 		hp = &bogus;
 		hp->h_length = sizeof(target_addr);
-		if (!(hp->h_addr_list = (char **)malloc(2 * sizeof(char *))))
+		if (!(hp->h_addr_list = (char **)calloc(2, sizeof(char *))))
 			err(1, "Not enough memory");
 		if (!(hp->h_addr_list[0] = malloc(hp->h_length)))
 			err(1, "Not enough memory");
