@@ -46,28 +46,25 @@ typedef struct {
 /*
  * Forward declarations.
  */
-static void start_vif __P((vifi_t vifi));
-static void start_vif2 __P((vifi_t vifi));
-static void stop_vif __P((vifi_t vifi));
-static void age_old_hosts __P((void));
-static void send_probe_on_vif __P((struct uvif *v));
-static void send_query __P((struct uvif *v));
-static int info_version __P((u_char *p));
-static void DelVif __P((void *arg));
-static int SetTimer __P((int vifi, struct listaddr *g));
-static int DeleteTimer __P((int id));
-static void SendQuery __P((void *arg));
-static int SetQueryTimer __P((struct listaddr *g, vifi_t vifi, int to_expire,
-					int q_time));
-
+static void start_vif(vifi_t vifi);
+static void start_vif2(vifi_t vifi);
+static void stop_vif(vifi_t vifi);
+static void age_old_hosts(void);
+static void send_probe_on_vif(struct uvif *v);
+static void send_query(struct uvif *v);
+static int info_version(u_char *p);
+static void DelVif(void *arg);
+static int SetTimer(vifi_t vifi, struct listaddr *g);
+static int DeleteTimer(int id);
+static void SendQuery(void *arg);
+static int SetQueryTimer(struct listaddr *g, vifi_t vifi, int to_expire, int q_time);
 
 /*
  * Initialize the virtual interfaces, but do not install
  * them in the kernel.  Start routing on all vifs that are
  * not down or disabled.
  */
-void
-init_vifs()
+void init_vifs(void)
 {
     vifi_t vifi;
     struct uvif *v;
@@ -183,8 +180,7 @@ zero_vif(v, t)
  * Start routing on all virtual interfaces that are not down or
  * administratively disabled.
  */
-void
-init_installvifs()
+void init_installvifs(void)
 {
     vifi_t vifi;
     struct uvif *v;
@@ -214,8 +210,7 @@ init_installvifs()
  * tunnel end-points.  Ignore interfaces that have been administratively
  * disabled.
  */
-void
-check_vif_state()
+void check_vif_state(void)
 {
     register vifi_t vifi;
     register struct uvif *v;
@@ -272,12 +267,7 @@ check_vif_state()
  * sent "beside" the tunnel, as required by earlier versions of mrouted,
  * then just send the message.
  */
-void
-send_on_vif(v, dst, code, datalen)
-    register struct uvif *v;
-    u_int32 dst;
-    int code;
-    int datalen;
+void send_on_vif(struct uvif *v, u_int32 dst, int code, size_t datalen)
 {
     u_int32 group = htonl(MROUTED_LEVEL | 
 			((v->uv_flags & VIFF_LEAF) ? 0 : LEAF_FLAGS));
@@ -299,12 +289,10 @@ send_on_vif(v, dst, code, datalen)
 /*
  * Send a probe message on vif v
  */
-static void
-send_probe_on_vif(v)
-    register struct uvif *v;
+static void send_probe_on_vif(struct uvif *v)
 {
-    register char *p;
-    register int datalen = 0;
+    char *p;
+    size_t datalen = 0;
     struct listaddr *nbr;
     int i;
 
@@ -333,9 +321,7 @@ send_probe_on_vif(v)
     send_on_vif(v, 0, DVMRP_PROBE, datalen);
 }
 
-static void
-send_query(v)
-    register struct uvif *v;
+static void send_query(struct uvif *v)
 {
     IF_DEBUG(DEBUG_IGMP)
     logit(LOG_DEBUG, 0, "sending %squery on vif %d",
@@ -350,9 +336,7 @@ send_query(v)
 /*
  * Add a vifi to the kernel and start routing on it.
  */
-static void
-start_vif(vifi)
-    vifi_t vifi;
+static void start_vif(vifi_t vifi)
 {
     /*
      * Install the interface in the kernel's vif structure.
@@ -366,9 +350,7 @@ start_vif(vifi)
  * Add a vifi to all the user-level data structures but don't add
  * it to the kernel yet.
  */
-static void
-start_vif2(vifi)
-    vifi_t vifi;
+static void start_vif2(vifi_t vifi)
 {
     struct uvif *v;
     u_int32 src;
@@ -432,9 +414,7 @@ start_vif2(vifi)
 /*
  * Stop routing on the specified virtual interface.
  */
-static void
-stop_vif(vifi)
-    vifi_t vifi;
+static void stop_vif(vifi_t vifi)
 {
     struct uvif *v;
     struct listaddr *a;
@@ -509,8 +489,7 @@ stop_vif(vifi)
 /*
  * stop routing on all vifs
  */
-void
-stop_all_vifs()
+void stop_all_vifs(void)
 {
     vifi_t vifi;
     struct uvif *v;
@@ -543,14 +522,11 @@ stop_all_vifs()
  * Find the virtual interface from which an incoming packet arrived,
  * based on the packet's source and destination IP addresses.
  */
-vifi_t
-find_vif(src, dst)
-    register u_int32 src;
-    register u_int32 dst;
+vifi_t find_vif(u_int32 src, u_int32 dst)
 {
-    register vifi_t vifi;
-    register struct uvif *v;
-    register struct phaddr *p;
+    vifi_t vifi;
+    struct uvif *v;
+    struct phaddr *p;
 
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
 	if (!(v->uv_flags & (VIFF_DOWN|VIFF_DISABLED))) {
@@ -576,12 +552,11 @@ find_vif(src, dst)
     return (NO_VIF);
 }
 
-static void
-age_old_hosts()
+static void age_old_hosts(void)
 {
-    register vifi_t vifi;
-    register struct uvif *v;
-    register struct listaddr *g;
+    vifi_t vifi;
+    struct uvif *v;
+    struct listaddr *g;
 
     /*
      * Decrement the old-hosts-present timer for each
@@ -603,11 +578,10 @@ age_old_hosts()
  * so can not cause loss of membership (but can send more packets than
  * necessary)
  */
-void
-query_groups()
+void query_groups(void)
 {
-    register vifi_t vifi;
-    register struct uvif *v;
+    vifi_t vifi;
+    struct uvif *v;
 
     for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
 	if (v->uv_flags & VIFF_QUERIER) {
@@ -622,13 +596,10 @@ query_groups()
  * IGMP version mismatches, perform querier election, and
  * handle group-specific queries when we're not the querier.
  */
-void
-accept_membership_query(src, dst, group, tmo)
-    u_int32 src, dst, group;
-    int  tmo;
+void accept_membership_query(u_int32 src, u_int32 dst, u_int32 group, int tmo)
 {
-    register vifi_t vifi;
-    register struct uvif *v;
+    vifi_t vifi;
+    struct uvif *v;
 
     if ((vifi = find_vif(src, dst)) == NO_VIF ||
 	(uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
@@ -706,7 +677,7 @@ accept_membership_query(src, dst, group, tmo)
      */
     if (!(v->uv_flags & (VIFF_IGMPV1|VIFF_QUERIER)) && group != 0 &&
 					src != v->uv_lcl_addr) {
-	register struct listaddr *g;
+	struct listaddr *g;
 
 	IF_DEBUG(DEBUG_IGMP)
 	logit(LOG_DEBUG, 0,
@@ -737,14 +708,11 @@ accept_membership_query(src, dst, group, tmo)
 /*
  * Process an incoming group membership report.
  */
-void
-accept_group_report(src, dst, group, r_type)
-    u_int32 src, dst, group;
-    int  r_type;
+void accept_group_report(u_int32 src, u_int32 dst, u_int32 group, int r_type)
 {
-    register vifi_t vifi;
-    register struct uvif *v;
-    register struct listaddr *g;
+    vifi_t vifi;
+    struct uvif *v;
+    struct listaddr *g;
 
     if ((vifi = find_vif(src, dst)) == NO_VIF ||
 	(uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
@@ -812,13 +780,11 @@ accept_group_report(src, dst, group, r_type)
 /*
  * Process an incoming IGMPv2 Leave Group message.
  */
-void
-accept_leave_message(src, dst, group)
-    u_int32 src, dst, group;
+void accept_leave_message(u_int32 src, u_int32 dst, u_int32 group)
 {
-    register vifi_t vifi;
-    register struct uvif *v;
-    register struct listaddr *g;
+    vifi_t vifi;
+    struct uvif *v;
+    struct listaddr *g;
 
     if ((vifi = find_vif(src, dst)) == NO_VIF ||
 	(uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
@@ -882,11 +848,10 @@ of queries remaining.
  * Useful to determine one-way interfaces.
  * Detect neighbor loss faster.
  */
-void
-probe_for_neighbors()
+void probe_for_neighbors(void)
 {
-    register vifi_t vifi;
-    register struct uvif *v;
+    vifi_t vifi;
+    struct uvif *v;
 
     for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
 	if (!(v->uv_flags & (VIFF_DOWN|VIFF_DISABLED))) {
@@ -899,9 +864,7 @@ probe_for_neighbors()
 /*
  * Send a list of all of our neighbors to the requestor, `src'.
  */
-void
-accept_neighbor_request(src, dst)
-    u_int32 src, UNUSED dst;
+void accept_neighbor_request(u_int32 src, u_int32 dst)
 {
     vifi_t vifi;
     struct uvif *v;
@@ -960,9 +923,7 @@ accept_neighbor_request(src, dst)
 /*
  * Send a list of all of our neighbors to the requestor, `src'.
  */
-void
-accept_neighbor_request2(src, dst)
-    u_int32 src, UNUSED dst;
+void accept_neighbor_request2(u_int32 src, u_int32 dst)
 {
     vifi_t vifi;
     struct uvif *v;
@@ -1058,11 +1019,7 @@ accept_neighbor_request2(src, dst)
 		htonl(MROUTED_LEVEL), datalen);
 }
 
-void
-accept_info_request(src, dst, p, datalen)
-    u_int32 src, UNUSED dst;
-    u_char *p;
-    int datalen;
+void accept_info_request(u_int32 src, u_int32 dst, u_char *p, size_t datalen)
 {
     u_char *q;
     int len;
@@ -1104,9 +1061,7 @@ accept_info_request(src, dst, p, datalen)
 /*
  * Information response -- return version string
  */
-static int
-info_version(p)
-    u_char *p;
+static int info_version(u_char *p)
 {
     int len;
     extern char versionstring[];
@@ -1124,11 +1079,7 @@ info_version(p)
 /*
  * Process an incoming neighbor-list message.
  */
-void
-accept_neighbors(src, dst, p, datalen, level)
-    u_int32 src, dst, UNUSED level;
-    u_char UNUSED *p;
-    int UNUSED datalen;
+void accept_neighbors(u_int32_t src, u_int32_t dst, u_char *p, size_t datalen, u_int32_t level)
 {
     logit(LOG_INFO, 0, "ignoring spurious DVMRP neighbor list from %s to %s",
 	inet_fmt(src, s1), inet_fmt(dst, s2));
@@ -1138,11 +1089,7 @@ accept_neighbors(src, dst, p, datalen, level)
 /*
  * Process an incoming neighbor-list message.
  */
-void
-accept_neighbors2(src, dst, p, datalen, level)
-    u_int32 src, dst, UNUSED level;
-    u_char UNUSED *p;
-    int UNUSED datalen;
+void accept_neighbors2(u_int32 src, u_int32 dst, u_char *p, size_t datalen, u_int32 level)
 {
     IF_DEBUG(DEBUG_PKT)
     logit(LOG_DEBUG, 0, "ignoring spurious DVMRP neighbor list2 from %s to %s",
@@ -1152,11 +1099,7 @@ accept_neighbors2(src, dst, p, datalen, level)
 /*
  * Process an incoming info reply message.
  */
-void
-accept_info_reply(src, dst, p, datalen)
-    u_int32 src, dst;
-    u_char UNUSED *p;
-    int UNUSED datalen;
+void accept_info_reply(u_int32 src, u_int32 dst, u_char *p, size_t datalen)
 {
     IF_DEBUG(DEBUG_PKT)
     logit(LOG_DEBUG, 0, "ignoring spurious DVMRP info reply from %s to %s",
@@ -1169,14 +1112,7 @@ accept_info_reply(src, dst, p, datalen)
  * 'msgtype' is the type of DVMRP message received from the neighbor.
  * Return the neighbor entry if 'addr' is a valid neighbor, FALSE otherwise.
  */
-struct listaddr *
-update_neighbor(vifi, addr, msgtype, p, datalen, level)
-    vifi_t vifi;
-    u_int32 addr;
-    int msgtype;
-    char *p;
-    int datalen;
-    u_int32 level;
+struct listaddr *update_neighbor(vifi_t vifi, u_int32 addr, int msgtype, char *p, size_t datalen, u_int32 level)
 {
     register struct uvif *v;
     register struct listaddr *n;
@@ -1494,13 +1430,12 @@ update_neighbor(vifi, addr, msgtype, p, datalen, level)
  * On every timer interrupt, advance the timer in each neighbor and
  * group entry on every vif.
  */
-void
-age_vifs()
+void age_vifs(void)
 {
-    register vifi_t vifi;
-    register struct uvif *v;
-    register struct listaddr *a, *prev_a;
-    register u_int32 addr;
+    vifi_t vifi;
+    struct uvif *v;
+    struct listaddr *a, *prev_a;
+    u_int32 addr;
 
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v ) {
 	if (v->uv_leaf_timer && (v->uv_leaf_timer -= TIMER_INTERVAL == 0)) {
@@ -1570,10 +1505,7 @@ age_vifs()
 /*
  * Returns the neighbor info struct for a given neighbor
  */
-struct listaddr *
-neighbor_info(vifi, addr)
-    vifi_t vifi;
-    u_int32 addr;
+struct listaddr *neighbor_info(vifi_t vifi, u_int32 addr)
 {
     struct listaddr *u;
 
@@ -1617,15 +1549,13 @@ static struct vnflags nbrflags[] = {
 /*
  * Print the contents of the uvifs array on file 'fp'.
  */
-void
-dump_vifs(fp)
-    FILE *fp;
+void dump_vifs(FILE *fp)
 {
-    register vifi_t vifi;
-    register struct uvif *v;
-    register struct listaddr *a;
-    register struct phaddr *p;
-    register struct vif_acl *acl;
+    vifi_t vifi;
+    struct uvif *v;
+    struct listaddr *a;
+    struct phaddr *p;
+    struct vif_acl *acl;
     int i;
     struct sioc_vif_req v_req;
     time_t now;
@@ -1768,9 +1698,7 @@ dump_vifs(fp)
 /*
  * Time out record of a group membership on a vif
  */
-static void
-DelVif(arg)
-    void *arg;
+static void DelVif(void *arg)
 {
     cbk_t *cbk = (cbk_t *)arg;
     vifi_t vifi = cbk->vifi;
@@ -1802,10 +1730,7 @@ DelVif(arg)
 /*
  * Set a timer to delete the record of a group membership on a vif.
  */
-static int
-SetTimer(vifi, g)
-    vifi_t vifi;
-    struct listaddr *g;
+static int SetTimer(vifi_t vifi, struct listaddr *g)
 {
     cbk_t *cbk;
 
@@ -1818,9 +1743,7 @@ SetTimer(vifi, g)
 /*
  * Delete a timer that was set above.
  */
-static int
-DeleteTimer(id)
-    int id;
+static int DeleteTimer(int id)
 {
     timer_clearTimer(id);
     return 0;
@@ -1829,9 +1752,7 @@ DeleteTimer(id)
 /*
  * Send a group-specific query.
  */
-static void
-SendQuery(arg)
-    void *arg;
+static void SendQuery(void *arg)
 {
     cbk_t *cbk = (cbk_t *)arg;
     register struct uvif *v = &uvifs[cbk->vifi];
@@ -1846,11 +1767,7 @@ SendQuery(arg)
 /*
  * Set a timer to send a group-specific query.
  */
-static int
-SetQueryTimer(g, vifi, to_expire, q_time)
-    struct listaddr *g;
-    vifi_t vifi;
-    int to_expire, q_time;
+static int SetQueryTimer(struct listaddr *g, vifi_t vifi, int to_expire, int q_time)
 {
     cbk_t *cbk;
 
@@ -1860,3 +1777,11 @@ SetQueryTimer(g, vifi, to_expire, q_time)
     cbk->vifi = vifi;
     return timer_setTimer(to_expire, SendQuery, cbk);
 }
+
+/**
+ * Local Variables:
+ *  version-control: t
+ *  indent-tabs-mode: t
+ *  c-file-style: "bsd"
+ * End:
+ */

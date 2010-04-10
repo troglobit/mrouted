@@ -38,11 +38,7 @@
 #include <sys/time.h>
 #include "defs.h"
 #include <arpa/inet.h>
-#ifdef __STDC__
 #include <stdarg.h>
-#else
-#include <varargs.h>
-#endif
 
 #define DEFAULT_TIMEOUT	2	/* How long to wait before retrying requests */
 #define DEFAULT_RETRIES 1	/* How many times to ask each router */
@@ -87,31 +83,23 @@ int	show_names = TRUE;
 vifi_t  numvifs;		/* to keep loader happy */
 				/* (see COPY_TABLES macro called in kern.c) */
 
-Node *			find_node __P((u_int32_t addr, Node **ptr));
-Interface *		find_interface __P((u_int32_t addr, Node *node));
-Neighbor *		find_neighbor __P((u_int32_t addr, Node *node));
-int			main __P((int argc, char *argv[]));
-void			ask __P((u_int32_t dst));
-void			ask2 __P((u_int32_t dst));
-int			retry_requests __P((Node *node));
-char *			inet_name __P((u_int32_t addr));
-void			print_map __P((Node *node));
-char *			graph_name __P((u_int32_t addr, char *buf));
-void			graph_edges __P((Node *node));
-void			elide_aliases __P((Node *node));
-void			graph_map __P((void));
-int			get_number __P((int *var, int deflt, char ***pargv,
-						int *pargc));
-u_int32_t			host_addr __P((char *name));
+Node *		find_node(u_int32_t addr, Node **ptr);
+Interface *	find_interface(u_int32_t addr, Node *node);
+Neighbor *	find_neighbor(u_int32_t addr, Node *node);
+int		main(int argc, char *argv[]);
+void		ask(u_int32_t dst);
+void		ask2(u_int32_t dst);
+int		retry_requests(Node *node);
+char *		inet_name(u_int32_t addr);
+void		print_map(Node *node);
+char *		graph_name(u_int32_t addr, char *buf, size_t len);
+void		graph_edges(Node *node);
+void		elide_aliases(Node *node);
+void		graph_map(void);
+int		get_number(int *var, int deflt, char ***pargv, int *pargc);
+u_int32_t	host_addr(char *name);
 
-#ifdef __STDC__
-void logit(int severity, int syserr, const char *format, ...)
-	__attribute__((__format__(__printf__, 3, 4)));
-#endif
-
-Node *find_node(addr, ptr)
-    u_int32_t addr;
-    Node **ptr;
+Node *find_node(u_int32_t addr, Node **ptr)
 {
     Node *n = *ptr;
 
@@ -132,9 +120,7 @@ Node *find_node(addr, ptr)
 }
 
 
-Interface *find_interface(addr, node)
-    u_int32_t addr;
-    Node *node;
+Interface *find_interface(u_int32_t addr, Node *node)
 {
     Interface *ifc;
 
@@ -152,9 +138,7 @@ Interface *find_interface(addr, node)
 }
 
 
-Neighbor *find_neighbor(addr, node)
-    u_int32_t addr;
-    Node *node;
+Neighbor *find_neighbor(u_int32_t addr, Node *node)
 {
     Interface *ifc;
 
@@ -175,62 +159,46 @@ Neighbor *find_neighbor(addr, node)
  * message and the current debug level.  For errors of severity LOG_ERR or
  * worse, terminate the program.
  */
-#ifdef __STDC__
-void
-logit(int severity, int syserr, const char *format, ...)
+void logit(int severity, int syserr, const char *format, ...)
 {
 	va_list ap;
-	char    fmt[100];
 
-	va_start(ap, format);
-#else
-/*VARARGS3*/
-void 
-logit(severity, syserr, format, va_alist)
-	int     severity, syserr;
-	char   *format;
-	va_dcl
-{
-	va_list ap;
-	char    fmt[100];
-
-	va_start(ap);
-#endif
-
-    switch (debug) {
-	case 0: if (severity > LOG_WARNING) return;
-	case 1: if (severity > LOG_NOTICE ) return;
-	case 2: if (severity > LOG_INFO   ) return;
+	switch (debug) {
+	case 0:
+		if (severity > LOG_WARNING)
+			return;
+	case 1:
+		if (severity > LOG_NOTICE)
+			return;
+	case 2:
+		if (severity > LOG_INFO)
+			return;
 	default:
-	    fmt[0] = '\0';
-	    if (severity == LOG_WARNING)
-		strcat(fmt, "warning - ");
-	    strncat(fmt, format, 80);
-	    format = fmt;
-	    vfprintf(stderr, format, ap);
-	    if (syserr == 0)
-		fprintf(stderr, "\n");
-	    else
-		fprintf(stderr, ": %s\n", strerror(syserr));
-    }
+		if (severity == LOG_WARNING)
+			fprintf(stderr, "warning - ");
+		va_start(ap, format);
+		vfprintf(stderr, format, ap);
+		va_end(ap);
+		if (syserr == 0)
+			fprintf(stderr, "\n");
+		else
+			fprintf(stderr, ": %s\n", strerror(syserr));
+	}
 
-    if (severity <= LOG_ERR)
-	exit(1);
+	if (severity <= LOG_ERR)
+		exit(1);
 }
-
 
 /*
  * Send a neighbors-list request.
  */
-void ask(dst)
-    u_int32_t dst;
+void ask(u_int32_t dst)
 {
     send_igmp(our_addr, dst, IGMP_DVMRP, DVMRP_ASK_NEIGHBORS,
 		htonl(MROUTED_LEVEL), 0);
 }
 
-void ask2(dst)
-    u_int32_t dst;
+void ask2(u_int32_t dst)
 {
     send_igmp(our_addr, dst, IGMP_DVMRP, DVMRP_ASK_NEIGHBORS2,
 		htonl(MROUTED_LEVEL), 0);
@@ -240,9 +208,7 @@ void ask2(dst)
 /*
  * Process an incoming group membership report.
  */
-void accept_group_report(src, dst, group, r_type)
-    u_int32_t src, dst, UNUSED group;
-    int UNUSED r_type;
+void accept_group_report(u_int32 src, u_int32 dst, u_int32 group, int r_type)
 {
     logit(LOG_INFO, 0, "ignoring IGMP group membership report from %s to %s",
 	inet_fmt(src, s1), inet_fmt(dst, s2));
@@ -252,10 +218,7 @@ void accept_group_report(src, dst, group, r_type)
 /*
  * Process an incoming neighbor probe message.
  */
-void accept_probe(src, dst, p, datalen, level)
-    u_int32_t src, dst, UNUSED level;
-    char UNUSED *p;
-    int UNUSED datalen;
+void accept_probe(u_int32_t src, u_int32_t dst, char *p, size_t datalen, u_int32_t level)
 {
     logit(LOG_INFO, 0, "ignoring DVMRP probe from %s to %s",
 	inet_fmt(src, s1), inet_fmt(dst, s2));
@@ -265,10 +228,7 @@ void accept_probe(src, dst, p, datalen, level)
 /*
  * Process an incoming route report message.
  */
-void accept_report(src, dst, p, datalen, level)
-    u_int32_t src, dst, UNUSED level;
-    char UNUSED *p;
-    int UNUSED datalen;
+void accept_report(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level)
 {
     logit(LOG_INFO, 0, "ignoring DVMRP routing report from %s to %s",
 	inet_fmt(src, s1), inet_fmt(dst, s2));
@@ -278,8 +238,7 @@ void accept_report(src, dst, p, datalen, level)
 /*
  * Process an incoming neighbor-list request message.
  */
-void accept_neighbor_request(src, dst)
-    u_int32_t src, dst;
+void accept_neighbor_request(u_int32 src, u_int32 dst)
 {
     if (src != our_addr)
 	logit(LOG_INFO, 0,
@@ -287,8 +246,7 @@ void accept_neighbor_request(src, dst)
 	    inet_fmt(src, s1), inet_fmt(dst, s2));
 }
 
-void accept_neighbor_request2(src, dst)
-    u_int32_t src, dst;
+void accept_neighbor_request2(u_int32 src, u_int32 dst)
 {
     if (src != our_addr)
 	logit(LOG_INFO, 0,
@@ -300,10 +258,7 @@ void accept_neighbor_request2(src, dst)
 /*
  * Process an incoming neighbor-list message.
  */
-void accept_neighbors(src, dst, p, datalen, level)
-    u_int32_t src, UNUSED dst, level;
-    u_char *p;
-    int datalen;
+void accept_neighbors(u_int32_t src, u_int32_t dst, u_char *p, size_t datalen, u_int32_t level)
 {
     Node       *node = find_node(src, &routers);
 
@@ -461,10 +416,7 @@ void accept_neighbors(src, dst, p, datalen, level)
     }
 }
 
-void accept_neighbors2(src, dst, p, datalen, level)
-    u_int32_t src, UNUSED dst, level;
-    u_char *p;
-    int datalen;
+void accept_neighbors2(u_int32 src, u_int32 dst, u_char *p, size_t datalen, u_int32 level)
 {
     Node       *node = find_node(src, &routers);
     u_int broken_cisco = ((level & 0xffff) == 0x020a); /* 10.2 */
@@ -608,14 +560,13 @@ void accept_neighbors2(src, dst, p, datalen, level)
 }
 
 
-void check_vif_state()
+void check_vif_state(void)
 {
     logit(LOG_NOTICE, 0, "network marked down...");
 }
 
 
-int retry_requests(node)
-    Node *node;
+int retry_requests(Node *node)
 {
     int	result;
 
@@ -635,8 +586,7 @@ int retry_requests(node)
 }
 
 
-char *inet_name(addr)
-    u_int32_t addr;
+char *inet_name(u_int32_t addr)
 {
     struct hostent *e;
 
@@ -646,8 +596,7 @@ char *inet_name(addr)
 }
 
 
-void print_map(node)
-    Node *node;
+void print_map(Node *node)
 {
     if (node) {
 	char *name, *addr;
@@ -714,14 +663,12 @@ void print_map(node)
 }
 
 
-char *graph_name(addr, buf)
-    u_int32_t addr;
-    char *buf;
+char *graph_name(u_int32_t addr, char *buf, size_t len)
 {
     char *name;
 
     if (show_names  &&  (name = inet_name(addr)))
-	strcpy(buf, name);
+       strlcpy(buf, name, len);
     else
 	inet_fmt(addr, buf);
 
@@ -729,12 +676,11 @@ char *graph_name(addr, buf)
 }
 
 
-void graph_edges(node)
-    Node *node;
+void graph_edges(Node *node)
 {
     Interface *ifc;
     Neighbor *nb;
-    char name[100];
+    char name[MAXHOSTNAMELEN];
 
     if (node) {
 	graph_edges(node->left);
@@ -742,7 +688,7 @@ void graph_edges(node)
 	    printf("  %d {$ NP %d0 %d0 $} \"%s%s\" \n",
 		   (int) node->addr,
 		   node->addr & 0xFF, (node->addr >> 8) & 0xFF,
-		   graph_name(node->addr, name),
+		   graph_name(node->addr, name, sizeof(name)),
 		   node->u.interfaces ? "" : "*");
 	    for (ifc = node->u.interfaces; ifc; ifc = ifc->next)
 		for (nb = ifc->neighbors; nb; nb = nb->next) {
@@ -774,8 +720,7 @@ void graph_edges(node)
     }
 }
 
-void elide_aliases(node)
-    Node *node;
+void elide_aliases(Node *node)
 {
     if (node) {
 	elide_aliases(node->left);
@@ -797,7 +742,7 @@ void elide_aliases(node)
     }
 }
 
-void graph_map()
+void graph_map(void)
 {
     time_t now = time(0);
     char *nowstr = ctime(&now);
@@ -811,9 +756,7 @@ void graph_map()
 }
 
 
-int get_number(var, deflt, pargv, pargc)
-    int *var, *pargc, deflt;
-    char ***pargv;
+int get_number(int *var, int deflt, char ***pargv, int *pargc)
 {
     if ((*pargv)[0][2] == '\0') { /* Get the value from the next argument */
 	if (*pargc > 1  &&  isdigit((*pargv)[1][0])) {
@@ -836,8 +779,7 @@ int get_number(var, deflt, pargv, pargc)
 }
 
 
-u_int32_t host_addr(name)
-    char *name;
+u_int32_t host_addr(char *name)
 {
     struct hostent *e = gethostbyname(name);
     int addr;
@@ -854,9 +796,7 @@ u_int32_t host_addr(name)
 }
 
 
-int main(argc, argv)
-    int argc;
-    char *argv[];
+int main(int argc, char *argv[])
 {
     int flood = FALSE, graph = FALSE;
     
@@ -922,9 +862,10 @@ int main(argc, argv)
 	struct sockaddr_in addr;
 	socklen_t addrlen = sizeof(addr);
 
+        memset(&addr, 0, sizeof addr);
 	addr.sin_family = AF_INET;
-#if (defined(BSD) && (BSD >= 199103))
-	addr.sin_len = sizeof addr;
+#ifdef HAVE_SA_LEN
+	addr.sin_len = sizeof(addr);
 #endif
 	addr.sin_addr.s_addr = dvmrp_group;
 	addr.sin_port = htons(2000); /* any port over 1024 will do... */
@@ -959,6 +900,8 @@ int main(argc, argv)
         socklen_t       dummy = 0;
 
 	FD_ZERO(&fds);
+	if (igmp_socket >= FD_SETSIZE)
+		logit(LOG_ERR, 0, "Descriptor too big");
 	FD_SET(igmp_socket, &fds);
 
 	tv.tv_sec = timeout;
@@ -999,54 +942,38 @@ int main(argc, argv)
 }
 
 /* dummies */
-void accept_prune(src, dst, p, datalen)
-	u_int32_t UNUSED src, UNUSED dst;
-	char UNUSED *p;
-	int UNUSED datalen;
+void accept_prune(u_int32 src, u_int32 dst, char *p, size_t datalen)
 {
 }
-void accept_graft(src, dst, p, datalen)
-	u_int32_t UNUSED src, UNUSED dst;
-	char UNUSED *p;
-	int UNUSED datalen;
+void accept_graft(u_int32 src, u_int32 dst, char *p, size_t datalen)
 {
 }
-void accept_g_ack(src, dst, p, datalen)
-	u_int32_t UNUSED src, UNUSED dst;
-	char UNUSED *p;
-	int UNUSED datalen;
+void accept_g_ack(u_int32 src, u_int32 dst, char *p, size_t datalen)
 {
 }
-void add_table_entry(origin, mcastgrp)
-	u_int32_t UNUSED origin, UNUSED mcastgrp;
+void add_table_entry(u_int32 origin, u_int32 mcastgrp)
 {
 }
-void accept_leave_message(src, dst, group)
-	u_int32_t UNUSED src, UNUSED dst, UNUSED group;
+void accept_leave_message(u_int32 src, u_int32 dst, u_int32 group)
 {
 }
-void accept_mtrace(src, dst, group, data, no, datalen)
-	u_int32_t UNUSED src, UNUSED dst, UNUSED group;
-	char UNUSED *data;
-	u_int8_t UNUSED no;
-	size_t UNUSED datalen;
+void accept_mtrace(u_int32 src, u_int32 dst, u_int32 group, char *data, u_int8_t no, size_t datalen)
 {
 }
-void accept_membership_query(src, dst, group, tmo)
-	u_int32_t UNUSED src, UNUSED dst, UNUSED group;
-	int UNUSED tmo;
+void accept_membership_query(u_int32 src, u_int32 dst, u_int32 group, int tmo)
 {
 }
-void accept_info_request(src, dst, p, datalen)
-	u_int32_t UNUSED src, UNUSED dst;
-	u_char UNUSED *p;
-	int UNUSED datalen;
+void accept_info_request(u_int32 src, u_int32 dst, u_char *p, size_t datalen)
 {
 }
-void accept_info_reply(src, dst, p, datalen)
-	u_int32_t UNUSED src, UNUSED dst;
-	u_char UNUSED *p;
-	int UNUSED datalen;
+void accept_info_reply(u_int32 src, u_int32 dst, u_char *p, size_t datalen)
 {
 }
 
+/**
+ * Local Variables:
+ *  version-control: t
+ *  indent-tabs-mode: t
+ *  c-file-style: "bsd"
+ * End:
+ */

@@ -21,18 +21,13 @@
 
 
 #include "defs.h"
-#ifdef __STDC__
 #include <stdarg.h>
-#else
-#include <varargs.h>
-#endif
 #include <fcntl.h>
+#include <time.h>
 
 #ifdef SNMP
 #include "snmp.h"
 #endif
-
-#include <time.h>
 
 #ifndef lint
 static char UNUSED rcsid[] = "@(#) $Id: \
@@ -108,25 +103,19 @@ static struct debugname {
 /*
  * Forward declarations.
  */
-static void final_init __P((void *));
-static void fasttimer __P((void*));
-static void timer __P((void*));
+static void final_init(void *);
+static void fasttimer(void*);
+static void timer(void*);
 static void dump __P((void)) UNUSED;
-static void dump_version __P((FILE *));
-static void fdump __P((void));
-static void cdump __P((void));
-static void restart __P((void));
-static void handler __P((int));
-static void cleanup __P((void));
-static void resetlogging __P((void *));
+static void dump_version(FILE *);
+static void fdump(void);
+static void cdump(void);
+static void restart(void);
+static void handler(int);
+static void cleanup(void);
+static void resetlogging(void *);
 
-/* To shut up gcc -Wstrict-prototypes */
-int main __P((int argc, char **argv));
-
-int
-register_input_handler(fd, func)
-    int fd;
-    ihfunc_t func;
+int register_input_handler(int fd, ihfunc_t func)
 {
     if (nhandlers >= NHANDLERS)
 	return -1;
@@ -137,10 +126,7 @@ register_input_handler(fd, func)
     return 0;
 }
 
-int
-main(argc, argv)
-    int argc;
-    char *argv[];
+int main(int argc, char *argv[])
 {
     register int recvlen;
     socklen_t dummy;
@@ -158,12 +144,11 @@ main(argc, argv)
     int index, block;
 #endif
 
-    setlinebuf(stderr);
-
     if (geteuid() != 0) {
 	fprintf(stderr, "mrouted: must be root\n");
 	exit(1);
     }
+    setlinebuf(stderr);
 
     progname = strrchr(argv[0], '/');
     if (progname)
@@ -232,8 +217,8 @@ main(argc, argv)
     }
 
     if (argc > 0) {
-usage:	fprintf(stderr, 
-		"usage: mrouted [-p] [-c configfile] [-d [debug_level][,debug_level...]]\n");
+usage:	fprintf(stderr,
+		"usage: mrouted [-p] [-c config_file] [-d [debug_level][,debug_level...]]\n");
 	exit(1);
     }
 
@@ -260,7 +245,7 @@ usage:	fprintf(stderr,
 #else
     (void)openlog("mrouted", LOG_PID);
 #endif
-    sprintf(versionstring, "mrouted version %s", todaysversion);
+    snprintf(versionstring, sizeof(versionstring), "mrouted version %s", todaysversion);
 
     logit(LOG_DEBUG, 0, "%s starting", versionstring);
 
@@ -271,7 +256,7 @@ usage:	fprintf(stderr,
 #endif
 
     /*
-     * Get generation id 
+     * Get generation id
      */
     gettimeofday(&tv, 0);
     dvmrp_genid = tv.tv_sec;
@@ -327,11 +312,11 @@ usage:	fprintf(stderr,
 
     gettimeofday(nvp, 0);
     if (nvp->tv_usec < 500000L){
-   svp->tv_usec = nvp->tv_usec + 500000L;
-   svp->tv_sec = nvp->tv_sec;
+	    svp->tv_usec = nvp->tv_usec + 500000L;
+	    svp->tv_sec = nvp->tv_sec;
     } else {
-   svp->tv_usec = nvp->tv_usec - 500000L;
-   svp->tv_sec = nvp->tv_sec + 1;
+	    svp->tv_usec = nvp->tv_usec - 500000L;
+	    svp->tv_sec = nvp->tv_sec + 1;
     }
 #endif /* SNMP */
 
@@ -351,9 +336,13 @@ usage:	fprintf(stderr,
     sigaction(SIGUSR2, &sa, NULL);
 
     FD_ZERO(&readers);
+    if (igmp_socket >= FD_SETSIZE)
+       logit(LOG_ERR, 0, "Descriptor too big");
     FD_SET(igmp_socket, &readers);
     nfds = igmp_socket + 1;
     for (i = 0; i < nhandlers; i++) {
+	if (ihandlers[i].fd >= FD_SETSIZE)
+	    logit(LOG_ERR, 0, "Descriptor too big");
 	FD_SET(ihandlers[i].fd, &readers);
 	if (ihandlers[i].fd >= nfds)
 	    nfds = ihandlers[i].fd + 1;
@@ -397,7 +386,7 @@ usage:	fprintf(stderr,
 #endif
     }
 
-    fp = fopen(pidfilename, "w");		
+    fp = fopen(pidfilename, "w");
     if (fp != NULL) {
 	fprintf(fp, "%d\n", (int)getpid());
 	(void) fclose(fp);
@@ -455,7 +444,7 @@ usage:	fprintf(stderr,
 	snmp_select_info(&nfds, &rfds, tvp, &block);
 	if (block == 1)
 		tvp = NULL; /* block without timeout */
-	if ((n = select(nfds, &rfds, NULL, NULL, tvp)) < 0) 
+	if ((n = select(nfds, &rfds, NULL, NULL, tvp)) < 0)
 #endif
 	if (sighandled) {
 	    if (sighandled & GOT_SIGINT) {
@@ -476,10 +465,10 @@ usage:	fprintf(stderr,
 	    }
 	}
 	if ((n = select(nfds, &rfds, NULL, NULL, timeout)) < 0) {
-            if (errno != EINTR)
-                logit(LOG_WARNING, errno, "select failed");
-            continue;
-        }
+	    if (errno != EINTR)
+		logit(LOG_WARNING, errno, "select failed");
+	    continue;
+	}
 
 	if (n > 0) {
 	    if (FD_ISSET(igmp_socket, &rfds)) {
@@ -500,7 +489,7 @@ usage:	fprintf(stderr,
 
 #ifdef SNMP
 	THIS IS BROKEN
-	snmp_read(&rfds); 
+	snmp_read(&rfds);
 	snmp_timeout(); /* poll */
 #endif
 	/*
@@ -549,9 +538,7 @@ usage:	fprintf(stderr,
     exit(0);
 }
 
-static void
-final_init(i)
-    void *i;
+static void final_init(void *i)
 {
     char *s = (char *)i;
 
@@ -578,14 +565,12 @@ final_init(i)
  * seconds.  Also, every TIMER_INTERVAL seconds it calls timer() to
  * do all the other time-based processing.
  */
-static void
-fasttimer(p)
-    void UNUSED *p;
+static void fasttimer(void *p)
 {
     static unsigned int tlast;
     static unsigned int nsent;
-    register unsigned int t = tlast + 1;
-    register int n;
+    unsigned int t = tlast + 1;
+    int n;
 
     /*
      * if we're in the last second, send everything that's left.
@@ -638,9 +623,7 @@ u_long virtual_time = 0;
  * group querying duties, and drives various timers in routing entries and
  * virtual interface data structures.
  */
-static void
-timer(p)
-    void UNUSED *p;
+static void timer(void *p)
 {
     age_routes();	/* Advance the timers in the route entries     */
     age_vifs();		/* Advance the timers for neighbors */
@@ -689,8 +672,7 @@ timer(p)
 }
 
 
-static void
-cleanup()
+static void cleanup(void)
 {
     static int in_cleanup = 0;
 
@@ -703,6 +685,7 @@ cleanup()
 	report_to_all_neighbors(ALL_ROUTES);
 	if (did_final_init)
 	    k_stop_dvmrp();
+	remove(pidfilename);
     }
 }
 
@@ -710,9 +693,7 @@ cleanup()
  * Signal handler.  Take note of the fact that the signal arrived
  * so that the main loop can take care of it.
  */
-static void
-handler(sig)
-    int sig;
+static void handler(int sig)
 {
     switch (sig) {
 	case SIGINT:
@@ -738,16 +719,13 @@ handler(sig)
 /*
  * Dump internal data structures to stderr.
  */
-static void
-dump()
+static void dump(void)
 {
     dump_vifs(stderr);
     dump_routes(stderr);
 }
 
-static void
-dump_version(fp)
-    FILE *fp;
+static void dump_version(FILE *fp)
 {
     time_t t;
 
@@ -764,8 +742,7 @@ dump_version(fp)
 /*
  * Dump internal data structures to a file.
  */
-static void
-fdump()
+static void fdump(void)
 {
     FILE *fp;
 
@@ -782,15 +759,14 @@ fdump()
 /*
  * Dump local cache contents to a file.
  */
-static void
-cdump()
+static void cdump(void)
 {
     FILE *fp;
 
     fp = fopen(cachefilename, "w");
     if (fp != NULL) {
 	dump_version(fp);
-	dump_cache(fp); 
+	dump_cache(fp);
 	(void) fclose(fp);
     }
 }
@@ -799,8 +775,7 @@ cdump()
 /*
  * Restart mrouted
  */
-static void
-restart()
+static void restart(void)
 {
     char *s;
 
@@ -842,9 +817,7 @@ restart()
 #define LOG_SHUT_UP	600	/* shut up for 10 minutes */
 static int log_nmsgs = 0;
 
-static void
-resetlogging(arg)
-    void *arg;
+static void resetlogging(void *arg)
 {
     int nxttime = 60;
     void *narg = NULL;
@@ -861,13 +834,11 @@ resetlogging(arg)
     timer_setTimer(nxttime, resetlogging, narg);
 }
 
-char *
-scaletime(t)
-    u_long t;
-{
 #define SCALETIMEBUFLEN 20
-    static char buf1[20];
-    static char buf2[20];
+char *scaletime(u_long t)
+{
+    static char buf1[SCALETIMEBUFLEN];
+    static char buf2[SCALETIMEBUFLEN];
     static char *buf = buf1;
     char *p;
 
@@ -877,9 +848,8 @@ scaletime(t)
     else
 	buf = buf1;
 
-    /* XXX snprintf */
-    sprintf(p, "%2ld:%02ld:%02ld", t / 3600, (t % 3600) / 60, t % 60);
-    p[SCALETIMEBUFLEN - 1] = '\0';
+    snprintf(p, SCALETIMEBUFLEN, "%2ld:%02ld:%02ld", t / 3600, (t % 3600) / 60, t % 60);
+
     return p;
 }
 
@@ -889,8 +859,7 @@ scaletime(t)
 char *logmsg[NLOGMSGS];
 static int logmsgno = 0;
 
-void
-printringbuf()
+void printringbuf(void)
 {
     FILE *f;
     int i;
@@ -921,9 +890,7 @@ printringbuf()
  * according to the severity of the message and the current debug level.
  * For errors of severity LOG_ERR or worse, terminate the program.
  */
-#ifdef __STDC__
-void
-logit(int severity, int syserr, const char *format, ...)
+void logit(int severity, int syserr, const char *format, ...)
 {
     va_list ap;
     static char fmt[211] = "warning - ";
@@ -936,28 +903,7 @@ logit(int severity, int syserr, const char *format, ...)
 #endif
 
     va_start(ap, format);
-#else
-/*VARARGS3*/
-void
-logit(severity, syserr, format, va_alist)
-    int severity, syserr;
-    char *format;
-    va_dcl
-{
-    va_list ap;
-    static char fmt[311] = "warning - ";
-    char *msg;
-    char tbuf[20];
-    struct timeval now;
-    time_t now_sec;
-    struct tm *thyme;
-#ifdef RINGBUFFER
-    static int ringbufinit = 0;
-#endif
-
-    va_start(ap);
-#endif
-    vsprintf(&fmt[10], format, ap);
+    vsnprintf(&fmt[10], sizeof(fmt) - 10, format, ap);
     va_end(ap);
     msg = (severity == LOG_WARNING) ? fmt : &fmt[10];
 
@@ -968,8 +914,8 @@ logit(severity, syserr, format, va_alist)
 	for (i = 0; i < NLOGMSGS; i++) {
 	    logmsg[i] = malloc(LOGMSGSIZE);
 	    if (logmsg[i] == 0) {
-		syslog(LOG_ERR, "out of memory");
-		exit(-1);
+		syslog(LOG_ERR, "Out of memory");
+		exit(1);
 	    }
 	    *logmsg[i] = 0;
 	}
@@ -978,9 +924,9 @@ logit(severity, syserr, format, va_alist)
     gettimeofday(&now,NULL);
     now_sec = now.tv_sec;
     thyme = localtime(&now_sec);
-    sprintf(logmsg[logmsgno++], "%02d:%02d:%02d.%03ld %s err %d",
-		    thyme->tm_hour, thyme->tm_min, thyme->tm_sec,
-		    now.tv_usec / 1000, msg, syserr);
+    snprintf(logmsg[logmsgno++], LOGMSGSIZE, "%02d:%02d:%02d.%03ld %s err %d",
+	     thyme->tm_hour, thyme->tm_min, thyme->tm_sec,
+	     now.tv_usec / 1000, msg, syserr);
     logmsgno %= NLOGMSGS;
     if (severity <= LOG_NOTICE)
 #endif
@@ -1020,14 +966,11 @@ logit(severity, syserr, format, va_alist)
 	    syslog(severity, "%s", msg);
     }
 
-    if (severity <= LOG_ERR) exit(-1);
+    if (severity <= LOG_ERR) exit(1);
 }
 
 #ifdef DEBUG_MFC
-void
-md_log(what, origin, mcastgrp)
-    int what;
-    u_int32 origin, mcastgrp;
+void md_log(int what, u_int32 origin, u_int32 mcastgrp)
 {
     static FILE *f = NULL;
     struct timeval tv;
@@ -1048,3 +991,11 @@ md_log(what, origin, mcastgrp)
     fwrite(buf, sizeof(u_int32), 4, f);
 }
 #endif
+
+/**
+ * Local Variables:
+ *  version-control: t
+ *  indent-tabs-mode: t
+ *  c-file-style: "stroustrup"
+ * End:
+ */

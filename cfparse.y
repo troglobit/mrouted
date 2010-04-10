@@ -7,11 +7,7 @@
  * cfparse.y,v 3.8.4.30 1998/03/01 01:48:58 fenner Exp
  */
 #include <stdio.h>
-#ifdef __STDC__
 #include <stdarg.h>
-#else
-#include <varargs.h>
-#endif
 #include "defs.h"
 #include <netdb.h>
 #include <ifaddrs.h>
@@ -647,7 +643,6 @@ filtelem	: ADDRMASK	{
 
 				}
 %%
-#ifdef __STDC__
 static void
 fatal(char *fmt, ...)
 {
@@ -655,25 +650,12 @@ fatal(char *fmt, ...)
 	char buf[MAXHOSTNAMELEN + 100];
 
 	va_start(ap, fmt);
-#else
-/*VARARGS1*/
-static void
-fatal(fmt, va_alist)
-char *fmt;
-va_dcl
-{
-	va_list ap;
-	char buf[MAXHOSTNAMELEN + 100];
-
-	va_start(ap);
-#endif
 	vsnprintf(buf, sizeof(buf), fmt, ap);
 	va_end(ap);
 
 	logit(LOG_ERR,0,"%s: %s near line %d", configfilename, buf, lineno);
 }
 
-#ifdef __STDC__
 static void
 warn(char *fmt, ...)
 {
@@ -681,18 +663,6 @@ warn(char *fmt, ...)
 	char buf[200];
 
 	va_start(ap, fmt);
-#else
-/*VARARGS1*/
-static void
-warn(fmt, va_alist)
-char *fmt;
-va_dcl
-{
-	va_list ap;
-	char buf[200];
-
-	va_start(ap);
-#endif
 	vsnprintf(buf, sizeof(buf), fmt, ap);
 	va_end(ap);
 

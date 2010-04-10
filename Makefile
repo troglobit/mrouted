@@ -29,8 +29,7 @@ mandir        = $(prefix)/share/man/man8
 # Uncomment the following three lines if you want to use RSRR (Routing
 # Support for Resource Reservations), currently used by RSVP.
 RSRRDEF       = -DRSRR
-RSRRC         = rsrr.c
-RSRRO         = rsrr.o
+RSRR_OBJS     = rsrr.o
 
 ## Common
 CFLAGS        = -O ${MCAST_INCLUDE} ${SNMPDEF} ${RSRRDEF}
@@ -55,16 +54,21 @@ LIBS          = ${SNMPLIBDIR} ${SNMPLIBS} ${LIB2}
 LINTFLAGS     = ${MCAST_INCLUDE}
 IGMP_SRCS     = igmp.c inet.c kern.c
 IGMP_OBJS     = igmp.o inet.o kern.o
-ROUTER_SRCS   = config.c cfparse.y main.c route.c vif.c prune.c callout.c \
-		icmp.c ipip.c ${SNMPC} ${RSRRC}
 ROUTER_OBJS   = config.o cfparse.o main.o route.o vif.o prune.o callout.o \
-		icmp.o ipip.o ${SNMPO} ${RSRRO}
-MAPPER_SRCS   = mapper.c
+		icmp.o ipip.o ${RSRR_OBJS}
+ROUTER_SRCS   = $(ROUTER_OBJS:.o=.c)
+
 MAPPER_OBJS   = mapper.o
+ifndef HAVE_STRLCPY
+MAPPER_OBJS  += strlcpy.o
+endif
+
 MRINFO_SRCS   = mrinfo.c
 MRINFO_OBJS   = mrinfo.o
+
 #MSTAT_SRCS    = mstat.c 
 #MSTAT_OBJS    = mstat.o
+
 HDRS          = defs.h dvmrp.h route.h vif.h prune.h igmpv2.h pathnames.h \
 		rsrr.h rsrr_var.h
 OBJS          = ${IGMP_OBJS} ${ROUTER_OBJS} ${MAPPER_OBJS} ${MRINFO_OBJS} \

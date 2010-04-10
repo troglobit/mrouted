@@ -1281,11 +1281,7 @@ delete_lclgrp(vifi, mcastgrp)
  * Determines if a corresponding prune message has to be generated
  */
 void
-accept_prune(src, dst, p, datalen)
-    u_int32 src;
-    u_int32 dst;
-    char *p;
-    int datalen;
+accept_prune(u_int32 src, u_int32 dst, char *p, size_t datalen)
 {
     u_int32 prun_src;
     u_int32 prun_grp;
@@ -1517,11 +1513,7 @@ chkgrp_graft(vifi, mcastgrp)
  * if no entry exists for this group send ack downstream.
  */
 void
-accept_graft(src, dst, p, datalen)
-    u_int32 	src;
-    u_int32	dst;
-    char	*p;
-    int		datalen;
+accept_graft(u_int32 src, u_int32 dst, char *p, size_t datalen)
 {
     vifi_t 	vifi;
     u_int32 	graft_src;
@@ -1627,11 +1619,7 @@ accept_graft(src, dst, p, datalen)
  * have send a graft again
  */
 void
-accept_g_ack(src, dst, p, datalen)
-    u_int32 	src;
-    u_int32	dst;
-    char	*p;
-    int		datalen;
+accept_g_ack(u_int32 src, u_int32 dst, char *p, size_t datalen)
 {
     struct gtable *g;
     vifi_t 	vifi;
@@ -2296,13 +2284,7 @@ dump_cache(fp2)
  * router. Also forwards the request to downstream routers.
  */
 void
-accept_mtrace(src, dst, group, data, no, datalen)
-    u_int32 src;
-    u_int32 dst;
-    u_int32 group;
-    char *data;
-    u_int8_t no;
-    size_t datalen;
+accept_mtrace(u_int32 src, u_int32 dst, u_int32 group, char *data, u_int8_t no, size_t datalen)
 {
     u_char type;
     struct rtentry *rt;

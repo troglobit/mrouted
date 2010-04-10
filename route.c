@@ -45,17 +45,16 @@ unsigned int nroutes;			/* current number of route entries  */
 /*
  * Private functions.
  */
-static int init_children_and_leaves	__P((struct rtentry *r,
-						vifi_t parent, int first));
-static int find_route		__P((u_int32 origin, u_int32 mask));
-static void create_route	__P((u_int32 origin, u_int32 mask));
-static void discard_route	__P((struct rtentry *prev_r));
-static int compare_rts		__P((const void *rt1, const void *rt2));
-static int report_chunk		__P((int, struct rtentry *start_rt, vifi_t vifi,
-						u_int32 dst));
-static void queue_blaster_report __P((vifi_t, u_int32, u_int32, char *,
-					int, u_int32));
-static void process_blaster_report __P((void *));
+static int init_children_and_leaves (struct rtentry *r, vifi_t parent, int first);
+static int find_route		(u_int32 origin, u_int32 mask);
+static void create_route	(u_int32 origin, u_int32 mask);
+static void discard_route	(struct rtentry *prev_r);
+static int compare_rts		(const void *rt1, const void *rt2);
+static int report_chunk		(int, struct rtentry *start_rt, vifi_t vifi,
+						u_int32 dst);
+static void queue_blaster_report(vifi_t vifi, u_int32 src, u_int32 dst, char *p,
+                                 size_t datalen, u_int32 level);
+static void process_blaster_report (void *);
 
 #ifdef SNMP
 #include <sys/types.h>
@@ -66,8 +65,7 @@ static void process_blaster_report __P((void *));
  * function from find_route() which modifies rtp.
  */
 struct rtentry *
-snmp_find_route(src, mask)
-    register u_int32 src, mask;
+snmp_find_route(u_int32 src, u_int32 mask)
 {
     register struct rtentry *rt;
 
@@ -82,10 +80,7 @@ snmp_find_route(src, mask)
  * Find next route entry > specification 
  */
 int
-next_route(rtpp, src, mask)
-   struct rtentry **rtpp;
-   u_int32 src;
-   u_int32 mask;
+next_route(struct rtentry **rtpp, u_int32 src, u_int32 mask)
 {
    struct rtentry *rt, *rbest = NULL;
 
@@ -107,11 +102,7 @@ next_route(rtpp, src, mask)
  * Given a routing table entry, and a vifi, find the next vifi/entry
  */
 int
-next_route_child(rtpp, src, mask, vifi)
-   struct rtentry **rtpp;
-   u_int32   src;
-   u_int32   mask;
-   vifi_t   *vifi;     /* vif at which to start looking */
+next_route_child(struct rtentry **rtpp, u_int32 src, u_int32 mask, vifi_t vifi)
 {
    /* Get (S,M) entry */
    if (!((*rtpp) = snmp_find_route(src,mask)))
@@ -152,13 +143,10 @@ init_routes()
  * XXX Does this need a return value?
  */
 static int
-init_children_and_leaves(r, parent, first)
-    register struct rtentry *r;
-    register vifi_t parent;
-    int first;
+init_children_and_leaves(struct rtentry *r, vifi_t parent, int first)
 {
-    register vifi_t vifi;
-    register struct uvif *v;
+    vifi_t vifi;
+    struct uvif *v;
     vifbitmap_t old_children;
     nbrbitmap_t old_subords;
 
@@ -192,11 +180,10 @@ init_children_and_leaves(r, parent, first)
  * entries to take that into account.
  */
 void
-add_vif_to_routes(vifi)
-    register vifi_t vifi;
+add_vif_to_routes(vifi_t vifi)
 {
-    register struct rtentry *r;
-    register struct uvif *v;
+    struct rtentry *r;
+    struct uvif *v;
 
     v = &uvifs[vifi];
     for (r = routing_table; r != NULL; r = r->rt_next) {
@@ -218,10 +205,9 @@ add_vif_to_routes(vifi)
  * account the failed vif.
  */
 void
-delete_vif_from_routes(vifi)
-    register vifi_t vifi;
+delete_vif_from_routes(vifi_t vifi)
 {
-    register struct rtentry *r;
+    struct rtentry *r;
 
     for (r = routing_table; r != NULL; r = r->rt_next) {
 	if (r->rt_metric != UNREACHABLE) {
@@ -251,12 +237,10 @@ delete_vif_from_routes(vifi)
  * is not this vif.
  */
 void
-add_neighbor_to_routes(vifi, index)
-    register vifi_t vifi;
-    register u_int index;
+add_neighbor_to_routes(vifi_t vifi, u_int index)
 {
-    register struct rtentry *r;
-    register struct uvif *v;
+    struct rtentry *r;
+    struct uvif *v;
 
     v = &uvifs[vifi];
     if (v->uv_flags & VIFF_NOFLOOD)
@@ -804,9 +788,9 @@ expire_all_routes()
  * Delete all the routes in the routing table.
  */
 void
-free_all_routes()
+free_all_routes(void)
 {
-    register struct rtentry *r;
+    struct rtentry *r;
 
     r = RT_ADDR;
 
@@ -819,12 +803,7 @@ free_all_routes()
  * Process an incoming neighbor probe message.
  */
 void
-accept_probe(src, dst, p, datalen, level)
-    u_int32 src;
-    u_int32 dst;
-    char *p;
-    int datalen;
-    u_int32 level;
+accept_probe(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level)
 {
     vifi_t vifi;
     static struct listaddr *unknowns = NULL;
@@ -880,11 +859,11 @@ compare_rts(rt1, rt2)
     const void *rt1;
     const void *rt2;
 {
-    register struct newrt *r1 = (struct newrt *)rt1;
-    register struct newrt *r2 = (struct newrt *)rt2;
-    register u_int32 m1 = ntohl(r1->mask);
-    register u_int32 m2 = ntohl(r2->mask);
-    register u_int32 o1, o2;
+    struct newrt *r1 = (struct newrt *)rt1;
+    struct newrt *r2 = (struct newrt *)rt2;
+    u_int32 m1 = ntohl(r1->mask);
+    u_int32 m2 = ntohl(r2->mask);
+    u_int32 o1, o2;
 
     if (m1 > m2)
 	return (-1);
@@ -905,7 +884,7 @@ void
 blaster_alloc(vifi)
     vifi_t vifi;
 {
-    register struct uvif *v;
+    struct uvif *v;
 
     v = &uvifs[vifi];
     if (v->uv_blasterbuf)
@@ -932,11 +911,7 @@ struct blaster_hdr {
  * start it.
  */
 static void
-queue_blaster_report(vifi, src, dst, p, datalen, level)
-    vifi_t vifi;
-    u_int32 src, dst, level;
-    register char *p;
-    register int datalen;
+queue_blaster_report(vifi_t vifi, u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level)
 {
     register struct blaster_hdr *bh;
     register struct uvif *v;
@@ -991,12 +966,11 @@ queue_blaster_report(vifi, src, dst, p, datalen, level)
  * in 1 second.
  */
 static void
-process_blaster_report(vifip)
-    void *vifip;
+process_blaster_report(void *vifip)
 {
     vifi_t vifi = *(int *)vifip;
-    register struct uvif *v;
-    register struct blaster_hdr *bh;
+    struct uvif *v;
+    struct blaster_hdr *bh;
     int i;
 
     IF_DEBUG(DEBUG_ROUTE)
@@ -1034,10 +1008,7 @@ process_blaster_report(vifip)
  * a queued report so actually process it instead of queueing it.
  */
 void
-accept_report(src, dst, p, datalen, level)
-    u_int32 src, dst, level;
-    register char *p;
-    register int datalen;
+accept_report(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level)
 {
     vifi_t vifi;
     register int width, i, nrt = 0;
@@ -1178,13 +1149,10 @@ accept_report(src, dst, p, datalen, level)
  * 'vifi'.  'which_routes' specifies ALL_ROUTES or CHANGED_ROUTES.
  */
 void
-report(which_routes, vifi, dst)
-    int which_routes;
-    vifi_t vifi;
-    u_int32 dst;
+report(int which_routes, vifi_t vifi, u_int32 dst)
 {
-    register struct rtentry *r;
-    register int i;
+    struct rtentry *r;
+    int i;
 
     r = rt_end;
     while (r != RT_ADDR) {
@@ -1200,8 +1168,7 @@ report(which_routes, vifi, dst)
  * 'which_routes' specifies ALL_ROUTES or CHANGED_ROUTES.
  */
 void
-report_to_all_neighbors(which_routes)
-    int which_routes;
+report_to_all_neighbors(int which_routes)
 {
     register vifi_t vifi;
     register struct uvif *v;

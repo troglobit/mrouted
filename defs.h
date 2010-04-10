@@ -53,16 +53,8 @@
 /*XXX*/
 typedef u_int u_int32;
 
-#ifndef __P
-#ifdef __STDC__
-#define __P(x)	x
-#else
-#define __P(x)	()
-#endif
-#endif
-
-typedef void (*cfunc_t) __P((void*));
-typedef void (*ihfunc_t) __P((int, fd_set *));
+typedef void (*cfunc_t) (void*);
+typedef void (*ihfunc_t) (int, fd_set *);
 
 #include "dvmrp.h"
 #include "igmpv2.h"
@@ -101,13 +93,7 @@ typedef void (*ihfunc_t) __P((int, fd_set *));
 #define	DEL_ALL_ROUTES		1
 			    /* for Deleting kernel table entries */
 
-/* obnoxious gcc gives an extraneous warning about this constant... */
-#if defined(__STDC__) || defined(__GNUC__)
 #define JAN_1970	2208988800UL	/* 1970 - 1900 in seconds */
-#else
-#define JAN_1970	2208988800L	/* 1970 - 1900 in seconds */
-#define const		/**/
-#endif
 
 #ifdef RSRR
 #define BIT_ZERO(X)      ((X) = 0)
@@ -228,169 +214,149 @@ extern int		errno;
 #endif
 
 /* main.c */
-extern char *		scaletime __P((u_long));
-extern void		logit __P((int, int, const char *, ...));
-extern int		register_input_handler __P((int, ihfunc_t));
+extern char *		scaletime(u_long);
+extern void		logit(int, int, const char *, ...);
+extern int		register_input_handler(int, ihfunc_t);
 
 /* igmp.c */
-extern void		init_igmp __P((void));
-extern void		accept_igmp __P((size_t));
-extern void		build_igmp __P((u_int32, u_int32, int, int, u_int32,
-						int));
-extern void		send_igmp __P((u_int32, u_int32, int, int, u_int32,
-						int));
-extern char *		igmp_packet_kind __P((u_int, u_int));
-extern int		igmp_debug_kind __P((u_int, u_int));
+extern void		init_igmp(void);
+extern void		accept_igmp(size_t);
+extern void		build_igmp(u_int32, u_int32, int, int, u_int32, int);
+extern void		send_igmp(u_int32, u_int32, int, int, u_int32, int);
+extern char *		igmp_packet_kind(u_int, u_int);
+extern int		igmp_debug_kind(u_int, u_int);
 
 /* icmp.c */
-extern void		init_icmp __P((void));
+extern void		init_icmp(void);
 
 /* ipip.c */
-extern void		init_ipip __P((void));
-extern void		init_ipip_on_vif __P((struct uvif *));
-extern void		send_ipip __P((u_int32, u_int32, int, int, u_int32,
-						int, struct uvif *));
+extern void		init_ipip(void);
+extern void		init_ipip_on_vif(struct uvif *);
+extern void		send_ipip(u_int32, u_int32, int, int, u_int32, int, struct uvif *);
 
 /* callout.c */
-extern void		callout_init __P((void));
-extern void		free_all_callouts __P((void));
-extern void		age_callout_queue __P((int));
-extern int		timer_nextTimer __P((void));
-extern int		timer_setTimer __P((int, cfunc_t, void *));
-extern int		timer_clearTimer __P((int));
-extern int		timer_leftTimer __P((int));
+extern void		callout_init(void);
+extern void		free_all_callouts(void);
+extern void		age_callout_queue(int);
+extern int		timer_nextTimer(void);
+extern int		timer_setTimer(int, cfunc_t, void *);
+extern int		timer_clearTimer(int);
+extern int		timer_leftTimer(int);
 
 /* route.c */
-extern void		init_routes __P((void));
-extern void		start_route_updates __P((void));
-extern void		update_route __P((u_int32, u_int32, u_int, u_int32,
-						vifi_t, struct listaddr *));
-extern void		age_routes __P((void));
-extern void		expire_all_routes __P((void));
-extern void		free_all_routes __P((void));
-extern void		accept_probe __P((u_int32, u_int32, char *, int,
-						u_int32));
-extern void		accept_report __P((u_int32, u_int32, char *, int,
-						u_int32));
-extern struct rtentry *	determine_route __P((u_int32 src));
-extern void		report __P((int, vifi_t, u_int32));
-extern void		report_to_all_neighbors __P((int));
-extern int		report_next_chunk __P((void));
-extern void		blaster_alloc __P((vifi_t));
-extern void		add_vif_to_routes __P((vifi_t));
-extern void		delete_vif_from_routes __P((vifi_t));
-extern void		add_neighbor_to_routes __P((vifi_t, u_int));
-extern void		delete_neighbor_from_routes __P((u_int32,
-						vifi_t, u_int));
-extern void		dump_routes __P((FILE *fp));
+extern void		init_routes(void);
+extern void		start_route_updates(void);
+extern void		update_route(u_int32, u_int32, u_int, u_int32, vifi_t, struct listaddr *);
+extern void		age_routes(void);
+extern void		expire_all_routes(void);
+extern void		free_all_routes(void);
+extern void		accept_probe(u_int32, u_int32, char *, size_t, u_int32);
+extern void		accept_report(u_int32, u_int32, char *, size_t, u_int32);
+extern struct rtentry *	determine_route(u_int32 src);
+extern void		report(int, vifi_t, u_int32);
+extern void		report_to_all_neighbors(int);
+extern int		report_next_chunk(void);
+extern void		blaster_alloc(vifi_t);
+extern void		add_vif_to_routes(vifi_t);
+extern void		delete_vif_from_routes(vifi_t);
+extern void		add_neighbor_to_routes(vifi_t, u_int);
+extern void		delete_neighbor_from_routes(u_int32, vifi_t, u_int);
+extern void		dump_routes(FILE *fp);
 
 /* vif.c */
-extern void		init_vifs __P((void));
-extern void		zero_vif __P((struct uvif *, int));
-extern void		init_installvifs __P((void));
-extern void		check_vif_state __P((void));
-extern void		send_on_vif __P((struct uvif *, u_int32, int, int));
-extern vifi_t		find_vif __P((u_int32, u_int32));
-extern void		age_vifs __P((void));
-extern void		dump_vifs __P((FILE *));
-extern void		stop_all_vifs __P((void));
-extern struct listaddr *neighbor_info __P((vifi_t, u_int32));
-extern void		accept_group_report __P((u_int32, u_int32,
-					u_int32, int));
-extern void		query_groups __P((void));
-extern void		probe_for_neighbors __P((void));
-extern struct listaddr *update_neighbor __P((vifi_t, u_int32, int, char *, int,
-					u_int32));
-extern void		accept_neighbor_request __P((u_int32, u_int32));
-extern void		accept_neighbor_request2 __P((u_int32, u_int32));
-extern void		accept_info_request __P((u_int32, u_int32,
-					u_char *, int));
-extern void		accept_info_reply __P((u_int32, u_int32,
-					u_char *, int));
-extern void		accept_neighbors __P((u_int32, u_int32,
-					u_char *, int, u_int32));
-extern void		accept_neighbors2 __P((u_int32, u_int32,
-					u_char *, int, u_int32));
-extern void		accept_leave_message __P((u_int32, u_int32,
-					u_int32));
-extern void		accept_membership_query __P((u_int32, u_int32,
-					u_int32, int));
+extern void		init_vifs(void);
+extern void		zero_vif(struct uvif *, int);
+extern void		init_installvifs(void);
+extern void		check_vif_state(void);
+extern void		send_on_vif(struct uvif *, u_int32, int, size_t);
+extern vifi_t		find_vif(u_int32, u_int32);
+extern void		age_vifs(void);
+extern void		dump_vifs(FILE *);
+extern void		stop_all_vifs(void);
+extern struct listaddr *neighbor_info(vifi_t, u_int32);
+extern void		accept_group_report(u_int32, u_int32, u_int32, int);
+extern void		query_groups(void);
+extern void		probe_for_neighbors(void);
+extern struct listaddr *update_neighbor(vifi_t, u_int32, int, char *, size_t, u_int32);
+extern void		accept_neighbor_request(u_int32, u_int32);
+extern void		accept_neighbor_request2(u_int32, u_int32);
+extern void		accept_info_request(u_int32, u_int32, u_char *, size_t);
+extern void		accept_info_reply(u_int32, u_int32, u_char *, size_t);
+extern void		accept_neighbors(u_int32, u_int32, u_char *, size_t, u_int32);
+extern void		accept_neighbors2(u_int32, u_int32, u_char *, size_t, u_int32);
+extern void		accept_leave_message(u_int32, u_int32, u_int32);
+extern void		accept_membership_query(u_int32, u_int32, u_int32, int);
 
 /* config.c */
-extern void		config_vifs_from_kernel __P((void));
+extern void		config_vifs_from_kernel(void);
 
 /* cfparse.y */
-extern void		config_vifs_from_file __P((void));
+extern void		config_vifs_from_file(void);
 
 /* inet.c */
-extern int		inet_valid_host __P((u_int32));
-extern int		inet_valid_mask __P((u_int32));
-extern int		inet_valid_subnet __P((u_int32, u_int32));
-extern char *		inet_fmt __P((u_int32, char *));
-extern char *		inet_fmts __P((u_int32, u_int32, char *));
-extern u_int32		inet_parse __P((char *, int));
-extern int		inet_cksum __P((u_short *, u_int));
+extern int		inet_valid_host(u_int32);
+extern int		inet_valid_mask(u_int32);
+extern int		inet_valid_subnet(u_int32, u_int32);
+extern char *		inet_fmt(u_int32, char *);
+extern char *		inet_fmts(u_int32, u_int32, char *);
+extern u_int32		inet_parse(char *, int);
+extern int		inet_cksum(u_short *, u_int);
 
 /* prune.c */
 extern unsigned		kroutes;
-extern void		determine_forwvifs __P((struct gtable *));
-extern void		send_prune_or_graft __P((struct gtable *));
-extern void		add_table_entry __P((u_int32, u_int32));
-extern void 		del_table_entry __P((struct rtentry *,
-					u_int32, u_int));
-extern void		update_table_entry __P((struct rtentry *, u_int32));
-extern int		find_src_grp __P((u_int32, u_int32, u_int32));
-extern void		init_ktable __P((void));
-extern void		steal_sources __P((struct rtentry *));
-extern void		reset_neighbor_state __P((vifi_t, u_int32));
-extern int		grplst_mem __P((vifi_t, u_int32));
-extern void		free_all_prunes __P((void));
-extern void 		age_table_entry __P((void));
-extern void		dump_cache __P((FILE *));
-extern void 		update_lclgrp __P((vifi_t, u_int32));
-extern void		delete_lclgrp __P((vifi_t, u_int32));
-extern void		chkgrp_graft __P((vifi_t, u_int32));
-extern void 		accept_prune __P((u_int32, u_int32, char *, int));
-extern void		accept_graft __P((u_int32, u_int32, char *, int));
-extern void 		accept_g_ack __P((u_int32, u_int32, char *, int));
+extern void		determine_forwvifs(struct gtable *);
+extern void		send_prune_or_graft(struct gtable *);
+extern void		add_table_entry(u_int32, u_int32);
+extern void 		del_table_entry(struct rtentry *,
+					u_int32, u_int);
+extern void		update_table_entry(struct rtentry *, u_int32);
+extern int		find_src_grp(u_int32, u_int32, u_int32);
+extern void		init_ktable(void);
+extern void		steal_sources(struct rtentry *);
+extern void		reset_neighbor_state(vifi_t, u_int32);
+extern int		grplst_mem(vifi_t, u_int32);
+extern void		free_all_prunes(void);
+extern void 		age_table_entry(void);
+extern void		dump_cache(FILE *);
+extern void 		update_lclgrp(vifi_t, u_int32);
+extern void		delete_lclgrp(vifi_t, u_int32);
+extern void		chkgrp_graft(vifi_t, u_int32);
+extern void 		accept_prune(u_int32, u_int32, char *, size_t);
+extern void		accept_graft(u_int32, u_int32, char *, size_t);
+extern void 		accept_g_ack(u_int32, u_int32, char *, size_t);
 /* u_int is promoted u_char */
-extern void		accept_mtrace __P((u_int32, u_int32,
-					u_int32, char *, u_int8_t, size_t));
+extern void		accept_mtrace(u_int32, u_int32,
+                                      u_int32, char *, u_int8_t, size_t);
 
 /* kern.c */
-extern void		k_set_rcvbuf __P((int, int));
-extern void		k_hdr_include __P((int));
-extern void		k_set_ttl __P((int));
-extern void		k_set_loop __P((int));
-extern void		k_set_if __P((u_int32));
-extern void		k_join __P((u_int32, u_int32));
-extern void		k_leave __P((u_int32, u_int32));
-extern void		k_init_dvmrp __P((void));
-extern void		k_stop_dvmrp __P((void));
-extern void		k_add_vif __P((vifi_t, struct uvif *));
-extern void		k_del_vif __P((vifi_t));
-extern void		k_add_rg __P((u_int32, struct gtable *));
-extern int		k_del_rg __P((u_int32, struct gtable *));
-extern int		k_get_version __P((void));
+extern void		k_set_rcvbuf(int, int);
+extern void		k_hdr_include(int);
+extern void		k_set_ttl(int);
+extern void		k_set_loop(int);
+extern void		k_set_if(u_int32);
+extern void		k_join(u_int32, u_int32);
+extern void		k_leave(u_int32, u_int32);
+extern void		k_init_dvmrp(void);
+extern void		k_stop_dvmrp(void);
+extern void		k_add_vif(vifi_t, struct uvif *);
+extern void		k_del_vif(vifi_t);
+extern void		k_add_rg(u_int32, struct gtable *);
+extern int		k_del_rg(u_int32, struct gtable *);
+extern int		k_get_version(void);
 
 #ifdef SNMP
 /* prune.c */
-extern struct gtable *	find_grp __P((u_int32));
-extern struct stable *	find_grp_src __P((struct gtable *, u_int32));
-extern int		next_grp_src_mask __P((struct gtable **,
-					struct stable **, u_int32,
-					u_int32, u_int32));
-extern void		refresh_sg __P((struct sioc_sg_req *, struct gtable *,
-					struct stable *));
-extern int		next_child __P((struct gtable **, struct stable **,
-					u_int32, u_int32, u_int32,
-					vifi_t *));
+extern struct gtable *	find_grp(u_int32);
+extern struct stable *	find_grp_src(struct gtable *, u_int32);
+extern int		next_grp_src_mask(struct gtable **, struct stable **, u_int32, u_int32, u_int32);
+extern void		refresh_sg(struct sioc_sg_req *, struct gtable *, struct stable *);
+extern int		next_child(struct gtable **, struct stable **,
+                                   u_int32, u_int32, u_int32, vifi_t *);
 
 /* route.c */
-extern struct rtentry * snmp_find_route __P((u_int32, u_int32));
-extern int		next_route __P((struct rtentry **, u_int32, u_int32));
-extern int		next_route_child __P((struct rtentry **,
-				u_int32, u_int32, vifi_t *));
+extern struct rtentry * snmp_find_route(u_int32, u_int32);
+extern int		next_route(struct rtentry **, u_int32, u_int32);
+extern int		next_route_child(struct rtentry **, u_int32, u_int32, vifi_t *);
 #endif
 
 #ifdef RSRR
@@ -399,10 +365,10 @@ extern struct gtable	*kernel_table;
 extern struct gtable	*gtp;
 
 /* rsrr.c */
-extern void		rsrr_init __P((void));
-extern void		rsrr_clean __P((void));
-extern void		rsrr_cache_send __P((struct gtable *, int));
-extern void		rsrr_cache_clean __P((struct gtable *));
+extern void		rsrr_init(void);
+extern void		rsrr_clean(void);
+extern void		rsrr_cache_send(struct gtable *, int);
+extern void		rsrr_cache_clean(struct gtable *);
 #endif /* RSRR */
 
 #ifdef __GNUC__
@@ -410,3 +376,8 @@ extern void		rsrr_cache_clean __P((struct gtable *));
 #else
 # define UNUSED /*empty*/
 #endif
+
+#ifndef HAVE_STRLCPY
+size_t                  strlcpy(char *dst, const char *src, size_t siz);
+#endif
+
