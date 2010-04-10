@@ -178,7 +178,7 @@ logit(severity, syserr, format, va_alist)
 	}
 
 	if (severity <= LOG_ERR)
-		exit(-1);
+		exit(1);
 }
 
 /*
@@ -421,7 +421,7 @@ main(argc, argv)
 		|| connect(udp, (struct sockaddr *) & addr, sizeof(addr)) < 0
 		    || getsockname(udp, (struct sockaddr *) & addr, &addrlen) < 0) {
 			perror("Determining local address");
-			exit(-1);
+			exit(1);
 		}
 		close(udp);
 		our_addr = addr.sin_addr.s_addr;
