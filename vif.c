@@ -927,7 +927,7 @@ void accept_neighbor_request2(u_int32 src, u_int32 UNUSED dst)
     datalen = 0;
 
     for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
-	register u_short vflags = v->uv_flags;
+	register u_int16_t vflags = v->uv_flags;
 	register u_char rflags = 0;
 	if (vflags & VIFF_TUNNEL)
 	    rflags |= DVMRP_NF_TUNNEL;

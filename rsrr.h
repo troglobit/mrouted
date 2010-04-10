@@ -106,7 +106,7 @@ struct rsrr_header {
 struct rsrr_vif {
     u_char id;				/* vif id */
     u_char threshold;			/* vif threshold ttl */
-    u_short status;			/* vif status bitmask */
+    u_int16_t status;			/* vif status bitmask */
     struct in_addr local_addr;		/* vif local address */
 };
 
@@ -136,7 +136,7 @@ struct rsrr_rr {
     struct in_addr dest_addr;		/* destination */
     struct in_addr source_addr;		/* source */
     u_long query_id;			/* query ID */
-    u_short in_vif;			/* incoming vif */
-    u_short reserved;			/* reserved */
+    u_int16_t in_vif;			/* incoming vif */
+    u_int16_t reserved;			/* reserved */
     u_long out_vif_bm;			/* outgoing vif bitmask */
 };

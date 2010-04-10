@@ -302,7 +302,7 @@ extern int		inet_valid_subnet(u_int32, u_int32);
 extern char *		inet_fmt(u_int32, char *, size_t);
 extern char *		inet_fmts(u_int32, u_int32, char *, size_t);
 extern u_int32		inet_parse(char *, int);
-extern int		inet_cksum(u_short *, u_int);
+extern int		inet_cksum(u_int16_t *, u_int);
 
 /* prune.c */
 extern unsigned		kroutes;

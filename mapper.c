@@ -53,7 +53,7 @@ typedef struct neighbor {
     u_int32_t		addr;		/* IP address in NET order */
     u_char		metric;		/* TTL cost of forwarding */
     u_char		threshold;	/* TTL threshold to forward */
-    u_short		flags;		/* flags on connection */
+    u_int16_t		flags;		/* flags on connection */
 #define NF_PRESENT 0x8000	/* True if flags are meaningful */
 } Neighbor;
 
@@ -641,7 +641,7 @@ void print_map(Node *node)
 			    printf(" (%s)", name);
 			printf(" [%d/%d", nb->metric, nb->threshold);
 			if (nb->flags) {
-			    u_short flags = nb->flags;
+			    u_int16_t flags = nb->flags;
 			    if (flags & DVMRP_NF_TUNNEL)
 				    printf("/tunnel");
 			    if (flags & DVMRP_NF_SRCRT)

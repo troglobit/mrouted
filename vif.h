@@ -209,7 +209,7 @@ struct listaddr {
     	    u_char   alug_old;		/* time since heard old report      */
 	} alu_group;
     } al_alu;
-    u_short	     al_flags;		/* flags related to this neighbor   */
+    u_int16_t	     al_flags;		/* flags related to this neighbor   */
 };
 #define	al_genid	al_alu.alu_router.alur_genid
 #define	al_nroutes	al_alu.alu_router.alur_nroutes

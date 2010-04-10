@@ -82,7 +82,7 @@ void send_ipip(u_int32 src, u_int32 dst, int type, int code, u_int32 group, int 
     ip = (struct ip *)send_buf;
     ip->ip_id = htons(rawid++);
     ip->ip_sum = 0;
-    ip->ip_sum = inet_cksum((u_short *)ip, ip->ip_hl << 2);
+    ip->ip_sum = inet_cksum((u_int16_t *)ip, ip->ip_hl << 2);
 
     ip = v->uv_encap_hdr;
     ip->ip_len = 2 * MIN_IP_HEADER_LEN + IGMP_MINLEN + datalen;
