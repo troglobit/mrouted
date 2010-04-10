@@ -509,11 +509,7 @@ main(argc, argv)
 		src = ip->ip_src.s_addr;
 		dst = ip->ip_dst.s_addr;
 		iphdrlen = ip->ip_hl << 2;
-#ifdef RAW_INPUT_IS_RAW
 		ipdatalen = ntohs(ip->ip_len) - iphdrlen;
-#else
-		ipdatalen = ip->ip_len;
-#endif
 		if (iphdrlen + ipdatalen != recvlen) {
 		    logit(LOG_WARNING, 0,
 		      "packet shorter (%u bytes) than hdr+data length (%u+%u)",
