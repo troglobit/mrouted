@@ -5,22 +5,14 @@
  *
  * The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
  * Leland Stanford Junior University.
- *
- *
- * icmp.c,v 3.8.4.2 1998/01/06 01:57:42 fenner Exp
  */
 
 #include "defs.h"
 
-#ifndef lint
-static char UNUSED rcsid[] = "@(#) $Id: \
-icmp.c,v 3.8.4.2 1998/01/06 01:57:42 fenner Exp $";
-#endif
-
 static int	icmp_socket;
 
-static void	icmp_handler __P((int, fd_set *));
-static char *	icmp_name __P((struct icmp *));
+static void	icmp_handler(int, fd_set *);
+static char *	icmp_name(struct icmp *);
 
 void
 init_icmp()

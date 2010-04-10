@@ -5,17 +5,9 @@
  *
  * The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
  * Leland Stanford Junior University.
- *
- *
- * callout.c,v 3.8.4.8 1998/01/06 01:58:45 fenner Exp
  */
 
 #include "defs.h"
-
-#ifndef lint
-static char UNUSED rcsid[] = "@(#) $Id: \
-callout.c,v 3.8.4.8 1998/01/06 01:58:45 fenner Exp $";
-#endif
 
 /* the code below implements a callout queue */
 static int id = 0;
@@ -30,7 +22,7 @@ struct timeout_q {
 };
 
 #ifdef IGMP_DEBUG
-static void print_Q __P((void));
+static void print_Q(void);
 #else
 #define	print_Q()	
 #endif
@@ -238,8 +230,7 @@ timer_clearTimer(timer_id)
 /*
  * debugging utility
  */
-static void
-print_Q()
+static void print_Q(void)
 {
     struct timeout_q  *ptr;
     

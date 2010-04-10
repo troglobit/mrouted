@@ -5,18 +5,9 @@
  *
  * The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
  * Leland Stanford Junior University.
- *
- *
- * ipip.c,v 3.8.4.6 1998/01/06 01:57:45 fenner Exp
  */
 
-
 #include "defs.h"
-
-#ifndef lint
-static char UNUSED rcsid[] = "@(#) $Id: \
-ipip.c,v 3.8.4.6 1998/01/06 01:57:45 fenner Exp $";
-#endif
 
 /*
  * Exported variables.
@@ -143,3 +134,12 @@ send_ipip(src, dst, type, code, group, datalen, v)
 				 inet_fmt(src, s1), inet_fmt(dst, s2),
 				 inet_fmt(sdst.sin_addr.s_addr, s3));
 }
+
+/**
+ * Local Variables:
+ *  version-control: t
+ *  indent-tabs-mode: t
+ *  c-file-style: "ellemtel"
+ *  c-basic-offset: 4
+ * End:
+ */

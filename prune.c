@@ -5,18 +5,9 @@
  *
  * The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
  * Leland Stanford Junior University.
- *
- *
- * prune.c,v 3.8.4.59 1998/03/01 02:06:32 fenner Exp
  */
 
-
 #include "defs.h"
-
-#ifndef lint
-static char UNUSED rcsid[] = "@(#) $Id: \
-prune.c,v 3.8.4.59 1998/03/01 02:06:32 fenner Exp $";
-#endif
 
 extern int cache_lifetime;
 extern int prune_lifetime;
@@ -45,20 +36,20 @@ unsigned int kroutes;			/* current number of cache entries  */
 /****************************************************************************
                        Functions that are local to prune.c
 ****************************************************************************/
-static int		scoped_addr __P((vifi_t vifi, u_int32 addr));
-static void		prun_add_ttls __P((struct gtable *gt));
-static int		pruning_neighbor __P((vifi_t vifi, u_int32 addr));
-static int		can_mtrace __P((vifi_t vifi, u_int32 addr));
-static struct ptable *	find_prune_entry __P((u_int32 vr, struct ptable *pt));
-static void		remove_sources __P((struct gtable *gt));
-static void		rexmit_prune __P((void *arg));
-static void		expire_prune __P((vifi_t vifi, struct gtable *gt));
-static void		send_prune __P((struct gtable *gt));
-static void		send_graft __P((struct gtable *gt));
-static void		send_graft_ack __P((u_int32 src, u_int32 dst,
-					u_int32 origin, u_int32 grp,
-					vifi_t vifi));
-static void		update_kernel __P((struct gtable *g));
+static int		scoped_addr(vifi_t vifi, u_int32 addr);
+static void		prun_add_ttls(struct gtable *gt);
+static int		pruning_neighbor(vifi_t vifi, u_int32 addr);
+static int		can_mtrace(vifi_t vifi, u_int32 addr);
+static struct ptable *	find_prune_entry(u_int32 vr, struct ptable *pt);
+static void		remove_sources(struct gtable *gt);
+static void		rexmit_prune(void *arg);
+static void		expire_prune(vifi_t vifi, struct gtable *gt);
+static void		send_prune(struct gtable *gt);
+static void		send_graft(struct gtable *gt);
+static void		send_graft_ack(u_int32 src, u_int32 dst,
+                                       u_int32 origin, u_int32 grp,
+                                       vifi_t vifi);
+static void		update_kernel(struct gtable *g);
 
 /* 
  * Updates the ttl values for each vif.

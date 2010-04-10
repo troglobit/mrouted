@@ -5,18 +5,9 @@
  *
  * The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
  * Leland Stanford Junior University.
- *
- *
- * route.c,v 3.8.4.41 1998/01/15 00:08:34 fenner Exp
  */
 
-
 #include "defs.h"
-
-#ifndef lint
-static char UNUSED rcsid[] = "@(#) $Id: \
-route.c,v 3.8.4.41 1998/01/15 00:08:34 fenner Exp $";
-#endif
 
 /*
  * This define statement saves a lot of space later
@@ -1443,3 +1434,12 @@ determine_route(src)
     }
     return rt;
 }
+
+/**
+ * Local Variables:
+ *  version-control: t
+ *  indent-tabs-mode: t
+ *  c-file-style: "ellemtel"
+ *  c-basic-offset: 4
+ * End:
+ */

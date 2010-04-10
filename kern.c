@@ -5,18 +5,9 @@
  *
  * The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
  * Leland Stanford Junior University.
- *
- *
- * kern.c,v 3.8.4.10 1998/01/06 02:00:51 fenner Exp
  */
 
-
 #include "defs.h"
-
-#ifndef lint
-static char UNUSED rcsid[] = "@(#) $Id: \
-kern.c,v 3.8.4.10 1998/01/06 02:00:51 fenner Exp $";
-#endif
 
 int curttl = 0;
 

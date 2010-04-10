@@ -74,11 +74,6 @@
 
 #include "defs.h"
 
-#ifndef lint
-static char UNUSED rcsid[] = "@(#) $Id: \
-mrinfo.c,v 3.8.4.7 1998/03/01 03:05:20 fenner Exp $";
-#endif
-
 #include <netdb.h>
 #include <sys/time.h>
 #include <arpa/inet.h>

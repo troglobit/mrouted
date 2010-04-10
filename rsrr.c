@@ -42,11 +42,6 @@
 #include <stddef.h>	/* for offsetof */
 #endif
 
-#ifndef lint
-static char UNUSED rcsid[] = "@(#) $Id: \
-rsrr.c,v 3.8.4.8 1998/01/06 01:57:58 fenner Exp $";
-#endif
-
 /*
  * Exported variables.
  */
@@ -65,18 +60,15 @@ socklen_t client_length = sizeof(client_addr);
 /*
  * Procedure definitions needed internally.
  */
-static void	rsrr_accept __P((size_t recvlen));
-static void	rsrr_accept_iq __P((void));
-static int	rsrr_accept_rq __P((struct rsrr_rq *route_query, int flags,
-					struct gtable *gt_notify));
-static void	rsrr_read __P((int, fd_set *));
-static int	rsrr_send __P((int sendlen));
-static void	rsrr_cache __P((struct gtable *gt,
-					struct rsrr_rq *route_query));
+static void	rsrr_accept(size_t recvlen);
+static void	rsrr_accept_iq(void);
+static int	rsrr_accept_rq(struct rsrr_rq *route_query, int flags, struct gtable *gt_notify);
+static void	rsrr_read(int, fd_set *);
+static int	rsrr_send(int sendlen);
+static void	rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query);
 
 /* Initialize RSRR socket */
-void
-rsrr_init()
+void rsrr_init()
 {
     int servlen;
     struct sockaddr_un serv_addr;
@@ -104,10 +96,7 @@ rsrr_init()
 }
 
 /* Read a message from the RSRR socket */
-static void
-rsrr_read(f, rfd)
-	int UNUSED f;
-	fd_set UNUSED *rfd;
+static void rsrr_read(int f, fd_set *rfd)
 {
     ssize_t rsrr_recvlen;
     
@@ -125,9 +114,7 @@ rsrr_read(f, rfd)
 /* Accept a message from the reservation protocol and take
  * appropriate action.
  */
-static void
-rsrr_accept(recvlen)
-    size_t recvlen;
+static void rsrr_accept(size_t recvlen)
 {
     struct rsrr_header *rsrr;
     struct rsrr_rq *route_query;
@@ -193,8 +180,7 @@ rsrr_accept(recvlen)
 }
 
 /* Send an Initial Reply to the reservation protocol. */
-static void
-rsrr_accept_iq()
+static void rsrr_accept_iq(void)
 {
     struct rsrr_header *rsrr;
     struct rsrr_vif *vif_list;
@@ -246,11 +232,7 @@ rsrr_accept_iq()
  * kernel table entry contains the routing info to use for a route
  * change notification.
  */
-static int
-rsrr_accept_rq(route_query,flags,gt_notify)
-    struct rsrr_rq *route_query;
-    int flags;
-    struct gtable *gt_notify;
+static int rsrr_accept_rq(struct rsrr_rq *route_query, int flags, struct gtable *gt_notify)
 {
     struct rsrr_header *rsrr;
     struct rsrr_rr *route_reply;
@@ -354,9 +336,7 @@ rsrr_accept_rq(route_query,flags,gt_notify)
 }
 
 /* Send an RSRR message. */
-static int
-rsrr_send(sendlen)
-    int sendlen;
+static int rsrr_send(int sendlen)
 {
     int error;
     
@@ -377,10 +357,7 @@ rsrr_send(sendlen)
 /* Cache a message being sent to a client.  Currently only used for
  * caching Route Reply messages for route change notification.
  */
-static void
-rsrr_cache(gt,route_query)
-    struct gtable *gt;
-    struct rsrr_rq *route_query;
+static void rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query)
 {
     struct rsrr_cache *rc, **rcnp;
     struct rsrr_header *rsrr;
@@ -435,10 +412,7 @@ rsrr_cache(gt,route_query)
 /* Send all the messages in the cache.  Currently this is used to send
  * all the cached Route Reply messages for route change notification.
  */
-void
-rsrr_cache_send(gt,notify)
-    struct gtable *gt;
-    int notify;
+void rsrr_cache_send(struct gtable *gt, int notify)
 {
     struct rsrr_cache *rc, **rcnp;
     int flags = 0;
@@ -462,9 +436,7 @@ rsrr_cache_send(gt,notify)
 }
 
 /* Clean the cache by deleting all entries. */
-void
-rsrr_cache_clean(gt)
-    struct gtable *gt;
+void rsrr_cache_clean(struct gtable *gt)
 {
     struct rsrr_cache *rc,*rc_next;
 
@@ -480,8 +452,7 @@ rsrr_cache_clean(gt)
     gt->gt_rsrr_cache = NULL;
 }
 
-void
-rsrr_clean()
+void rsrr_clean()
 {
     unlink(RSRR_SERV_PATH);
 }

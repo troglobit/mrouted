@@ -5,18 +5,9 @@
  *
  * The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
  * Leland Stanford Junior University.
- *
- *
- * inet.c,v 3.8.4.2 1998/01/06 01:57:44 fenner Exp
  */
 
-
 #include "defs.h"
-
-#ifndef lint
-static char UNUSED rcsid[] = "@(#) $Id: \
-inet.c,v 3.8.4.2 1998/01/06 01:57:44 fenner Exp $";
-#endif
 
 /*
  * Exported variables.
@@ -234,3 +225,12 @@ inet_cksum(addr, len)
 	answer = ~sum;				/* truncate to 16 bits */
 	return (answer);
 }
+
+/**
+ * Local Variables:
+ *  version-control: t
+ *  indent-tabs-mode: t
+ *  c-file-style: "ellemtel"
+ *  c-basic-offset: 4
+ * End:
+ */

@@ -5,18 +5,10 @@
  *
  * The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
  * Leland Stanford Junior University.
- *
- *
- * igmp.c,v 3.8.4.19 1998/01/06 01:57:43 fenner Exp
  */
 
 
 #include "defs.h"
-
-#ifndef lint
-static char UNUSED rcsid[] = "@(#) $Id: \
-igmp.c,v 3.8.4.19 1998/01/06 01:57:43 fenner Exp $";
-#endif
 
 /*
  * Exported variables.
@@ -33,7 +25,7 @@ u_int32		dvmrp_genid;		     /* IGMP generation id          */
  * Local function definitions.
  */
 /* u_char promoted to u_int */
-static int	igmp_log_level __P((u_int type, u_int code));
+static int	igmp_log_level(u_int type, u_int code);
 
 /*
  * Open and initialize the igmp socket, and fill in the non-changing

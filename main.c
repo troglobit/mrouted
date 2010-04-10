@@ -5,9 +5,6 @@
  *
  * The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
  * Leland Stanford Junior University.
- *
- *
- * main.c,v 3.8.4.29 1998/03/01 01:49:00 fenner Exp
  */
 
 /*
@@ -19,7 +16,6 @@
  *  original routed code has been adopted.)
  */
 
-
 #include "defs.h"
 #include <stdarg.h>
 #include <fcntl.h>
@@ -27,11 +23,6 @@
 
 #ifdef SNMP
 #include "snmp.h"
-#endif
-
-#ifndef lint
-static char UNUSED rcsid[] = "@(#) $Id: \
-main.c,v 3.8.4.29 1998/03/01 01:49:00 fenner Exp $";
 #endif
 
 extern char *configfilename;
@@ -106,7 +97,7 @@ static struct debugname {
 static void final_init(void *);
 static void fasttimer(void*);
 static void timer(void*);
-static void dump __P((void)) UNUSED;
+static void dump(void);
 static void dump_version(FILE *);
 static void fdump(void);
 static void cdump(void);

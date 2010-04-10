@@ -5,19 +5,10 @@
  *
  * The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
  * Leland Stanford Junior University.
- *
- *
- * vif.c,v 3.8.4.56.2.1 1999/01/20 05:18:50 fenner Exp
  */
-
 
 #include "defs.h"
 #include <fcntl.h>
-
-#ifndef lint
-static char UNUSED rcsid[] = "@(#) $Id: \
-vif.c,v 3.8.4.56.2.1 1999/01/20 05:18:50 fenner Exp $";
-#endif
 
 /*
  * Exported variables.
