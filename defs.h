@@ -327,8 +327,7 @@ extern void 		accept_prune(u_int32, u_int32, char *, size_t);
 extern void		accept_graft(u_int32, u_int32, char *, size_t);
 extern void 		accept_g_ack(u_int32, u_int32, char *, size_t);
 /* u_int is promoted u_char */
-extern void		accept_mtrace(u_int32, u_int32,
-                                      u_int32, char *, u_int8_t, size_t);
+extern void		accept_mtrace(u_int32, u_int32, u_int32, char *, u_int8_t, size_t);
 
 /* kern.c */
 extern void		k_set_rcvbuf(int, int);

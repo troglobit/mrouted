@@ -10,7 +10,7 @@
 VERSION      ?= 3.9.0
 NAME          = mrouted
 CONFIG        = $(NAME).conf
-EXECS         = mrouted map-mbone mrinfo
+EXECS         = mrouted map-mbone mrinfo mtrace
 PKG           = $(NAME)-$(VERSION)
 ARCHIVE       = $(PKG).tar.bz2
 
@@ -76,13 +76,18 @@ ifndef HAVE_STRTONUM
 MRINFO_OBJS  += strtonum.o
 endif
 
+MTRACE_OBJS   = mtrace.o
+ifndef HAVE_STRTONUM
+MTRACE_OBJS  += strtonum.o
+endif
+
 #MSTAT_SRCS    = mstat.c 
 #MSTAT_OBJS    = mstat.o
 
 HDRS          = defs.h dvmrp.h route.h vif.h prune.h igmpv2.h pathnames.h \
 		rsrr.h rsrr_var.h
 OBJS          = ${IGMP_OBJS} ${ROUTER_OBJS} ${MAPPER_OBJS} ${MRINFO_OBJS} \
-		${MSTAT_OBJS}
+		${MTRACE_OBJS} ${MSTAT_OBJS}
 
 SRCS          = $(OBJS:.o=.c)
 DEPS          = $(filter-out .cfparse.d, $(addprefix .,$(SRCS:.c=.d)))
@@ -142,6 +147,12 @@ ifdef Q
 	@printf "  LINK    $(subst $(ROOTDIR),,$(shell pwd))/$@\n"
 endif
 	$(Q)${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${IGMP_OBJS} ${MRINFO_OBJS} ${LIB2}
+
+mtrace: ${IGMP_OBJS} ${MTRACE_OBJS}
+ifdef Q
+	@printf "  LINK    $(subst $(ROOTDIR),,$(shell pwd))/$@\n"
+endif
+	$(Q)${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${IGMP_OBJS} ${MTRACE_OBJS} ${LIB2}
 
 mstat: ${MSTAT_OBJS} snmplib/libsnmp.a
 ifdef Q
