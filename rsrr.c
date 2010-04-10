@@ -68,7 +68,7 @@ static int	rsrr_send(int sendlen);
 static void	rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query);
 
 /* Initialize RSRR socket */
-void rsrr_init()
+void rsrr_init(void)
 {
     int servlen;
     struct sockaddr_un serv_addr;
@@ -96,12 +96,12 @@ void rsrr_init()
 }
 
 /* Read a message from the RSRR socket */
-static void rsrr_read(int f, fd_set *rfd)
+static void rsrr_read(int fd, fd_set UNUSED *rfd)
 {
     ssize_t rsrr_recvlen;
     
     memset((char *) &client_addr, 0, sizeof(client_addr));
-    rsrr_recvlen = recvfrom(rsrr_socket, rsrr_recv_buf, sizeof(rsrr_recv_buf),
+    rsrr_recvlen = recvfrom(fd, rsrr_recv_buf, sizeof(rsrr_recv_buf),
 			    0, (struct sockaddr *)&client_addr, &client_length);
     if (rsrr_recvlen < 0) {	
 	if (errno != EINTR)

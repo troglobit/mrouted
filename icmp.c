@@ -14,8 +14,7 @@ static int	icmp_socket;
 static void	icmp_handler(int, fd_set *);
 static char *	icmp_name(struct icmp *);
 
-void
-init_icmp()
+void init_icmp(void)
 {
     if ((icmp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) < 0)
 	logit(LOG_ERR, errno, "ICMP socket");
@@ -26,10 +25,7 @@ init_icmp()
     logit(LOG_DEBUG, 0, "registering icmp socket fd %d\n", icmp_socket);
 }
 
-static void
-icmp_handler(fd, rfds)
-    int UNUSED fd;
-    fd_set UNUSED *rfds;
+static void icmp_handler(int fd, fd_set UNUSED *rfds)
 {
     u_char icmp_buf[RECV_BUF_SIZE];
     struct sockaddr_in from;
@@ -43,7 +39,7 @@ icmp_handler(fd, rfds)
     u_int32 src;
 
     fromlen = sizeof(from);
-    recvlen = recvfrom(icmp_socket, icmp_buf, RECV_BUF_SIZE, 0,
+    recvlen = recvfrom(fd, icmp_buf, RECV_BUF_SIZE, 0,
 			    (struct sockaddr *)&from, &fromlen);
     if (recvlen < 0) {
 	if (errno != EINTR)
@@ -52,11 +48,7 @@ icmp_handler(fd, rfds)
     }
     ip = (struct ip *)icmp_buf;
     iphdrlen = ip->ip_hl << 2;
-#ifdef RAW_INPUT_IS_RAW
     ipdatalen = ntohs(ip->ip_len) - iphdrlen;
-#else
-    ipdatalen = ip->ip_len;
-#endif
     if (iphdrlen + ipdatalen != recvlen) {
 	IF_DEBUG(DEBUG_ICMP)
 	logit(LOG_DEBUG, 0, "hdr %d data %d != rcv %d", iphdrlen, ipdatalen, recvlen);
@@ -71,7 +63,7 @@ icmp_handler(fd, rfds)
     icmp = (struct icmp *)(icmp_buf + iphdrlen);
     IF_DEBUG(DEBUG_ICMP)
     logit(LOG_DEBUG, 0, "got ICMP type %d from %s",
-	icmp->icmp_type, inet_fmt(src, s1));
+	  icmp->icmp_type, inet_fmt(src, s1));
     /*
      * Eventually:
      * have registry of ICMP listeners, by type, code and ICMP_ID
@@ -114,9 +106,7 @@ icmp_handler(fd, rfds)
  * Return NULL for ICMP informational messages.
  * Return string describing the error for ICMP errors.
  */
-static char *
-icmp_name(icmp)
-    struct icmp *icmp;
+static char *icmp_name(struct icmp *icmp)
 {
     static char retval[30];
 
