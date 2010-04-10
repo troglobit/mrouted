@@ -31,8 +31,7 @@ static int rawid = 0;
 /*
  * Open and initialize the raw socket.
  */
-void
-init_ipip()
+void init_ipip(void)
 {
 #ifdef notyet
     if ((raw_socket = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0)
@@ -43,9 +42,7 @@ init_ipip()
 /*
  * Allocate and fill in static IP header for encapsulating on a tunnel.
  */
-void
-init_ipip_on_vif(v)
-    struct uvif *v;
+void init_ipip_on_vif(struct uvif *v)
 {
     struct ip *ip;
 
@@ -74,13 +71,7 @@ init_ipip_on_vif(v)
  * kernel to fill in, and encapsulate the original packet with the
  * pre-created ip header for this vif.
  */
-void
-send_ipip(src, dst, type, code, group, datalen, v)
-    u_int32 src, dst;
-    int type, code;
-    u_int32 group;
-    int datalen;
-    struct uvif *v;
+void send_ipip(u_int32 src, u_int32 dst, int type, int code, u_int32 group, int datalen, struct uvif *v)
 {
     struct msghdr msg;
     struct iovec iov[2];
