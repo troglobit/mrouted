@@ -33,12 +33,14 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <string.h>
-#include <netdb.h>
-#include <sys/time.h>
-#include "defs.h"
 #include <arpa/inet.h>
+#include <err.h>
+#include <netdb.h>
 #include <stdarg.h>
+#include <string.h>
+#include <sys/time.h>
+
+#include "defs.h"
 
 #define DEFAULT_TIMEOUT	2	/* How long to wait before retrying requests */
 #define DEFAULT_RETRIES 1	/* How many times to ask each router */
@@ -208,7 +210,7 @@ void ask2(u_int32_t dst)
 /*
  * Process an incoming group membership report.
  */
-void accept_group_report(u_int32 src, u_int32 dst, u_int32 group, int r_type)
+void accept_group_report(u_int32 src, u_int32 dst, u_int32 UNUSED group, int UNUSED r_type)
 {
     logit(LOG_INFO, 0, "ignoring IGMP group membership report from %s to %s",
 	inet_fmt(src, s1), inet_fmt(dst, s2));
@@ -218,7 +220,7 @@ void accept_group_report(u_int32 src, u_int32 dst, u_int32 group, int r_type)
 /*
  * Process an incoming neighbor probe message.
  */
-void accept_probe(u_int32_t src, u_int32_t dst, char *p, size_t datalen, u_int32_t level)
+void accept_probe(u_int32_t src, u_int32_t dst, char UNUSED *p, size_t UNUSED datalen, u_int32_t UNUSED level)
 {
     logit(LOG_INFO, 0, "ignoring DVMRP probe from %s to %s",
 	inet_fmt(src, s1), inet_fmt(dst, s2));
@@ -228,7 +230,7 @@ void accept_probe(u_int32_t src, u_int32_t dst, char *p, size_t datalen, u_int32
 /*
  * Process an incoming route report message.
  */
-void accept_report(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level)
+void accept_report(u_int32 src, u_int32 dst, char UNUSED *p, size_t UNUSED datalen, u_int32 UNUSED level)
 {
     logit(LOG_INFO, 0, "ignoring DVMRP routing report from %s to %s",
 	inet_fmt(src, s1), inet_fmt(dst, s2));
@@ -258,7 +260,7 @@ void accept_neighbor_request2(u_int32 src, u_int32 dst)
 /*
  * Process an incoming neighbor-list message.
  */
-void accept_neighbors(u_int32_t src, u_int32_t dst, u_char *p, size_t datalen, u_int32_t level)
+void accept_neighbors(u_int32_t src, u_int32_t UNUSED dst, u_char *p, size_t datalen, u_int32_t level)
 {
     Node       *node = find_node(src, &routers);
 
@@ -279,7 +281,7 @@ void accept_neighbors(u_int32_t src, u_int32_t dst, u_char *p, size_t datalen, u
     }
 
     if (debug > 3) {
-	int i;
+	size_t i;
 
 	fprintf(stderr, "    datalen = %d\n", datalen);
 	for (i = 0; i < datalen; i++) {
@@ -416,7 +418,7 @@ void accept_neighbors(u_int32_t src, u_int32_t dst, u_char *p, size_t datalen, u
     }
 }
 
-void accept_neighbors2(u_int32 src, u_int32 dst, u_char *p, size_t datalen, u_int32 level)
+void accept_neighbors2(u_int32 src, u_int32 UNUSED dst, u_char *p, size_t datalen, u_int32 level)
 {
     Node       *node = find_node(src, &routers);
     u_int broken_cisco = ((level & 0xffff) == 0x020a); /* 10.2 */
@@ -947,31 +949,31 @@ int main(int argc, char *argv[])
 }
 
 /* dummies */
-void accept_prune(u_int32 src, u_int32 dst, char *p, size_t datalen)
+void accept_prune(u_int32 UNUSED src, u_int32 UNUSED dst, char UNUSED *p, size_t UNUSED datalen)
 {
 }
-void accept_graft(u_int32 src, u_int32 dst, char *p, size_t datalen)
+void accept_graft(u_int32 UNUSED src, u_int32 UNUSED dst, char UNUSED *p, size_t UNUSED datalen)
 {
 }
-void accept_g_ack(u_int32 src, u_int32 dst, char *p, size_t datalen)
+void accept_g_ack(u_int32 UNUSED src, u_int32 UNUSED dst, char UNUSED *p, size_t UNUSED datalen)
 {
 }
-void add_table_entry(u_int32 origin, u_int32 mcastgrp)
+void add_table_entry(u_int32 UNUSED origin, u_int32 UNUSED mcastgrp)
 {
 }
-void accept_leave_message(u_int32 src, u_int32 dst, u_int32 group)
+void accept_leave_message(u_int32 UNUSED src, u_int32 UNUSED dst, u_int32 UNUSED group)
 {
 }
-void accept_mtrace(u_int32 src, u_int32 dst, u_int32 group, char *data, u_int8_t no, size_t datalen)
+void accept_mtrace(u_int32 UNUSED src, u_int32 UNUSED dst, u_int32 UNUSED group, char UNUSED *data, u_int8_t UNUSED no, size_t UNUSED datalen)
 {
 }
-void accept_membership_query(u_int32 src, u_int32 dst, u_int32 group, int tmo)
+void accept_membership_query(u_int32 UNUSED src, u_int32 UNUSED dst, u_int32 UNUSED group, int UNUSED tmo)
 {
 }
-void accept_info_request(u_int32 src, u_int32 dst, u_char *p, size_t datalen)
+void accept_info_request(u_int32 UNUSED src, u_int32 UNUSED dst, u_char UNUSED *p, size_t UNUSED datalen)
 {
 }
-void accept_info_reply(u_int32 src, u_int32 dst, u_char *p, size_t datalen)
+void accept_info_reply(u_int32 UNUSED src, u_int32 UNUSED dst, u_char UNUSED *p, size_t UNUSED datalen)
 {
 }
 
