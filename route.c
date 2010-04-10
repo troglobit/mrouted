@@ -329,8 +329,7 @@ static int find_route(u_int32 origin, u_int32 mask)
  * pointing to the new entry.
  *
  * Only the origin, originmask, originwidth and flags fields are initialized
- * in the new route entry; the caller is responsible for filling in the the
- * rest.
+ * in the new route entry; the caller is responsible for filling in the rest.
  */
 static void create_route(u_int32 origin, u_int32 mask)
 {
