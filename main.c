@@ -16,11 +16,12 @@
  *  original routed code has been adopted.)
  */
 
-#include "defs.h"
-#include <stdarg.h>
+#include <err.h>
 #include <fcntl.h>
+#include <stdarg.h>
 #include <time.h>
 
+#include "defs.h"
 #ifdef SNMP
 #include "snmp.h"
 #endif
@@ -63,7 +64,7 @@ static int nhandlers = 0;
 
 static struct debugname {
     char	*name;
-    int		 level;
+    u_int32_t	 level;
     size_t	 nchars;
 } debugnames[] = {
     {	"packet",	DEBUG_PKT,	2	},
@@ -97,7 +98,9 @@ static struct debugname {
 static void final_init(void *);
 static void fasttimer(void*);
 static void timer(void*);
+#if UNUSED_CODE
 static void dump(void);
+#endif
 static void dump_version(FILE *);
 static void fdump(void);
 static void cdump(void);
@@ -119,7 +122,7 @@ int register_input_handler(int fd, ihfunc_t func)
 
 void usage(void)
 {
-    int i, j, k;
+    size_t i, j, k;
     extern char *__progname;
     struct debugname *d;
 
@@ -163,8 +166,8 @@ int main(int argc, char *argv[])
     extern char todaysversion[];
     extern char *__progname;
     struct sigaction sa;
-    const char *errstr;
 #ifdef SNMP
+    const char *errstr;
     struct timeval  timeout, *tvp = &timeout;
     struct timeval  sched, *svp = &sched, now, *nvp = &now;
     int index, block;
@@ -589,7 +592,7 @@ static void final_init(void *i)
  * seconds.  Also, every TIMER_INTERVAL seconds it calls timer() to
  * do all the other time-based processing.
  */
-static void fasttimer(void *p)
+static void fasttimer(void UNUSED *arg)
 {
     static unsigned int tlast;
     static unsigned int nsent;
@@ -647,7 +650,7 @@ u_long virtual_time = 0;
  * group querying duties, and drives various timers in routing entries and
  * virtual interface data structures.
  */
-static void timer(void *p)
+static void timer(void UNUSED *arg)
 {
     age_routes();	/* Advance the timers in the route entries     */
     age_vifs();		/* Advance the timers for neighbors */
@@ -739,7 +742,7 @@ static void handler(int sig)
     }
 }
 
-
+#if UNUSED_CODE
 /*
  * Dump internal data structures to stderr.
  */
@@ -748,6 +751,7 @@ static void dump(void)
     dump_vifs(stderr);
     dump_routes(stderr);
 }
+#endif
 
 static void dump_version(FILE *fp)
 {
