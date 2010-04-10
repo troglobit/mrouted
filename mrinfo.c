@@ -96,17 +96,12 @@ int	target_level = 0;
 vifi_t  numvifs;		/* to keep loader happy */
 				/* (see COPY_TABLES macro called in kern.c) */
 
-char *			inet_name __P((u_int32 addr));
-void			ask __P((u_int32 dst));
-void			ask2 __P((u_int32 dst));
-int			get_number __P((int *var, int deflt, char ***pargv,
-					int *pargc));
-u_int32			host_addr __P((char *name));
-void			usage __P((void));
-
-/* to shut up -Wstrict-prototypes */
-int			main __P((int argc, char *argv[]));
-
+char *	inet_name(u_int32 addr);
+void	ask(u_int32 dst);
+void	ask2(u_int32 dst);
+int	get_number(int *var, int deflt, char ***pargv, int *pargc);
+u_int32	host_addr(char *name);
+void	usage(void);
 
 char   *
 inet_name(addr)
@@ -315,9 +310,7 @@ usage()
 }
 
 int
-main(argc, argv)
-	int     argc;
-	char   *argv[];
+main(int argc, char *argv[])
 {
 	int tries;
 	int trynew;
@@ -631,3 +624,11 @@ void accept_info_reply(src, dst, p, datalen)
 	int UNUSED datalen;
 {
 }
+
+/**
+ * Local Variables:
+ *  version-control: t
+ *  indent-tabs-mode: t
+ *  c-file-style: "bsd"
+ * End:
+ */
