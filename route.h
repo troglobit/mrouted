@@ -46,4 +46,4 @@ struct rtentry {
 #define ALL_ROUTES	0		/* possible arguments to report()   */
 #define CHANGED_ROUTES	1		/*  and report_to_all_neighbors()   */
 
-#define	RT_FMT(r, s)	inet_fmts((r)->rt_origin, (r)->rt_originmask, s)
+#define	RT_FMT(r, s)	inet_fmts((r)->rt_origin, (r)->rt_originmask, s, sizeof(s))

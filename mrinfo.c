@@ -174,7 +174,7 @@ void accept_neighbors(u_int32 src, u_int32 UNUSED dst, u_char *p, size_t datalen
 #define GET_ADDR(a) (a = ((u_int32)*p++ << 24), a += ((u_int32)*p++ << 16),\
 		     a += ((u_int32)*p++ << 8), a += *p++)
 
-	printf("%s (%s):\n", inet_fmt(src, s1), inet_name(src));
+	printf("%s (%s):\n", inet_fmt(src, s1, sizeof(s1)), inet_name(src));
 	while (p < ep) {
 		u_int32 laddr;
 		u_char metric;
@@ -190,8 +190,8 @@ void accept_neighbors(u_int32 src, u_int32 UNUSED dst, u_char *p, size_t datalen
 			u_int32 neighbor;
 			GET_ADDR(neighbor);
 			neighbor = htonl(neighbor);
-			printf("  %s -> ", inet_fmt(laddr, s1));
-			printf("%s (%s) [%d/%d]\n", inet_fmt(neighbor, s1),
+			printf("  %s -> ", inet_fmt(laddr, s1, sizeof(s1)));
+			printf("%s (%s) [%d/%d]\n", inet_fmt(neighbor, s1, sizeof(s1)),
 			       inet_name(neighbor), metric, thresh);
 		}
 	}
@@ -205,7 +205,7 @@ void accept_neighbors2(u_int32 src, u_int32 UNUSED dst, u_char *p, size_t datale
 	u_int majvers = level & 0xff;
 	u_int minvers = (level >> 8) & 0xff;
 
-	printf("%s (%s) [", inet_fmt(src, s1), inet_name(src));
+	printf("%s (%s) [", inet_fmt(src, s1, sizeof(s1)), inet_name(src));
 	if (majvers == 3 && minvers == 0xff)
 		printf("DVMRPv3 compliant");
 	else
@@ -231,8 +231,8 @@ void accept_neighbors2(u_int32 src, u_int32 UNUSED dst, u_char *p, size_t datale
 		while (--ncount >= 0 && p < ep) {
 			u_int32 neighbor = *(u_int32*)p;
 			p += 4;
-			printf("  %s -> ", inet_fmt(laddr, s1));
-			printf("%s (%s) [%d/%d", inet_fmt(neighbor, s1),
+			printf("  %s -> ", inet_fmt(laddr, s1, sizeof(s1)));
+			printf("%s (%s) [%d/%d", inet_fmt(neighbor, s1, sizeof(s1)),
 			       inet_name(neighbor), metric, thresh);
 			if (flags & DVMRP_NF_TUNNEL)
 				printf("/tunnel");
@@ -472,7 +472,7 @@ int main(int argc, char *argv[])
 		if (ipdatalen < IGMP_MINLEN) {
 		    logit(LOG_WARNING, 0,
 			"IP data field too short (%u bytes) for IGMP, from %s",
-			ipdatalen, inet_fmt(src, s1));
+			ipdatalen, inet_fmt(src, s1, sizeof(s1)));
 		    continue;
 		}
 		igmpdatalen = ipdatalen - IGMP_MINLEN;
@@ -484,9 +484,9 @@ int main(int argc, char *argv[])
 		case DVMRP_NEIGHBORS2:
 			if (src != target_addr) {
 				fprintf(stderr, "mrinfo: got reply from %s",
-					inet_fmt(src, s1));
+					inet_fmt(src, s1, sizeof(s1)));
 				fprintf(stderr, " instead of %s\n",
-					inet_fmt(target_addr, s1));
+					inet_fmt(target_addr, s1, sizeof(s1)));
 				/*continue;*/
 			}
 			break;

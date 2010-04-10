@@ -79,10 +79,9 @@ void rsrr_init(void)
     unlink(RSRR_SERV_PATH);
     memset((char *) &serv_addr, 0, sizeof(serv_addr));
     serv_addr.sun_family = AF_UNIX;
-    strcpy(serv_addr.sun_path, RSRR_SERV_PATH);
+    strlcpy(serv_addr.sun_path, RSRR_SERV_PATH, sizeof(serv_addr.sun_path));
 #ifdef HAVE_SA_LEN
-    servlen = offsetof(struct sockaddr_un, sun_path) +
-		strlen(serv_addr.sun_path);
+    servlen = offsetof(struct sockaddr_un, sun_path) + strlen(serv_addr.sun_path);
     serv_addr.sun_len = servlen;
 #else
     servlen = sizeof(serv_addr.sun_family) + strlen(serv_addr.sun_path);
@@ -155,11 +154,11 @@ static void rsrr_accept(size_t recvlen)
 	    /* Get the query */
 	    route_query = (struct rsrr_rq *) (rsrr_recv_buf + RSRR_HEADER_LEN);
 	    IF_DEBUG(DEBUG_RSRR)
-	    logit(LOG_DEBUG, 0,
-		"Received Route Query for src %s grp %s notification %d",
-		inet_fmt(route_query->source_addr.s_addr, s1),
-		inet_fmt(route_query->dest_addr.s_addr,s2),
-		BIT_TST(rsrr->flags,RSRR_NOTIFICATION_BIT));
+		logit(LOG_DEBUG, 0,
+		      "Received Route Query for src %s grp %s notification %d",
+		      inet_fmt(route_query->source_addr.s_addr, s1, sizeof(s1)),
+		      inet_fmt(route_query->dest_addr.s_addr, s2, sizeof(s2)),
+		      BIT_TST(rsrr->flags,RSRR_NOTIFICATION_BIT));
 	    /* Send Route Reply to client */
 	    rsrr_accept_rq(route_query,rsrr->flags,NULL);
 	    break;
@@ -325,11 +324,11 @@ static int rsrr_accept_rq(struct rsrr_rq *route_query, int flags, struct gtable 
     }
     
     IF_DEBUG(DEBUG_RSRR)
-    logit(LOG_DEBUG, 0, "%sSend RSRR Route Reply for src %s dst %s in vif %d out vif %d\n",
-	gt_notify ? "Route Change: " : "",
-	inet_fmt(route_reply->source_addr.s_addr,s1),
-	inet_fmt(route_reply->dest_addr.s_addr,s2),
-	route_reply->in_vif,route_reply->out_vif_bm);
+	logit(LOG_DEBUG, 0, "%sSend RSRR Route Reply for src %s dst %s in vif %d out vif %d\n",
+	      gt_notify ? "Route Change: " : "",
+	      inet_fmt(route_reply->source_addr.s_addr, s1, sizeof(s1)),
+	      inet_fmt(route_reply->dest_addr.s_addr, s2, sizeof(s2)),
+	      route_reply->in_vif,route_reply->out_vif_bm);
     
     /* Send it. */
     return rsrr_send(sendlen);
@@ -400,7 +399,7 @@ static void rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query)
     rc->route_query.source_addr.s_addr = route_query->source_addr.s_addr;
     rc->route_query.dest_addr.s_addr = route_query->dest_addr.s_addr;
     rc->route_query.query_id = route_query->query_id;
-    strcpy(rc->client_addr.sun_path, client_addr.sun_path);
+    strlcpy(rc->client_addr.sun_path, client_addr.sun_path, sizeof(rc->client_addr.sun_path));
     rc->client_length = client_length;
     rc->next = gt->gt_rsrr_cache;
     gt->gt_rsrr_cache = rc;
@@ -442,7 +441,7 @@ void rsrr_cache_clean(struct gtable *gt)
 
     IF_DEBUG(DEBUG_RSRR)
     logit(LOG_DEBUG, 0, "cleaning cache for group %s\n",
-			inet_fmt(gt->gt_mcastgrp, s1));
+			inet_fmt(gt->gt_mcastgrp, s1, sizeof(s1)));
     rc = gt->gt_rsrr_cache;
     while (rc) {
 	rc_next = rc->next;

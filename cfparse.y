@@ -116,7 +116,7 @@ stmt	: error
 			
 			if (vifi == numvifs)
 			    fatal("%s is not a configured interface",
-				inet_fmt($2,s1));
+				inet_fmt($2, s1, sizeof(s1)));
 
 					}
 		ifmods
@@ -130,16 +130,16 @@ stmt	: error
 			ifname = ifconfaddr($2);
 			if (ifname == 0)
 			    fatal("Tunnel local address %s is not mine",
-				inet_fmt($2, s1));
+				inet_fmt($2, s1, sizeof(s1)));
 
 			if (((ntohl($2) & IN_CLASSA_NET) >> IN_CLASSA_NSHIFT) ==
 				IN_LOOPBACKNET)
 			    fatal("Tunnel local address %s is a loopback address",
-				inet_fmt($2, s1));
+				inet_fmt($2, s1, sizeof(s1)));
 
 			if (ifconfaddr($3) != 0)
 			    fatal("Tunnel remote address %s is one of mine",
-				inet_fmt($3, s1));
+				inet_fmt($3, s1, sizeof(s1)));
 
 			for (vifi = 0, v = uvifs;
 			     vifi < numvifs;
@@ -147,17 +147,17 @@ stmt	: error
 			    if (v->uv_flags & VIFF_TUNNEL) {
 				if ($3 == v->uv_rmt_addr)
 				    fatal("Duplicate tunnel to %s",
-					inet_fmt($3, s1));
+					inet_fmt($3, s1, sizeof(s1)));
 			    } else if (!(v->uv_flags & VIFF_DISABLED)) {
 				if (($3 & v->uv_subnetmask) == v->uv_subnet)
 				    fatal("Unnecessary tunnel to %s, same subnet as vif %d (%s)",
-					inet_fmt($3,s1), vifi, v->uv_name);
+					inet_fmt($3, s1, sizeof(s1)), vifi, v->uv_name);
 			    }
 
 			if (numvifs == MAXVIFS)
 			    fatal("too many vifs");
 
-			strncpy(ffr.ifr_name, ifname, sizeof(ffr.ifr_name));
+			strlcpy(ffr.ifr_name, ifname, sizeof(ffr.ifr_name));
 			if (ioctl(udp_socket, SIOCGIFFLAGS, (char *)&ffr)<0)
 			    fatal("ioctl SIOCGIFFLAGS on %s", ffr.ifr_name);
 
@@ -168,7 +168,7 @@ stmt	: error
 			v->uv_lcl_addr	= $2;
 			v->uv_rmt_addr	= $3;
 			v->uv_dst_addr	= $3;
-			strncpy(v->uv_name, ffr.ifr_name, sizeof(v->uv_name));
+			strlcpy(v->uv_name, ffr.ifr_name, sizeof(v->uv_name));
 
 			if (!(ffr.ifr_flags & IFF_UP)) {
 			    v->uv_flags |= VIFF_DOWN;
@@ -184,7 +184,7 @@ stmt	: error
 
 	logit(LOG_INFO, 0,
 	    "installing tunnel from %s to %s as vif #%u - rate=%d",
-	    inet_fmt($2, s1), inet_fmt($3, s2),
+	    inet_fmt($2, s1, sizeof(s1)), inet_fmt($3, s2, sizeof(s2)),
 	    numvifs, v->uv_rate_limit);
 
 	++numvifs;
@@ -272,12 +272,13 @@ stmt	: error
 		    }
 
 				}
-	| NAME STRING boundary	    { if (numbounds >= MAXBOUNDS) {
+	| NAME STRING boundary	    { size_t len = strlen($2) + 1;
+				      if (numbounds >= MAXBOUNDS) {
 					fatal("Too many named boundaries (max %d)", MAXBOUNDS);
 				      }
 
-				      boundlist[numbounds].name = malloc(strlen($2) + 1);
-				      strcpy(boundlist[numbounds].name, $2);
+				      boundlist[numbounds].name = malloc(len);
+				      strlcpy(boundlist[numbounds].name, $2, len);
 				      boundlist[numbounds++].bound = $3;
 				    }
 	| SYSNAM STRING    {
@@ -358,7 +359,7 @@ ifmod	: mod
 		    ph->pa_subnetbcast = ph->pa_subnet | ~ph->pa_subnetmask;
 		    if ($2.addr & ~ph->pa_subnetmask)
 			warn("Extra subnet %s/%d has host bits set",
-				inet_fmt($2.addr,s1), $2.mask);
+			     inet_fmt($2.addr, s1, sizeof(s1)), $2.mask);
 		    ph->pa_next = v->uv_addrs;
 		    v->uv_addrs = ph;
 
@@ -431,7 +432,7 @@ mod	: THRESHOLD NUMBER	{ if ($2 < 1 || $2 > 255)
 		    v_acl->acl_addr = $2.addr & v_acl->acl_mask;
 		    if ($2.addr & ~v_acl->acl_mask)
 			warn("Boundary spec %s/%d has host bits set",
-				inet_fmt($2.addr,s1),$2.mask);
+			     inet_fmt($2.addr, s1, sizeof(s1)), $2.mask);
 		    v_acl->acl_next = v->uv_acl;
 		    v->uv_acl = v_acl;
 
@@ -603,7 +604,7 @@ boundary	: ADDRMASK	{
 #endif
 			if ((ntohl($1.addr) & 0xff000000) != 0xef000000) {
 			    fatal("Boundaries must be 239.x.x.x, not %s/%d",
-				inet_fmt($1.addr, s1), $1.mask);
+				inet_fmt($1.addr, s1, sizeof(s1)), $1.mask);
 			}
 			$$ = $1;
 
@@ -872,7 +873,7 @@ static const char *ifconfaddr(u_int32_t a)
     for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
 	if (ifa->ifa_addr->sa_family == AF_INET &&
 	    ((struct sockaddr_in *)ifa->ifa_addr)->sin_addr.s_addr == a) {
-	    strncpy(ifname, ifa->ifa_name, sizeof(ifname));
+	    strlcpy(ifname, ifa->ifa_name, sizeof(ifname));
 	    freeifaddrs(ifap);
 	    return (ifname);
 	}

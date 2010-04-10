@@ -26,7 +26,7 @@
 #endif
 
 extern char *configfilename;
-char versionstring[100];
+char versionstring[MAX_VERSION_LEN];
 
 static char pidfilename[]  = _PATH_MROUTED_PID;
 static char dumpfilename[] = _PATH_MROUTED_DUMP;
@@ -806,10 +806,9 @@ static void restart(void)
 {
     char *s;
 
-    s = (char *)malloc(sizeof(" restart"));
+    s = strdup (" restart");
     if (s == NULL)
 	logit(LOG_ERR, 0, "out of memory");
-    strcpy(s, " restart");
 
     /*
      * reset all the entries

@@ -55,6 +55,9 @@ ROUTER_OBJS   = config.o cfparse.o main.o route.o vif.o prune.o callout.o \
 ifndef HAVE_STRTONUM
 ROUTER_OBJS  += strtonum.o
 endif
+ifndef HAVE_STRLCPY
+ROUTER_OBJS  += strlcpy.o
+endif
 ROUTER_SRCS   = $(ROUTER_OBJS:.o=.c)
 
 MAPPER_OBJS   = mapper.o

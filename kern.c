@@ -96,7 +96,7 @@ void k_set_if(u_int32 ifa)
     if (setsockopt(igmp_socket, IPPROTO_IP, IP_MULTICAST_IF,
 		   (char *)&adr, sizeof(adr)) < 0)
 	logit(LOG_ERR, errno, "setsockopt IP_MULTICAST_IF %s",
-	    		    inet_fmt(ifa, s1));
+	    		    inet_fmt(ifa, s1, sizeof(s1)));
 }
 
 
@@ -110,7 +110,7 @@ void k_join(u_int32 grp, u_int32 ifa)
     if (setsockopt(igmp_socket, IPPROTO_IP, IP_ADD_MEMBERSHIP,
 		   (char *)&mreq, sizeof(mreq)) < 0)
 	logit(LOG_WARNING, errno, "can't join group %s on interface %s",
-				inet_fmt(grp, s1), inet_fmt(ifa, s2));
+				inet_fmt(grp, s1, sizeof(s1)), inet_fmt(ifa, s2, sizeof(s2)));
 }
 
 
@@ -124,7 +124,7 @@ void k_leave(u_int32 grp, u_int32 ifa)
     if (setsockopt(igmp_socket, IPPROTO_IP, IP_DROP_MEMBERSHIP,
 		   (char *)&mreq, sizeof(mreq)) < 0)
 	logit(LOG_WARNING, errno, "can't leave group %s on interface %s",
-				inet_fmt(grp, s1), inet_fmt(ifa, s2));
+				inet_fmt(grp, s1, sizeof(s1)), inet_fmt(ifa, s2, sizeof(s2)));
 }
 
 
@@ -204,7 +204,7 @@ void k_add_rg(u_int32 origin, struct gtable *g)
 	md_log(MD_ADD_FAIL, origin, g->gt_mcastgrp);
 #endif
 	logit(LOG_WARNING, errno, "setsockopt MRT_ADD_MFC",
-		inet_fmt(origin, s1), inet_fmt(g->gt_mcastgrp, s2));
+		inet_fmt(origin, s1, sizeof(s1)), inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)));
     }
 }
 
@@ -234,7 +234,7 @@ int k_del_rg(u_int32 origin, struct gtable *g)
 	md_log(MD_DEL_FAIL, origin, g->gt_mcastgrp);
 #endif
 	logit(LOG_WARNING, errno, "setsockopt MRT_DEL_MFC of (%s %s)",
-		inet_fmt(origin, s1), inet_fmt(g->gt_mcastgrp, s2));
+		inet_fmt(origin, s1, sizeof(s1)), inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)));
     }
 
     return retval;
@@ -299,7 +299,7 @@ int k_get_sg_count(u_int32 src, u_int32 grp, int *pktcnt, int *bytecnt, int *wro
     sgreq.grp.s_addr = grp;
     if (ioctl(udp_socket, SIOCGETSGCNT, (char *)&sgreq) < 0) {
 	logit(LOG_WARNING, errno, "SIOCGETSGCNT on (%s %s)",
-	    inet_fmt(src, s1), inet_fmt(grp, s2));
+	    inet_fmt(src, s1, sizeof(s1)), inet_fmt(grp, s2, sizeof(s2)));
 	sgreq.pktcnt = sgreq.bytecnt = sgreq.wrong_if = 0xffffffff;
 	return 1;
     }

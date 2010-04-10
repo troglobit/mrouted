@@ -111,14 +111,14 @@ void send_ipip(u_int32 src, u_int32 dst, int type, int code, u_int32 group, int 
 	else
 	    logit(LOG_WARNING, errno,
 		"sendmsg to %s on %s",
-		inet_fmt(sdst.sin_addr.s_addr, s1), inet_fmt(src, s2));
+		inet_fmt(sdst.sin_addr.s_addr, s1, sizeof(s1)), inet_fmt(src, s2, sizeof(s2)));
     }
 
     IF_DEBUG(DEBUG_PKT|igmp_debug_kind(type, code))
     logit(LOG_DEBUG, 0, "SENT %s from %-15s to %s encaped to %s",
 	igmp_packet_kind(type, code), src == INADDR_ANY ? "INADDR_ANY" :
-				 inet_fmt(src, s1), inet_fmt(dst, s2),
-				 inet_fmt(sdst.sin_addr.s_addr, s3));
+				 inet_fmt(src, s1, sizeof(s1)), inet_fmt(dst, s2, sizeof(s2)),
+				 inet_fmt(sdst.sin_addr.s_addr, s3, sizeof(s3)));
 }
 
 /**

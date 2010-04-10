@@ -406,7 +406,7 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
     if (src != 0 && (metric < 1 || metric >= 2*UNREACHABLE)) {
 	logit(LOG_WARNING, 0,
 	    "%s reports out-of-range metric %u for origin %s",
-	    inet_fmt(src, s1), metric, inet_fmts(origin, mask, s2));
+	    inet_fmt(src, s1, sizeof(s1)), metric, inet_fmts(origin, mask, s2, sizeof(s2)));
 	return;
     }
     adj_metric = metric + uvifs[vifi].uv_metric;
@@ -427,13 +427,13 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
 	if (src != 0 && !inet_valid_subnet(origin, mask)) {
 	    logit(LOG_WARNING, 0,
 		"%s reports an invalid origin (%s) and/or mask (%08x)",
-		inet_fmt(src, s1), inet_fmt(origin, s2), ntohl(mask));
+		inet_fmt(src, s1, sizeof(s1)), inet_fmt(origin, s2, sizeof(s2)), ntohl(mask));
 	    return;
 	}
 
 	IF_DEBUG(DEBUG_RTDETAIL)
 	logit(LOG_DEBUG, 0, "%s advertises new route %s",
-		inet_fmt(src, s1), inet_fmts(origin, mask, s2));
+		inet_fmt(src, s1, sizeof(s1)), inet_fmts(origin, mask, s2, sizeof(s2)));
 
 	/*
 	 * OK, create the new routing entry.  'rtp' will be left pointing
@@ -461,7 +461,7 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
 
 	IF_DEBUG(DEBUG_RTDETAIL)
 	logit(LOG_DEBUG, 0, "%s advertises %s with adj_metric %d (ours was %d)",
-		inet_fmt(src, s1), inet_fmts(origin, mask, s2),
+		inet_fmt(src, s1, sizeof(s1)), inet_fmts(origin, mask, s2, sizeof(s2)),
 		adj_metric, r->rt_metric);
 
 	/*
@@ -499,7 +499,7 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
 
 	IF_DEBUG(DEBUG_RTDETAIL)
 	logit(LOG_DEBUG, 0, "%s (current parent) advertises %s with adj_metric %d (ours was %d)",
-		inet_fmt(src, s1), inet_fmts(origin, mask, s2),
+		inet_fmt(src, s1, sizeof(s1)), inet_fmts(origin, mask, s2, sizeof(s2)),
 		adj_metric, r->rt_metric);
 
 	if (adj_metric == r->rt_metric)
@@ -543,8 +543,8 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
 
 	IF_DEBUG(DEBUG_RTDETAIL)
 	logit(LOG_DEBUG, 0, "%s (new parent) on vif %d advertises %s with adj_metric %d (old parent was %s on vif %d, metric %d)",
-		inet_fmt(src, s1), vifi, inet_fmts(origin, mask, s2),
-		adj_metric, inet_fmt(old_gateway, s3), old_parent,
+		inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
+		adj_metric, inet_fmt(old_gateway, s3, sizeof(s3)), old_parent,
 		r->rt_metric);
 
 	if (old_parent != vifi) {
@@ -574,7 +574,7 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
 	     */
 	    IF_DEBUG(DEBUG_RTDETAIL)
 	    logit(LOG_DEBUG, 0, "%s on vif %d advertises %s with metric %d (ignored due to NOTRANSIT)",
-		inet_fmt(src, s1), vifi, inet_fmts(origin, mask, s2),
+		inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
 		metric);
 	} else if (VIFM_ISSET(vifi, r->rt_children)) {
 	    /*
@@ -599,7 +599,7 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
 		update_table_entry(r, r->rt_gateway);
 		IF_DEBUG(DEBUG_RTDETAIL)
 		logit(LOG_DEBUG, 0, "%s on vif %d becomes dominant for %s with metric %d",
-		    inet_fmt(src, s1), vifi, inet_fmts(origin, mask, s2),
+		    inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
 		    metric);
 	    }
 	    else if (metric > UNREACHABLE) {	/* "poisoned reverse" */
@@ -610,14 +610,14 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
 		if (!NBRM_ISSET(n->al_index, r->rt_subordinates)) {
 		    IF_DEBUG(DEBUG_RTDETAIL)
 		    logit(LOG_DEBUG, 0, "%s on vif %d becomes subordinate for %s with poison-reverse metric %d",
-			inet_fmt(src, s1), vifi, inet_fmts(origin, mask, s2),
+			inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
 			metric - UNREACHABLE);
 		    NBRM_SET(n->al_index, r->rt_subordinates);
 		    update_table_entry(r, r->rt_gateway);
 		} else {
 		    IF_DEBUG(DEBUG_RTDETAIL)
 		    logit(LOG_DEBUG, 0, "%s on vif %d confirms subordinateness for %s with poison-reverse metric %d",
-			inet_fmt(src, s1), vifi, inet_fmts(origin, mask, s2),
+			inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
 			metric - UNREACHABLE);
 		}
 		NBRM_SET(n->al_index, r->rt_subordadv);
@@ -630,7 +630,7 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
 		 */
 		IF_DEBUG(DEBUG_RTDETAIL)
 		logit(LOG_DEBUG, 0, "%s on vif %d is no longer a subordinate for %s with metric %d",
-		    inet_fmt(src, s1), vifi, inet_fmts(origin, mask, s2),
+		    inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
 		    metric);
 		NBRM_CLR(n->al_index, r->rt_subordinates);
 		update_table_entry(r, r->rt_gateway);
@@ -648,7 +648,7 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
 	     */
 	    IF_DEBUG(DEBUG_RTDETAIL)
 	    logit(LOG_DEBUG, 0, "%s (current dominant) on vif %d is no longer dominant for %s with metric %d",
-		inet_fmt(src, s1), vifi, inet_fmts(origin, mask, s2),
+		inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
 		metric);
 	    VIFM_SET(vifi, r->rt_children);
 	    r->rt_dominants[vifi] = 0;
@@ -664,7 +664,7 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
 	} else {
 	    IF_DEBUG(DEBUG_RTDETAIL)
 	    logit(LOG_DEBUG, 0, "%s on vif %d advertises %s with metric %d (ignored)",
-		inet_fmt(src, s1), vifi, inet_fmts(origin, mask, s2),
+		inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
 		metric);
 	}
     }
@@ -799,12 +799,12 @@ void accept_probe(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 lev
 	if (match->al_ctime + match->al_timer <= (u_long)now) {
 	    logit(LOG_WARNING, 0,
 		"ignoring probe from non-neighbor %s, check for misconfigured tunnel or routing on %s",
-		inet_fmt(src, s1), s1);
+		inet_fmt(src, s1, sizeof(s1)), s1);
 	    match->al_timer *= 2;
 	} else
 	    IF_DEBUG(DEBUG_PEER)
 	    logit(LOG_DEBUG, 0,
-		"ignoring probe from non-neighbor %s (%d seconds until next warning)", inet_fmt(src, s1), match->al_ctime + match->al_timer - now);
+		"ignoring probe from non-neighbor %s (%d seconds until next warning)", inet_fmt(src, s1, sizeof(s1)), match->al_ctime + match->al_timer - now);
 	return;
     }
 
@@ -977,7 +977,7 @@ accept_report(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level)
 
     if ((vifi = find_vif(src, dst)) == NO_VIF) {
 	logit(LOG_INFO, 0,
-    	    "ignoring route report from non-neighbor %s", inet_fmt(src, s1));
+    	    "ignoring route report from non-neighbor %s", inet_fmt(src, s1, sizeof(s1)));
 	return;
     }
 
@@ -996,7 +996,7 @@ accept_report(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level)
     if (datalen > 2*4096) {
 	logit(LOG_INFO, 0,
     	    "ignoring oversize (%d bytes) route report from %s",
-	    datalen, inet_fmt(src, s1));
+	    datalen, inet_fmt(src, s1, sizeof(s1)));
 	return;
     }
 
@@ -1005,7 +1005,7 @@ accept_report(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level)
 	if (datalen < 3) {
 	    logit(LOG_WARNING, 0,
 		"received truncated route report from %s", 
-		inet_fmt(src, s1));
+		inet_fmt(src, s1, sizeof(s1)));
 	    return;
 	}
 	((u_char *)&mask)[0] = 0xff;            width = 1;
@@ -1015,7 +1015,7 @@ accept_report(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level)
 	if (!inet_valid_mask(ntohl(mask))) {
 	    logit(LOG_WARNING, 0,
 		"%s reports bogus netmask 0x%08x (%s)",
-		inet_fmt(src, s1), ntohl(mask), inet_fmt(mask, s2));
+		inet_fmt(src, s1, sizeof(s1)), ntohl(mask), inet_fmt(mask, s2, sizeof(s2)));
 	    return;
 	}
 	datalen -= 3;
@@ -1024,7 +1024,7 @@ accept_report(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level)
 	    if (datalen < width + 1) {
 		logit(LOG_WARNING, 0,
 		    "received truncated route report from %s", 
-		    inet_fmt(src, s1));
+		    inet_fmt(src, s1, sizeof(s1)));
 		return;
 	    }
 	    origin = 0;
@@ -1049,11 +1049,11 @@ accept_report(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level)
 
     IF_DEBUG(DEBUG_ROUTE)
     logit(LOG_DEBUG, 0, "Updating %d routes from %s to %s", nrt,
-		inet_fmt(src, s1), inet_fmt(dst, s2));
+		inet_fmt(src, s1, sizeof(s1)), inet_fmt(dst, s2, sizeof(s2)));
     for (i = 0; i < nrt; ++i) {
 	if (i > 0 && rt[i].origin == rt[i - 1].origin && rt[i].mask == rt[i - 1].mask) {
 	    logit(LOG_WARNING, 0, "%s reports duplicate route for %s",
-                  inet_fmt(src, s1), inet_fmts(rt[i].origin, rt[i].mask, s2));
+                  inet_fmt(src, s1, sizeof(s1)), inet_fmts(rt[i].origin, rt[i].mask, s2, sizeof(s2)));
 	    continue;
 	}
 	/* Only filter non-poisoned updates. */
@@ -1079,10 +1079,10 @@ accept_report(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level)
 		(uvifs[vifi].uv_filter->vf_type == VFT_DENY && match == 1)) {
 		    IF_DEBUG(DEBUG_ROUTE)
 		    logit(LOG_DEBUG, 0, "%s skipped on vif %d because it %s %s",
-			inet_fmts(rt[i].origin, rt[i].mask, s1),
+			inet_fmts(rt[i].origin, rt[i].mask, s1, sizeof(s1)),
 			vifi,
 			match ? "matches" : "doesn't match",
-			match ? inet_fmts(vfe->vfe_addr, vfe->vfe_mask, s2) :
+			match ? inet_fmts(vfe->vfe_addr, vfe->vfe_mask, s2, sizeof(s2)) :
 				"the filter");
 #if 0
 		    rt[i].metric += vfe->vfe_addmetric;
@@ -1224,7 +1224,7 @@ static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi,
 		    logit(LOG_DEBUG, 0, "%s not reported on vif %d because it %s %s",
 			RT_FMT(r, s1), vifi,
 			match ? "matches" : "doesn't match",
-			match ? inet_fmts(vfe->vfe_addr, vfe->vfe_mask, s2) :
+			match ? inet_fmts(vfe->vfe_addr, vfe->vfe_mask, s2, sizeof(s2)) :
 				"the filter");
 		    nrt++;
 		    continue;
@@ -1338,8 +1338,8 @@ void dump_routes(FILE *fp)
     for (r = routing_table; r != NULL; r = r->rt_next) {
 
 	fprintf(fp, " %-18s %-15s ",
-		inet_fmts(r->rt_origin, r->rt_originmask, s1),
-		(r->rt_gateway == 0) ? "" : inet_fmt(r->rt_gateway, s2));
+		inet_fmts(r->rt_origin, r->rt_originmask, s1, sizeof(s1)),
+		(r->rt_gateway == 0) ? "" : inet_fmt(r->rt_gateway, s2, sizeof(s2)));
 
 	fprintf(fp, (r->rt_metric == UNREACHABLE) ? "  NR " : "%4u ",
 		r->rt_metric);

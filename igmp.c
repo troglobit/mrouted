@@ -96,7 +96,7 @@ char *igmp_packet_kind(u_int type, u_int code)
 	    case DVMRP_INFO_REQUEST:		return "info request      ";
 	    case DVMRP_INFO_REPLY:		return "info reply        ";
 	    default:
-		    sprintf(unknown, "unknown DVMRP %3d ", code);
+		    snprintf(unknown, sizeof(unknown), "unknown DVMRP %3d ", code);
 		    return unknown;
 	  }
  	case IGMP_PIM:
@@ -110,13 +110,13 @@ char *igmp_packet_kind(u_int type, u_int code)
  	    case PIM_GRAFT:			return "PIM Graft         ";
  	    case PIM_GRAFT_ACK:			return "PIM Graft-Ack     ";
  	    default:
- 		    sprintf(unknown, "unknown PIM msg%3d", code);
+ 		    snprintf(unknown, sizeof(unknown), "unknown PIM msg%3d", code);
 		    return unknown;
  	  }
 	case IGMP_MTRACE:			return "IGMP trace query  ";
 	case IGMP_MTRACE_RESP:			return "IGMP trace reply  ";
 	default:
-		sprintf(unknown, "unk: 0x%02x/0x%02x    ", type, code);
+		snprintf(unknown, sizeof(unknown), "unk: 0x%02x/0x%02x    ", type, code);
 		return unknown;
     }
 }
@@ -200,7 +200,7 @@ void accept_igmp(size_t recvlen)
     if ((size_t)(iphdrlen + ipdatalen) != recvlen) {
 	logit(LOG_WARNING, 0,
 	    "received packet from %s shorter (%u bytes) than hdr+data length (%u+%u)",
-	    inet_fmt(src, s1), recvlen, iphdrlen, ipdatalen);
+	    inet_fmt(src, s1, sizeof(s1)), recvlen, iphdrlen, ipdatalen);
 	return;
     }
 
@@ -210,14 +210,14 @@ void accept_igmp(size_t recvlen)
     if (igmpdatalen < 0) {
 	logit(LOG_WARNING, 0,
 	    "received IP data field too short (%u bytes) for IGMP, from %s",
-	    ipdatalen, inet_fmt(src, s1));
+	    ipdatalen, inet_fmt(src, s1, sizeof(s1)));
 	return;
     }
 
     IF_DEBUG(DEBUG_PKT|igmp_debug_kind(igmp->igmp_type, igmp->igmp_code))
     logit(LOG_DEBUG, 0, "RECV %s from %-15s to %s",
 	igmp_packet_kind(igmp->igmp_type, igmp->igmp_code),
-	inet_fmt(src, s1), inet_fmt(dst, s2));
+	inet_fmt(src, s1, sizeof(s1)), inet_fmt(dst, s2, sizeof(s2)));
 
     switch (igmp->igmp_type) {
 
@@ -285,8 +285,8 @@ void accept_igmp(size_t recvlen)
 		default:
 		    logit(LOG_INFO, 0,
 		     "ignoring unknown DVMRP message code %u from %s to %s",
-		     igmp->igmp_code, inet_fmt(src, s1),
-		     inet_fmt(dst, s2));
+		     igmp->igmp_code, inet_fmt(src, s1, sizeof(s1)),
+		     inet_fmt(dst, s2, sizeof(s2)));
 		    return;
 	    }
 
@@ -304,8 +304,8 @@ void accept_igmp(size_t recvlen)
 	default:
 	    logit(LOG_INFO, 0,
 		"ignoring unknown IGMP message type %x from %s to %s",
-		igmp->igmp_type, inet_fmt(src, s1),
-		inet_fmt(dst, s2));
+		igmp->igmp_type, inet_fmt(src, s1, sizeof(s1)),
+		inet_fmt(dst, s2, sizeof(s2)));
 	    return;
     }
 }
@@ -396,7 +396,7 @@ void send_igmp(u_int32 src, u_int32 dst, int type, int code, u_int32 group, int 
 	else
 	    logit(igmp_log_level(type, code), errno,
 		"sendto to %s on %s",
-		inet_fmt(dst, s1), inet_fmt(src, s2));
+		inet_fmt(dst, s1, sizeof(s1)), inet_fmt(src, s2, sizeof(s2)));
     }
 
     if (setloop)
@@ -405,7 +405,7 @@ void send_igmp(u_int32 src, u_int32 dst, int type, int code, u_int32 group, int 
     IF_DEBUG(DEBUG_PKT|igmp_debug_kind(type, code))
     logit(LOG_DEBUG, 0, "SENT %s from %-15s to %s",
 	igmp_packet_kind(type, code), src == INADDR_ANY ? "INADDR_ANY" :
-				 inet_fmt(src, s1), inet_fmt(dst, s2));
+				 inet_fmt(src, s1, sizeof(s1)), inet_fmt(dst, s2, sizeof(s2)));
 }
 
 /**

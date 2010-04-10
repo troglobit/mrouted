@@ -57,7 +57,7 @@ config_vifs_from_kernel()
 	    addr == (subnet | ~mask)) {
 	    logit(LOG_WARNING, 0,
 		"ignoring %s, has invalid address (%s) and/or mask (%s)",
-		ifa->ifa_name, inet_fmt(addr, s1), inet_fmt(mask, s2));
+		ifa->ifa_name, inet_fmt(addr, s1, sizeof(s1)), inet_fmt(mask, s2, sizeof(s2)));
 	    continue;
 	}
 
@@ -68,8 +68,8 @@ config_vifs_from_kernel()
 	for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
 	    if (strcmp(v->uv_name, ifa->ifa_name) == 0) {
 		logit(LOG_DEBUG, 0, "skipping %s (%s on subnet %s) (alias for vif#%u?)",
-			v->uv_name, inet_fmt(addr, s1),
-			inet_fmts(subnet, mask, s2), vifi);
+			v->uv_name, inet_fmt(addr, s1, sizeof(s1)),
+			inet_fmts(subnet, mask, s2, sizeof(s2)), vifi);
 		break;
 	    }
 	    if ((addr & v->uv_subnetmask) == v->uv_subnet ||
@@ -100,7 +100,7 @@ config_vifs_from_kernel()
 	    v->uv_flags |= VIFF_REXMIT_PRUNES;
 
 	logit(LOG_INFO,0,"installing %s (%s on subnet %s) as vif #%u - rate=%d",
-	    v->uv_name, inet_fmt(addr, s1), inet_fmts(subnet, mask, s2),
+	    v->uv_name, inet_fmt(addr, s1, sizeof(s1)), inet_fmts(subnet, mask, s2, sizeof(s2)),
 	    numvifs, v->uv_rate_limit);
 
 	++numvifs;

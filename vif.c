@@ -113,11 +113,11 @@ void init_vifs(void)
 	    if (!(v->uv_flags & VIFF_DOWN)) {
 		if (v->uv_flags & VIFF_TUNNEL)
 		    logit(LOG_INFO, 0, "vif #%d, tunnel %s -> %s", vifi,
-				inet_fmt(v->uv_lcl_addr, s1),
-				inet_fmt(v->uv_rmt_addr, s2));
+				inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)),
+				inet_fmt(v->uv_rmt_addr, s2, sizeof(s2)));
 		else
 		    logit(LOG_INFO, 0, "vif #%d, phyint %s", vifi,
-				inet_fmt(v->uv_lcl_addr, s1));
+				inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)));
 		start_vif2(vifi);
 	    } else logit(LOG_INFO, 0,
 		     "%s is not yet up; vif #%u not in service",
@@ -182,11 +182,11 @@ void init_installvifs(void)
 	    if (!(v->uv_flags & VIFF_DOWN)) {
 		if (v->uv_flags & VIFF_TUNNEL)
 		    logit(LOG_INFO, 0, "vif #%d, tunnel %s -> %s", vifi,
-				inet_fmt(v->uv_lcl_addr, s1),
-				inet_fmt(v->uv_rmt_addr, s2));
+				inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)),
+				inet_fmt(v->uv_rmt_addr, s2, sizeof(s2)));
 		else
 		    logit(LOG_INFO, 0, "vif #%d, phyint %s", vifi,
-				inet_fmt(v->uv_lcl_addr, s1));
+				inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)));
 		k_add_vif(vifi, &uvifs[vifi]);
 	    } else logit(LOG_INFO, 0,
 		     "%s is not yet up; vif #%u not in service",
@@ -596,7 +596,7 @@ void accept_membership_query(u_int32 src, u_int32 dst, u_int32 group, int tmo)
 	(uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
 	logit(LOG_INFO, 0,
 	    "ignoring group membership query from non-adjacent host %s",
-	    inet_fmt(src, s1));
+	    inet_fmt(src, s1, sizeof(s1)));
 	return;
     }
 
@@ -616,7 +616,7 @@ void accept_membership_query(u_int32 src, u_int32 dst, u_int32 group, int tmo)
 	    logit(LOG_WARNING, 0, "%s %s on vif %d, %s",
 		tmo == 0 ? "Received IGMPv1 report from"
 			 : "Received IGMPv2 report from",
-		inet_fmt(src, s1),
+		inet_fmt(src, s1, sizeof(s1)),
 		vifi,
 		tmo == 0 ? "please configure vif for IGMPv1"
 			 : "but I am configured for IGMPv1");
@@ -634,8 +634,8 @@ void accept_membership_query(u_int32 src, u_int32 dst, u_int32 group, int tmo)
 				   : ntohl(v->uv_lcl_addr))) {
 	    IF_DEBUG(DEBUG_IGMP)
 	    logit(LOG_DEBUG, 0, "new querier %s (was %s) on vif %d",
-		       inet_fmt(src, s1),
-		       v->uv_querier ? inet_fmt(v->uv_querier->al_addr, s2) :
+		       inet_fmt(src, s1, sizeof(s1)),
+		       v->uv_querier ? inet_fmt(v->uv_querier->al_addr, s2, sizeof(s2)) :
 		       "me", vifi);
 	    if (!v->uv_querier) {
 		v->uv_querier = (struct listaddr *)
@@ -647,8 +647,8 @@ void accept_membership_query(u_int32 src, u_int32 dst, u_int32 group, int tmo)
 	} else {
 	    IF_DEBUG(DEBUG_IGMP)
 	    logit(LOG_DEBUG, 0, "ignoring query from %s; querier on vif %d is still %s",
-		       inet_fmt(src, s1), vifi,
-		       v->uv_querier ? inet_fmt(v->uv_querier->al_addr, s2) :
+		       inet_fmt(src, s1, sizeof(s1)), vifi,
+		       v->uv_querier ? inet_fmt(v->uv_querier->al_addr, s2, sizeof(s2)) :
 		       "me");
 
 	    return;
@@ -674,7 +674,7 @@ void accept_membership_query(u_int32 src, u_int32 dst, u_int32 group, int tmo)
 	logit(LOG_DEBUG, 0,
 	    "%s for %s from %s on vif %d, timer %d",
 	    "Group-specific membership query",
-	    inet_fmt(group, s2), inet_fmt(src, s1), vifi, tmo);
+	    inet_fmt(group, s2, sizeof(s2)), inet_fmt(src, s1, sizeof(s1)), vifi, tmo);
 	
 	for (g = v->uv_groups; g != NULL; g = g->al_next) {
 	    if (group == g->al_addr && g->al_query == 0) {
@@ -689,7 +689,7 @@ void accept_membership_query(u_int32 src, u_int32 dst, u_int32 group, int tmo)
 		IF_DEBUG(DEBUG_IGMP)
 		logit(LOG_DEBUG, 0,
 		    "timer for grp %s on vif %d set to %d",
-		    inet_fmt(group, s2), vifi, g->al_timer);
+		    inet_fmt(group, s2, sizeof(s2)), vifi, g->al_timer);
 		break;
 	    }
 	}
@@ -709,7 +709,7 @@ void accept_group_report(u_int32 src, u_int32 dst, u_int32 group, int r_type)
 	(uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
 	logit(LOG_INFO, 0,
 	    "ignoring group membership report from non-adjacent host %s",
-	    inet_fmt(src, s1));
+	    inet_fmt(src, s1, sizeof(s1)));
 	return;
     }
 
@@ -781,7 +781,7 @@ void accept_leave_message(u_int32 src, u_int32 dst, u_int32 group)
 	(uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
 	logit(LOG_INFO, 0,
 	    "ignoring group leave report from non-adjacent host %s",
-	    inet_fmt(src, s1));
+	    inet_fmt(src, s1, sizeof(s1)));
 	return;
     }
 
@@ -1055,15 +1055,19 @@ void accept_info_request(u_int32 src, u_int32 UNUSED dst, u_char *p, size_t data
 static int info_version(u_char *p)
 {
     int len;
-    extern char versionstring[];
 
     *p++ = DVMRP_INFO_VERSION;
     p++;	/* skip over length */
     *p++ = 0;	/* zero out */
     *p++ = 0;	/* reserved fields */
-    strcpy((char *)p, versionstring);	/* XXX strncpy!!! */
+    /* XXX: We use sizeof(versionstring) instead of the available 
+     *      space in send_buf[] because that buffer is 8192 bytes.
+     *      It is not very likely our versionstring will ever be
+     *      as long as 100 bytes, but it's better to limit the amount
+     *      of data copied to send_buf since we do not want to risk
+     *      sending MAX size frames. */
+    len = strlcpy((char *)p, versionstring, sizeof(versionstring));
 
-    len = strlen(versionstring);
     return ((len + 3) / 4);
 }
 
@@ -1073,7 +1077,7 @@ static int info_version(u_char *p)
 void accept_neighbors(u_int32_t src, u_int32_t dst, u_char UNUSED *p, size_t UNUSED datalen, u_int32_t UNUSED level)
 {
     logit(LOG_INFO, 0, "ignoring spurious DVMRP neighbor list from %s to %s",
-	inet_fmt(src, s1), inet_fmt(dst, s2));
+	inet_fmt(src, s1, sizeof(s1)), inet_fmt(dst, s2, sizeof(s2)));
 }
 
 
@@ -1084,7 +1088,7 @@ void accept_neighbors2(u_int32 src, u_int32 dst, u_char UNUSED *p, size_t UNUSED
 {
     IF_DEBUG(DEBUG_PKT)
     logit(LOG_DEBUG, 0, "ignoring spurious DVMRP neighbor list2 from %s to %s",
-	inet_fmt(src, s1), inet_fmt(dst, s2));
+	inet_fmt(src, s1, sizeof(s1)), inet_fmt(dst, s2, sizeof(s2)));
 }
 
 /*
@@ -1094,7 +1098,7 @@ void accept_info_reply(u_int32 src, u_int32 dst, u_char UNUSED *p, size_t UNUSED
 {
     IF_DEBUG(DEBUG_PKT)
     logit(LOG_DEBUG, 0, "ignoring spurious DVMRP info reply from %s to %s",
-	inet_fmt(src, s1), inet_fmt(dst, s2));
+	inet_fmt(src, s1, sizeof(s1)), inet_fmt(dst, s2, sizeof(s2)));
 }
 
 
@@ -1137,7 +1141,7 @@ struct listaddr *update_neighbor(vifi_t vifi, u_int32 addr, int msgtype, char *p
 	    "received DVMRP message from %s: %s",
 	    (addr == v->uv_lcl_addr) ? "self (check device loopback)" :
 				       "'the unknown host'",
-	    inet_fmt(addr, s1));
+	    inet_fmt(addr, s1, sizeof(s1)));
 	return NULL;
     }
 
@@ -1158,12 +1162,12 @@ struct listaddr *update_neighbor(vifi_t vifi, u_int32 addr, int msgtype, char *p
 
 	IF_DEBUG(DEBUG_PEER)
 	logit(LOG_DEBUG, 0, "checking probe from %s (%d.%d) on vif %d",
-	    inet_fmt(addr, s1), pv, mv, vifi);
+	    inet_fmt(addr, s1, sizeof(s1)), pv, mv, vifi);
 
 	if (datalen < 4) {
 	    logit(LOG_WARNING, 0,
 		"received truncated probe message from %s (len %d)",
-		inet_fmt(addr, s1), datalen);
+		inet_fmt(addr, s1, sizeof(s1)), datalen);
 	    return NULL;
 	}
 
@@ -1177,7 +1181,7 @@ struct listaddr *update_neighbor(vifi_t vifi, u_int32 addr, int msgtype, char *p
 	    if (datalen < 4) {
 		logit(LOG_WARNING, 0,
 		    "received truncated probe message from %s (len %d)",
-		    inet_fmt(addr, s1), datalen);
+		    inet_fmt(addr, s1, sizeof(s1)), datalen);
 		return NULL;
 	    }
 	    for (i = 0; i < 4; i++)
@@ -1222,7 +1226,7 @@ struct listaddr *update_neighbor(vifi_t vifi, u_int32 addr, int msgtype, char *p
 	    /* XXX This is a severe new restriction. */
 	    /* XXX want extensible bitmaps! */
 	    logit(LOG_ERR, 0, "Can't handle %dth neighbor %s on vif %d!",
-		MAXNBRS, inet_fmt(addr, s1), vifi);
+		MAXNBRS, inet_fmt(addr, s1, sizeof(s1)), vifi);
 	    /*NOTREACHED*/
 	}
 
@@ -1231,7 +1235,7 @@ struct listaddr *update_neighbor(vifi_t vifi, u_int32 addr, int msgtype, char *p
 	 */
 	IF_DEBUG(DEBUG_PEER)
 	logit(LOG_DEBUG, 0, "New neighbor %s on vif %d v%d.%d nf 0x%02x idx %d",
-	    inet_fmt(addr, s1), vifi, level & 0xff, (level >> 8) & 0xff,
+	    inet_fmt(addr, s1, sizeof(s1)), vifi, level & 0xff, (level >> 8) & 0xff,
 	    (level >> 16) & 0xff, i);
 
 	n = (struct listaddr *)malloc(sizeof(struct listaddr));
@@ -1270,7 +1274,7 @@ struct listaddr *update_neighbor(vifi_t vifi, u_int32 addr, int msgtype, char *p
 	    if (!in_router_list) {
 		IF_DEBUG(DEBUG_PEER)
 		logit(LOG_DEBUG, 0, "waiting for probe from %s with my addr",
-		    inet_fmt(addr, s1));
+		    inet_fmt(addr, s1, sizeof(s1)));
 		n->al_flags |= NBRF_WAITING;
 		return NULL;
 	    }
@@ -1279,7 +1283,7 @@ struct listaddr *update_neighbor(vifi_t vifi, u_int32 addr, int msgtype, char *p
 	if (n->al_flags & NBRF_DONTPEER) {
 	    IF_DEBUG(DEBUG_PEER)
 	    logit(LOG_DEBUG, 0, "not peering with %s on vif %d because %x",
-		inet_fmt(addr, s1), vifi, n->al_flags & NBRF_DONTPEER);
+		inet_fmt(addr, s1, sizeof(s1)), vifi, n->al_flags & NBRF_DONTPEER);
 	    return NULL;
 	}
 
@@ -1308,7 +1312,7 @@ struct listaddr *update_neighbor(vifi_t vifi, u_int32 addr, int msgtype, char *p
 	    n->al_flags &= ~NBRF_WAITING;
 	    if (!in_router_list) {
 		logit(LOG_WARNING, 0, "possible one-way peering with %s on vif %d",
-		    inet_fmt(addr, s1), vifi);
+		    inet_fmt(addr, s1, sizeof(s1)), vifi);
 		n->al_flags |= NBRF_ONEWAY;
 		return NULL;
 	    } else {
@@ -1322,7 +1326,7 @@ struct listaddr *update_neighbor(vifi_t vifi, u_int32 addr, int msgtype, char *p
 		add_neighbor_to_routes(vifi, n->al_index);
 		IF_DEBUG(DEBUG_PEER)
 		logit(LOG_DEBUG, 0, "%s on vif %d exits WAITING",
-		    inet_fmt(addr, s1), vifi);
+		    inet_fmt(addr, s1, sizeof(s1)), vifi);
 	    }
 	}
 
@@ -1333,13 +1337,13 @@ struct listaddr *update_neighbor(vifi_t vifi, u_int32 addr, int msgtype, char *p
 		NBRM_SET(n->al_index, v->uv_nbrmap);
 		add_neighbor_to_routes(vifi, n->al_index);
 		logit(LOG_NOTICE, 0, "peering with %s on vif %d is no longer one-way",
-			inet_fmt(addr, s1), vifi);
+			inet_fmt(addr, s1, sizeof(s1)), vifi);
 		n->al_flags &= ~NBRF_ONEWAY;
 	    } else {
 		/* XXX rate-limited warning message? */
 		IF_DEBUG(DEBUG_PEER)
 		logit(LOG_DEBUG, 0, "%s on vif %d is still ONEWAY",
-		    inet_fmt(addr, s1), vifi);
+		    inet_fmt(addr, s1, sizeof(s1)), vifi);
 	    }
 	}
 
@@ -1367,7 +1371,7 @@ struct listaddr *update_neighbor(vifi_t vifi, u_int32 addr, int msgtype, char *p
 	    IF_DEBUG(DEBUG_PEER)
 	    logit(LOG_DEBUG, 0,
 		"version/genid change neighbor %s [old:%d.%d/%8x, new:%d.%d/%8x]",
-		inet_fmt(addr, s1),
+		inet_fmt(addr, s1, sizeof(s1)),
 		n->al_pv, n->al_mv, n->al_genid, pv, mv, genid);
 	    
 	    n->al_pv = pv;
@@ -1387,7 +1391,7 @@ struct listaddr *update_neighbor(vifi_t vifi, u_int32 addr, int msgtype, char *p
 		delete_neighbor_from_routes(addr, vifi, n->al_index);
 		reset_neighbor_state(vifi, addr);
 		logit(LOG_WARNING, 0, "peering with %s on vif %d is one-way",
-			inet_fmt(addr, s1), vifi);
+			inet_fmt(addr, s1, sizeof(s1)), vifi);
 		n->al_flags |= NBRF_ONEWAY;
 	    }
 	}
@@ -1395,7 +1399,7 @@ struct listaddr *update_neighbor(vifi_t vifi, u_int32 addr, int msgtype, char *p
 	if (n->al_flags & NBRF_DONTPEER) {
 	    IF_DEBUG(DEBUG_PEER)
 	    logit(LOG_DEBUG, 0, "not peering with %s on vif %d because %x",
-		inet_fmt(addr, s1), vifi, n->al_flags & NBRF_DONTPEER);
+		inet_fmt(addr, s1, sizeof(s1)), vifi, n->al_flags & NBRF_DONTPEER);
 	    return NULL;
 	}
 
@@ -1451,7 +1455,7 @@ void age_vifs(void)
 
 	    IF_DEBUG(DEBUG_PEER)
 	    logit(LOG_DEBUG, 0, "Neighbor %s (%d.%d) expired after %d seconds",
-		    inet_fmt(a->al_addr, s1), a->al_pv, a->al_mv, exp_time);
+		    inet_fmt(a->al_addr, s1, sizeof(s1)), a->al_pv, a->al_mv, exp_time);
 
 	    /*
 	     * Neighbor has expired; delete it from the neighbor list,
@@ -1484,7 +1488,7 @@ void age_vifs(void)
 	     */
 	    IF_DEBUG(DEBUG_IGMP)
 	    logit(LOG_DEBUG, 0, "querier %s timed out",
-		    inet_fmt(v->uv_querier->al_addr, s1));
+		    inet_fmt(v->uv_querier->al_addr, s1, sizeof(s1)));
 	    free(v->uv_querier);
 	    v->uv_querier = NULL;
 	    v->uv_flags |= VIFF_QUERIER;
@@ -1569,13 +1573,13 @@ void dump_vifs(FILE *fp)
 	fprintf(fp, "%2u %6s  %-15s %6s: %-18s %2u %3u  %5u  ",
 		vifi,
 		v->uv_name,
-		inet_fmt(v->uv_lcl_addr, s1),
+		inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)),
 		(v->uv_flags & VIFF_TUNNEL) ?
 			"tunnel":
 			"subnet",
 		(v->uv_flags & VIFF_TUNNEL) ?
-			inet_fmt(v->uv_rmt_addr, s2) :
-			inet_fmts(v->uv_subnet, v->uv_subnetmask, s3),
+			inet_fmt(v->uv_rmt_addr, s2, sizeof(s2)) :
+			inet_fmts(v->uv_subnet, v->uv_subnetmask, s3, sizeof(s3)),
 		v->uv_metric,
 		v->uv_threshold,
 		v->uv_rate_limit);
@@ -1595,14 +1599,14 @@ void dump_vifs(FILE *fp)
 	label = "alternate subnets:";
 	for (p = v->uv_addrs; p; p = p->pa_next) {
 	    fprintf(fp, "                %18s %s\n", label,
-			inet_fmts(p->pa_subnet, p->pa_subnetmask, s1));
+			inet_fmts(p->pa_subnet, p->pa_subnetmask, s1, sizeof(s1)));
 	    label = "";
 	}
 
 	label = "peers:";
 	for (a = v->uv_neighbors; a != NULL; a = a->al_next) {
 	    fprintf(fp, "                            %6s %s (%d.%d) [%d]",
-		    label, inet_fmt(a->al_addr, s1), a->al_pv, a->al_mv,
+		    label, inet_fmt(a->al_addr, s1, sizeof(s1)), a->al_pv, a->al_mv,
 		    a->al_index);
 	    for (i = 0; i < sizeof(nbrflags) / sizeof(struct vnflags); i++)
 		    if (a->al_flags & nbrflags[i].vn_flag)
@@ -1616,32 +1620,30 @@ void dump_vifs(FILE *fp)
 	for (a = v->uv_groups; a != NULL; a = a->al_next) {
 	    fprintf(fp, "           %23s %-15s %-15s (%s)\n",
 		    label,
-		    inet_fmt(a->al_addr, s1),
-		    inet_fmt(a->al_reporter, s2),
+		    inet_fmt(a->al_addr, s1, sizeof(s1)),
+		    inet_fmt(a->al_reporter, s2, sizeof(s2)),
 		    scaletime(timer_leftTimer(a->al_timerid)));
 	    label = "";
 	}
 	label = "boundaries:";
 	for (acl = v->uv_acl; acl != NULL; acl = acl->acl_next) {
 	    fprintf(fp, "                       %11s %-18s\n", label,
-			inet_fmts(acl->acl_addr, acl->acl_mask, s1));
+			inet_fmts(acl->acl_addr, acl->acl_mask, s1, sizeof(s1)));
 	    label = "";
 	}
 	if (v->uv_filter) {
 	    struct vf_element *vfe;
 	    char lbuf[100];
 
-	    sprintf(lbuf, "%5s %7s filter:",
-			v->uv_filter->vf_flags & VFF_BIDIR ? "bidir"
-							   : "     ",
-			v->uv_filter->vf_type == VFT_ACCEPT ? "accept"
-							    : "deny");
+	    snprintf(lbuf, sizeof(lbuf), "%5s %7s filter:",
+		     v->uv_filter->vf_flags & VFF_BIDIR  ? "bidir"  : "     ",
+		     v->uv_filter->vf_type == VFT_ACCEPT ? "accept" : "deny");
 	    label = lbuf;
 	    for (vfe = v->uv_filter->vf_filter;
-					vfe != NULL; vfe = vfe->vfe_next) {
+		 vfe != NULL; vfe = vfe->vfe_next) {
 		fprintf(fp, "           %23s %-18s%s\n",
 			label,
-			inet_fmts(vfe->vfe_addr, vfe->vfe_mask, s1),
+			inet_fmts(vfe->vfe_addr, vfe->vfe_mask, s1, sizeof(s1)),
 			vfe->vfe_flags & VFEF_EXACT ? " (exact)" : "");
 		label = "";
 	    }
@@ -1651,12 +1653,12 @@ void dump_vifs(FILE *fp)
 	    if (v->uv_querier == NULL)
 		if (v->uv_flags & VIFF_QUERIER)
 		    fprintf(fp, "%-18s (this system)\n",
-				    inet_fmt(v->uv_lcl_addr, s1));
+				    inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)));
 		else
 		    fprintf(fp, "NONE - querier election failure?\n");
 	    else
 	    	fprintf(fp, "%-18s up %s last heard %s ago\n",
-			inet_fmt(v->uv_querier->al_addr, s1),
+			inet_fmt(v->uv_querier->al_addr, s1, sizeof(s1)),
 			scaletime(now - v->uv_querier->al_ctime),
 			scaletime(v->uv_querier->al_timer));
 	}
@@ -1773,6 +1775,7 @@ static int SetQueryTimer(struct listaddr *g, vifi_t vifi, int to_expire, int q_t
  * Local Variables:
  *  version-control: t
  *  indent-tabs-mode: t
- *  c-file-style: "bsd"
+ *  c-file-style: "ellemtel"
+ *  c-basic-offset: 4
  * End:
  */

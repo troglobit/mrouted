@@ -155,10 +155,14 @@ extern int		vifs_down;
 extern int		udp_socket;
 extern int		vifs_with_neighbors;
 
-extern char		s1[];
-extern char		s2[];
-extern char		s3[];
-extern char		s4[];
+#define MAX_INET_BUF_LEN 19
+extern char		s1[MAX_INET_BUF_LEN];
+extern char		s2[MAX_INET_BUF_LEN];
+extern char		s3[MAX_INET_BUF_LEN];
+extern char		s4[MAX_INET_BUF_LEN];
+
+#define MAX_VERSION_LEN 100
+extern char             versionstring[MAX_VERSION_LEN];
 
 #if !(defined(BSD) && (BSD >= 199103)) && !defined(__linux__)
 extern int		errno;
@@ -295,8 +299,8 @@ extern void		config_vifs_from_file(void);
 extern int		inet_valid_host(u_int32);
 extern int		inet_valid_mask(u_int32);
 extern int		inet_valid_subnet(u_int32, u_int32);
-extern char *		inet_fmt(u_int32, char *);
-extern char *		inet_fmts(u_int32, u_int32, char *);
+extern char *		inet_fmt(u_int32, char *, size_t);
+extern char *		inet_fmts(u_int32, u_int32, char *, size_t);
 extern u_int32		inet_parse(char *, int);
 extern int		inet_cksum(u_short *, u_int);
 

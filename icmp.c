@@ -63,7 +63,7 @@ static void icmp_handler(int fd, fd_set UNUSED *rfds)
     icmp = (struct icmp *)(icmp_buf + iphdrlen);
     IF_DEBUG(DEBUG_ICMP)
     logit(LOG_DEBUG, 0, "got ICMP type %d from %s",
-	  icmp->icmp_type, inet_fmt(src, s1));
+	  icmp->icmp_type, inet_fmt(src, s1, sizeof(s1)));
     /*
      * Eventually:
      * have registry of ICMP listeners, by type, code and ICMP_ID
@@ -91,8 +91,8 @@ static void icmp_handler(int fd, fd_set UNUSED *rfds)
 			n >>= 1;
 		    if (n == 1 && ((p = icmp_name(icmp)) != NULL))
 			logit(LOG_WARNING, 0, "Received ICMP %s from %s %s %s on vif %d",
-			    p, inet_fmt(src, s1), "for traffic sent to",
-			    inet_fmt(ip->ip_dst.s_addr, s2),
+			    p, inet_fmt(src, s1, sizeof(s1)), "for traffic sent to",
+			    inet_fmt(ip->ip_dst.s_addr, s2, sizeof(s2)),
 			    i);
 
 		    break;
@@ -176,7 +176,7 @@ static char *icmp_name(struct icmp *icmp)
 		case ICMP_UNREACH_PRECEDENCE_CUTOFF:
 		    return "precedence cutoff";
 		default:
-		    sprintf(retval, "unreachable code %d", icmp->icmp_code);
+		    snprintf(retval, sizeof(retval), "unreachable code %d", icmp->icmp_code);
 		    return retval;
 	    }
 	case ICMP_SOURCEQUENCH:
@@ -190,7 +190,7 @@ static char *icmp_name(struct icmp *icmp)
 		case ICMP_TIMXCEED_REASS:
 		    return "time exceeded in reassembly";
 		default:
-		    sprintf(retval, "time exceeded code %d", icmp->icmp_code);
+		    snprintf(retval, sizeof(retval), "time exceeded code %d", icmp->icmp_code);
 		    return retval;
 	    }
 	case ICMP_PARAMPROB:
@@ -201,7 +201,7 @@ static char *icmp_name(struct icmp *icmp)
 		case ICMP_PARAMPROB_OPTABSENT:
 		    return "required option absent";
 		default:
-		    sprintf(retval, "parameter problem code %d", icmp->icmp_code);
+		    snprintf(retval, sizeof(retval), "parameter problem code %d", icmp->icmp_code);
 		    return retval;
 	    }
     }
