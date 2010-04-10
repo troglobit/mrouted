@@ -258,7 +258,7 @@ void usage(void)
     extern char *__progname;
 
     fprintf(stderr,
-	    "Usage: %s [-hn] [-d [debug_level]] [-r retries] [-t timeout] [router]\n", __progname);
+	    "Usage: %s [-hn] [-d [level]] [-r count] [-t seconds] [router]\n", __progname);
 
     exit(1);
 }
@@ -272,19 +272,6 @@ int main(int argc, char *argv[])
 	char *host;
 	uid_t uid;
 	const char *errstr;
-
-	if (geteuid() != 0) {
-		fprintf(stderr, "mrinfo: must be root\n");
-		exit(1);
-	}
-
-	init_igmp();
-
-	uid = getuid();
-	if (setresuid(uid, uid, uid) == -1)
-		err(1, "setresuid");
-
-	setlinebuf(stderr);
 
 	while ((ch = getopt(argc, argv, "d::hnr:t:")) != -1) {
 		switch (ch) {
@@ -325,6 +312,19 @@ int main(int argc, char *argv[])
 	}
 	argc -= optind;
 	argv += optind;
+
+	if (geteuid() != 0) {
+		fprintf(stderr, "mrinfo: must be root\n");
+		exit(1);
+	}
+
+	init_igmp();
+
+	uid = getuid();
+	if (setresuid(uid, uid, uid) == -1)
+		err(1, "setresuid");
+
+	setlinebuf(stderr);
 
 	if (argc > 1)
 		usage();

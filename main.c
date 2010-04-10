@@ -46,7 +46,7 @@ int cache_lifetime 	= DEFAULT_CACHE_LIFETIME;
 int prune_lifetime	= AVERAGE_PRUNE_LIFETIME;
 
 int debug = 0;
-char *progname;
+extern char *__progname;
 time_t mrouted_init_time;
 
 #ifdef SNMP
@@ -122,13 +122,13 @@ int register_input_handler(int fd, ihfunc_t func)
 void usage(void)
 {
     size_t i, j, k;
-    extern char *__progname;
     struct debugname *d;
 
     fprintf(stderr,
-	    "Usage: %s [-hp] [-c config_file] [-d [debug_level][,debug_level...]]\n\n", __progname);
+	    "Usage: %s [-fhp] [-c file] [-d [level[,level...]]]\n\n", __progname);
     fprintf(stderr, "\t-c  Configuration file to use, default /etc/mrouted.conf\n");
     fprintf(stderr, "\t-d  Debug level, see below for valid levels\n");
+    fprintf(stderr, "\t-f  Run in foreground, do not detach from the calling terminal\n");
     fprintf(stderr, "\t-h  Show this help text\n");
     fprintf(stderr, "\t-p  Disable pruning.  Not supported anymore, compatibility option\n");
     fprintf(stderr, "\n");
@@ -159,11 +159,10 @@ int main(int argc, char *argv[])
     FILE *fp;
     struct timeval tv, difftime, curtime, lasttime, *timeout;
     u_int32 prev_genid;
-    int vers;
+    int vers, foreground = 0;
     fd_set rfds, readers;
     int nfds, n, i, secs, ch;
     extern char todaysversion[];
-    extern char *__progname;
     struct sigaction sa;
 #ifdef SNMP
     const char *errstr;
@@ -172,73 +171,70 @@ int main(int argc, char *argv[])
     int index, block;
 #endif
 
-    if (geteuid() != 0) {
-	fprintf(stderr, "%s: must be root\n", __progname);
-	exit(1);
-    }
-    setlinebuf(stderr);
-
-    progname = strrchr(argv[0], '/');
-    if (progname)
-	progname++;
-    else
-	progname = argv[0];
-
-    while ((ch = getopt(argc, argv, "c:d::hpP::")) != -1) {
+    while ((ch = getopt(argc, argv, "c:d::fhpP::")) != -1) {
 	switch (ch) {
-	case 'c':
-	    configfilename = optarg;
-	    break;
-	case 'd':
-	    if (!optarg)
-		debug = DEFAULT_DEBUG;
-	    else {
-		char *p,*q;
-		size_t i, len;
-		struct debugname *d;
+	    case 'c':
+		configfilename = optarg;
+		break;
 
-		debug = 0;
-		p = optarg; q = NULL;
-		while (p) {
-		    q = strchr(p, ',');
-		    if (q)
-			*q++ = '\0';
-		    len = strlen(p);
-		    for (i = 0, d = debugnames; i < ARRAY_LEN(debugnames); i++, d++)
-			if (len >= d->nchars && strncmp(d->name, p, len) == 0)
-			    break;
+	    case 'd':
+		if (!optarg)
+		    debug = DEFAULT_DEBUG;
+		else {
+		    char *p,*q;
+		    size_t i, len;
+		    struct debugname *d;
 
-		    if (i == ARRAY_LEN(debugnames))
-			usage();
+		    debug = 0;
+		    p = optarg; q = NULL;
+		    while (p) {
+			q = strchr(p, ',');
+			if (q)
+			    *q++ = '\0';
+			len = strlen(p);
+			for (i = 0, d = debugnames; i < ARRAY_LEN(debugnames); i++, d++)
+			    if (len >= d->nchars && strncmp(d->name, p, len) == 0)
+				break;
 
-		    debug |= d->level;
-		    p = q;
+			if (i == ARRAY_LEN(debugnames))
+			    usage();
+
+			debug |= d->level;
+			p = q;
+		    }
 		}
-	    }
-	    break;
-	case 'h':
-	    usage();
-	    break;
-	case 'p':
-	    warnx("Disabling pruning is no longer supported.");
-	    break;
+		break;
+
+	    case 'f':
+		foreground = 1;
+		break;
+
+	    case 'h':
+		usage();
+		break;
+
+	    case 'p':
+		warnx("Disabling pruning is no longer supported.");
+		break;
+
 #ifdef SNMP
-	case 'P':
-	    if (!optarg)
-		dest_port = DEFAULT_PORT;
-	    else {
-		dest_port = strtonum(optarg, 1, 65535, &errstr);
-		if (errstr) {
-		    warnx("destination port %s", errstr);
-		    debug = DEFAULT_PORT;
+	    case 'P':
+		if (!optarg)
+		    dest_port = DEFAULT_PORT;
+		else {
+		    dest_port = strtonum(optarg, 1, 65535, &errstr);
+		    if (errstr) {
+			warnx("destination port %s", errstr);
+			dest_port = DEFAULT_PORT;
+		    }
 		}
-	    }
 #else
-	    warnx("SNMP support missing, please feel free to submit a patch.");
+		warnx("SNMP support missing, please feel free to submit a patch.");
 #endif
-	    break;
-	default:
-	    usage();
+		break;
+
+	    default:
+		usage();
 	}
     }
 
@@ -247,6 +243,12 @@ int main(int argc, char *argv[])
 
     if (argc > 0)
 	usage();
+
+    if (geteuid() != 0) {
+	fprintf(stderr, "%s: must be root\n", __progname);
+	exit(1);
+    }
+    setlinebuf(stderr);
 
     if (debug != 0) {
 	struct debugname *d;
@@ -383,7 +385,7 @@ int main(int argc, char *argv[])
     timer_setTimer(1, fasttimer, NULL);
     timer_setTimer(TIMER_INTERVAL, timer, NULL);
 
-    if (debug == 0) {
+    if (!debug && !foreground) {
 	/*
 	 * Detach from the terminal
 	 */
@@ -965,7 +967,7 @@ void logit(int severity, int syserr, const char *format, ...)
 	now_sec = now.tv_sec;
 	thyme = localtime(&now_sec);
 	if (!debug)
-	    fprintf(stderr, "%s: ", progname);
+	    fprintf(stderr, "%s: ", __progname);
 	fprintf(stderr, "%02d:%02d:%02d.%03ld %s", thyme->tm_hour,
 		    thyme->tm_min, thyme->tm_sec, now.tv_usec / 1000, msg);
 	if (syserr == 0)

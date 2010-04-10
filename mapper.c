@@ -798,13 +798,6 @@ int main(int argc, char *argv[])
     int ch;
     const char *errstr;
 
-    setlinebuf(stderr);
-
-    if (geteuid() != 0) {
-	fprintf(stderr, "must be root\n");
-	exit(1);
-    }
-
     while ((ch = getopt(argc, argv, "d::fghnr:t:")) != -1) {
 	 switch (ch) {
 	 case 'd':
@@ -851,6 +844,13 @@ int main(int argc, char *argv[])
 
     argc -= optind;
     argv += optind;
+
+    setlinebuf(stderr);
+
+    if (geteuid() != 0) {
+	fprintf(stderr, "must be root\n");
+	exit(1);
+    }
 
     if (argc > 1)
 	usage();
