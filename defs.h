@@ -223,7 +223,7 @@ extern int		register_input_handler(int, ihfunc_t);
 /* igmp.c */
 extern void		init_igmp(void);
 extern void		accept_igmp(size_t);
-extern void		build_igmp(u_int32, u_int32, int, int, u_int32, int);
+extern size_t		build_igmp(u_int32, u_int32, int, int, u_int32, int);
 extern void		send_igmp(u_int32, u_int32, int, int, u_int32, int);
 extern char *		igmp_packet_kind(u_int, u_int);
 extern int		igmp_debug_kind(u_int, u_int);

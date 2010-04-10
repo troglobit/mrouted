@@ -336,17 +336,17 @@ static int igmp_log_level(u_int type, u_int code)
  * Construct an IGMP message in the output packet buffer.  The caller may
  * have already placed data in that buffer, of length 'datalen'.
  */
-void build_igmp(u_int32 src, u_int32 dst, int type, int code, u_int32 group, int datalen)
+size_t build_igmp(u_int32 src, u_int32 dst, int type, int code, u_int32 group, int datalen)
 {
     struct ip *ip;
     struct igmp *igmp;
     extern int curttl;
+    size_t len = MIN_IP_HEADER_LEN + IGMP_MINLEN + datalen;
 
     ip                      = (struct ip *)send_buf;
     ip->ip_src.s_addr       = src;
     ip->ip_dst.s_addr       = dst;
-    ip->ip_len              = MIN_IP_HEADER_LEN + IGMP_MINLEN + datalen;
-    ip->ip_len		    = htons(ip->ip_len);
+    ip->ip_len              = htons(len);
     if (IN_MULTICAST(ntohl(dst))) {
 	ip->ip_ttl = curttl;
     } else {
@@ -360,6 +360,8 @@ void build_igmp(u_int32 src, u_int32 dst, int type, int code, u_int32 group, int
     igmp->igmp_cksum        = 0;
     igmp->igmp_cksum        = inet_cksum((u_int16_t *)igmp,
 					 IGMP_MINLEN + datalen);
+
+    return len;
 }
 
 /* 
@@ -371,8 +373,9 @@ void send_igmp(u_int32 src, u_int32 dst, int type, int code, u_int32 group, int 
 {
     struct sockaddr_in sdst;
     int setloop = 0;
+    size_t len;
 
-    build_igmp(src, dst, type, code, group, datalen);
+    len = build_igmp(src, dst, type, code, group, datalen);
 
     if (IN_MULTICAST(ntohl(dst))) {
 	k_set_if(src);
@@ -388,9 +391,7 @@ void send_igmp(u_int32 src, u_int32 dst, int type, int code, u_int32 group, int 
     sdst.sin_len = sizeof(sdst);
 #endif
     sdst.sin_addr.s_addr = dst;
-    if (sendto(igmp_socket, send_buf,
-			MIN_IP_HEADER_LEN + IGMP_MINLEN + datalen, 0,
-			(struct sockaddr *)&sdst, sizeof(sdst)) < 0) {
+    if (sendto(igmp_socket, send_buf, len, 0, (struct sockaddr *)&sdst, sizeof(sdst)) < 0) {
 	if (errno == ENETDOWN)
 	    check_vif_state();
 	else
