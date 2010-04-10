@@ -16,12 +16,11 @@
  *  original routed code has been adopted.)
  */
 
+#include "defs.h"
 #include <err.h>
 #include <fcntl.h>
 #include <stdarg.h>
-#include <time.h>
 
-#include "defs.h"
 #ifdef SNMP
 #include "snmp.h"
 #endif
@@ -290,7 +289,7 @@ int main(int argc, char *argv[])
 
     fp = fopen(genidfilename, "r");
     if (fp != NULL) {
-	int ret = fscanf(fp, "%d", &prev_genid);
+	int ret = fscanf(fp, "%u", &prev_genid);
 	if (ret == 1 && prev_genid == dvmrp_genid)
 	    dvmrp_genid++;
 	(void) fclose(fp);

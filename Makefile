@@ -42,13 +42,9 @@ CFLAGS        = -O ${MCAST_INCLUDE} ${SNMPDEF} ${RSRRDEF}
 #LIB2          = -lsocket -lnsl
 
 ## GNU/Linux
-CFLAGS       += -D__BSD_SOURCE -DRAW_INPUT_IS_RAW -DRAW_OUTPUT_IS_RAW -DIOCTL_OK_ON_RAW_SOCKET
+CFLAGS       += -D__BSD_SOURCE -D_GNU_SOURCE -DIOCTL_OK_ON_RAW_SOCKET
 CFLAGS       += -Iinclude/linux
-
-# This reveals several signed/unsigned problems that should be dealt with
-# in a more thorough way -- I'm masking them out meanwhile. --Joachim
-#CFLAGS       += -W -Wall
-CFLAGS       += -O2 -fno-strict-aliasing -pipe
+CFLAGS       += -W -Wall -Wextra
 CFLAGS       += $(USERCOMPILE)
 LIBS          = ${SNMPLIBDIR} ${SNMPLIBS} ${LIB2}
 LINTFLAGS     = ${MCAST_INCLUDE}

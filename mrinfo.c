@@ -72,13 +72,14 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "defs.h"
-
-#include <netdb.h>
-#include <sys/time.h>
 #include <arpa/inet.h>
-#include <stdarg.h>
 #include <err.h>
+#include <netdb.h>
+#include <stdarg.h>
+#include <sys/time.h>
+#include <unistd.h>
+
+#include "defs.h"
 
 #define DEFAULT_TIMEOUT	4	/* How long to wait before retrying requests */
 #define DEFAULT_RETRIES 3	/* How many times to ask each router */
@@ -167,7 +168,7 @@ void ask2(u_int32 dst)
 /*
  * Process an incoming neighbor-list message.
  */
-void accept_neighbors(u_int32 src, u_int32 dst, u_char *p, size_t datalen, u_int32 level)
+void accept_neighbors(u_int32 src, u_int32 UNUSED dst, u_char *p, size_t datalen, u_int32 UNUSED level)
 {
 	u_char *ep = p + datalen;
 #define GET_ADDR(a) (a = ((u_int32)*p++ << 24), a += ((u_int32)*p++ << 16),\
@@ -196,7 +197,7 @@ void accept_neighbors(u_int32 src, u_int32 dst, u_char *p, size_t datalen, u_int
 	}
 }
 
-void accept_neighbors2(u_int32 src, u_int32 dst, u_char *p, size_t datalen, u_int32 level)
+void accept_neighbors2(u_int32 src, u_int32 UNUSED dst, u_char *p, size_t datalen, u_int32 level)
 {
 	u_char *ep = p + datalen;
 	u_int broken_cisco = ((level & 0xffff) == 0x020a); /* 10.2 */
@@ -460,7 +461,7 @@ int main(int argc, char *argv[])
 		dst = ip->ip_dst.s_addr;
 		iphdrlen = ip->ip_hl << 2;
 		ipdatalen = ntohs(ip->ip_len) - iphdrlen;
-		if (iphdrlen + ipdatalen != recvlen) {
+		if (iphdrlen + ipdatalen != (size_t)recvlen) {
 		    logit(LOG_WARNING, 0,
 		      "packet shorter (%u bytes) than hdr+data length (%u+%u)",
 		      recvlen, iphdrlen, ipdatalen);
@@ -468,13 +469,13 @@ int main(int argc, char *argv[])
 		}
 		igmp = (struct igmp *) (recv_buf + iphdrlen);
 		group = igmp->igmp_group.s_addr;
-		igmpdatalen = ipdatalen - IGMP_MINLEN;
-		if (igmpdatalen < 0) {
+		if (ipdatalen < IGMP_MINLEN) {
 		    logit(LOG_WARNING, 0,
 			"IP data field too short (%u bytes) for IGMP, from %s",
 			ipdatalen, inet_fmt(src, s1));
 		    continue;
 		}
+		igmpdatalen = ipdatalen - IGMP_MINLEN;
 		if (igmp->igmp_type != IGMP_DVMRP)
 			continue;
 
@@ -520,49 +521,49 @@ int main(int argc, char *argv[])
 }
 
 /* dummies */
-void accept_probe(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level)
+void accept_probe(u_int32 UNUSED src, u_int32 UNUSED dst, char UNUSED *p, size_t UNUSED datalen, u_int32 UNUSED level)
 {
 }
-void accept_group_report(u_int32 src, u_int32 dst, u_int32 group, int r_type)
+void accept_group_report(u_int32 UNUSED src, u_int32 UNUSED dst, u_int32 UNUSED group, int UNUSED r_type)
 {
 }
-void accept_report(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level)
+void accept_report(u_int32 UNUSED src, u_int32 UNUSED dst, char UNUSED *p, size_t UNUSED datalen, u_int32 UNUSED level)
 {
 }
-void accept_neighbor_request(u_int32 src, u_int32 dst)
+void accept_neighbor_request(u_int32 UNUSED src, u_int32 UNUSED dst)
 {
 }
-void accept_neighbor_request2(u_int32 src, u_int32 dst)
+void accept_neighbor_request2(u_int32 UNUSED src, u_int32 UNUSED dst)
 {
 }
-void accept_prune(u_int32 src, u_int32 dst, char *p, size_t datalen)
+void accept_prune(u_int32 UNUSED src, u_int32 UNUSED dst, char UNUSED *p, size_t UNUSED datalen)
 {
 }
-void accept_graft(u_int32 src, u_int32 dst, char *p, size_t datalen)
+void accept_graft(u_int32 UNUSED src, u_int32 UNUSED dst, char UNUSED *p, size_t UNUSED datalen)
 {
 }
-void accept_g_ack(u_int32 src, u_int32 dst, char *p, size_t datalen)
+void accept_g_ack(u_int32 UNUSED src, u_int32 UNUSED dst, char UNUSED *p, size_t UNUSED datalen)
 {
 }
-void add_table_entry(u_int32 origin, u_int32 mcastgrp)
+void add_table_entry(u_int32 UNUSED origin, u_int32 UNUSED mcastgrp)
 {
 }
-void check_vif_state()
+void check_vif_state(void)
 {
 }
-void accept_leave_message(u_int32 src, u_int32 dst, u_int32 group)
+void accept_leave_message(u_int32 UNUSED src, u_int32 UNUSED dst, u_int32 UNUSED group)
 {
 }
-void accept_mtrace(u_int32 src, u_int32 dst, u_int32 group, char *data, u_int8_t no, size_t datalen)
+void accept_mtrace(u_int32 UNUSED src, u_int32 UNUSED dst, u_int32 UNUSED group, char UNUSED *data, u_int8_t UNUSED no, size_t UNUSED datalen)
 {
 }
-void accept_membership_query(u_int32 src, u_int32 dst, u_int32 group, int tmo)
+void accept_membership_query(u_int32 UNUSED src, u_int32 UNUSED dst, u_int32 UNUSED group, int UNUSED tmo)
 {
 }
-void accept_info_request(u_int32 src, u_int32 dst, u_char *p, size_t datalen)
+void accept_info_request(u_int32 UNUSED src, u_int32 UNUSED dst, u_char UNUSED *p, size_t UNUSED datalen)
 {
 }
-void accept_info_reply(u_int32 src, u_int32 dst, u_char *p, size_t datalen)
+void accept_info_reply(u_int32 UNUSED src, u_int32 UNUSED dst, u_char UNUSED *p, size_t UNUSED datalen)
 {
 }
 

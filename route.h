@@ -5,9 +5,6 @@
  *
  * The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
  * Leland Stanford Junior University.
- *
- *
- * route.h,v 3.8.4.6 1997/07/01 23:02:35 fenner Exp
  */
 
 /*

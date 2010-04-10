@@ -7,7 +7,6 @@
  * Leland Stanford Junior University.
  */
 
-
 #include "defs.h"
 
 /*
@@ -197,11 +196,7 @@ void accept_igmp(size_t recvlen)
     }
 
     iphdrlen  = ip->ip_hl << 2;
-#ifdef RAW_INPUT_IS_RAW
     ipdatalen = ntohs(ip->ip_len) - iphdrlen;
-#else
-    ipdatalen = ip->ip_len;
-#endif
     if ((size_t)(iphdrlen + ipdatalen) != recvlen) {
 	logit(LOG_WARNING, 0,
 	    "received packet from %s shorter (%u bytes) than hdr+data length (%u+%u)",
@@ -351,9 +346,7 @@ void build_igmp(u_int32 src, u_int32 dst, int type, int code, u_int32 group, int
     ip->ip_src.s_addr       = src;
     ip->ip_dst.s_addr       = dst;
     ip->ip_len              = MIN_IP_HEADER_LEN + IGMP_MINLEN + datalen;
-#ifdef RAW_OUTPUT_IS_RAW
     ip->ip_len		    = htons(ip->ip_len);
-#endif
     if (IN_MULTICAST(ntohl(dst))) {
 	ip->ip_ttl = curttl;
     } else {

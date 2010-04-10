@@ -5,9 +5,6 @@
  *
  * The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
  * Leland Stanford Junior University.
- *
- *
- * defs.h,v 3.8.4.15 1998/03/01 02:51:42 fenner Exp
  */
 #ifndef __MROUTED_DEFS_H__
 #define __MROUTED_DEFS_H__

@@ -855,7 +855,7 @@ void probe_for_neighbors(void)
 /*
  * Send a list of all of our neighbors to the requestor, `src'.
  */
-void accept_neighbor_request(u_int32 src, u_int32 dst)
+void accept_neighbor_request(u_int32 src, u_int32 UNUSED dst)
 {
     vifi_t vifi;
     struct uvif *v;
@@ -914,7 +914,7 @@ void accept_neighbor_request(u_int32 src, u_int32 dst)
 /*
  * Send a list of all of our neighbors to the requestor, `src'.
  */
-void accept_neighbor_request2(u_int32 src, u_int32 dst)
+void accept_neighbor_request2(u_int32 src, u_int32 UNUSED dst)
 {
     vifi_t vifi;
     struct uvif *v;
@@ -1010,7 +1010,7 @@ void accept_neighbor_request2(u_int32 src, u_int32 dst)
 		htonl(MROUTED_LEVEL), datalen);
 }
 
-void accept_info_request(u_int32 src, u_int32 dst, u_char *p, size_t datalen)
+void accept_info_request(u_int32 src, u_int32 UNUSED dst, u_char *p, size_t datalen)
 {
     u_char *q;
     int len;
@@ -1070,7 +1070,7 @@ static int info_version(u_char *p)
 /*
  * Process an incoming neighbor-list message.
  */
-void accept_neighbors(u_int32_t src, u_int32_t dst, u_char *p, size_t datalen, u_int32_t level)
+void accept_neighbors(u_int32_t src, u_int32_t dst, u_char UNUSED *p, size_t UNUSED datalen, u_int32_t UNUSED level)
 {
     logit(LOG_INFO, 0, "ignoring spurious DVMRP neighbor list from %s to %s",
 	inet_fmt(src, s1), inet_fmt(dst, s2));
@@ -1080,7 +1080,7 @@ void accept_neighbors(u_int32_t src, u_int32_t dst, u_char *p, size_t datalen, u
 /*
  * Process an incoming neighbor-list message.
  */
-void accept_neighbors2(u_int32 src, u_int32 dst, u_char *p, size_t datalen, u_int32 level)
+void accept_neighbors2(u_int32 src, u_int32 dst, u_char UNUSED *p, size_t UNUSED datalen, u_int32 UNUSED level)
 {
     IF_DEBUG(DEBUG_PKT)
     logit(LOG_DEBUG, 0, "ignoring spurious DVMRP neighbor list2 from %s to %s",
@@ -1090,7 +1090,7 @@ void accept_neighbors2(u_int32 src, u_int32 dst, u_char *p, size_t datalen, u_in
 /*
  * Process an incoming info reply message.
  */
-void accept_info_reply(u_int32 src, u_int32 dst, u_char *p, size_t datalen)
+void accept_info_reply(u_int32 src, u_int32 dst, u_char UNUSED *p, size_t UNUSED datalen)
 {
     IF_DEBUG(DEBUG_PKT)
     logit(LOG_DEBUG, 0, "ignoring spurious DVMRP info reply from %s to %s",
@@ -1105,8 +1105,8 @@ void accept_info_reply(u_int32 src, u_int32 dst, u_char *p, size_t datalen)
  */
 struct listaddr *update_neighbor(vifi_t vifi, u_int32 addr, int msgtype, char *p, size_t datalen, u_int32 level)
 {
-    register struct uvif *v;
-    register struct listaddr *n;
+    struct uvif *v;
+    struct listaddr *n;
     int pv = level & 0xff;
     int mv = (level >> 8) & 0xff;
     int has_genid = 0;
@@ -1114,7 +1114,7 @@ struct listaddr *update_neighbor(vifi_t vifi, u_int32 addr, int msgtype, char *p
     int dvmrpspec = 0;
     u_int32 genid;
     u_int32 send_tables = 0;
-    int i;
+    size_t i;
     int do_reset = FALSE;
 
     v = &uvifs[vifi];
@@ -1437,7 +1437,7 @@ void age_vifs(void)
 	     a = v->uv_neighbors;
 	     a != NULL;
 	     prev_a = a, a = a->al_next) {
-	    int exp_time;
+	    u_long exp_time;
 	    int idx;
 
 	    if (((a->al_pv == 3) && (a->al_mv >= 3)) ||
@@ -1547,7 +1547,7 @@ void dump_vifs(FILE *fp)
     struct listaddr *a;
     struct phaddr *p;
     struct vif_acl *acl;
-    int i;
+    size_t i;
     struct sioc_vif_req v_req;
     time_t now;
     char *label;

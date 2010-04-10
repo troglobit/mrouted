@@ -64,23 +64,20 @@ void k_hdr_include(bool)
 }
 
 
-void k_set_ttl(t)
-    int t;
+void k_set_ttl(int t)
 {
-#ifndef RAW_OUTPUT_IS_RAW
     u_char ttl;
 
     ttl = t;
     if (setsockopt(igmp_socket, IPPROTO_IP, IP_MULTICAST_TTL,
 		   (char *)&ttl, sizeof(ttl)) < 0)
 	logit(LOG_ERR, errno, "setsockopt IP_MULTICAST_TTL %u", ttl);
-#endif
+
     curttl = t;
 }
 
 
-void k_set_loop(l)
-    int l;
+void k_set_loop(int l)
 {
     u_char loop;
 
@@ -91,8 +88,7 @@ void k_set_loop(l)
 }
 
 
-void k_set_if(ifa)
-    u_int32 ifa;
+void k_set_if(u_int32 ifa)
 {
     struct in_addr adr;
 
@@ -104,9 +100,7 @@ void k_set_if(ifa)
 }
 
 
-void k_join(grp, ifa)
-    u_int32 grp;
-    u_int32 ifa;
+void k_join(u_int32 grp, u_int32 ifa)
 {
     struct ip_mreq mreq;
 
@@ -120,9 +114,7 @@ void k_join(grp, ifa)
 }
 
 
-void k_leave(grp, ifa)
-    u_int32 grp;
-    u_int32 ifa;
+void k_leave(u_int32 grp, u_int32 ifa)
 {
     struct ip_mreq mreq;
 
@@ -136,7 +128,7 @@ void k_leave(grp, ifa)
 }
 
 
-void k_init_dvmrp()
+void k_init_dvmrp(void)
 {
 #ifdef OLD_KERNEL
     if (setsockopt(igmp_socket, IPPROTO_IP, MRT_INIT,
@@ -151,7 +143,7 @@ void k_init_dvmrp()
 }
 
 
-void k_stop_dvmrp()
+void k_stop_dvmrp(void)
 {
     if (setsockopt(igmp_socket, IPPROTO_IP, MRT_DONE,
 		   (char *)NULL, 0) < 0)
@@ -159,9 +151,7 @@ void k_stop_dvmrp()
 }
 
 
-void k_add_vif(vifi, v)
-    vifi_t vifi;
-    struct uvif *v;
+void k_add_vif(vifi_t vifi, struct uvif *v)
 {
     struct vifctl vc;
 
@@ -178,8 +168,7 @@ void k_add_vif(vifi, v)
 }
 
 
-void k_del_vif(vifi)
-    vifi_t vifi;
+void k_del_vif(vifi_t vifi)
 {
     if (setsockopt(igmp_socket, IPPROTO_IP, MRT_DEL_VIF,
 		   (char *)&vifi, sizeof(vifi)) < 0)
@@ -190,9 +179,7 @@ void k_del_vif(vifi)
 /*
  * Adds a (source, mcastgrp) entry to the kernel
  */
-void k_add_rg(origin, g)
-    u_int32 origin;
-    struct gtable *g;
+void k_add_rg(u_int32 origin, struct gtable *g)
 {
     struct mfcctl mc;
     vifi_t i;
@@ -225,9 +212,7 @@ void k_add_rg(origin, g)
 /*
  * Deletes a (source, mcastgrp) entry from the kernel
  */
-int k_del_rg(origin, g)
-    u_int32 origin;
-    struct gtable *g;
+int k_del_rg(u_int32 origin, struct gtable *g)
 {
     struct mfcctl mc;
     int retval;
@@ -258,7 +243,7 @@ int k_del_rg(origin, g)
 /*
  * Get the kernel's idea of what version of mrouted needs to run with it.
  */
-int k_get_version()
+int k_get_version(void)
 {
 #ifdef OLD_KERNEL
     return -1;
@@ -279,10 +264,7 @@ int k_get_version()
 /*
  * Get packet counters
  */
-int
-k_get_vif_count(vifi, icount, ocount, ibytes, obytes)
-    vifi_t vifi;
-    int *icount, *ocount, *ibytes, *obytes;
+int k_get_vif_count(vifi_t vifi, int *icount, int *ocount, int *ibytes, int *obytes)
 {
     struct sioc_vif_req vreq;
     int retval = 0;
@@ -308,11 +290,7 @@ k_get_vif_count(vifi, icount, ocount, ibytes, obytes)
 /*
  * Get counters for a desired source and group.
  */
-int
-k_get_sg_count(src, grp, pktcnt, bytecnt, wrong_if)
-    u_int32 src;
-    u_int32 grp;
-    struct sg_count *retval;
+int k_get_sg_count(u_int32 src, u_int32 grp, int *pktcnt, int *bytecnt, int *wrong_if)
 {
     struct sioc_sg_req sgreq;
     int retval = 0;
@@ -331,6 +309,7 @@ k_get_sg_count(src, grp, pktcnt, bytecnt, wrong_if)
     	*bytecnt = sgreq.bytecnt;
     if (wrong_if)
     	*wrong_if = sgreq.wrong_if;
+
     return retval;
 }
 #endif

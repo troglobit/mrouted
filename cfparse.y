@@ -653,70 +653,66 @@ fatal(char *fmt, ...)
 	vsnprintf(buf, sizeof(buf), fmt, ap);
 	va_end(ap);
 
-	logit(LOG_ERR,0,"%s: %s near line %d", configfilename, buf, lineno);
+	logit(LOG_ERR, 0, "%s: %s near line %d", configfilename, buf, lineno);
 }
 
-static void
-warn(char *fmt, ...)
+static void warn(char *fmt, ...)
 {
-	va_list ap;
-	char buf[200];
+    va_list ap;
+    char buf[200];
 
-	va_start(ap, fmt);
-	vsnprintf(buf, sizeof(buf), fmt, ap);
-	va_end(ap);
+    va_start(ap, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
 
-	logit(LOG_WARNING,0,"%s: %s near line %d", configfilename, buf, lineno);
+    logit(LOG_WARNING,0,"%s: %s near line %d", configfilename, buf, lineno);
 }
 
-static void
-yyerror(s)
-char *s;
+static void yyerror(char *s)
 {
-	logit(LOG_ERR, 0, "%s: %s near line %d", configfilename, s, lineno);
+    logit(LOG_ERR, 0, "%s: %s near line %d", configfilename, s, lineno);
 }
 
-static char *
-next_word()
+static char *next_word(void)
 {
-	static char buf[1024];
-	static char *p=NULL;
-	char *q;
+    static char buf[1024];
+    static char *p=NULL;
+    char *q;
 
-	while (1) {
-	    if (!p || !*p) {
-		lineno++;
-		if (fgets(buf, sizeof(buf), f) == NULL)
-		    return NULL;
-		p = buf;
-	    }
-	    while (*p && (*p == ' ' || *p == '\t'))	/* skip whitespace */
-		p++;
-	    if (*p == '#') {
-		p = NULL;		/* skip comments */
-		continue;
-	    }
-	    q = p;
+    while (1) {
+        if (!p || !*p) {
+            lineno++;
+            if (fgets(buf, sizeof(buf), f) == NULL)
+                return NULL;
+            p = buf;
+        }
+        while (*p && (*p == ' ' || *p == '\t'))	/* skip whitespace */
+            p++;
+        if (*p == '#') {
+            p = NULL;		/* skip comments */
+            continue;
+        }
+        q = p;
 #ifdef SNMP
-       if (*p == '"') {
-          p++;
-	       while (*p && *p != '"' && *p != '\n')
-		      p++;		/* find next whitespace */
-          if (*p == '"')
-             p++;
-       } else
+        if (*p == '"') {
+            p++;
+            while (*p && *p != '"' && *p != '\n')
+                p++;		/* find next whitespace */
+            if (*p == '"')
+                p++;
+        } else
 #endif
-	    while (*p && *p != ' ' && *p != '\t' && *p != '\n')
-		p++;		/* find next whitespace */
-	    *p++ = '\0';	/* null-terminate string */
+        while (*p && *p != ' ' && *p != '\t' && *p != '\n')
+            p++;		/* find next whitespace */
+        *p++ = '\0';	/* null-terminate string */
 
-	    if (!*q) {
-		p = NULL;
-		continue;	/* if 0-length string, read another line */
-	    }
+        if (!*q) {
+            p = NULL;
+            continue;	/* if 0-length string, read another line */
+        }
 
-	    return q;
-	}
+        return q;
+    }
 }
 
 /*
@@ -772,105 +768,100 @@ static struct keyword {
 };
 
 
-static int
-yylex()
+static int yylex(void)
 {
-	int n;
-	u_int32 addr;
-	char *q;
-	struct keyword *w;
+    u_int32 addr, n;
+    char *q;
+    struct keyword *w;
 
-	if ((q = next_word()) == NULL) {
-		return 0;
-	}
+    if ((q = next_word()) == NULL) {
+        return 0;
+    }
 
-	for (w = words; w->word; w++)
-		if (!strcmp(q, w->word))
-		    return (state && w->val2) ? w->val2 : w->val1;
+    for (w = words; w->word; w++)
+        if (!strcmp(q, w->word))
+            return (state && w->val2) ? w->val2 : w->val1;
 
-	if (!strcmp(q,"on") || !strcmp(q,"yes")) {
-		yylval.num = 1;
-		return BOOLEAN;
-	}
-	if (!strcmp(q,"off") || !strcmp(q,"no")) {
-		yylval.num = 0;
-		return BOOLEAN;
-	}
-	if (!strcmp(q,"default")) {
-		yylval.addrmask.mask = 0;
-		yylval.addrmask.addr = 0;
-		return ADDRMASK;
-	}
-	if (sscanf(q,"%[.0-9]/%d%c",s1,&n,s2) == 2) {
-		if ((addr = inet_parse(s1,1)) != 0xffffffff) {
-			yylval.addrmask.mask = n;
-			yylval.addrmask.addr = addr;
-			return ADDRMASK;
-		}
-		/* fall through to returning STRING */
-	}
-	if (sscanf(q,"%[.0-9]%c",s1,s2) == 1) {
-		if ((addr = inet_parse(s1,4)) != 0xffffffff &&
-		    inet_valid_host(addr)) { 
-			yylval.addr = addr;
-			return ADDR;
-		}
-	}
-	if (sscanf(q,"0x%8x%c",&n,s1) == 1) {
-		yylval.addr = n;
-		return ADDR;
-	}
-	if (sscanf(q,"%d%c",&n,s1) == 1) {
-		yylval.num = n;
-		return NUMBER;
-	}
+    if (!strcmp(q,"on") || !strcmp(q,"yes")) {
+        yylval.num = 1;
+        return BOOLEAN;
+    }
+    if (!strcmp(q,"off") || !strcmp(q,"no")) {
+        yylval.num = 0;
+        return BOOLEAN;
+    }
+    if (!strcmp(q,"default")) {
+        yylval.addrmask.mask = 0;
+        yylval.addrmask.addr = 0;
+        return ADDRMASK;
+    }
+    if (sscanf(q,"%[.0-9]/%u%c",s1,&n,s2) == 2) {
+        if ((addr = inet_parse(s1,1)) != 0xffffffff) {
+            yylval.addrmask.mask = n;
+            yylval.addrmask.addr = addr;
+            return ADDRMASK;
+        }
+        /* fall through to returning STRING */
+    }
+    if (sscanf(q,"%[.0-9]%c",s1,s2) == 1) {
+        if ((addr = inet_parse(s1,4)) != 0xffffffff &&
+            inet_valid_host(addr)) { 
+            yylval.addr = addr;
+            return ADDR;
+        }
+    }
+    if (sscanf(q,"0x%8x%c", &n, s1) == 1) {
+        yylval.addr = n;
+        return ADDR;
+    }
+    if (sscanf(q,"%u%c",&n,s1) == 1) {
+        yylval.num = n;
+        return NUMBER;
+    }
 #ifdef SNMP
-   if (*q=='"') {
-      if (q[ strlen(q)-1 ]=='"')
-         q[ strlen(q)-1 ]='\0'; /* trash trailing quote */
-      yylval.ptr = q+1;
-      return STRING;
-   }
+    if (*q=='"') {
+        if (q[ strlen(q)-1 ]=='"')
+            q[ strlen(q)-1 ]='\0'; /* trash trailing quote */
+        yylval.ptr = q+1;
+        return STRING;
+    }
 #endif
-	yylval.ptr = q;
-	return STRING;
+    yylval.ptr = q;
+    return STRING;
 }
 
-void
-config_vifs_from_file()
+void config_vifs_from_file(void)
 {
-	order = 0;
-	state = 0;
-	numbounds = 0;
-	lineno = 0;
+    order = 0;
+    state = 0;
+    numbounds = 0;
+    lineno = 0;
 
-	if ((f = fopen(configfilename, "r")) == NULL) {
-	    if (errno != ENOENT)
-		logit(LOG_ERR, errno, "can't open %s", configfilename);
-	    return;
-	}
+    if ((f = fopen(configfilename, "r")) == NULL) {
+        if (errno != ENOENT)
+            logit(LOG_ERR, errno, "can't open %s", configfilename);
+        return;
+    }
 
-	yyparse();
+    yyparse();
 
-	fclose(f);
+    fclose(f);
 }
 
-static u_int32
-valid_if(s)
-char *s;
+static u_int32 valid_if(char *s)
 {
-	register vifi_t vifi;
-	register struct uvif *v;
+    vifi_t vifi;
+    struct uvif *v;
 
-	for (vifi=0, v=uvifs; vifi<numvifs; vifi++, v++)
-	    if (!strcmp(v->uv_name, s))
-		return v->uv_lcl_addr;
+    for (vifi=0, v=uvifs; vifi<numvifs; vifi++, v++) {
+        if (!strcmp(v->uv_name, s))
+            return v->uv_lcl_addr;
+    }
 
-	return 0;
+    return 0;
 }
 
-static const char *
-ifconfaddr(u_int32_t a)
+static const char *ifconfaddr(u_int32_t a)
 {
     static char ifname[IFNAMSIZ];
     struct ifaddrs *ifap, *ifa;

@@ -5,10 +5,10 @@
  *
  * The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
  * Leland Stanford Junior University.
- *
- *
- * prune.h,v 3.8.4.5 1998/02/27 22:45:43 fenner Exp
  */
+
+#ifndef __MROUTED_PRUNE_H__
+#define __MROUTED_PRUNE_H__
 
 /*
  * Group table
@@ -67,7 +67,7 @@ struct ptable
     struct ptable  *pt_next;		/* pointer to the next entry	    */
     u_int32	    pt_router;		/* router that sent this prune	    */
     vifi_t	    pt_vifi;		/* vif prune received on	    */
-    int		    pt_index;		/* neighbor index of router	    */
+    u_int	    pt_index;		/* neighbor index of router	    */
     int		    pt_timer;		/* timer for prune		    */
 };
 
@@ -149,3 +149,5 @@ struct tr_resp {
 			};
 
 #define NBR_VERS(n)	(((n)->al_pv << 8) + (n)->al_mv)
+
+#endif /* __MROUTED_PRUNE_H__ */

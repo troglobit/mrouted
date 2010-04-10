@@ -14,7 +14,6 @@ extern int prune_lifetime;
 extern struct rtentry *routing_table;
 
 extern int phys_vif;
-
 extern int allow_black_holes;
 
 /*
@@ -54,9 +53,7 @@ static void		update_kernel(struct gtable *g);
 /* 
  * Updates the ttl values for each vif.
  */
-static void
-prun_add_ttls(gt)
-    struct gtable *gt;
+static void prun_add_ttls(struct gtable *gt)
 {
     struct uvif *v;
     vifi_t vifi;
@@ -74,34 +71,32 @@ prun_add_ttls(gt)
  * XXX I want to make the check of allow_black_holes based on ALLOW_BLACK_HOLES
  * but macros are not functions.
  */
-#define GET_SCOPE(gt) { \
-	register vifi_t _i; \
-	VIFM_CLRALL((gt)->gt_scope); \
-	if (allow_black_holes || \
-	    (ntohl((gt)->gt_mcastgrp) & 0xff000000) == 0xef000000) \
-	    for (_i = 0; _i < numvifs; _i++) \
-		if (scoped_addr(_i, (gt)->gt_mcastgrp)) \
-		    VIFM_SET(_i, (gt)->gt_scope); \
-	} \
-	if ((gt)->gt_route == NULL || ((gt)->gt_route->rt_parent != NO_VIF && \
-	    VIFM_ISSET((gt)->gt_route->rt_parent, (gt)->gt_scope))) \
-		VIFM_SETALL((gt)->gt_scope);
+#define GET_SCOPE(gt) {                                                 \
+	vifi_t _i;                                                      \
+	VIFM_CLRALL((gt)->gt_scope);                                    \
+	if (allow_black_holes ||                                        \
+	    (ntohl((gt)->gt_mcastgrp) & 0xff000000) == 0xef000000)      \
+	    for (_i = 0; _i < numvifs; _i++)                            \
+		if (scoped_addr(_i, (gt)->gt_mcastgrp))                 \
+		    VIFM_SET(_i, (gt)->gt_scope);                       \
+	if ((gt)->gt_route == NULL                                      \
+            || ((gt)->gt_route->rt_parent != NO_VIF                     \
+                && VIFM_ISSET((gt)->gt_route->rt_parent, (gt)->gt_scope))) \
+            VIFM_SETALL((gt)->gt_scope);                                \
+    }
 
 #define	APPLY_SCOPE(gt)	VIFM_CLR_MASK((gt)->gt_grpmems, (gt)->gt_scope)
 
-#define	GET_MEMBERSHIP(gt, vifi) { \
-	if ((gt)->gt_route && \
-	    VIFM_ISSET((vifi), (gt)->gt_route->rt_children) && \
-	    (!SUBS_ARE_PRUNED((gt)->gt_route->rt_subordinates, \
-				uvifs[vifi].uv_nbrmap, (gt)->gt_prunes) || \
-	     grplst_mem((vifi), (gt)->gt_mcastgrp))) \
-		VIFM_SET((vifi), (gt)->gt_grpmems); \
-	}
+#define	GET_MEMBERSHIP(gt, vifi) {                                      \
+	if ((gt)->gt_route                                              \
+	    && VIFM_ISSET((vifi), (gt)->gt_route->rt_children)          \
+	    && (!SUBS_ARE_PRUNED((gt)->gt_route->rt_subordinates,       \
+                                 uvifs[vifi].uv_nbrmap, (gt)->gt_prunes) \
+                || grplst_mem((vifi), (gt)->gt_mcastgrp)))              \
+            VIFM_SET((vifi), (gt)->gt_grpmems);                         \
+    }
 
-static int
-scoped_addr(vifi, addr)
-    vifi_t vifi;
-    u_int32 addr;
+static int scoped_addr(vifi_t vifi, u_int32 addr)
 {
     struct vif_acl *acl;
 
@@ -117,9 +112,7 @@ scoped_addr(vifi, addr)
  * route subordinates, prunes received, and group
  * memberships.
  */
-void
-determine_forwvifs(gt)
-    struct gtable *gt;
+void determine_forwvifs(struct gtable *gt)
 {
     vifi_t i;
 
@@ -134,9 +127,7 @@ determine_forwvifs(gt)
 /*
  * Send a prune or a graft if necessary.
  */
-void
-send_prune_or_graft(gt)
-    struct gtable *gt;
+void send_prune_or_graft(struct gtable *gt)
 {
     if (VIFM_ISEMPTY(gt->gt_grpmems))
 	send_prune(gt);
@@ -147,13 +138,10 @@ send_prune_or_graft(gt)
 /* 
  * Determine if mcastgrp has a listener on vifi
  */
-int
-grplst_mem(vifi, mcastgrp)
-    vifi_t vifi;
-    u_int32 mcastgrp;
+int grplst_mem(vifi_t vifi, u_int32 mcastgrp)
 {
-    register struct listaddr *g;
-    register struct uvif *v;
+    struct listaddr *g;
+    struct uvif *v;
     
     v = &uvifs[vifi];
     
@@ -174,11 +162,7 @@ grplst_mem(vifi, mcastgrp)
  * the entry in question belongs, or is NULL if the it belongs at the
  * head of the list.
  */
-int
-find_src_grp(src, mask, grp)
-   u_int32 src;
-   u_int32 mask;
-   u_int32 grp;
+int find_src_grp(u_int32 src, u_int32 mask, u_int32 grp)
 {
     struct gtable *gt;
 
@@ -207,10 +191,7 @@ find_src_grp(src, mask, grp)
 /*
  * Check if the neighbor supports pruning
  */
-static int
-pruning_neighbor(vifi, addr)
-    vifi_t vifi;
-    u_int32 addr;
+static int pruning_neighbor(vifi_t vifi, u_int32 addr)
 {
     struct listaddr *n = neighbor_info(vifi, addr);
     int vers;
@@ -225,10 +206,7 @@ pruning_neighbor(vifi, addr)
 /*
  * Can the neighbor in question handle multicast traceroute?
  */
-static int
-can_mtrace(vifi, addr)
-    vifi_t	vifi;
-    u_int32	addr;
+static int can_mtrace(vifi_t vifi, u_int32 addr)
 {
     struct listaddr *n = neighbor_info(vifi, addr);
     int vers;
@@ -243,10 +221,7 @@ can_mtrace(vifi, addr)
 /*
  * Returns the prune entry of the router, or NULL if none exists
  */
-static struct ptable *
-find_prune_entry(vr, pt)
-    u_int32 vr;
-    struct ptable *pt;
+static struct ptable *find_prune_entry(u_int32 vr, struct ptable *pt)
 {
     while (pt) {
 	if (pt->pt_router == vr)
@@ -264,9 +239,7 @@ find_prune_entry(vr, pt)
  * either on a multi-access network or when a prune that we sent upstream
  * has expired.
  */
-static void
-remove_sources(gt)
-    struct gtable *gt;
+static void remove_sources(struct gtable *gt)
 {
     struct stable *st;
     struct sioc_sg_req sg_req;
@@ -282,6 +255,7 @@ remove_sources(gt)
     for (st = gt->gt_srctbl; st; st = st->st_next) {
 	if (st->st_ctime == 0)
 	    continue;
+
 	IF_DEBUG(DEBUG_PRUNE)
 	logit(LOG_DEBUG, 0, "rexmit_prune deleting (%s %s) (next is %d sec)",
 		inet_fmt(st->st_origin, s1),
@@ -305,9 +279,7 @@ remove_sources(gt)
 /*
  * Prepare for possible prune retransmission
  */
-static void
-rexmit_prune(arg)
-    void *arg;
+static void rexmit_prune(void *arg)
 {
     struct gtable *gt = *(struct gtable **)arg;
 
@@ -333,9 +305,7 @@ rexmit_prune(arg)
  *
  * Record an entry that a prune was sent for this group
  */
-static void
-send_prune(gt)
-    struct gtable *gt;
+static void send_prune(struct gtable *gt)
 {
     struct ptable *pt;
     char *p;
@@ -457,9 +427,7 @@ send_prune(gt)
  * heard within that time, another graft request
  * is sent out.
  */
-static void
-send_graft(gt)
-    struct gtable *gt;
+static void send_graft(struct gtable *gt)
 {
     register char *p;
     register int i;
@@ -505,13 +473,7 @@ send_graft(gt)
 /*
  * Send an ack that a graft was received
  */
-static void
-send_graft_ack(src, dst, origin, grp, vifi)
-    u_int32 src;
-    u_int32 dst;
-    u_int32 origin;
-    u_int32 grp;
-    vifi_t vifi;
+static void send_graft_ack(u_int32 src, u_int32 dst, u_int32 origin, u_int32 grp, vifi_t vifi)
 {
     register char *p;
     register int i;
@@ -550,9 +512,7 @@ send_graft_ack(src, dst, origin, grp, vifi)
 /*
  * Update the kernel cache with all the routes hanging off the group entry
  */
-static void
-update_kernel(g)
-    struct gtable *g;
+static void update_kernel(struct gtable *g)
 {
     struct stable *st;
 
@@ -572,9 +532,7 @@ update_kernel(g)
 /*
  * Find a specific group entry in the group table
  */
-struct gtable *
-find_grp(grp)
-   u_int32 grp;
+struct gtable *find_grp(u_int32 grp)
 {
    struct gtable *gt;
 
@@ -584,6 +542,7 @@ find_grp(grp)
       if (gt->gt_mcastgrp == grp) 
          return gt;
    }
+
    return NULL;
 }
 
@@ -591,10 +550,7 @@ find_grp(grp)
  * Given a group entry and source, find the corresponding source table
  * entry
  */
-struct stable *
-find_grp_src(gt, src)
-   struct gtable *gt;
-   u_int32 src;
+struct stable *find_grp_src(struct gtable *gt, u_int32 src)
 {
    struct stable *st;
    u_long grp = gt->gt_mcastgrp;
@@ -605,19 +561,19 @@ find_grp_src(gt, src)
 	 if (st->st_origin == src)
 	    return st;
    }
+
    return NULL;
 }
 
 /* 
  * Find next entry > specification 
+ * @gtpp: ordered by group  
+ * @stpp: ordered by source 
+ * @grp:  
+ * @src:  
+ * @mask: 
  */
-int
-next_grp_src_mask(gtpp, stpp, grp, src, mask)
-   struct gtable **gtpp;   /* ordered by group  */
-   struct stable **stpp;   /* ordered by source */
-   u_int32 grp;
-   u_int32 src;
-   u_int32 mask;
+int next_grp_src_mask(struct gtable **gtpp, struct stable **stpp, u_int32 grp, u_int32 src, u_int32 mask)
 {
    struct gtable *gt, *gbest = NULL;
    struct stable *st, *sbest = NULL;
@@ -661,16 +617,12 @@ next_grp_src_mask(gtpp, stpp, grp, src, mask)
  * are consistent, i.e. packet and byte counts for the same entry are 
  * read at the same time.
  */
-void
-refresh_sg(sg, gt, st)
-   struct sioc_sg_req *sg;
-   struct gtable *gt;
-   struct stable *st;
+void refresh_sg(struct sioc_sg_req *sg, struct gtable *gt, struct stable *st)
 {
    static   int lastq = -1;
 
    if (quantum != lastq || sg->src.s_addr!=st->st_origin
-    || sg->grp.s_addr!=gt->gt_mcastgrp) {
+       || sg->grp.s_addr!=gt->gt_mcastgrp) {
        lastq = quantum;
        sg->src.s_addr = st->st_origin;
        sg->grp.s_addr = gt->gt_mcastgrp;
@@ -679,43 +631,43 @@ refresh_sg(sg, gt, st)
 }
 
 /*
+ * next_child
+ * @gtpp: 
+ * @stpp:
+ * @grp:  
+ * @src   
+ * @mask: 
+ * @vifi: vif at which to start looking
+ *
  * Given a routing table entry, and a vifi, find the next entry
  * equal to or greater than those
  */
-int
-next_child(gtpp, stpp, grp, src, mask, vifi)
-   struct gtable **gtpp;
-   struct stable **stpp;
-   u_int32   grp;
-   u_int32   src;
-   u_int32   mask;
-   vifi_t   *vifi;     /* vif at which to start looking */
+int next_child(struct gtable **gtpp, struct stable **stpp, u_int32 grp, u_int32 src, u_int32 mask, vifi_t vifi)
 {
-   /* Get (G,S,M) entry */
-   if (mask!=0xFFFFFFFF
-    || !((*gtpp) = find_grp(grp))
-    || !((*stpp) = find_grp_src((*gtpp),src)))
-      if (!next_grp_src_mask(gtpp, stpp, grp, src, mask))
-         return 0;
+    /* Get (G,S,M) entry */
+    if (mask!=0xFFFFFFFF
+        || !((*gtpp) = find_grp(grp))
+        || !((*stpp) = find_grp_src((*gtpp),src)))
+        if (!next_grp_src_mask(gtpp, stpp, grp, src, mask))
+            return 0;
 
-   /* Continue until we get one with a valid next vif */
-   do {
-      for (; (*gtpp)->gt_route->rt_children && *vifi<numvifs; (*vifi)++)
-         if (VIFM_ISSET(*vifi, (*gtpp)->gt_route->rt_children))
-            return 1;
-      *vifi = 0;
-   } while (next_grp_src_mask(gtpp, stpp, (*gtpp)->gt_mcastgrp, 
-		(*stpp)->st_origin, 0xFFFFFFFF) );
+    /* Continue until we get one with a valid next vif */
+    do {
+        for (; (*gtpp)->gt_route->rt_children && *vifi<numvifs; (*vifi)++)
+            if (VIFM_ISSET(*vifi, (*gtpp)->gt_route->rt_children))
+                return 1;
+        *vifi = 0;
+    } while (next_grp_src_mask(gtpp, stpp, (*gtpp)->gt_mcastgrp, 
+                               (*stpp)->st_origin, 0xFFFFFFFF));
 
-   return 0;
+    return 0;
 }
 #endif /* SNMP */
 
 /*
  * Initialize the kernel table structure
  */
-void
-init_ktable()
+void init_ktable(void)
 {
     kernel_table 	= NULL;
     kernel_no_route	= NULL;
@@ -725,10 +677,7 @@ init_ktable()
 /* 
  * Add a new table entry for (origin, mcastgrp)
  */
-void
-add_table_entry(origin, mcastgrp)
-    u_int32 origin;
-    u_int32 mcastgrp;
+void add_table_entry(u_int32 origin, u_int32 mcastgrp)
 {
     struct rtentry *r;
     struct gtable *gt,**gtnp,*prev_gt;
@@ -882,10 +831,7 @@ add_table_entry(origin, mcastgrp)
 /*
  * A router has gone down.  Remove prune state pertinent to that router.
  */
-void
-reset_neighbor_state(vifi, addr)
-    vifi_t vifi;
-    u_int32 addr;
+void reset_neighbor_state(vifi_t vifi, u_int32 addr)
 {
     struct rtentry *r;
     struct gtable *g;
@@ -967,11 +913,7 @@ reset_neighbor_state(vifi, addr)
  * Delete table entry from the kernel
  * del_flag determines how many entries to delete
  */
-void
-del_table_entry(r, mcastgrp, del_flag)
-    struct rtentry *r;
-    u_int32 mcastgrp;
-    u_int  del_flag;
+void del_table_entry(struct rtentry *r, u_int32 mcastgrp, u_int del_flag)
 {
     struct gtable *g, *prev_g;
     struct stable *st, *prev_st;
@@ -982,7 +924,7 @@ del_table_entry(r, mcastgrp, del_flag)
 	while (g) {
 	    IF_DEBUG(DEBUG_CACHE)
 	    logit(LOG_DEBUG, 0, "del_table_entry deleting (%s %s)",
-		RT_FMT(r, s1), inet_fmt(g->gt_mcastgrp, s2));
+                  RT_FMT(r, s1), inet_fmt(g->gt_mcastgrp, s2));
 	    st = g->gt_srctbl;
 	    while (st) {
 		if (st->st_ctime != 0) {
@@ -1097,10 +1039,7 @@ del_table_entry(r, mcastgrp, del_flag)
 /*
  * update kernel table entry when a route entry changes
  */
-void
-update_table_entry(r, old_parent_gw)
-    struct rtentry *r;
-    u_int32 old_parent_gw;
+void update_table_entry(struct rtentry *r, u_int32 old_parent_gw)
 {
     struct gtable *g;
     struct ptable *pt, **ptnp;
@@ -1175,10 +1114,7 @@ update_table_entry(r, old_parent_gw)
 /*
  * set the forwarding flag for all mcastgrps on this vifi
  */
-void
-update_lclgrp(vifi, mcastgrp)
-    vifi_t vifi;
-    u_int32 mcastgrp;
+void update_lclgrp(vifi_t vifi, u_int32 mcastgrp)
 {
     struct rtentry *r;
     struct gtable *g;
@@ -1218,10 +1154,7 @@ update_lclgrp(vifi, mcastgrp)
 /*
  * reset forwarding flag for all mcastgrps on this vifi
  */
-void
-delete_lclgrp(vifi, mcastgrp)
-    vifi_t vifi;
-    u_int32 mcastgrp;
+void delete_lclgrp(vifi_t vifi, u_int32 mcastgrp)
 {
     struct gtable *g;
     
@@ -1271,8 +1204,7 @@ delete_lclgrp(vifi, mcastgrp)
  *
  * Determines if a corresponding prune message has to be generated
  */
-void
-accept_prune(u_int32 src, u_int32 dst, char *p, size_t datalen)
+void accept_prune(u_int32 src, u_int32 dst, char *p, size_t datalen)
 {
     u_int32 prun_src;
     u_int32 prun_grp;
@@ -1445,10 +1377,7 @@ accept_prune(u_int32 src, u_int32 dst, char *p, size_t datalen)
  * Checks if this mcastgrp is present in the kernel table
  * If so and if a prune was sent, it sends a graft upwards
  */
-void
-chkgrp_graft(vifi, mcastgrp)
-    vifi_t	vifi;
-    u_int32	mcastgrp;
+void chkgrp_graft(vifi_t vifi, u_int32 mcastgrp)
 {
     struct rtentry *r;
     struct gtable *g;
@@ -1503,8 +1432,7 @@ chkgrp_graft(vifi, mcastgrp)
  *
  * if no entry exists for this group send ack downstream.
  */
-void
-accept_graft(u_int32 src, u_int32 dst, char *p, size_t datalen)
+void accept_graft(u_int32 src, u_int32 dst, char *p, size_t datalen)
 {
     vifi_t 	vifi;
     u_int32 	graft_src;
@@ -1609,8 +1537,7 @@ accept_graft(u_int32 src, u_int32 dst, char *p, size_t datalen)
  * source, remove the graft timer so that we don't 
  * have send a graft again
  */
-void
-accept_g_ack(u_int32 src, u_int32 dst, char *p, size_t datalen)
+void accept_g_ack(u_int32 src, u_int32 dst, char *p, size_t datalen)
 {
     struct gtable *g;
     vifi_t 	vifi;
@@ -1625,7 +1552,7 @@ accept_g_ack(u_int32 src, u_int32 dst, char *p, size_t datalen)
 	return;
     }
     
-    if (datalen < 0  || datalen > 8) {
+    if (datalen > 8) {
 	logit(LOG_WARNING, 0,
 	    "received non-decipherable graft ack from %s",
 	    inet_fmt(src, s1));
@@ -1667,8 +1594,7 @@ accept_g_ack(u_int32 src, u_int32 dst, char *p, size_t datalen)
  * are going away, but this is only called by restart(), which is
  * about to call MRT_DONE which does that anyway.
  */
-void
-free_all_prunes()
+void free_all_prunes(void)
 {
     register struct rtentry *r;
     register struct gtable *g, *prev_g;
@@ -1725,13 +1651,11 @@ free_all_prunes()
  * "Inheriting" these sources might be cleanest, but simply deleting
  * them is easier, and letting the kernel re-request them.
  */
-void
-steal_sources(rt)
-    struct rtentry *rt;
+void steal_sources(struct rtentry *rt)
 {
-    register struct rtentry *rp;
-    register struct gtable *gt, **gtnp;
-    register struct stable *st, **stnp;
+    struct rtentry *rp;
+    struct gtable *gt, **gtnp;
+    struct stable *st, **stnp;
 
     for (rp = rt->rt_next; rp; rp = rp->rt_next) {
 	if (rp->rt_groups == NULL)
@@ -1806,8 +1730,7 @@ steal_sources(rt)
  * If there are any entries whose timers have expired,
  * remove these entries from the kernel cache.
  */
-void
-age_table_entry()
+void age_table_entry(void)
 {
     struct rtentry *r;
     struct gtable *gt, **gtnptr;
@@ -2122,10 +2045,7 @@ age_table_entry()
  * were received on the vif given by vifi, for the group given by gt,
  * have expired.
  */
-static void
-expire_prune(vifi, gt)
-     vifi_t vifi;
-     struct gtable *gt;
+static void expire_prune(vifi_t vifi, struct gtable *gt)
 {
     /*
      * No need to send a graft, any prunes that we sent
@@ -2162,17 +2082,15 @@ expire_prune(vifi, gt)
 /*
  * Print the contents of the cache table on file 'fp2'.
  */
-void
-dump_cache(fp2)
-    FILE *fp2;
+void dump_cache(FILE *fp2)
 {
-    register struct rtentry *r;
-    register struct gtable *gt;
-    register struct stable *st;
-    register struct ptable *pt;
-    register vifi_t i;
+    struct rtentry *r;
+    struct gtable *gt;
+    struct stable *st;
+    struct ptable *pt;
+    vifi_t i;
     char c;
-    register time_t thyme = time(0);
+    time_t thyme = time(0);
 
     fprintf(fp2,
 	    "Multicast Routing Cache Table (%d entries)\n%s", kroutes,
@@ -2274,8 +2192,7 @@ dump_cache(fp2)
  * Traceroute function which returns traceroute replies to the requesting
  * router. Also forwards the request to downstream routers.
  */
-void
-accept_mtrace(u_int32 src, u_int32 dst, u_int32 group, char *data, u_int8_t no, size_t datalen)
+void accept_mtrace(u_int32 src, u_int32 dst, u_int32 group, char *data, u_int8_t no, size_t datalen)
 {
     u_char type;
     struct rtentry *rt;
