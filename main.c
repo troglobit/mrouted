@@ -894,7 +894,7 @@ void printringbuf(void)
 
     f = fopen("/var/tmp/mrouted.log", "a");
     if (f == NULL) {
-	logit(LOG_ERR, errno, "can't open /var/tmp/mrouted.log");
+	logit(LOG_ERR, errno, "Cannot open /var/tmp/mrouted.log");
 	/*NOTREACHED*/
     }
     fprintf(f, "--------------------------------------------\n");

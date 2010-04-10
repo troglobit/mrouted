@@ -505,7 +505,7 @@ mod	: THRESHOLD NUMBER	{ if ($2 < 1 || $2 > 255)
 			v_filter->vf_filter = $2;
 			v->uv_filter = v_filter;
 		    } else if (v->uv_filter->vf_type != VFT_ACCEPT) {
-			fatal("can't accept and deny");
+			fatal("Cannot accept and deny");
 		    } else {
 			struct vf_element *p;
 
@@ -534,7 +534,7 @@ mod	: THRESHOLD NUMBER	{ if ($2 < 1 || $2 > 255)
 			v_filter->vf_filter = $2;
 			v->uv_filter = v_filter;
 		    } else if (v->uv_filter->vf_type != VFT_DENY) {
-			fatal("can't accept and deny");
+			fatal("Cannot accept and deny");
 		    } else {
 			struct vf_element *p;
 
@@ -840,7 +840,7 @@ void config_vifs_from_file(void)
 
     if ((f = fopen(configfilename, "r")) == NULL) {
         if (errno != ENOENT)
-            logit(LOG_ERR, errno, "can't open %s", configfilename);
+            logit(LOG_ERR, errno, "Cannot open %s", configfilename);
         return;
     }
 

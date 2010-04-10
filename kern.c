@@ -109,7 +109,7 @@ void k_join(u_int32 grp, u_int32 ifa)
 
     if (setsockopt(igmp_socket, IPPROTO_IP, IP_ADD_MEMBERSHIP,
 		   (char *)&mreq, sizeof(mreq)) < 0)
-	logit(LOG_WARNING, errno, "can't join group %s on interface %s",
+	logit(LOG_WARNING, errno, "Cannot join group %s on interface %s",
 				inet_fmt(grp, s1, sizeof(s1)), inet_fmt(ifa, s2, sizeof(s2)));
 }
 
@@ -123,7 +123,7 @@ void k_leave(u_int32 grp, u_int32 ifa)
 
     if (setsockopt(igmp_socket, IPPROTO_IP, IP_DROP_MEMBERSHIP,
 		   (char *)&mreq, sizeof(mreq)) < 0)
-	logit(LOG_WARNING, errno, "can't leave group %s on interface %s",
+	logit(LOG_WARNING, errno, "Cannot leave group %s on interface %s",
 				inet_fmt(grp, s1, sizeof(s1)), inet_fmt(ifa, s2, sizeof(s2)));
 }
 
@@ -139,7 +139,7 @@ void k_init_dvmrp(void)
     if (setsockopt(igmp_socket, IPPROTO_IP, MRT_INIT,
 		   (char *)&v, sizeof(int)) < 0)
 #endif
-	logit(LOG_ERR, errno, "can't enable Multicast routing in kernel");
+	logit(LOG_ERR, errno, "Cannot enable Multicast routing in kernel");
 }
 
 
@@ -147,7 +147,7 @@ void k_stop_dvmrp(void)
 {
     if (setsockopt(igmp_socket, IPPROTO_IP, MRT_DONE,
 		   (char *)NULL, 0) < 0)
-	logit(LOG_WARNING, errno, "can't disable Multicast routing in kernel");
+	logit(LOG_WARNING, errno, "Cannot disable Multicast routing in kernel");
 }
 
 

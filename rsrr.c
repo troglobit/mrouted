@@ -74,7 +74,7 @@ void rsrr_init(void)
     struct sockaddr_un serv_addr;
 
     if ((rsrr_socket = socket(AF_UNIX, SOCK_DGRAM, 0)) < 0)
-	logit(LOG_ERR, errno, "Can't create RSRR socket");
+	logit(LOG_ERR, errno, "Cannot create RSRR socket");
 
     unlink(RSRR_SERV_PATH);
     memset((char *) &serv_addr, 0, sizeof(serv_addr));
@@ -88,7 +88,7 @@ void rsrr_init(void)
 #endif
  
     if (bind(rsrr_socket, (struct sockaddr *) &serv_addr, servlen) < 0)
-	logit(LOG_ERR, errno, "Can't bind RSRR socket");
+	logit(LOG_ERR, errno, "Cannot bind RSRR socket");
 
     if (register_input_handler(rsrr_socket, rsrr_read) < 0)
 	logit(LOG_WARNING, 0, "Couldn't register RSRR as an input handler");
@@ -191,7 +191,7 @@ static void rsrr_accept_iq(void)
      */
     if (numvifs > RSRR_MAX_VIFS) {
 	logit(LOG_WARNING, 0,
-	    "Can't send RSRR Route Reply because %d is too many vifs %d",
+	    "Cannot send RSRR Route Reply because %d is too many vifs %d",
 	    numvifs);
 	return;
     }

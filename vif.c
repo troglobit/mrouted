@@ -100,7 +100,7 @@ void init_vifs(void)
 	}
     }
     if (enabled_vifs < 2)
-	logit(LOG_ERR, 0, "can't forward: %s",
+	logit(LOG_ERR, 0, "Cannot forward: %s",
 	    enabled_vifs == 0 ? "no enabled vifs" : "only one enabled vif");
 
     if (enabled_phyints == 0)
@@ -1225,7 +1225,7 @@ struct listaddr *update_neighbor(vifi_t vifi, u_int32 addr, int msgtype, char *p
 	if (i == MAXNBRS) {
 	    /* XXX This is a severe new restriction. */
 	    /* XXX want extensible bitmaps! */
-	    logit(LOG_ERR, 0, "Can't handle %dth neighbor %s on vif %d!",
+	    logit(LOG_ERR, 0, "Cannot handle %dth neighbor %s on vif %d!",
 		MAXNBRS, inet_fmt(addr, s1, sizeof(s1)), vifi);
 	    /*NOTREACHED*/
 	}
