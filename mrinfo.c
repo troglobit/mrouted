@@ -349,7 +349,7 @@ main(argc, argv)
 	}
 
 	init_igmp();
-	setuid(getuid());
+	seteuid(getuid());
 
 	setlinebuf(stderr);
 
