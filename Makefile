@@ -52,11 +52,14 @@ IGMP_SRCS     = igmp.c inet.c kern.c
 IGMP_OBJS     = igmp.o inet.o kern.o
 ROUTER_OBJS   = config.o cfparse.o main.o route.o vif.o prune.o callout.o \
 		icmp.o ipip.o ${RSRR_OBJS}
+ifndef HAVE_STRLCPY
+ROUTER_OBJS  += strlcpy.o
+endif
 ifndef HAVE_STRTONUM
 ROUTER_OBJS  += strtonum.o
 endif
-ifndef HAVE_STRLCPY
-ROUTER_OBJS  += strlcpy.o
+ifndef HAVE_PIDFILE
+ROUTER_OBJS  += pidfile.o
 endif
 ROUTER_SRCS   = $(ROUTER_OBJS:.o=.c)
 

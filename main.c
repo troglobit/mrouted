@@ -28,10 +28,9 @@
 extern char *configfilename;
 char versionstring[MAX_VERSION_LEN];
 
-static char pidfilename[]  = _PATH_MROUTED_PID;
-static char dumpfilename[] = _PATH_MROUTED_DUMP;
-static char cachefilename[] = _PATH_MROUTED_CACHE;
-static char genidfilename[] = _PATH_MROUTED_GENID;
+static const char dumpfilename[] = _PATH_MROUTED_DUMP;
+static const char cachefilename[] = _PATH_MROUTED_CACHE;
+static const char genidfilename[] = _PATH_MROUTED_GENID;
 
 static int haveterminal = 1;
 int did_final_init = 0;
@@ -414,10 +413,8 @@ int main(int argc, char *argv[])
 #endif
     }
 
-    fp = fopen(pidfilename, "w");
-    if (fp != NULL) {
-	fprintf(fp, "%d\n", (int)getpid());
-	(void) fclose(fp);
+    if (pidfile (NULL)) {
+	warn("Cannot create pidfile");
     }
 
     /* XXX HACK
@@ -713,7 +710,6 @@ static void cleanup(void)
 	report_to_all_neighbors(ALL_ROUTES);
 	if (did_final_init)
 	    k_stop_dvmrp();
-	remove(pidfilename);
     }
 }
 

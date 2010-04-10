@@ -385,5 +385,8 @@ size_t strlcpy(char *dst, const char *src, size_t siz);
 #ifndef HAVE_STRTONUM
 long long strtonum(const char *numstr, long long minval, long long maxval, const char **errstrp);
 #endif
+#ifndef HAVE_PIDFILE
+int pidfile(const char *basename);
+#endif
 
 #endif /* __MROUTED_DEFS_H__ */
