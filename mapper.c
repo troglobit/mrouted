@@ -283,7 +283,7 @@ void accept_neighbors(u_int32_t src, u_int32_t UNUSED dst, u_char *p, size_t dat
     if (debug > 3) {
 	size_t i;
 
-	fprintf(stderr, "    datalen = %d\n", datalen);
+	fprintf(stderr, "    datalen = %ld\n", datalen);
 	for (i = 0; i < datalen; i++) {
 	    if ((i & 0xF) == 0)
 		fprintf(stderr, "   ");

@@ -123,30 +123,29 @@ void usage(void)
     size_t i, j, k;
     struct debugname *d;
 
-    fprintf(stderr,
-	    "Usage: %s [-fhp] [-c file] [-d [level[,level...]]]\n\n", __progname);
-    fprintf(stderr, "\t-c  Configuration file to use, default /etc/mrouted.conf\n");
-    fprintf(stderr, "\t-d  Debug level, see below for valid levels\n");
-    fprintf(stderr, "\t-f  Run in foreground, do not detach from the calling terminal\n");
-    fprintf(stderr, "\t-h  Show this help text\n");
-    fprintf(stderr, "\t-p  Disable pruning.  Not supported anymore, compatibility option\n");
-    fprintf(stderr, "\n");
+    fprintf(stderr, "Usage: %s [-fhp] [-c file] [-d [level[,level...]]]\n\n", __progname);
+    fputs("    -c  Configuration file to use, default /etc/mrouted.conf\n", stderr);
+    fputs("    -d  Debug level, see below for valid levels\n", stderr);
+    fputs("    -f  Run in foreground, do not detach from calling terminal\n", stderr);
+    fputs("    -h  Show this help text\n", stderr);
+    fputs("    -p  Disable pruning.  Not supported anymore, compatibility option\n", stderr);
+    fputs("\n", stderr);
 
     j = 0xffffffff;
     k = 0;
-    fprintf(stderr, "Valid debug levels:\n\t");
+    fputs("Valid debug levels:\n    ", stderr);
     for (i = 0, d = debugnames; i < ARRAY_LEN(debugnames); i++, d++) {
 	if ((j & d->level) == d->level) {
 	    if (k++)
 		fputs(", ", stderr);
 	    if (!(k % 7))
-		fputs("\n\t", stderr);
+		fputs("\n    ", stderr);
 
 	    fputs(d->name, stderr);
 	    j &= ~d->level;
 	}
     }
-    putc('\n', stderr);
+    fputc('\n', stderr);
 
     exit(1);
 }
@@ -216,8 +215,8 @@ int main(int argc, char *argv[])
 		warnx("Disabling pruning is no longer supported.");
 		break;
 
-#ifdef SNMP
 	    case 'P':
+#ifdef SNMP
 		if (!optarg)
 		    dest_port = DEFAULT_PORT;
 		else {
@@ -385,12 +384,10 @@ int main(int argc, char *argv[])
     timer_setTimer(TIMER_INTERVAL, timer, NULL);
 
     if (!debug && !foreground) {
-	/*
-	 * Detach from the terminal
-	 */
-
+	/* Detach from the terminal */
 	haveterminal = 0;
-	if (fork()) exit(0);
+	if (fork())
+	    exit(0);
 	(void)close(0);
 	(void)close(1);
 	(void)close(2);

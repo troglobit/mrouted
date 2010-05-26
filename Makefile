@@ -44,7 +44,7 @@ CFLAGS        = -O ${MCAST_INCLUDE} ${SNMPDEF} ${RSRRDEF}
 ## GNU/Linux
 CFLAGS       += -D__BSD_SOURCE -D_GNU_SOURCE -DIOCTL_OK_ON_RAW_SOCKET
 CFLAGS       += -Iinclude/linux
-CFLAGS       += -W -Wall -Wextra
+CFLAGS       += -W -Wall -Werror -Wextra
 CFLAGS       += $(USERCOMPILE)
 LIBS          = ${SNMPLIBDIR} ${SNMPLIBS} ${LIB2}
 LINTFLAGS     = ${MCAST_INCLUDE}
