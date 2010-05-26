@@ -457,31 +457,39 @@ Multicast Routing Cache Table (147 entries)
 .Pp
 Each entry is characterized by the origin subnet number and mask and the
 destination multicast group.
+.Pp
 The 'CTmr' field indicates the lifetime of the entry.
 The entry is deleted from the cache table when the timer decrements to zero.
 The 'Age' field is the time since this cache entry was originally created.
 Since cache entries get refreshed if traffic is flowing,
 routing entries can grow very old.
+.Pp
 The 'Ptmr' field is simply a dash if no prune was sent upstream, or the
 amount of time until the upstream prune will time out.
 The 'Ivif' field indicates the incoming vif for multicast packets from
 that origin.
+.Pp
 Each router also maintains a record of the number of prunes received from
 neighboring routers for a particular source and group.
+.Pp
 If there are no members of a multicast group on any downward link of the
 multicast tree for a subnet, a prune message is sent to the upstream router.
 They are indicated by a "P" after the vif number.
+.Pp
 The Forwvifs field shows the interfaces along which datagrams belonging to
 the source-group are forwarded.
+.Pp
 A "p" indicates that no datagrams are being forwarded along that interface.
 An unlisted interface is a leaf subnet with no members of the particular
 group on that subnet.
+.Pp
 A "b" on an interface indicates that it is a boundary interface, i.e.\&
 traffic will not be forwarded on the scoped address on that interface.
 An additional line with a
 .Sq \*(Gt
 as the first character is printed for
 each source on the subnet.
+.Pp
 Note that there can be many sources in one subnet.
 .Sh SEE ALSO
 .Xr map-mbone 8 ,
@@ -493,4 +501,5 @@ DVMRP is described, along with other multicast routing algorithms, in the
 paper "Multicast Routing in Internetworks and Extended LANs" by S. Deering,
 in the Proceedings of the ACM SIGCOMM '88 Conference.
 .Sh AUTHORS
-Steve Deering, Ajit Thyagarajan, Bill Fenner
+Steve Deering, Ajit Thyagarajan, Bill Fenner, David Thaler and Daniel Zappala.  With
+contributions by many others.

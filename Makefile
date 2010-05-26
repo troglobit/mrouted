@@ -1,13 +1,13 @@
 # -*-Makefile-*-
 #
 # Makefile for mrouted, a multicast router, and its auxiliary programs,
-# map-mbone and mrinfo.
+# map-mbone, mrinfo and mtrace.
 #
 # Makefile,v 3.8.4.7 1998/03/01 03:09:11 fenner Exp
 #
 
 # VERSION       ?= $(shell git tag -l | tail -1)
-VERSION      ?= 3.9.1
+VERSION      ?= 3.9.2-rc1
 NAME          = mrouted
 CONFIG        = $(NAME).conf
 EXECS         = mrouted map-mbone mrinfo mtrace
