@@ -115,9 +115,6 @@ typedef void (*ihfunc_t) (int, fd_set *);
 extern char		*recv_buf;
 extern char		*send_buf;
 extern int		igmp_socket;
-#ifdef RSRR
-extern int              rsrr_socket;
-#endif /* RSRR */
 extern u_int32		allhosts_group;
 extern u_int32		allrtrs_group;
 extern u_int32		dvmrp_group;

@@ -39,30 +39,25 @@
 #include "defs.h"
 #include <sys/param.h>
 #ifdef HAVE_SA_LEN
-#include <stddef.h>	/* for offsetof */
+#include <stddef.h>		/* for offsetof */
 #endif
 
-/*
- * Exported variables.
- */
-int rsrr_socket;			/* interface to reservation protocol */
-
 /* 
- * Global RSRR variables.
+ * Local RSRR variables.
  */
-char rsrr_recv_buf[RSRR_MAX_LEN];	/* RSRR receive buffer */
-char rsrr_send_buf[RSRR_MAX_LEN];	/* RSRR send buffer */
+static int rsrr_socket;		/* interface to reservation protocol */
+static char *rsrr_recv_buf;    	/* RSRR receive buffer */
+static char *rsrr_send_buf;    	/* RSRR send buffer */
 
-struct sockaddr_un client_addr;
-socklen_t client_length = sizeof(client_addr);
-
+static struct sockaddr_un client_addr;
+static socklen_t client_length = sizeof(client_addr);
 
 /*
  * Procedure definitions needed internally.
  */
 static void	rsrr_accept(size_t recvlen);
 static void	rsrr_accept_iq(void);
-static int	rsrr_accept_rq(struct rsrr_rq *route_query, int flags, struct gtable *gt_notify);
+static int	rsrr_accept_rq(struct rsrr_rq *route_query, u_char flags, struct gtable *gt_notify);
 static void	rsrr_read(int, fd_set *);
 static int	rsrr_send(int sendlen);
 static void	rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query);
@@ -73,11 +68,16 @@ void rsrr_init(void)
     int servlen;
     struct sockaddr_un serv_addr;
 
+    rsrr_recv_buf = (char *)malloc(RSRR_MAX_LEN);
+    rsrr_send_buf = (char *)malloc(RSRR_MAX_LEN);
+    if (!rsrr_recv_buf || !rsrr_send_buf)
+	logit(LOG_ERR, 0, "Ran out of memory");
+
     if ((rsrr_socket = socket(AF_UNIX, SOCK_DGRAM, 0)) < 0)
 	logit(LOG_ERR, errno, "Cannot create RSRR socket");
 
     unlink(RSRR_SERV_PATH);
-    memset((char *) &serv_addr, 0, sizeof(serv_addr));
+    memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sun_family = AF_UNIX;
     strlcpy(serv_addr.sun_path, RSRR_SERV_PATH, sizeof(serv_addr.sun_path));
 #ifdef HAVE_SA_LEN
@@ -91,7 +91,7 @@ void rsrr_init(void)
 	logit(LOG_ERR, errno, "Cannot bind RSRR socket");
 
     if (register_input_handler(rsrr_socket, rsrr_read) < 0)
-	logit(LOG_WARNING, 0, "Couldn't register RSRR as an input handler");
+	logit(LOG_WARNING, 0, "Could not register RSRR as an input handler");
 }
 
 /* Read a message from the RSRR socket */
@@ -99,7 +99,7 @@ static void rsrr_read(int fd, fd_set UNUSED *rfd)
 {
     ssize_t rsrr_recvlen;
     
-    memset((char *) &client_addr, 0, sizeof(client_addr));
+    memset(&client_addr, 0, sizeof(client_addr));
     rsrr_recvlen = recvfrom(fd, rsrr_recv_buf, sizeof(rsrr_recv_buf),
 			    0, (struct sockaddr *)&client_addr, &client_length);
     if (rsrr_recvlen < 0) {	
@@ -115,73 +115,59 @@ static void rsrr_read(int fd, fd_set UNUSED *rfd)
  */
 static void rsrr_accept(size_t recvlen)
 {
-    struct rsrr_header *rsrr;
+    struct rsrr_header *rsrr = (struct rsrr_header *)rsrr_recv_buf;
     struct rsrr_rq *route_query;
     
     if (recvlen < RSRR_HEADER_LEN) {
-	logit(LOG_WARNING, 0,
-	    "Received RSRR packet of %d bytes, which is less than min size",
-	    recvlen);
+	logit(LOG_WARNING, 0, "Received RSRR packet of %d bytes, which is less than MIN size %d.",
+	      recvlen, RSRR_HEADER_LEN);
 	return;
     }
     
-    rsrr = (struct rsrr_header *) rsrr_recv_buf;
-    
-    if (rsrr->version > RSRR_MAX_VERSION) {
-	logit(LOG_WARNING, 0,
-	    "Received RSRR packet version %d, which I don't understand",
-	    rsrr->version);
+    if (rsrr->version > RSRR_MAX_VERSION || rsrr->version != 1) {
+	logit(LOG_WARNING, 0, "Received RSRR packet version %d, which I don't understand",
+	      rsrr->version);
 	return;
     }
-    
-    switch (rsrr->version) {
-      case 1:
-	switch (rsrr->type) {
-	  case RSRR_INITIAL_QUERY:
+
+    switch (rsrr->type) {
+	case RSRR_INITIAL_QUERY:
 	    /* Send Initial Reply to client */
-	    IF_DEBUG(DEBUG_RSRR)
-	    logit(LOG_DEBUG, 0, "Received Initial Query\n");
+	    IF_DEBUG(DEBUG_RSRR) {
+		logit(LOG_DEBUG, 0, "Received Initial Query\n");
+	    }
 	    rsrr_accept_iq();
 	    break;
-	  case RSRR_ROUTE_QUERY:
+
+	case RSRR_ROUTE_QUERY:
 	    /* Check size */
 	    if (recvlen < RSRR_RQ_LEN) {
-		logit(LOG_WARNING, 0,
-		    "Received Route Query of %d bytes, which is too small",
-		    recvlen);
+		logit(LOG_WARNING, 0, "Received Route Query of %d bytes, which is too small", recvlen);
 		break;
 	    }
 	    /* Get the query */
 	    route_query = (struct rsrr_rq *) (rsrr_recv_buf + RSRR_HEADER_LEN);
-	    IF_DEBUG(DEBUG_RSRR)
+	    IF_DEBUG(DEBUG_RSRR) {
 		logit(LOG_DEBUG, 0,
 		      "Received Route Query for src %s grp %s notification %d",
 		      inet_fmt(route_query->source_addr.s_addr, s1, sizeof(s1)),
 		      inet_fmt(route_query->dest_addr.s_addr, s2, sizeof(s2)),
 		      BIT_TST(rsrr->flags,RSRR_NOTIFICATION_BIT));
+	    }
 	    /* Send Route Reply to client */
-	    rsrr_accept_rq(route_query,rsrr->flags,NULL);
+	    rsrr_accept_rq(route_query, rsrr->flags, NULL);
 	    break;
-	  default:
-	    logit(LOG_WARNING, 0,
-		"Received RSRR packet type %d, which I don't handle",
-		rsrr->type);
+
+	default:
+	    logit(LOG_WARNING, 0, "Received RSRR packet type %d, which I don't handle", rsrr->type);
 	    break;
-	}
-	break;
-	
-      default:
-	logit(LOG_WARNING, 0,
-	    "Received RSRR packet version %d, which I don't understand",
-	    rsrr->version);
-	break;
     }
 }
 
 /* Send an Initial Reply to the reservation protocol. */
 static void rsrr_accept_iq(void)
 {
-    struct rsrr_header *rsrr;
+    struct rsrr_header *rsrr = (struct rsrr_header *)rsrr_send_buf;
     struct rsrr_vif *vif_list;
     struct uvif *v;
     int vifi, sendlen;
@@ -197,16 +183,15 @@ static void rsrr_accept_iq(void)
     }
     
     /* Set up message */
-    rsrr = (struct rsrr_header *) rsrr_send_buf;
     rsrr->version = 1;
     rsrr->type = RSRR_INITIAL_REPLY;
     rsrr->flags = 0;
     rsrr->num = numvifs;
     
-    vif_list = (struct rsrr_vif *) (rsrr_send_buf + RSRR_HEADER_LEN);
+    vif_list = (struct rsrr_vif *)(rsrr_send_buf + RSRR_HEADER_LEN);
     
     /* Include the vif list. */
-    for (vifi=0, v = uvifs; vifi < numvifs; vifi++, v++) {
+    for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
 	vif_list[vifi].id = vifi;
 	vif_list[vifi].status = 0;
 	if (v->uv_flags & VIFF_DISABLED)
@@ -219,8 +204,9 @@ static void rsrr_accept_iq(void)
     sendlen = RSRR_HEADER_LEN + numvifs*RSRR_VIF_LEN;
     
     /* Send it. */
-    IF_DEBUG(DEBUG_RSRR)
-    logit(LOG_DEBUG, 0, "Send RSRR Initial Reply");
+    IF_DEBUG(DEBUG_RSRR) {
+	logit(LOG_DEBUG, 0, "Send RSRR Initial Reply");
+    }
     rsrr_send(sendlen);
 }
 
@@ -231,9 +217,10 @@ static void rsrr_accept_iq(void)
  * kernel table entry contains the routing info to use for a route
  * change notification.
  */
-static int rsrr_accept_rq(struct rsrr_rq *route_query, int flags, struct gtable *gt_notify)
+/* XXX: must modify if your routing table structure/search is different */
+static int rsrr_accept_rq(struct rsrr_rq *route_query, u_char flags, struct gtable *gt_notify)
 {
-    struct rsrr_header *rsrr;
+    struct rsrr_header *rsrr = (struct rsrr_header *)rsrr_send_buf;
     struct rsrr_rr *route_reply;
     struct gtable *gt,local_g;
     struct rtentry *r;
@@ -241,7 +228,6 @@ static int rsrr_accept_rq(struct rsrr_rq *route_query, int flags, struct gtable 
     u_long mcastgrp;
     
     /* Set up message */
-    rsrr = (struct rsrr_header *) rsrr_send_buf;
     rsrr->version = 1;
     rsrr->type = RSRR_ROUTE_REPLY;
     rsrr->flags = 0;
@@ -284,11 +270,14 @@ static int rsrr_accept_rq(struct rsrr_rq *route_query, int flags, struct gtable 
 	route_reply->out_vif_bm = gt->gt_grpmems;
 
 	/* Cache reply if using route change notification. */
-	if BIT_TST(flags,RSRR_NOTIFICATION_BIT) {
-	    rsrr_cache(gt,route_query);
-	    BIT_SET(rsrr->flags,RSRR_NOTIFICATION_BIT);
+	if (BIT_TST(flags, RSRR_NOTIFICATION_BIT)) {
+	    /* TODO: XXX: Originally the rsrr_cache() call was first, but
+	     * I think this is incorrect, because rsrr_cache() checks the
+	     * rsrr_send_buf "flag" first.
+	     */
+	    BIT_SET(rsrr->flags, RSRR_NOTIFICATION_BIT);
+	    rsrr_cache(gt, route_query);
 	}
-	
     } else {
 	/* No kernel entry; use routing table. */
 	r = determine_route(route_query->source_addr.s_addr);
@@ -316,20 +305,20 @@ static int rsrr_accept_rq(struct rsrr_rq *route_query, int flags, struct gtable 
 	    /* Include the routing entry. */
 	    route_reply->in_vif = gt->gt_route->rt_parent;
 	    route_reply->out_vif_bm = gt->gt_grpmems;
-
 	} else {
 	    /* Set error bit. */
-	    BIT_SET(rsrr->flags,RSRR_ERROR_BIT);
+	    BIT_SET(rsrr->flags, RSRR_ERROR_BIT);
 	}
     }
     
-    IF_DEBUG(DEBUG_RSRR)
+    IF_DEBUG(DEBUG_RSRR) {
 	logit(LOG_DEBUG, 0, "%sSend RSRR Route Reply for src %s dst %s in vif %d out vif %d\n",
 	      gt_notify ? "Route Change: " : "",
 	      inet_fmt(route_reply->source_addr.s_addr, s1, sizeof(s1)),
 	      inet_fmt(route_reply->dest_addr.s_addr, s2, sizeof(s2)),
 	      route_reply->in_vif,route_reply->out_vif_bm);
-    
+    }
+
     /* Send it. */
     return rsrr_send(sendlen);
 }
@@ -353,15 +342,14 @@ static int rsrr_send(int sendlen)
     return error;
 }
 
+/* TODO: need to sort the rsrr_cache entries for faster access */
 /* Cache a message being sent to a client.  Currently only used for
  * caching Route Reply messages for route change notification.
  */
 static void rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query)
 {
     struct rsrr_cache *rc, **rcnp;
-    struct rsrr_header *rsrr;
-
-    rsrr = (struct rsrr_header *) rsrr_send_buf;
+    struct rsrr_header *rsrr = (struct rsrr_header *)rsrr_send_buf;
 
     rcnp = &gt->gt_rsrr_cache;
     while ((rc = *rcnp) != NULL) {
@@ -373,17 +361,19 @@ static void rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query)
 	    /* Cache entry already exists.
 	     * Check if route notification bit has been cleared.
 	     */
-	    if (!BIT_TST(rsrr->flags,RSRR_NOTIFICATION_BIT)) {
+	    if (!BIT_TST(rsrr->flags, RSRR_NOTIFICATION_BIT)) {
 		/* Delete cache entry. */
 		*rcnp = rc->next;
 		free(rc);
 	    } else {
 		/* Update */
+		/* TODO: XXX: No need to update iif, oifs, flags */
 		rc->route_query.query_id = route_query->query_id;
-		IF_DEBUG(DEBUG_RSRR)
-		logit(LOG_DEBUG, 0,
-			"Update cached query id %ld from client %s\n",
-			rc->route_query.query_id, rc->client_addr.sun_path);
+		IF_DEBUG(DEBUG_RSRR) {
+		    logit(LOG_DEBUG, 0,
+			  "Update cached query id %ld from client %s\n",
+			  rc->route_query.query_id, rc->client_addr.sun_path);
+		}
 	    }
 	    return;
 	}
@@ -393,9 +383,10 @@ static void rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query)
     /* Cache entry doesn't already exist.  Create one and insert at
      * front of list.
      */
-    rc = (struct rsrr_cache *) malloc(sizeof(struct rsrr_cache));
+    rc = (struct rsrr_cache *)malloc(sizeof(struct rsrr_cache));
     if (rc == NULL)
-	logit(LOG_ERR, 0, "ran out of memory");
+	logit(LOG_ERR, 0, "Ran out of memory");
+
     rc->route_query.source_addr.s_addr = route_query->source_addr.s_addr;
     rc->route_query.dest_addr.s_addr = route_query->dest_addr.s_addr;
     rc->route_query.query_id = route_query->query_id;
@@ -403,28 +394,32 @@ static void rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query)
     rc->client_length = client_length;
     rc->next = gt->gt_rsrr_cache;
     gt->gt_rsrr_cache = rc;
-    IF_DEBUG(DEBUG_RSRR)
-    logit(LOG_DEBUG, 0, "Cached query id %ld from client %s\n",
-	   rc->route_query.query_id,rc->client_addr.sun_path);
+    IF_DEBUG(DEBUG_RSRR) {
+	logit(LOG_DEBUG, 0, "Cached query id %ld from client %s\n",
+	      rc->route_query.query_id, rc->client_addr.sun_path);
+    }
 }
 
-/* Send all the messages in the cache.  Currently this is used to send
- * all the cached Route Reply messages for route change notification.
+/* Send all the messages in the cache for particular routing entry.
+ * Currently this is used to send all the cached Route Reply messages
+ * for route change notification.
  */
 void rsrr_cache_send(struct gtable *gt, int notify)
 {
     struct rsrr_cache *rc, **rcnp;
-    int flags = 0;
+    u_char flags = 0;
 
-    if (notify)
-	BIT_SET(flags,RSRR_NOTIFICATION_BIT);
+    if (notify) {
+	BIT_SET(flags, RSRR_NOTIFICATION_BIT);
+    }
 
     rcnp = &gt->gt_rsrr_cache;
     while ((rc = *rcnp) != NULL) {
-	if (rsrr_accept_rq(&rc->route_query,flags,gt) < 0) {
-	    IF_DEBUG(DEBUG_RSRR)
-	    logit(LOG_DEBUG, 0, "Deleting cached query id %ld from client %s\n",
-		   rc->route_query.query_id,rc->client_addr.sun_path);
+	if (rsrr_accept_rq(&rc->route_query, flags, gt) < 0) {
+	    IF_DEBUG(DEBUG_RSRR) {
+		logit(LOG_DEBUG, 0, "Deleting cached query id %ld from client %s\n",
+		      rc->route_query.query_id,rc->client_addr.sun_path);
+	    }
 	    /* Delete cache entry. */
 	    *rcnp = rc->next;
 	    free(rc);
@@ -437,11 +432,12 @@ void rsrr_cache_send(struct gtable *gt, int notify)
 /* Clean the cache by deleting all entries. */
 void rsrr_cache_clean(struct gtable *gt)
 {
-    struct rsrr_cache *rc,*rc_next;
+    struct rsrr_cache *rc, *rc_next;
 
-    IF_DEBUG(DEBUG_RSRR)
-    logit(LOG_DEBUG, 0, "cleaning cache for group %s\n",
-			inet_fmt(gt->gt_mcastgrp, s1, sizeof(s1)));
+    IF_DEBUG(DEBUG_RSRR) {
+	logit(LOG_DEBUG, 0, "cleaning cache for group %s\n",
+	      inet_fmt(gt->gt_mcastgrp, s1, sizeof(s1)));
+    }
     rc = gt->gt_rsrr_cache;
     while (rc) {
 	rc_next = rc->next;
@@ -451,7 +447,7 @@ void rsrr_cache_clean(struct gtable *gt)
     gt->gt_rsrr_cache = NULL;
 }
 
-void rsrr_clean()
+void rsrr_clean(void)
 {
     unlink(RSRR_SERV_PATH);
 }

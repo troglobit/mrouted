@@ -7,7 +7,7 @@
 #
 
 # VERSION       ?= $(shell git tag -l | tail -1)
-VERSION      ?= 3.9.2-rc1
+VERSION      ?= 3.9.2-rc2
 NAME          = mrouted
 CONFIG        = $(NAME).conf
 EXECS         = mrouted map-mbone mrinfo mtrace
@@ -15,39 +15,18 @@ PKG           = $(NAME)-$(VERSION)
 ARCHIVE       = $(PKG).tar.bz2
 
 ROOTDIR      ?= $(dir $(shell pwd))
-CC            = $(CROSS)gcc
+CC           ?= $(CROSS)gcc
 
 prefix       ?= /usr/local
 sysconfdir   ?= /etc
 datadir       = $(prefix)/share/doc/pimd
 mandir        = $(prefix)/share/man/man8
 
-# If the multicast header files are not in the standard place on your system,
-# define MCAST_INCLUDE to be an appropriate `-I' options for the C compiler.
-#MCAST_INCLUDE=	-I/sys
-
 # Uncomment the following three lines if you want to use RSRR (Routing
 # Support for Resource Reservations), currently used by RSVP.
 RSRRDEF       = -DRSRR
 RSRR_OBJS     = rsrr.o
 
-## Common
-CFLAGS        = -O ${MCAST_INCLUDE} ${SNMPDEF} ${RSRRDEF}
-
-## SunOS, OSF1, FreeBSD, IRIX
-#CFLAGS        += 
-
-## Solaris 2.x
-#CFLAGS        += -DSYSV -DSUNOS5
-#LIB2          = -lsocket -lnsl
-
-## GNU/Linux
-CFLAGS       += -D__BSD_SOURCE -D_GNU_SOURCE -DIOCTL_OK_ON_RAW_SOCKET
-CFLAGS       += -Iinclude/linux
-CFLAGS       += -W -Wall -Werror -Wextra
-CFLAGS       += $(USERCOMPILE)
-LIBS          = ${SNMPLIBDIR} ${SNMPLIBS} ${LIB2}
-LINTFLAGS     = ${MCAST_INCLUDE}
 IGMP_SRCS     = igmp.c inet.c kern.c
 IGMP_OBJS     = igmp.o inet.o kern.o
 ROUTER_OBJS   = config.o cfparse.o main.o route.o vif.o prune.o callout.o \
@@ -84,19 +63,24 @@ endif
 #MSTAT_SRCS    = mstat.c 
 #MSTAT_OBJS    = mstat.o
 
-HDRS          = defs.h dvmrp.h route.h vif.h prune.h igmpv2.h pathnames.h \
-		rsrr.h rsrr_var.h
+include rules.mk
+include config.mk
+include snmp.mk
+
+## Common
+CFLAGS        = ${MCAST_INCLUDE} ${SNMPDEF} ${RSRRDEF} $(INCLUDES) $(DEFS) $(USERCOMPILE)
+CFLAGS       += -O2 -W -Wall -Werror
+#CFLAGS       += -O -g
+LDLIBS        = ${SNMPLIBDIR} ${SNMPLIBS} ${LIB2}
 OBJS          = ${IGMP_OBJS} ${ROUTER_OBJS} ${MAPPER_OBJS} ${MRINFO_OBJS} \
 		${MTRACE_OBJS} ${MSTAT_OBJS}
-
 SRCS          = $(OBJS:.o=.c)
 DEPS          = $(filter-out .cfparse.d, $(addprefix .,$(SRCS:.c=.d)))
 MANS          = $(addsuffix .8,$(EXECS))
+DISTFILES     = README AUTHORS LICENSE
 
-DISTFILES     = README AUTHORS LICENSE $(CONFIG)
-
-include rules.mk
-include snmp.mk
+LINT          = splint
+LINTFLAGS     = ${MCAST_INCLUDE} $(filter-out -W -Wall -Werror, $(CFLAGS)) -posix-lib -weak -skipposixheaders
 
 all: $(EXECS) ${MSTAT}
 
@@ -131,7 +115,7 @@ mrouted: ${IGMP_OBJS} ${ROUTER_OBJS} vers.o ${CMULIBS}
 ifdef Q
 	@printf "  LINK    $(subst $(ROOTDIR),,$(shell pwd))/$@\n"
 endif
-	$(Q)${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${IGMP_OBJS} ${ROUTER_OBJS} vers.o ${LIBS}
+	$(Q)${CC} ${CFLAGS} ${LDFLAGS} -Wl,-Map,$@.map -o $@ $^ $(LDLIBS$(LDLIBS-$(@)))
 
 vers.c: Makefile
 	@echo $(VERSION) | sed -e 's/.*/char todaysversion[]="&";/' > vers.c
@@ -140,25 +124,25 @@ map-mbone: ${IGMP_OBJS} ${MAPPER_OBJS}
 ifdef Q
 	@printf "  LINK    $(subst $(ROOTDIR),,$(shell pwd))/$@\n"
 endif
-	$(Q)${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${IGMP_OBJS} ${MAPPER_OBJS} ${LIB2}
+	$(Q)${CC} ${CFLAGS} ${LDFLAGS} -o $@ ${IGMP_OBJS} ${MAPPER_OBJS} ${LIB2}
 
 mrinfo: ${IGMP_OBJS} ${MRINFO_OBJS}
 ifdef Q
 	@printf "  LINK    $(subst $(ROOTDIR),,$(shell pwd))/$@\n"
 endif
-	$(Q)${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${IGMP_OBJS} ${MRINFO_OBJS} ${LIB2}
+	$(Q)${CC} ${CFLAGS} ${LDFLAGS} -o $@ ${IGMP_OBJS} ${MRINFO_OBJS} ${LIB2}
 
 mtrace: ${IGMP_OBJS} ${MTRACE_OBJS}
 ifdef Q
 	@printf "  LINK    $(subst $(ROOTDIR),,$(shell pwd))/$@\n"
 endif
-	$(Q)${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${IGMP_OBJS} ${MTRACE_OBJS} ${LIB2}
+	$(Q)${CC} ${CFLAGS} ${LDFLAGS} -o $@ ${IGMP_OBJS} ${MTRACE_OBJS} ${LIB2}
 
 mstat: ${MSTAT_OBJS} snmplib/libsnmp.a
 ifdef Q
 	@printf "  LINK    $(subst $(ROOTDIR),,$(shell pwd))/$@\n"
 endif
-	$(Q)${CC} ${LDFLAGS} -o $@ ${CFLAGS} ${MSTAT_OBJS} -Lsnmplib -lsnmp
+	$(Q)${CC} ${CFLAGS} ${LDFLAGS} -o $@ ${MSTAT_OBJS} -Lsnmplib -lsnmp
 
 clean: ${SNMPCLEAN}
 	-$(Q)$(RM) $(OBJS) $(EXECS)
@@ -172,7 +156,7 @@ dist:
 	@(cd ..; md5sum $(ARCHIVE))
 
 lint: 
-	@lint ${LINTFLAGS} ${SRCS}
+	@$(LINT) $(LINTFLAGS) $(SRCS)
 
 tags: ${IGMP_SRCS} ${ROUTER_SRCS}
 	@ctags ${IGMP_SRCS} ${ROUTER_SRCS}
