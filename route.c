@@ -373,6 +373,9 @@ static void discard_route(struct rtentry *prev_r)
 {
     struct rtentry *r;
 
+    if (!prev_r)
+	return;
+
     r = prev_r->rt_next;
     uvifs[r->rt_parent].uv_nroutes--;
     /*???nbr???.al_nroutes--;*/
@@ -756,9 +759,7 @@ void free_all_routes(void)
 {
     struct rtentry *r;
 
-    r = RT_ADDR;
-
-    while (r->rt_next)
+    for (r = routing_table; r != NULL; r = r->rt_next)
 	discard_route(r);
 }
 
