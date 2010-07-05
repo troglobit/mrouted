@@ -71,7 +71,7 @@ void rsrr_init(void)
     rsrr_recv_buf = (char *)malloc(RSRR_MAX_LEN);
     rsrr_send_buf = (char *)malloc(RSRR_MAX_LEN);
     if (!rsrr_recv_buf || !rsrr_send_buf)
-	logit(LOG_ERR, 0, "Ran out of memory");
+	logit(LOG_ERR, 0, "Ran out of memory in rsrr_init()");
 
     if ((rsrr_socket = socket(AF_UNIX, SOCK_DGRAM, 0)) < 0)
 	logit(LOG_ERR, errno, "Cannot create RSRR socket");
@@ -385,7 +385,7 @@ static void rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query)
      */
     rc = (struct rsrr_cache *)malloc(sizeof(struct rsrr_cache));
     if (rc == NULL)
-	logit(LOG_ERR, 0, "Ran out of memory");
+	logit(LOG_ERR, 0, "Ran out of memory in rsrr_cache()");
 
     rc->route_query.source_addr.s_addr = route_query->source_addr.s_addr;
     rc->route_query.dest_addr.s_addr = route_query->dest_addr.s_addr;
