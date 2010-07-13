@@ -502,7 +502,7 @@ int send_recv(u_int32_t dst, int type, int code, int tries, struct resp_buf *sav
 		case IGMP_MTRACE:	    /* For backward compatibility with 3.3 */
 		case IGMP_MTRACE_RESP:
 		    if (igmpdatalen <= QLEN) continue;
-		    if ((igmpdatalen - QLEN)%RLEN) {
+		    if ((igmpdatalen - QLEN) % RLEN) {
 			printf("packet with incorrect datalen\n");
 			continue;
 		    }
@@ -514,7 +514,7 @@ int send_recv(u_int32_t dst, int type, int code, int tries, struct resp_buf *sav
 		    if (rquery->tr_qid != query->tr_qid) continue;
 		    if (rquery->tr_src != qsrc) continue;
 		    if (rquery->tr_dst != qdst) continue;
-		    len = (igmpdatalen - QLEN)/RLEN;
+		    len = (igmpdatalen - QLEN) / RLEN;
 
 		    /*
 		     * Ignore trace queries passing through this node when
@@ -632,7 +632,7 @@ void passive_mode(void)
 	    case IGMP_MTRACE:	    /* For backward compatibility with 3.3 */
 	    case IGMP_MTRACE_RESP:
 		if (igmpdatalen < QLEN) continue;
-		if ((igmpdatalen - QLEN)%RLEN) {
+		if ((igmpdatalen - QLEN) % RLEN) {
 		    printf("packet with incorrect datalen\n");
 		    continue;
 		}
