@@ -19,7 +19,7 @@ CC           ?= $(CROSS)gcc
 
 prefix       ?= /usr/local
 sysconfdir   ?= /etc
-datadir       = $(prefix)/share/doc/pimd
+datadir       = $(prefix)/share/doc/mrouted
 mandir        = $(prefix)/share/man/man8
 
 # Uncomment the following three lines if you want to use RSRR (Routing
