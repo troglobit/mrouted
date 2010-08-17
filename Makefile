@@ -77,7 +77,7 @@ OBJS          = ${IGMP_OBJS} ${ROUTER_OBJS} ${MAPPER_OBJS} ${MRINFO_OBJS} \
 SRCS          = $(OBJS:.o=.c)
 DEPS          = $(filter-out .cfparse.d, $(addprefix .,$(SRCS:.c=.d)))
 MANS          = $(addsuffix .8,$(EXECS))
-DISTFILES     = README AUTHORS LICENSE
+DISTFILES     = README AUTHORS LICENSE CHANGES
 
 LINT          = splint
 LINTFLAGS     = ${MCAST_INCLUDE} $(filter-out -W -Wall -Werror, $(CFLAGS)) -posix-lib -weak -skipposixheaders
