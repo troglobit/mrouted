@@ -42,7 +42,9 @@ install: build
 	dh_prep
 	dh_installdirs
 	dh_auto_install -- prefix=/usr
-	@for file in AUTHORS LICENSE; do rm debian/mrouted/usr/share/doc/mrouted/$$file; done
+	@for file in AUTHORS LICENSE CHANGES; do \
+		rm debian/mrouted/usr/share/doc/mrouted/$$file; \
+	done
 	@rm debian/mrouted/usr/share/man/man8/map-mbone.8
 	@rm debian/mrouted/usr/sbin/map-mbone
 
