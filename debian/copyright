@@ -2,13 +2,14 @@ This package was (re)debianized by Joachim Nilsson <troglobit@vmlinux.org> on
 Mon, 17 Aug 2010 08:32:02 +0100.
 
 An earlier version was debianized by Christoph Martin <christoph.martin@uni-mainz.de>
-on Mon, 1 Mar 1999 21:36:23 +0100.  Who then downloaded it from an AT&T FTP mirror at
-ftp://ftp.tu-darmstadt.de/pub/networking/mbone/mrouted/Source/ this version was later
-dropped[1] by Debian.
+on Mon, 1 Mar 1999 21:36:23 +0100.  Downloaded from a mirror of Bill Fenner's last
+release while at AT&T: ftp://ftp.research.att.com/pub/fenner/mrouted/, specifically
+the code came from ftp://ftp.tu-darmstadt.de/pub/networking/mbone/mrouted/Source/
+that version was later dropped[1] by Debian.
 
-This version is based on the same code base, but with quite a few patches applied
-from other sources, most notably OpenBSD.  It is currently is available from the
-following locations, primarily GitHub:
+This version is from the same code base, but with quite a few patches applied from
+other sources, most notably OpenBSD. It is currently is available from the following
+locations, primarily GitHub:
 	http://github.com/troglobit/mrouted/
 	ftp://ftp.vmlinux.org/pub/People/jocke/mrouted/
 
@@ -20,10 +21,9 @@ Authors:
 	Daniel Zappala <daniel@isi.edu> (RSRR Support)
 
 Copyright:
-In its previous incarnation mrouted was non-free software in Debian, primarily
-due to the restrictions on redistribution. However, in March 2003 the OpenBSD
-project managed to convince[2] Stanford to change the license to the 3-clause
-BSD license, listed below.
+Previously mrouted was non-free software in Debian, mostly due to restrictions on
+redistribution. However, in March 2003 the OpenBSD project managed to convince[2]
+Stanford to change the license to the 3-clause BSD license, listed below.
 
 License:
 (Non-printable, or 8-bit, characters have been replaced below.)
