@@ -12,28 +12,33 @@ detailed explanation of the protocol, consult RFC 1075.
 
 History
 -------
-The mrouted routing daemon was developed by Steve Deering and Bill Fenner.
+The mrouted routing daemon was developed by Steve Deering, Ajit Thyagarajan,
+Bill Fenner, David Thaler and Daniel Zappala.  With contributions by many
+others.
 
-The last release by Mr. Fenner was 3.9-beta3 on April 26 1999, so mrouted has
-been in a sort of "beta" status since then.  Several prominent UNIX operating
-systems, such as AIX, Solaris, HP-UX, BSD/OS, NetBSD, FreeBSD, OpenBSD as well
-as most GNU/Linux based distributions.  Over time however many dropped support,
-but Debian and OpenBSD kept it under their wings.
+The last release by Mr. Fenner was 3.9-beta3 on April 26 1999 and mrouted has
+been in "beta" status since then.  Several prominent UNIX operating systems,
+such as AIX, Solaris, HP-UX, BSD/OS, NetBSD, FreeBSD, OpenBSD as well as most
+GNU/Linux based distributions have used that beta as a de facto stable release,
+with (mostly) minor patches for system adaptations.  Over time however many
+dropped support, but Debian and OpenBSD kept it under their wings.
 
-In March 2003 OpenBSD, led by Theo de Raadt, managed to convince Stanford to
-release mrouted under a fully free license, the BSD license[1].  Nevertheless,
-in February 2005 Debian finally dropped[2] mrouted as an "obsolete protocol".
+In March 2003 OpenBSD, led by the fearless Theo de Raadt, managed to convince
+Stanford to release mrouted under a fully free license, the BSD license[1].
+Nevertheless, in February 2005 Debian finally dropped[2] mrouted as an
+"obsolete protocol".
 
-The OpenBSD team has remained the sole guardian of this project.  In 2010 this
-effort of bringing mrouted back to life was started.  The 3.9.x stable series
-represent the first releases in over a decade.  All lingering patches, from all
-over the Internet have now been integrated by the new maintainer.
+For a long time the OpenBSD team remained the sole guardian of this project.
+
+In 2010 this effort of bringing mrouted back to life was started.  The 3.9.x
+stable series represent the first releases in over a decade.  Patches from all
+over the Internet, including OpenBSD, have been integrated.
 
 Bugs
 ----
 The basic functionality has been tested thoroughly over the years, but that
-does not mean it is bug free.  Please report any oddities, feature requests,
-patches or pull requests in the github issue tracker at:
+does not mean mrouted is bug free.  Please report any oddities, feature
+requests, patches or pull requests in the github issue tracker at:
 
 	http://github.com/troglobit/mrouted/issues
 
