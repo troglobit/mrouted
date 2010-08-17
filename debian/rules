@@ -3,7 +3,7 @@
 # GNU copyright 1997 to 1999 by Joey Hess.
 
 # Uncomment this to turn on verbose mode.
-export DH_VERBOSE=1
+#export DH_VERBOSE=1
 
 CFLAGS = -Wall -g
 
@@ -18,26 +18,24 @@ endif
 
 configure: configure-stamp
 configure-stamp:
-	dh_testdir
+	@dh_testdir
 	dh_auto_configure
-	touch $@
+	@touch $@
 
 build: build-stamp
 
 build-stamp: configure-stamp
-	dh_testdir
-	dh_auto_build
-	touch $@
+	@dh_testdir
+	dh_auto_build --parallel
+	@touch $@
 
 clean:
-	dh_testdir
-	dh_testroot
-	dh_auto_clean
+	@dh_testdir
+	dh_auto_clean --parallel
 	dh_clean
-	@rm -f build-stamp configure-stamp
 
 install: build
-	dh_testdir
+	@dh_testdir
 	dh_testroot
 	dh_prep
 	dh_installdirs
@@ -53,12 +51,11 @@ binary-indep: build install
 
 # Build architecture-dependent files here.
 binary-arch: build install
-	dh_testdir
+	@dh_testdir
 	dh_testroot
 	dh_installchangelogs CHANGES
 	dh_installdocs
 	dh_installexamples
-	@echo "Current dir is `pwd`"
 #	dh_install --sourcedir=debian/mrouted
 	dh_installinit
 	dh_installman
