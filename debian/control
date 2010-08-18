@@ -7,7 +7,9 @@ Standards-Version: 3.8.3
 
 Package: mrouted
 Architecture: any
+Homepage: http://github.com/troglobit/mrouted
 Depends: ${shlibs:Depends}
+Conflicts: pimd, smcroute
 Description: Multicast routing daemon for closely located users in LAN networks.
  Mrouted is an implementation of the Distance-Vector Multicast Routing
  Protocol (DVMRP), an earlier version of which is specified in RFC-1075.  
