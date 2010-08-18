@@ -18,6 +18,7 @@
 
 #include "defs.h"
 #include <err.h>
+#include <getopt.h>
 #include <fcntl.h>
 #include <stdarg.h>
 
@@ -123,12 +124,13 @@ void usage(void)
     size_t i, j, k;
     struct debugname *d;
 
-    fprintf(stderr, "Usage: %s [-fhp] [-c file] [-d [level[,level...]]]\n\n", __progname);
-    fputs("    -c  Configuration file to use, default /etc/mrouted.conf\n", stderr);
-    fputs("    -d  Debug level, see below for valid levels\n", stderr);
-    fputs("    -f  Run in foreground, do not detach from calling terminal\n", stderr);
-    fputs("    -h  Show this help text\n", stderr);
-    fputs("    -p  Disable pruning.  Not supported anymore, compatibility option\n", stderr);
+    fprintf(stderr, "Usage: %s [-fhpv] [-c file] [-d [level[,level...]]]\n\n", __progname);
+    fputs("    -c, --config=FILE    Configuration file to use, default /etc/mrouted.conf\n", stderr);
+    fputs("    -d, --debug[=LEVEL]  Debug level, see below for valid levels\n", stderr);
+    fputs("    -f, --foreground     Run in foreground, do not detach from calling terminal\n", stderr);
+    fputs("    -h, --help           Show this help text\n", stderr);
+    fputs("    -p                   Disable pruning.  Deprecated, compatibility option\n", stderr);
+    fprintf(stderr, "    -v, --version        Show %s version\n", __progname);
     fputs("\n", stderr);
 
     j = 0xffffffff;
@@ -168,8 +170,18 @@ int main(int argc, char *argv[])
     struct timeval  sched, *svp = &sched, now, *nvp = &now;
     int index, block;
 #endif
+    struct option long_options[] = {
+	{"config", 1, 0, 'c'},
+	{"debug", 2, 0, 'd'},
+	{"foreground", 0, 0, 'f'},
+	{"help", 0, 0, 'h'},
+	{"version", 0, 0, 'v'},
+	{0, 0, 0, 0}
+    };
 
-    while ((ch = getopt(argc, argv, "c:d::fhpP::")) != -1) {
+    snprintf(versionstring, sizeof(versionstring), "mrouted version %s", todaysversion);
+
+    while ((ch = getopt_long(argc, argv, "c:d::fhpP::v", long_options, NULL)) != EOF) {
 	switch (ch) {
 	    case 'c':
 		configfilename = optarg;
@@ -231,6 +243,10 @@ int main(int argc, char *argv[])
 #endif
 		break;
 
+	    case 'v':
+		printf("%s\n", versionstring);
+		return 0;
+
 	    default:
 		usage();
 	}
@@ -271,7 +287,6 @@ int main(int argc, char *argv[])
 #else
     (void)openlog("mrouted", LOG_PID);
 #endif
-    snprintf(versionstring, sizeof(versionstring), "mrouted version %s", todaysversion);
 
     logit(LOG_DEBUG, 0, "%s starting", versionstring);
 
