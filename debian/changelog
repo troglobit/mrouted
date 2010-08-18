@@ -3,6 +3,8 @@ mrouted (3.9.2-1) unstable; urgency=low
   * New upstream (bugfix) release.
   * New maintainer and new upstream.
   * Move package back to main, the OpenBSD team has freed it!
+  * Added lintian-overrides for empty-debian-diff as debian dir is maintained
+    along the upstream sources
   * Changed to use debhelper to manage debian/rules file.
 
  -- Joachim Nilsson <troglobit@vmlinux.org>  Tue, 17 Aug 2010 08:32:02 +0100
