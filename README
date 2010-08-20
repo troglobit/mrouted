@@ -50,11 +50,23 @@ fixed by the time 12.0 was out.
 
 Configuring
 -----------
-The default mrouted configuration is usually all you need.  However, when you
-want to connect networks across non-mulicast-aware routers you need to setup a
-tunnel, e.g., a GRE or native IP-IP mrouted tunnel.
 
-See the man page for details.
+By default mrouted reads its configuration file from /etc/mrouted.conf.  You can
+override the default by specifying an alternate file when invoking mrouted.
+
+	mrouted -f /path/file.conf
+
+The mrouted daemon can reconfigure itself at runtime if you change the configuration
+file, simply send the process a SIGHUP to activate new changes to the file.  The PID
+is saved automatically to the file /var/run/mrouted.pid at start.
+
+By default, mrouted configures itself to act as a multicast router on all multicast
+capable interfaces, excluding the loopback interface that has the IFF_MULTICAST flag
+set.  Therefore, you do not need to explicitly configure mrouted, unless you need to
+setup tunnel links, change the default operating parameters, or disable multicast
+routing over a specific physical interface.
+
+See the man page for further details.
 
 Running
 -------
