@@ -424,9 +424,6 @@ int main(int argc, char *argv[])
 
     if (!debug && !foreground) {
 	/* Detach from the terminal */
-#ifdef TIOCNOTTY
-	int t;
-#endif
 	haveterminal = 0;
 	if (fork())
 	    exit(0);
@@ -436,14 +433,14 @@ int main(int argc, char *argv[])
 	(void)open("/", 0);
 	(void)dup2(0, 1);
 	(void)dup2(0, 2);
-#if defined(SYSV) || defined(linux)
+#ifdef SYSV
 	(void)setpgrp();
 #else
 #ifdef TIOCNOTTY
-	t = open("/dev/tty", 2);
-	if (t >= 0) {
-	    (void)ioctl(t, TIOCNOTTY, (char *)0);
-	    (void)close(t);
+	n = open("/dev/tty", 2);
+	if (n >= 0) {
+	    (void)ioctl(n, TIOCNOTTY, (char *)0);
+	    (void)close(n);
 	}
 #else
 	if (setsid() < 0)
