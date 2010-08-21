@@ -24,9 +24,7 @@
 #ifdef SYSV
 #include <sys/sockio.h>
 #endif
-#if defined(_AIX) || defined(__linux__)
 #include <time.h>
-#endif
 #include <sys/time.h>
 #include <sys/uio.h>
 #include <net/if.h>
