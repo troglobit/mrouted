@@ -42,6 +42,15 @@
 #include <net/route.h>
 #undef rtentry
 #endif
+#endif  /* __FreeBSD__ */
+#if defined(HAVE_STRLCPY)
+#include <string.h>
+#endif
+#if defined(HAVE_STRTONUM)
+#include <stdlib.h>
+#endif
+#if defined(HAVE_PIDFILE)
+#include <util.h>
 #endif
 #include "netinet/ip_mroute.h"
 #ifdef RSRR
@@ -106,21 +115,6 @@ typedef void (*ihfunc_t) (int, fd_set *);
 
 #if defined(_AIX) || (defined(BSD) && (BSD >= 199103))
 #define	HAVE_SA_LEN
-#endif
-
-/* uClibc, OpenBSD, NetBSD, FreeBSD, Solaris and Mac OS X all have strlcpy()/strlcat() (Glibc/Eglibc does not.) */
-#if defined(__UCLIBC__) || defined(OpenBSD) || defined(NetBSD) || defined(__FreeBSD__)
-#define HAVE_STRLCPY
-#endif
-
-/* OpenBSD, NetBSD, and FreeBSD are known to have strtonum() */
-#if defined(OpenBSD) || defined(NetBSD) || defined(__FreeBSD__)
-#define HAVE_STRTONUM
-#endif
-
-/* Only OpenBSD is known to have pidfile() */
-#if defined(OpenBSD)
-#define HAVE_PIDFILE
 #endif
 
 /*
