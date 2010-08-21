@@ -35,6 +35,11 @@
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
 #include <netinet/igmp.h>
+#ifdef __linux__
+#include <linux/mroute.h>
+#else
+#include <netinet/ip_mroute.h>
+#endif
 #ifdef __FreeBSD__	/* sigh */
 #include <osreldate.h>
 #if __FreeBSD_version >= 220000
@@ -52,7 +57,6 @@
 #if defined(HAVE_PIDFILE)
 #include <util.h>
 #endif
-#include "netinet/ip_mroute.h"
 #ifdef RSRR
 #include <sys/un.h>
 #endif /* RSRR */

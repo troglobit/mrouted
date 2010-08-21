@@ -13,22 +13,21 @@ DEFS = -D_BSD_SOURCE -D_GNU_SOURCE
 # If the multicast header files are not in the standard place on your system,
 # define MCAST_INCLUDE to be an appropriate `-I' options for the C compiler.
 #MCAST_INCLUDE=	-I/sys
-MCAST_INCLUDE = -Iinclude
 
 ## FreeBSD	-D__FreeBSD__ is defined by the OS
 ## FreeBSD-3.x, FreeBSD-4.x
-#INCLUDES     = -Iinclude/freebsd
+#INCLUDES     =
 #DEFS        += -DHAVE_STRTONUM -DHAVE_STRLCPY -DHAVE_PIDFILE
 ## FreeBSD-2.x
-#INCLUDES     = -Iinclude/freebsd2
+#INCLUDES     =
 #DEFS        +=
 
 ## NetBSD	-DNetBSD is defined by the OS
-#INCLUDES     = -Iinclude/netbsd
+#INCLUDES     =
 #DEFS        += -DHAVE_STRTONUM -DHAVE_STRLCPY -DHAVE_PIDFILE
 
 ## OpenBSD	-DOpenBSD is defined by the OS
-#INCLUDES     = -Iinclude/openbsd
+#INCLUDES     =
 #DEFS        += -DHAVE_STRTONUM -DHAVE_STRLCPY -DHAVE_PIDFILE
 
 ## BSDI		-D__bsdi__ is defined by the OS
@@ -36,11 +35,11 @@ MCAST_INCLUDE = -Iinclude
 #DEFS        +=
 
 ## SunOS, OSF1, gcc
-#INCLUDES     = -Iinclude/sunos-gcc
+#INCLUDES     =
 #DEFS        += -DSunOS=43
 
 ## SunOS, OSF1, cc
-#INCLUDES     = -Iinclude/sunos-cc
+#INCLUDES     =
 #DEFS        += -DSunOS=43
 
 ## IRIX
@@ -61,5 +60,5 @@ MCAST_INCLUDE = -Iinclude
 
 ## Linux	-D__linux__ is defined by the OS
 # For uClibc based Linux systems, add -DHAVE_STRLCPY to DEFS
-INCLUDES      = -Iinclude/linux
+INCLUDES      =
 DEFS         += -DIOCTL_OK_ON_RAW_SOCKET
