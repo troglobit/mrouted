@@ -424,6 +424,9 @@ int main(int argc, char *argv[])
 
     if (!debug && !foreground) {
 	/* Detach from the terminal */
+#ifdef TIOCNOTTY
+	int t;
+#endif
 	haveterminal = 0;
 	if (fork())
 	    exit(0);
