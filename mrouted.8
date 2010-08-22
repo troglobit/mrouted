@@ -14,8 +14,8 @@
 .Sh SYNOPSIS
 .Nm mrouted
 .Op Fl fhp
-.Op Fl c Ar file
-.Op Fl d Op Ar level[,level...]
+.Op Fl c Ar FILE
+.Op Fl d Op Ar [LEVEL[,LEVEL,...]
 .Sh DESCRIPTION
 .Nm
 is an implementation of the Distance-Vector Multicast Routing
@@ -76,16 +76,18 @@ With the use of tunnels, it is not necessary for
 to have access to more than one physical subnet
 in order to perform multicast forwarding.
 .Pp
-The options are as follows:
+.Sh OPTIONS
+This program follows the usual UNIX command line syntax, with long options starting
+with two dashes (`-').  The options are as follows:
 .Bl -tag -width Ds
-.It Fl h
+.It Fl h, -help
 Print a help message and exit.
-.It Fl f
+.It Fl f, -foreground
 Run in foreground, do not detach from the calling terminal.
-.It Fl c Ar file
+.It Fl c, -config=FILE
 Specify an alternative configuration file, instead of the default
 .Pa /etc/mrouted.conf .
-.It Fl d Op Ar level[,level...]
+.It Fl d, -debug[=LEVEL[,LEVEL...]
 By default,
 .Nm
 detaches from the invoking terminal.
@@ -102,32 +104,32 @@ Regardless of the debug level,
 always writes warning and error messages to the system log daemon.
 Debug levels have the following effects:
 .Pp
-.Bl -tag -compact -offset indent
-.It packet
+.Bl -tag -width TERM -compact -offset indent
+.It Cm packet
 Debug inbound/outbout packets
-.It prunes
+.It Cm prunes
 Pruning operations, or pruned routes
-.It routes
+.It Cm routes
 Routing messages
-.It rtdetail
+.It Cm rtdetail
 Detailed routing information
-.It peers
+.It Cm peers
 Neighbor gossip
-.It cache
+.It Cm cache
 Debug routing cache
-.It timeout
+.It Cm timeout
 Debug timeouts
-.It interface
+.It Cm interface
 Show interface, or vif, debug messages
-.It groups
+.It Cm groups
 Debug group memberships
-.It mtrace
+.It Cm mtrace
 Multicast traceroute information
-.It igmp
+.It Cm igmp
 Debug IGMP messages
-.It icmp
+.It Cm icmp
 Debug ICMP messages
-.It rsrr
+.It Cm rsrr
 Debug RSRR messages
 .El
 .It Fl p
@@ -138,6 +140,7 @@ However, this is no longer supported and this option is only kept for compatibil
 reasons.
 .El
 .Pp
+.Sh CONFIGURATION
 .Nm
 automatically configures itself to forward on all multicast-capable
 interfaces, i.e. interfaces that have the IFF_MULTICAST flag set (excluding
