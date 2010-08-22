@@ -59,6 +59,7 @@ endif
 #MSTAT_SRCS    = mstat.c 
 #MSTAT_OBJS    = mstat.o
 
+# BSD Make use .include
 include rules.mk
 include config.mk
 include snmp.mk
@@ -150,6 +151,9 @@ dist:
 	@echo "Building bzip2 tarball of $(PKG) in parent dir..."
 	git archive --format=tar --prefix=$(PKG)/ $(VERSION) | bzip2 >../$(ARCHIVE)
 	@(cd ..; md5sum $(ARCHIVE))
+
+build-deb:
+	git-buildpackage --git-ignore-new --git-upstream-branch=master
 
 lint: 
 	@$(LINT) $(LINTFLAGS) $(SRCS)
