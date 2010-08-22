@@ -153,23 +153,23 @@ static void usage(void)
     struct debugname *d;
 
     fprintf(stderr, "Usage: %s [-fhpv] [-c file] [-d [level[,level...]]]\n\n", __progname);
-    fputs("    -c, --config=FILE    Configuration file to use, default /etc/mrouted.conf\n", stderr);
-    fputs("    -d, --debug[=LEVEL]  Debug level, see below for valid levels\n", stderr);
-    fputs("    -f, --foreground     Run in foreground, do not detach from calling terminal\n", stderr);
-    fputs("    -h, --help           Show this help text\n", stderr);
-    fputs("    -p                   Disable pruning.  Deprecated, compatibility option\n", stderr);
-    fprintf(stderr, "    -v, --version        Show %s version\n", __progname);
+    fputs("  -c, --config=FILE    Configuration file to use, default /etc/mrouted.conf\n", stderr);
+    fputs("  -d, --debug[=LEVEL]  Debug level, see below for valid levels\n", stderr);
+    fputs("  -f, --foreground     Run in foreground, do not detach from calling terminal\n", stderr);
+    fputs("  -h, --help           Show this help text\n", stderr);
+    fputs("  -p                   Disable pruning.  Deprecated, compatibility option\n", stderr);
+    fprintf(stderr, "  -v, --version        Show %s version\n", __progname);
     fputs("\n", stderr);
 
     j = 0xffffffff;
     k = 0;
-    fputs("Valid debug levels:\n    ", stderr);
+    fputs("Valid debug levels:\n  ", stderr);
     for (i = 0, d = debugnames; i < ARRAY_LEN(debugnames); i++, d++) {
 	if ((j & d->level) == d->level) {
 	    if (k++)
 		fputs(", ", stderr);
-	    if (!(k % 7))
-		fputs("\n    ", stderr);
+	    if (!(k % 6))
+		fputs("\n  ", stderr);
 
 	    fputs(d->name, stderr);
 	    j &= ~d->level;
