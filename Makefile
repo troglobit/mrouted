@@ -95,26 +95,26 @@ uninstall:
 
 mrouted: $(IGMP_OBJS) $(ROUTER_OBJS) vers.o $(CMULIBS)
 	@printf "  LINK    $@\n"
-	@$(CC) $(CFLAGS) $(LDFLAGS) -Wl,-Map,$@.map -o $@ $^ $(LDLIBS$(LDLIBS-$(@)))
+	@$(CC) $(CFLAGS) $(LDFLAGS) -Wl,-Map,$@.map -o $@ $^ $(LDLIBS)
 
 vers.c: Makefile
 	@echo $(VERSION) | sed -e 's/.*/char todaysversion[]="&";/' > vers.c
 
 map-mbone: $(IGMP_OBJS) $(MAPPER_OBJS)
 	@printf "  LINK    $@\n"
-	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(IGMP_OBJS) $(MAPPER_OBJS) $(EXTRA_LIBS)
+	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(IGMP_OBJS) $(MAPPER_OBJS) $(LDLIBS)
 
 mrinfo: $(IGMP_OBJS) $(MRINFO_OBJS)
 	@printf "  LINK    $@\n"
-	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(IGMP_OBJS) $(MRINFO_OBJS) $(EXTRA_LIBS)
+	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(IGMP_OBJS) $(MRINFO_OBJS) $(LDLIBS)
 
 mtrace: $(IGMP_OBJS) $(MTRACE_OBJS)
 	@printf "  LINK    $@\n"
-	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(IGMP_OBJS) $(MTRACE_OBJS) $(EXTRA_LIBS)
+	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(IGMP_OBJS) $(MTRACE_OBJS) $(LDLIBS)
 
-mstat: $(MSTAT_OBJS) snmplib/libsnmp.a
+mstat: $(MSTAT_OBJS) $(CMULIBS)
 	@printf "  LINK    $@\n"
-	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(MSTAT_OBJS) -Lsnmplib -lsnmp
+	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(MSTAT_OBJS) $(LDLIBS)
 
 clean: $(SNMPCLEAN)
 	-@$(RM) $(OBJS) $(EXECS)
