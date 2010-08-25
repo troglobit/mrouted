@@ -34,7 +34,7 @@ include config.mk
 include snmp.mk
 
 ROUTER_OBJS   = config.o cfparse.o main.o route.o vif.o prune.o callout.o \
-		icmp.o ipip.o $(RSRR_OBJS) $(EXTRA_OBJS)
+		icmp.o ipip.o vers.o $(RSRR_OBJS) $(EXTRA_OBJS)
 ROUTER_SRCS   = $(ROUTER_OBJS:.o=.c)
 MAPPER_OBJS   = mapper.o $(EXTRA_OBJS)
 MRINFO_OBJS   = mrinfo.o $(EXTRA_OBJS)
@@ -46,6 +46,7 @@ CFLAGS        = $(MCAST_INCLUDE) $(SNMPDEF) $(RSRRDEF) $(INCLUDES) $(DEFS) $(USE
 CFLAGS       += -O2 -W -Wall -Werror
 #CFLAGS       += -O -g
 LDLIBS        = $(SNMPLIBDIR) $(SNMPLIBS) $(EXTRA_LIBS)
+LDFLAGS      += -Wl,-Map,$@.map
 OBJS          = $(IGMP_OBJS) $(ROUTER_OBJS) $(MAPPER_OBJS) $(MRINFO_OBJS) \
 		$(MTRACE_OBJS) $(MSTAT_OBJS)
 SRCS          = $(OBJS:.o=.c)
@@ -93,9 +94,9 @@ uninstall:
 		$(RM) $(DESTDIR)$(mandir)/$$file; \
 	done
 
-mrouted: $(IGMP_OBJS) $(ROUTER_OBJS) vers.o $(CMULIBS)
+mrouted: $(IGMP_OBJS) $(ROUTER_OBJS) $(CMULIBS)
 	@printf "  LINK    $@\n"
-	@$(CC) $(CFLAGS) $(LDFLAGS) -Wl,-Map,$@.map -o $@ $^ $(LDLIBS)
+	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(IGMP_OBJS) $(ROUTER_OBJS) $(LDLIBS)
 
 vers.c: Makefile
 	@echo $(VERSION) | sed -e 's/.*/char todaysversion[]="&";/' > vers.c
