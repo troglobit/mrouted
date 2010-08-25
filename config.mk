@@ -18,33 +18,44 @@ DEFS = -D_BSD_SOURCE -D_GNU_SOURCE
 ## FreeBSD-3.x, FreeBSD-4.x
 #INCLUDES     =
 #DEFS        += -DHAVE_STRTONUM -DHAVE_STRLCPY -DHAVE_PIDFILE
+#EXTRA_OBJS   =
+#EXTRA_LIBS   = -lutil
 ## FreeBSD-2.x
 #INCLUDES     =
 #DEFS        +=
+#EXTRA_OBJS   = strlcpy.o pidfile.o strtonum.o
 
 ## NetBSD	-DNetBSD is defined by the OS
 #INCLUDES     =
 #DEFS        += -DHAVE_STRTONUM -DHAVE_STRLCPY -DHAVE_PIDFILE
+#EXTRA_OBJS   =
+#EXTRA_LIBS   = -lutil
 
 ## OpenBSD	-DOpenBSD is defined by the OS
 #INCLUDES     =
 #DEFS        += -DHAVE_STRTONUM -DHAVE_STRLCPY -DHAVE_PIDFILE
+#EXTRA_OBJS   =
+#EXTRA_LIBS   = -lutil
 
 ## BSDI		-D__bsdi__ is defined by the OS
 #INCLUDES     =
 #DEFS        +=
+#EXTRA_OBJS   = strlcpy.o pidfile.o strtonum.o
 
 ## SunOS, OSF1, gcc
 #INCLUDES     =
 #DEFS        += -DSunOS=43
+#EXTRA_OBJS   = strlcpy.o pidfile.o strtonum.o
 
 ## SunOS, OSF1, cc
 #INCLUDES     =
 #DEFS        += -DSunOS=43
+#EXTRA_OBJS   = strlcpy.o pidfile.o strtonum.o
 
 ## IRIX
 #INCLUDES     =
 #DEFS        += -D_BSD_SIGNALS -DIRIX
+#EXTRA_OBJS   = strlcpy.o pidfile.o strtonum.o
 
 ## Solaris 2.5, gcc
 #INCLUDES     =
@@ -56,9 +67,11 @@ DEFS = -D_BSD_SOURCE -D_GNU_SOURCE
 #INCLUDES     =
 #DEFS        += -DSYSV -DSUNOS5 -DSunOS=56
 ## Solaris 2.x
-#LIB2         = -L/usr/ucblib -lucb -L/usr/lib -lsocket -lnsl
+#EXTRA_OBJS   = strlcpy.o pidfile.o strtonum.o
+#EXTRA_LIBS   = -L/usr/ucblib -lucb -L/usr/lib -lsocket -lnsl
 
 ## Linux	-D__linux__ is defined by the OS
 # For uClibc based Linux systems, add -DHAVE_STRLCPY to DEFS
 INCLUDES      =
 DEFS         += -DIOCTL_OK_ON_RAW_SOCKET
+EXTRA_OBJS    = strlcpy.o pidfile.o strtonum.o
