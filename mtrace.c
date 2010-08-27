@@ -351,7 +351,7 @@ int send_recv(u_int32_t dst, int type, int code, int tries, struct resp_buf *sav
     struct ip *ip;
     struct igmp *igmp;
     struct tr_query *query, *rquery;
-    int ipdatalen, iphdrlen;
+    size_t ipdatalen, iphdrlen;
     u_int32_t local, group;
     int datalen;
     struct pollfd pfd[1];
@@ -447,7 +447,7 @@ int send_recv(u_int32_t dst, int type, int code, int tries, struct resp_buf *sav
 	    }
 
 	    if ((size_t)recvlen < sizeof(struct ip)) {
-		fprintf(stderr, "packet too short (%u bytes) for IP header", recvlen);
+		fprintf(stderr, "packet too short (%zd bytes) for IP header", recvlen);
 		continue;
 	    }
 	    ip = (struct ip *) recv_buf;
@@ -456,8 +456,8 @@ int send_recv(u_int32_t dst, int type, int code, int tries, struct resp_buf *sav
 
 	    iphdrlen = ip->ip_hl << 2;
 	    ipdatalen = ntohs(ip->ip_len) - iphdrlen;
-	    if (iphdrlen + ipdatalen != recvlen) {
-		fprintf(stderr, "packet shorter (%u bytes) than hdr+data len (%u+%u)\n",
+	    if (iphdrlen + ipdatalen != (size_t)recvlen) {
+		fprintf(stderr, "packet shorter (%zd bytes) than hdr+data len (%zu+%zu)\n",
 			recvlen, iphdrlen, ipdatalen);
 		continue;
 	    }
@@ -465,7 +465,7 @@ int send_recv(u_int32_t dst, int type, int code, int tries, struct resp_buf *sav
 	    igmp = (struct igmp *) (recv_buf + iphdrlen);
 	    if (ipdatalen < IGMP_MINLEN) {
 		fprintf(stderr,
-			"IP data field too short (%u bytes) for IGMP from %s\n",
+			"IP data field too short (%zu bytes) for IGMP from %s\n",
 			ipdatalen, inet_fmt(ip->ip_src.s_addr, s1, sizeof(s1)));
 		continue;
 	    }
@@ -580,7 +580,8 @@ void passive_mode(void)
     struct igmp *igmp;
     struct tr_resp *r;
     size_t ipdatalen, iphdrlen, igmpdatalen;
-    size_t len, recvlen;
+    size_t len;
+    ssize_t recvlen;
     socklen_t dummy = 0;
     u_int32_t smask;
 
@@ -599,7 +600,7 @@ void passive_mode(void)
 	}
 
 	if ((size_t)recvlen < sizeof(struct ip)) {
-	    fprintf(stderr, "packet too short (%u bytes) for IP header", recvlen);
+	    fprintf(stderr, "packet too short (%zd bytes) for IP header", recvlen);
 	    continue;
 	}
 	ip = (struct ip *) recv_buf;
@@ -608,15 +609,15 @@ void passive_mode(void)
 
 	iphdrlen = ip->ip_hl << 2;
 	ipdatalen = ntohs(ip->ip_len) - iphdrlen;
-	if (iphdrlen + ipdatalen != recvlen) {
-	    fprintf(stderr, "packet shorter (%u bytes) than hdr+data len (%u+%u)\n",
+	if (iphdrlen + ipdatalen != (size_t)recvlen) {
+	    fprintf(stderr, "packet shorter (%zd bytes) than hdr+data len (%zu+%zu)\n",
 		    recvlen, iphdrlen, ipdatalen);
 	    continue;
 	}
 
 	igmp = (struct igmp *) (recv_buf + iphdrlen);
 	if (ipdatalen < IGMP_MINLEN) {
-	    fprintf(stderr, "IP data field too short (%u bytes) for IGMP from %s\n",
+	    fprintf(stderr, "IP data field too short (%zu bytes) for IGMP from %s\n",
 		    ipdatalen, inet_fmt(ip->ip_src.s_addr, s1, sizeof(s1)));
 	    continue;
 	}
