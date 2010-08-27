@@ -17,9 +17,9 @@ DEFS = -D_BSD_SOURCE -D_GNU_SOURCE
 ## FreeBSD	-D__FreeBSD__ is defined by the OS
 ## FreeBSD-3.x, FreeBSD-4.x
 #INCLUDES     =
-#DEFS        += -DHAVE_STRTONUM -DHAVE_STRLCPY -DHAVE_PIDFILE
-#EXTRA_OBJS   =
-#EXTRA_LIBS   = -lutil
+#DEFS        += -DHAVE_STRTONUM -DHAVE_STRLCPY
+#EXTRA_OBJS   = pidfile.o
+#EXTRA_LIBS   =
 ## FreeBSD-2.x
 #INCLUDES     =
 #DEFS        +=
