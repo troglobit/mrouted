@@ -864,6 +864,10 @@ int main(int argc, char *argv[])
 
     init_igmp();
 
+    uid = getuid();
+    if (setuid(uid) == -1)
+	err(1, "setuid");
+
     {				/* Find a good local address for us. */
 	int udp;
 	struct sockaddr_in addr;

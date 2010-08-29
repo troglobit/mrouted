@@ -1199,8 +1199,8 @@ int main(int argc, char *argv[])
     init_igmp();
 
     uid = getuid();
-    if (setresuid(uid, uid, uid) == -1)
-	err(1, "setresuid");
+    if (setuid(uid) == -1)
+	err(1, "setuid");
 
     if (argc > 0 && (qsrc = host_addr(argv[0]))) {          /* Source of path */
 	if (IN_MULTICAST(ntohl(qsrc))) usage();
