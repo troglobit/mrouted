@@ -796,6 +796,7 @@ int main(int argc, char *argv[])
 {
     int flood = FALSE, graph = FALSE;
     int ch;
+    uid_t uid;
     const char *errstr;
 
     while ((ch = getopt(argc, argv, "d::fghnr:t:")) != -1) {
