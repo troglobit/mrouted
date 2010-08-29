@@ -27,8 +27,8 @@ DEFS = -D_BSD_SOURCE -D_GNU_SOURCE
 
 ## NetBSD	-DNetBSD is defined by the OS
 #INCLUDES     =
-#DEFS        += -DHAVE_STRTONUM -DHAVE_STRLCPY -DHAVE_PIDFILE
-#EXTRA_OBJS   =
+#DEFS        += -DHAVE_STRLCPY -DHAVE_PIDFILE
+#EXTRA_OBJS   = strtonum.o
 #EXTRA_LIBS   = -lutil
 
 ## OpenBSD	-DOpenBSD is defined by the OS
