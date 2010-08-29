@@ -179,7 +179,7 @@ u_int32_t host_addr(char *name)
     for (i = sizeof(buf) - 7; i > 0; --i) {
 	if (*ip == '.') --dots;
 	else if (*ip == '\0') break;
-	else if (!isdigit(*ip)) dots = 0;  /* Not numeric, don't add zeroes */
+	else if (!isdigit((int)*ip)) dots = 0;  /* Not numeric, don't add zeroes */
 	*op++ = *ip++;
     }
     for (i = 0; i < dots; ++i) {
