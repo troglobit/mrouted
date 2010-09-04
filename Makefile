@@ -68,7 +68,6 @@ all: $(EXECS) $(MSTAT)
 	@$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 install: $(EXECS)
-	@[ -n "$(DESTDIR)" -a ! -d $(DESTDIR) ] || install -d $(DESTDIR)
 	@install -d $(DESTDIR)$(prefix)/sbin
 	@install -d $(DESTDIR)$(sysconfdir)
 	@install -d $(DESTDIR)$(datadir)
