@@ -912,7 +912,7 @@ int main(int argc, char *argv[])
 	socklen_t       dummy = 0;
 
 	FD_ZERO(&fds);
-	if (igmp_socket >= FD_SETSIZE)
+	if (igmp_socket >= (int)FD_SETSIZE)
 		logit(LOG_ERR, 0, "Descriptor too big");
 	FD_SET(igmp_socket, &fds);
 

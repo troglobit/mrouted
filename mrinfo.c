@@ -403,7 +403,7 @@ int main(int argc, char *argv[])
 		size_t ipdatalen, iphdrlen, igmpdatalen;
 
 		FD_ZERO(&fds);
-		if (igmp_socket >= FD_SETSIZE)
+		if (igmp_socket >= (int)FD_SETSIZE)
 			logit(LOG_ERR, 0, "Descriptor too big");
 		FD_SET(igmp_socket, &fds);
 

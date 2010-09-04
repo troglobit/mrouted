@@ -401,12 +401,12 @@ int main(int argc, char *argv[])
     sigaction(SIGUSR2, &sa, NULL);
 
     FD_ZERO(&readers);
-    if (igmp_socket >= FD_SETSIZE)
+    if (igmp_socket >= (int)FD_SETSIZE)
        logit(LOG_ERR, 0, "Descriptor too big");
     FD_SET(igmp_socket, &readers);
     nfds = igmp_socket + 1;
     for (i = 0; i < nhandlers; i++) {
-	if (ihandlers[i].fd >= FD_SETSIZE)
+	if (ihandlers[i].fd >= (int)FD_SETSIZE)
 	    logit(LOG_ERR, 0, "Descriptor too big");
 	FD_SET(ihandlers[i].fd, &readers);
 	if (ihandlers[i].fd >= nfds)
