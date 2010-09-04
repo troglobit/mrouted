@@ -33,6 +33,14 @@
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
 #include <netinet/igmp.h>
+#ifdef __FreeBSD__      /* sigh */
+#include <osreldate.h>
+#endif /* __FreeBSD__ */
+#if (defined(__bsdi__)) || (defined(__FreeBSD__) && (__FreeBSD_version >= 220000))
+#define rtentry kernel_rtentry
+#include <net/route.h>
+#undef rtentry
+#endif /* bsdi or __FreeBSD_version >= 220000 */
 #ifdef __linux__
 #define _LINUX_IN_H             /* For Linux <= 2.6.25 */
 #include <linux/types.h>
@@ -40,14 +48,6 @@
 #else
 #include <netinet/ip_mroute.h>
 #endif
-#ifdef __FreeBSD__	/* sigh */
-#include <osreldate.h>
-#if __FreeBSD_version >= 220000
-#define rtentry kernel_rtentry
-#include <net/route.h>
-#undef rtentry
-#endif
-#endif  /* __FreeBSD__ */
 #if defined(HAVE_STRLCPY)
 #include <string.h>
 #endif

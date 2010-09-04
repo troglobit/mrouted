@@ -15,7 +15,7 @@ DEFS = -D_BSD_SOURCE -D_GNU_SOURCE
 #MCAST_INCLUDE=	-I/sys
 
 ## FreeBSD	-D__FreeBSD__ is defined by the OS
-## FreeBSD-3.x, FreeBSD-4.x
+## FreeBSD-3.x, FreeBSD-4.x, FreeBSD-8.x
 #INCLUDES     =
 #DEFS        += -DHAVE_STRTONUM -DHAVE_STRLCPY
 #EXTRA_OBJS   = pidfile.o
