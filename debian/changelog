@@ -1,3 +1,13 @@
+mrouted (3.9.3-1) unstable; urgency=low
+
+  * New upstream release.
+  * Removes restriction on interfaces not having a 255.255.255.255 netmask.
+    Fixes issues for users with OpenVPN, PPTP, L2TP tunnels or PPP links.
+    See http://openvpn.net/archive/openvpn-users/2004-04/msg00003.html
+  * Fixes segfaults at start with interfaces having no address.
+
+ -- Joachim Nilsson <troglobit@vmlinux.org>  Sun,  3 Oct 2010 01:42:00 +0100
+
 mrouted (3.9.2-1) unstable; urgency=low
 
   * New upstream (bugfix) release.
