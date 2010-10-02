@@ -592,16 +592,14 @@ void accept_membership_query(u_int32 src, u_int32 dst, u_int32 group, int tmo)
     vifi_t vifi;
     struct uvif *v;
 
-    if ((vifi = find_vif(src, dst)) == NO_VIF ||
-	(uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
-	logit(LOG_INFO, 0,
-	    "ignoring group membership query from non-adjacent host %s",
-	    inet_fmt(src, s1, sizeof(s1)));
+    vifi = find_vif(src, dst);
+    if (vifi == NO_VIF || (uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
+	logit(LOG_INFO, 0, "Ignoring group membership query from non-adjacent host %s",
+	      inet_fmt(src, s1, sizeof(s1)));
 	return;
     }
 
     v = &uvifs[vifi];
-
     if ((tmo == 0 && !(v->uv_flags & VIFF_IGMPV1)) ||
 	(tmo != 0 &&  (v->uv_flags & VIFF_IGMPV1))) {
 	int i;
@@ -612,14 +610,12 @@ void accept_membership_query(u_int32 src, u_int32 dst, u_int32 group, int tmo)
 	i = ++v->uv_igmpv1_warn;
 	while (i && !(i & 1))
 	    i >>= 1;
-	if (i == 1)
-	    logit(LOG_WARNING, 0, "%s %s on vif %d, %s",
-		tmo == 0 ? "Received IGMPv1 report from"
-			 : "Received IGMPv2 report from",
-		inet_fmt(src, s1, sizeof(s1)),
-		vifi,
-		tmo == 0 ? "please configure vif for IGMPv1"
-			 : "but I am configured for IGMPv1");
+
+	if (i == 1) {
+	    logit(LOG_WARNING, 0, "Received IGMP%s report from %s on vif %d, %s",
+		  tmo == 0 ? "v1" : "v2", inet_fmt(src, s1, sizeof(s1)), vifi,
+		  tmo == 0 ? "please configure vif for IGMPv1" : "but I am configured for IGMPv1");
+	}
     }
 
     if (v->uv_querier == NULL || v->uv_querier->al_addr != src) {
@@ -630,27 +626,27 @@ void accept_membership_query(u_int32 src, u_int32 dst, u_int32 group, int tmo)
 	 * - A query from a new router that just started up and doesn't
 	 *   know who the querier is.
 	 */
-	if (ntohl(src) < (v->uv_querier ? ntohl(v->uv_querier->al_addr)
-				   : ntohl(v->uv_lcl_addr))) {
-	    IF_DEBUG(DEBUG_IGMP)
-	    logit(LOG_DEBUG, 0, "new querier %s (was %s) on vif %d",
-		       inet_fmt(src, s1, sizeof(s1)),
-		       v->uv_querier ? inet_fmt(v->uv_querier->al_addr, s2, sizeof(s2)) :
-		       "me", vifi);
+	if (ntohl(src) < (v->uv_querier ? ntohl(v->uv_querier->al_addr) : ntohl(v->uv_lcl_addr))) {
+	    IF_DEBUG(DEBUG_IGMP) {
+		logit(LOG_DEBUG, 0, "new querier %s (was %s) on vif %d", inet_fmt(src, s1, sizeof(s1)),
+		      v->uv_querier ? inet_fmt(v->uv_querier->al_addr, s2, sizeof(s2)) : "me", vifi);
+	    }
+
 	    if (!v->uv_querier) {
-		v->uv_querier = (struct listaddr *)
-				       malloc(sizeof(struct listaddr));
+		v->uv_querier = (struct listaddr *)malloc(sizeof(struct listaddr));
 		v->uv_flags &= ~VIFF_QUERIER;
 	    }
-	    time(&v->uv_querier->al_ctime);
-	    v->uv_querier->al_addr = src;
-	} else {
-	    IF_DEBUG(DEBUG_IGMP)
-	    logit(LOG_DEBUG, 0, "ignoring query from %s; querier on vif %d is still %s",
-		       inet_fmt(src, s1, sizeof(s1)), vifi,
-		       v->uv_querier ? inet_fmt(v->uv_querier->al_addr, s2, sizeof(s2)) :
-		       "me");
 
+	    if (v->uv_querier) {
+		time(&v->uv_querier->al_ctime);
+		v->uv_querier->al_addr = src;
+	    }
+	} else {
+	    IF_DEBUG(DEBUG_IGMP) {
+		logit(LOG_DEBUG, 0, "ignoring query from %s; querier on vif %d is still %s",
+		      inet_fmt(src, s1, sizeof(s1)), vifi,
+		      v->uv_querier ? inet_fmt(v->uv_querier->al_addr, s2, sizeof(s2)) : "me");
+	    }
 	    return;
 	}
     }
@@ -666,30 +662,31 @@ void accept_membership_query(u_int32 src, u_int32 dst, u_int32 group, int tmo)
      * we must set our membership timer to [Last Member Query Count] *
      * the [Max Response Time] in the packet.
      */
-    if (!(v->uv_flags & (VIFF_IGMPV1|VIFF_QUERIER)) && group != 0 &&
-					src != v->uv_lcl_addr) {
+    if (!(v->uv_flags & (VIFF_IGMPV1|VIFF_QUERIER))
+	&& group != 0 && src != v->uv_lcl_addr) {
 	struct listaddr *g;
 
-	IF_DEBUG(DEBUG_IGMP)
-	logit(LOG_DEBUG, 0,
-	    "%s for %s from %s on vif %d, timer %d",
-	    "Group-specific membership query",
-	    inet_fmt(group, s2, sizeof(s2)), inet_fmt(src, s1, sizeof(s1)), vifi, tmo);
+	IF_DEBUG(DEBUG_IGMP) {
+	    logit(LOG_DEBUG, 0, "Group-specific membership query for %s from %s on vif %d, timer %d",
+		  inet_fmt(group, s2, sizeof(s2)),
+		  inet_fmt(src, s1, sizeof(s1)), vifi, tmo);
+	}
 	
 	for (g = v->uv_groups; g != NULL; g = g->al_next) {
 	    if (group == g->al_addr && g->al_query == 0) {
 		/* setup a timeout to remove the group membership */
 		if (g->al_timerid)
 		    g->al_timerid = DeleteTimer(g->al_timerid);
-		g->al_timer = IGMP_LAST_MEMBER_QUERY_COUNT *
-					   tmo / IGMP_TIMER_SCALE;
+
 		/* use al_query to record our presence in last-member state */
+		g->al_timer = IGMP_LAST_MEMBER_QUERY_COUNT * tmo / IGMP_TIMER_SCALE;
 		g->al_query = -1;
 		g->al_timerid = SetTimer(vifi, g);
-		IF_DEBUG(DEBUG_IGMP)
-		logit(LOG_DEBUG, 0,
-		    "timer for grp %s on vif %d set to %d",
-		    inet_fmt(group, s2, sizeof(s2)), vifi, g->al_timer);
+
+		IF_DEBUG(DEBUG_IGMP) {
+		    logit(LOG_DEBUG, 0, "timer for grp %s on vif %d set to %d",
+			  inet_fmt(group, s2, sizeof(s2)), vifi, g->al_timer);
+		}
 		break;
 	    }
 	}
