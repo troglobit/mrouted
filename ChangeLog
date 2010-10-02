@@ -1,15 +1,15 @@
-Change Log                                                            -*-org-*-
+mrouted | Change Log
 
 * Release 3.9.3: October nn, 2010
 
 ** Changes & New Features
-  - Update mrouted.8 with --long-options, missing sections and improve debug help.
+  - Update mrouted.8 with =--long-options=, missing sections and improve debug help.
 
   - Cleanup Makefile for use with BSD PMake as well as GNU Make.
 
 ** Bug Fixes
 
-  - Fix NULL pointer dereference in conf file parser.  Problem will arise for all
+  - Fix =NULL= pointer dereference in conf file parser.  Problem will arise for all
     interfaces that at one point might not have an address.
 
     Reported by Dan Kruchinin <mailto:dkruchinin@acm.org>
@@ -50,7 +50,7 @@ Biggest news in this release is that all OpenBSD patches as of this date are mer
 
 ** Changes & New Featues
 
-  - Change license to 3-clause BSD on mrinfo, rsrr and mrouted sources, thanks to
+  - Change license to 3-clause BSD on mrinfo, RSRR and mrouted sources, thanks to
     hard working OpenBSD team!
 
   - Support for older yacc versions.
@@ -59,7 +59,7 @@ Biggest news in this release is that all OpenBSD patches as of this date are mer
 
   - OpenBSD, all patches from their CVS repository have been merged.  Things like
     missing free for malloc, missing checks for malloc return value, restart syscalls
-    after signal (EINTR).  As well as a heap of neat code cleanup and modernization.
+    after signal (=EINTR=).  As well as a heap of neat code cleanup and modernization.
 
 * Release 3.9.0: January 23, 2010
 
@@ -85,7 +85,7 @@ Biggest news in this release is that all OpenBSD patches as of this date are mer
   - A ~notransit~ keyword; routes learned on a ~notransit~ vif will not be
     readvertised onto another ~notransit~ vif.
 
-  - The 500kbps default rate limit on tunnels has been removed.
+  - The 500 kbps default rate limit on tunnels has been removed.
 
   - An ICMP listener which logs ICMP errors which appear to be in response to
     tunnel packets that we sent.
@@ -142,11 +142,11 @@ following bugs.
     default is to flood for a minute or two until mrouted is able to learn
     subordinate relationships.
 
-  - mrouted now retransmits prunes by default on point-to-point links.  prune
-    retransmission can be turned on or off per vif via the ~rexmit_prunes [on|off]~
-    mrouted.conf command.  Prune retransmission helps on lossy links, and also helps
-    when a router has forgotten about a prune (e.g. if it is out of memory and needs
-    to shed state, or due to a bug).
+  - mrouted now retransmits prunes by default on point-to-point links.  The
+    mrouted.conf command ~rexmit_prunes [on|off]~ can be used to enable or disable
+    this feature on a per-vif basis.  Prune retransmission helps on lossy links, and
+    also helps when a router has forgotten about a prune (e.g. if it is out of memory
+    and needs to shed state, or due to a bug).
 
   - The new ~passive~ mode causes mrouted to not actively send probes looking for
     neighbors.  This allows a dialup link to become quiescent if there is no DVMRP
@@ -157,49 +157,40 @@ following bugs.
     ~allow_nonpruners~ mrouted.conf option on a vif on which you want to allow such
     peerings.
 
-  - mrouted now allows route filtering.  ~mrouted.conf~ syntax:
-        accept 13/8
+  - mrouted now allows route filtering using ~allow~ and ~deny~ in ~mrouted.conf~.
+    - Only ~accept~ or ~deny~ is allowed, no combinations.
 
-        accepts all routes matching 13/8 (e.g. accepts 13.2.116/22).  If you want to
-        accept only exactly 13/8, use
+    - Add ~bidir~ to apply the filter to output too, otherwise it's input only.
 
-        accept 13/8 exact
+    - Expected usage:
+      - Providers filter routes that customers send them
+      - Martian removal
+      - Topology modification (e.g. don't let the existence of private tunnel foo out
+        into the world).
 
-        deny 10/8 64/2 130/8 exact 172/8 exact
+    - Syntax:
+        - accept 13/8 :: All routes matching 13/8 (e.g. 13.2.116/22)
+        - accept 13/8 exact :: If you want to accept exactly 13/8
+        - deny 10/8 64/2 130/8 exact 172/8 exact :: Common MBone martians
 
-        denies some common MBone martians
-
-      Only ~accept~ or ~deny~ is allowed, no combinations.
-
-      Add ~bidir~ to apply the filter to output too, otherwise it's input only.
-
-    Expected usage:
-    - Providers filter routes that customers send them
-    - Martian removal
-    - Topology modification (e.g. don't let the existence of
-    private tunnel foo out into the world).
-
-
-  - mrouted now malloc's the buffer it uses for SIOCGIFCONF, to allow
+  - mrouted now malloc's the buffer it uses for ~SIOCGIFCONF~, to allow
     for more interfaces.  Thanks to Danny Mitzel
 
-  - mrouted now ignores multiple entries for a single interface
-    name (temporary hack until mrouted understands interface aliases)
+  - mrouted now ignores multiple entries for a single interface name (temporary hack
+    until mrouted understands interface aliases)
 
-  - mrouted's ~-d~ flag has been modified to accept the names of the
-    systems which you would like to debug.
-    packet, prunes, routes, peers, cache, timeout, interface,
-    membership, traceroute, igmp
+  - mrouted's ~-d~ flag has been modified to accept the names of the systems which
+    you would like to debug:  packet, prunes, routes, peers, cache, timeout,
+    interface, membership, traceroute, igmp
 
-  - mrouted now times neighbors out fater, and fully detects and
-    ignores routes from one-way peerings.
+  - mrouted now times neighbors out fater, and fully detects and ignores routes from
+    one-way peerings.
 
   - mrouted's route processing has been sped up, especially at startup.
 
-  - mrouted uses the biggest ~SO_RCVBUF~ the operating system allows
-    (up to 256Kbytes)
+  - mrouted uses the biggest ~SO_RCVBUF~ the operating system allows (up to 256 kb)
 
-  - mrouted uses TOS 0xc0 ("Internet Control") for DVMRP messages.
+  - mrouted uses TOS =0xC0= ("Internet Control") for DVMRP messages.
 
 ** Known Bugs
 
@@ -300,7 +291,7 @@ following bugs.
   - mrouted would sometimes reply to a multicast traceroute on a disabled
     phyint; now it uses the first configured phyint to reply to traceroutes.
 
-  - host routes (i.e. netmask 0xffffffff) works now; it was discarding
+  - host routes (i.e. netmask =0xffffffff=) works now; it was discarding
     IGMP from the host because it was coming from the "broadcast address"
     of the subnet.
 
@@ -308,10 +299,10 @@ following bugs.
     reply as informational, as opposed to warning.
 
   - mrouted would go into an infinite loop trying to respond to a traceroute
-    for a source with a netmask of 0xffffffff.
+    for a source with a netmask of =0xffffffff=.
 
   - ~vifs_with_neighbors~ was not being reset if the mrouted was restarted
-    with SIGHUP
+    with =SIGHUP=.
 
   - the default route was not being properly advertised to neighbors (although
     it was accepted if it was advertised to it)
@@ -421,7 +412,7 @@ following bugs.
 
   - Kernel hash function improved
 
-  - Eliminated possibility of panic(): timeout in cache maintenance
+  - Eliminated possibility of ~panic()~: timeout in cache maintenance
 
   - Reordered resource allocation when sending upcall to handle failure properly
 
@@ -438,3 +429,6 @@ following bugs.
 | ping/*             | sources for ping which support multicasting           |
 | mtest/*            | utility for testing multicast group membership        |
 
+# Local Variables:
+#  mode: org
+# End:
