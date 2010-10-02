@@ -35,8 +35,6 @@ config_vifs_from_kernel()
 	if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_INET)
 	    continue;
 
-	addr = ((struct sockaddr_in *)ifa->ifa_addr)->sin_addr.s_addr;
-
 	/*
 	 * Ignore loopback interfaces and interfaces that do not support
 	 * multicast.
@@ -46,18 +44,15 @@ config_vifs_from_kernel()
 	    continue;
 
 	/*
-	 * Ignore any interface whose address and mask do not define a
-	 * valid subnet number, or whose address is of the form {subnet,0}
-	 * or {subnet,-1}.
+	 * Perform some sanity checks on the address and subnet, ignore any
+	 * interface whose address and netmask do not define a valid subnet.
 	 */
+	addr = ((struct sockaddr_in *)ifa->ifa_addr)->sin_addr.s_addr;
 	mask = ((struct sockaddr_in *)ifa->ifa_netmask)->sin_addr.s_addr;
 	subnet = addr & mask;
-	if (!inet_valid_subnet(subnet, mask) ||
-	    addr == subnet ||
-	    addr == (subnet | ~mask)) {
-	    logit(LOG_WARNING, 0,
-		"ignoring %s, has invalid address (%s) and/or mask (%s)",
-		ifa->ifa_name, inet_fmt(addr, s1, sizeof(s1)), inet_fmt(mask, s2, sizeof(s2)));
+	if (!inet_valid_subnet(subnet, mask) || (addr != subnet && addr == (subnet & ~mask))) {
+	    logit(LOG_WARNING, 0, "ignoring %s, has invalid address (%s) and/or mask (%s)",
+		  ifa->ifa_name, inet_fmt(addr, s1, sizeof(s1)), inet_fmt(mask, s2, sizeof(s2)));
 	    continue;
 	}
 
