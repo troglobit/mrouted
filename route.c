@@ -10,20 +10,34 @@
 #include "defs.h"
 
 /*
- * This define statement saves a lot of space later
+ * Private macros.
  */
-#define RT_ADDR	(struct rtentry *)&routing_table
+#define RT_ADDR      (struct rtentry *)&routing_table
+#define MAX_NUM_RT   4096
+
+/*
+ * Private types.
+ */
+struct newrt {
+	u_int32 mask;
+	u_int32 origin;
+	int metric;
+	int pad;
+};
+
+struct blaster_hdr {
+    u_int32	bh_src;
+    u_int32	bh_dst;
+    u_int32	bh_level;
+    int		bh_datalen;
+};
 
 /*
  * Exported variables.
  */
 int routes_changed;			/* 1=>some routes have changed */
 int delay_change_reports;		/* 1=>postpone change reports  */
-
-
-/*
- * The routing table is shared with prune.c , so must not be static.
- */
+unsigned int nroutes;			/* current number of route entries  */
 struct rtentry *routing_table;		/* pointer to list of route entries */
 
 /*
@@ -31,21 +45,18 @@ struct rtentry *routing_table;		/* pointer to list of route entries */
  */
 static struct rtentry *rtp;		/* pointer to a route entry         */
 static struct rtentry *rt_end;		/* pointer to last route entry      */
-unsigned int nroutes;			/* current number of route entries  */
 
 /*
  * Private functions.
  */
-static int init_children_and_leaves (struct rtentry *r, vifi_t parent, int first);
-static int find_route		(u_int32 origin, u_int32 mask);
-static void create_route	(u_int32 origin, u_int32 mask);
-static void discard_route	(struct rtentry *prev_r);
-static int compare_rts		(const void *rt1, const void *rt2);
-static int report_chunk		(int, struct rtentry *start_rt, vifi_t vifi,
-						u_int32 dst);
-static void queue_blaster_report(vifi_t vifi, u_int32 src, u_int32 dst, char *p,
-                                 size_t datalen, u_int32 level);
-static void process_blaster_report (void *);
+static int  init_children_and_leaves (struct rtentry *r, vifi_t parent, int first);
+static int  find_route               (u_int32 origin, u_int32 mask);
+static void create_route             (u_int32 origin, u_int32 mask);
+static void discard_route            (struct rtentry *prev_r);
+static int  compare_rts              (const void *rt1, const void *rt2);
+static int  report_chunk             (int, struct rtentry *start_rt, vifi_t vifi, u_int32 dst);
+static void queue_blaster_report     (vifi_t vifi, u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level);
+static void process_blaster_report   (void *);
 
 #ifdef SNMP
 #include <sys/types.h>
@@ -109,7 +120,7 @@ int next_route_child(struct rtentry **rtpp, u_int32 src, u_int32 mask, vifi_t vi
 
    return 0;
 }
-#endif
+#endif	/* SNMP */
 
 /*
  * Initialize the routing table and associated variables.
@@ -333,12 +344,16 @@ static int find_route(u_int32 origin, u_int32 mask)
  */
 static void create_route(u_int32 origin, u_int32 mask)
 {
+    size_t len;
     struct rtentry *r;
 
-    if ((r = (struct rtentry *) malloc(sizeof(struct rtentry) +
-				       (numvifs * sizeof(u_int32)))) == NULL) {
-	logit(LOG_ERR, 0, "ran out of memory");	/* fatal */
+    len = sizeof(struct rtentry) + numvifs * sizeof(u_int32);
+    r = (struct rtentry *)malloc(len);
+    if (r == NULL) {
+	logit(LOG_ERR, 0, "Malloc failed in route.c:create_route()\n");
+	return;		/* NOTREACHED */
     }
+
     r->rt_origin     = origin;
     r->rt_originmask = mask;
     if      (((char *)&mask)[3] != 0) r->rt_originwidth = 4;
@@ -406,8 +421,7 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
      * all unreachable/poisoned metrics into a single value.
      */
     if (src != 0 && (metric < 1 || metric >= 2*UNREACHABLE)) {
-	logit(LOG_WARNING, 0,
-	    "%s reports out-of-range metric %u for origin %s",
+	logit(LOG_WARNING, 0, "%s reports out-of-range metric %u for origin %s",
 	    inet_fmt(src, s1, sizeof(s1)), metric, inet_fmts(origin, mask, s2, sizeof(s2)));
 	return;
     }
@@ -427,15 +441,15 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
 	    return;
 	}
 	if (src != 0 && !inet_valid_subnet(origin, mask)) {
-	    logit(LOG_WARNING, 0,
-		"%s reports an invalid origin (%s) and/or mask (%08x)",
-		inet_fmt(src, s1, sizeof(s1)), inet_fmt(origin, s2, sizeof(s2)), ntohl(mask));
+	    logit(LOG_WARNING, 0, "%s reports an invalid origin (%s) and/or mask (%08x)",
+		  inet_fmt(src, s1, sizeof(s1)), inet_fmt(origin, s2, sizeof(s2)), ntohl(mask));
 	    return;
 	}
 
-	IF_DEBUG(DEBUG_RTDETAIL)
-	logit(LOG_DEBUG, 0, "%s advertises new route %s",
-		inet_fmt(src, s1, sizeof(s1)), inet_fmts(origin, mask, s2, sizeof(s2)));
+	IF_DEBUG(DEBUG_RTDETAIL) {
+	    logit(LOG_DEBUG, 0, "%s advertises new route %s",
+		  inet_fmt(src, s1, sizeof(s1)), inet_fmts(origin, mask, s2, sizeof(s2)));
+	}
 
 	/*
 	 * OK, create the new routing entry.  'rtp' will be left pointing
@@ -461,10 +475,11 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
 	if (adj_metric == UNREACHABLE)
 	    return;
 
-	IF_DEBUG(DEBUG_RTDETAIL)
-	logit(LOG_DEBUG, 0, "%s advertises %s with adj_metric %d (ours was %d)",
-		inet_fmt(src, s1, sizeof(s1)), inet_fmts(origin, mask, s2, sizeof(s2)),
-		adj_metric, r->rt_metric);
+	IF_DEBUG(DEBUG_RTDETAIL) {
+	    logit(LOG_DEBUG, 0, "%s advertises %s with adj_metric %d (ours was %d)",
+		  inet_fmt(src, s1, sizeof(s1)), inet_fmts(origin, mask, s2, sizeof(s2)),
+		  adj_metric, r->rt_metric);
+	}
 
 	/*
 	 * Now "steal away" any sources that belong under this route
@@ -487,8 +502,7 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
 	r->rt_flags   |= RTF_CHANGED;
 	routes_changed = TRUE;
 	update_table_entry(r, r->rt_gateway);
-    }
-    else if (src == r->rt_gateway) {
+    } else if (src == r->rt_gateway) {
 	/*
 	 * The report has come either from the interface directly-connected
 	 * to the origin subnet (src and r->rt_gateway both equal zero) or
@@ -499,10 +513,11 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
 	 */
 	r->rt_timer = 0;
 
-	IF_DEBUG(DEBUG_RTDETAIL)
-	logit(LOG_DEBUG, 0, "%s (current parent) advertises %s with adj_metric %d (ours was %d)",
-		inet_fmt(src, s1, sizeof(s1)), inet_fmts(origin, mask, s2, sizeof(s2)),
-		adj_metric, r->rt_metric);
+	IF_DEBUG(DEBUG_RTDETAIL) {
+	    logit(LOG_DEBUG, 0, "%s (current parent) advertises %s with adj_metric %d (ours was %d)",
+		  inet_fmt(src, s1, sizeof(s1)), inet_fmts(origin, mask, s2, sizeof(s2)),
+		  adj_metric, r->rt_metric);
+	}
 
 	if (adj_metric == r->rt_metric)
 	    return;
@@ -514,13 +529,12 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
 	r->rt_metric   = adj_metric;
 	r->rt_flags   |= RTF_CHANGED;
 	routes_changed = TRUE;
-    }
-    else if (src == 0 ||
-	     (r->rt_gateway != 0 &&
-	      (adj_metric < r->rt_metric ||
-	       (adj_metric == r->rt_metric &&
-		(ntohl(src) < ntohl(r->rt_gateway) ||
-		 r->rt_timer >= ROUTE_SWITCH_TIME))))) {
+    } else if (src == 0 ||
+	       (r->rt_gateway != 0 &&
+		(adj_metric < r->rt_metric ||
+		 (adj_metric == r->rt_metric &&
+		  (ntohl(src) < ntohl(r->rt_gateway) ||
+		   r->rt_timer >= ROUTE_SWITCH_TIME))))) {
 	/*
 	 * The report is for an origin we consider reachable; the report
 	 * comes either from one of our own interfaces or from a gateway
@@ -538,16 +552,17 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
 	 */
 	u_int32 old_gateway;
 	vifi_t old_parent;
+
 	old_gateway = r->rt_gateway;
 	old_parent = r->rt_parent;
 	r->rt_gateway = src;
 	r->rt_parent = vifi;
 
-	IF_DEBUG(DEBUG_RTDETAIL)
-	logit(LOG_DEBUG, 0, "%s (new parent) on vif %d advertises %s with adj_metric %d (old parent was %s on vif %d, metric %d)",
-		inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
-		adj_metric, inet_fmt(old_gateway, s3, sizeof(s3)), old_parent,
-		r->rt_metric);
+	IF_DEBUG(DEBUG_RTDETAIL) {
+	    logit(LOG_DEBUG, 0, "%s (new parent) on vif %d advertises %s with adj_metric %d (old parent was %s on vif %d, metric %d)",
+		  inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
+		  adj_metric, inet_fmt(old_gateway, s3, sizeof(s3)), old_parent, r->rt_metric);
+	}
 
 	if (old_parent != vifi) {
 	    init_children_and_leaves(r, vifi, 0);
@@ -563,8 +578,7 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
 	r->rt_metric   = adj_metric;
 	r->rt_flags   |= RTF_CHANGED;
 	routes_changed = TRUE;
-    }
-    else if (vifi != r->rt_parent) {
+    } else if (vifi != r->rt_parent) {
 	/*
 	 * The report came from a vif other than the route's parent vif.
 	 * Update the children info, if necessary.
@@ -574,10 +588,10 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
 	     * The route's parent is a vif from which we're not supposed
 	     * to transit onto this vif.  Simply ignore the update.
 	     */
-	    IF_DEBUG(DEBUG_RTDETAIL)
-	    logit(LOG_DEBUG, 0, "%s on vif %d advertises %s with metric %d (ignored due to NOTRANSIT)",
-		inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
-		metric);
+	    IF_DEBUG(DEBUG_RTDETAIL) {
+		logit(LOG_DEBUG, 0, "%s on vif %d advertises %s with metric %d (ignored due to NOTRANSIT)",
+		      inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)), metric);
+	    }
 	} else if (VIFM_ISSET(vifi, r->rt_children)) {
 	    /*
 	     * Vif is a child vif for this route.
@@ -599,75 +613,80 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
 		 */
 		NBRM_CLRMASK(r->rt_subordinates, uvifs[vifi].uv_nbrmap);
 		update_table_entry(r, r->rt_gateway);
-		IF_DEBUG(DEBUG_RTDETAIL)
-		logit(LOG_DEBUG, 0, "%s on vif %d becomes dominant for %s with metric %d",
-		    inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
-		    metric);
-	    }
-	    else if (metric > UNREACHABLE) {	/* "poisoned reverse" */
+		IF_DEBUG(DEBUG_RTDETAIL) {
+		    logit(LOG_DEBUG, 0, "%s on vif %d becomes dominant for %s with metric %d",
+			  inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
+			  metric);
+		}
+	    } else if (metric > UNREACHABLE) {	/* "poisoned reverse" */
 		/*
 		 * Neighbor considers this vif to be on path to route's
 		 * origin; record this neighbor as subordinate
 		 */
 		if (!NBRM_ISSET(n->al_index, r->rt_subordinates)) {
-		    IF_DEBUG(DEBUG_RTDETAIL)
-		    logit(LOG_DEBUG, 0, "%s on vif %d becomes subordinate for %s with poison-reverse metric %d",
-			inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
-			metric - UNREACHABLE);
+		    IF_DEBUG(DEBUG_RTDETAIL) {
+			logit(LOG_DEBUG, 0, "%s on vif %d becomes subordinate for %s with poison-reverse metric %d",
+			      inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
+			      metric - UNREACHABLE);
+		    }
 		    NBRM_SET(n->al_index, r->rt_subordinates);
 		    update_table_entry(r, r->rt_gateway);
 		} else {
-		    IF_DEBUG(DEBUG_RTDETAIL)
-		    logit(LOG_DEBUG, 0, "%s on vif %d confirms subordinateness for %s with poison-reverse metric %d",
-			inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
-			metric - UNREACHABLE);
+		    IF_DEBUG(DEBUG_RTDETAIL) {
+			logit(LOG_DEBUG, 0, "%s on vif %d confirms subordinateness for %s with poison-reverse metric %d",
+			      inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
+			      metric - UNREACHABLE);
+		    }
 		}
 		NBRM_SET(n->al_index, r->rt_subordadv);
-	    }
-	    else if (NBRM_ISSET(n->al_index, r->rt_subordinates)) {
+	    } else if (NBRM_ISSET(n->al_index, r->rt_subordinates)) {
 		/*
 		 * Current subordinate no longer considers this vif to be on
 		 * path to route's origin; it is no longer a subordinate
 		 * router.
 		 */
-		IF_DEBUG(DEBUG_RTDETAIL)
-		logit(LOG_DEBUG, 0, "%s on vif %d is no longer a subordinate for %s with metric %d",
-		    inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
-		    metric);
+		IF_DEBUG(DEBUG_RTDETAIL) {
+		    logit(LOG_DEBUG, 0, "%s on vif %d is no longer a subordinate for %s with metric %d",
+			  inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
+			  metric);
+		}
 		NBRM_CLR(n->al_index, r->rt_subordinates);
 		update_table_entry(r, r->rt_gateway);
 	    }
-
-	}
-	else if (src == r->rt_dominants[vifi] &&
-		 (metric  > r->rt_metric ||
-		  (metric == r->rt_metric &&
-		   ntohl(src) > ntohl(uvifs[vifi].uv_lcl_addr)))) {
+	} else if (src == r->rt_dominants[vifi] &&
+		   (metric  > r->rt_metric ||
+		    (metric == r->rt_metric &&
+		     ntohl(src) > ntohl(uvifs[vifi].uv_lcl_addr)))) {
 	    /*
 	     * Current dominant no longer has a lower metric to origin
 	     * (or same metric and lower IP address); we adopt the vif
 	     * as our own child.
 	     */
-	    IF_DEBUG(DEBUG_RTDETAIL)
-	    logit(LOG_DEBUG, 0, "%s (current dominant) on vif %d is no longer dominant for %s with metric %d",
-		inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
-		metric);
+	    IF_DEBUG(DEBUG_RTDETAIL) {
+		logit(LOG_DEBUG, 0, "%s (current dominant) on vif %d is no longer dominant for %s with metric %d",
+		      inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
+		      metric);
+	    }
+
 	    VIFM_SET(vifi, r->rt_children);
 	    r->rt_dominants[vifi] = 0;
+
 	    if (uvifs[vifi].uv_flags & VIFF_NOFLOOD)
 		NBRM_CLRMASK(r->rt_subordinates, uvifs[vifi].uv_nbrmap);
 	    else
 		NBRM_SETMASK(r->rt_subordinates, uvifs[vifi].uv_nbrmap);
+
 	    if (metric > UNREACHABLE) {
 		NBRM_SET(n->al_index, r->rt_subordinates);
 		NBRM_SET(n->al_index, r->rt_subordadv);
 	    }
 	    update_table_entry(r, r->rt_gateway);
 	} else {
-	    IF_DEBUG(DEBUG_RTDETAIL)
-	    logit(LOG_DEBUG, 0, "%s on vif %d advertises %s with metric %d (ignored)",
-		inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
-		metric);
+	    IF_DEBUG(DEBUG_RTDETAIL) {
+		logit(LOG_DEBUG, 0, "%s on vif %d advertises %s with metric %d (ignored)",
+		      inet_fmt(src, s1, sizeof(s1)), vifi, inet_fmts(origin, mask, s2, sizeof(s2)),
+		      metric);
+	    }
 	}
     }
 }
@@ -718,11 +737,11 @@ void age_routes(void)
 	     * the last 2 intervals.
 	     */
 	    if (!NBRM_SAME(r->rt_subordinates, r->rt_subordadv)) {
-		IF_DEBUG(DEBUG_ROUTE)
-		logit(LOG_DEBUG, 0, "rt %s sub 0x%08x%08x subadv 0x%08x%08x metric %d",
-			RT_FMT(r, s1),
-			r->rt_subordinates.hi, r->rt_subordinates.lo,
-			r->rt_subordadv.hi, r->rt_subordadv.lo, r->rt_metric);
+		IF_DEBUG(DEBUG_ROUTE) {
+		    logit(LOG_DEBUG, 0, "rt %s sub 0x%08x%08x subadv 0x%08x%08x metric %d",
+			  RT_FMT(r, s1), r->rt_subordinates.hi, r->rt_subordinates.lo,
+			  r->rt_subordadv.hi, r->rt_subordadv.lo, r->rt_metric);
+		}
 		NBRM_MASK(r->rt_subordinates, r->rt_subordadv);
 		update_table_entry(r, r->rt_gateway);
 	    }
@@ -790,6 +809,11 @@ void accept_probe(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 lev
 	}
 	if (match == NULL) {
 	    match = *prev = (struct listaddr *)malloc(sizeof(struct listaddr));
+	    if (match == NULL) {
+		logit(LOG_ERR, 0, "Malloc failed in route.c:accept_probe()\n");
+		return;		/* NOTREACHED */
+	    }
+
 	    match->al_next = NULL;
 	    match->al_addr = src;
 	    match->al_timer = OLD_NEIGHBOR_EXPIRE_TIME;
@@ -797,26 +821,21 @@ void accept_probe(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 lev
 	}
 
 	if (match->al_ctime + match->al_timer <= (u_long)now) {
-	    logit(LOG_WARNING, 0,
-		"ignoring probe from non-neighbor %s, check for misconfigured tunnel or routing on %s",
-		inet_fmt(src, s1, sizeof(s1)), s1);
+	    logit(LOG_WARNING, 0, "Ignoring probe from non-neighbor %s, check for misconfigured tunnel or routing on %s",
+		  inet_fmt(src, s1, sizeof(s1)), s1);
 	    match->al_timer *= 2;
-	} else
-	    IF_DEBUG(DEBUG_PEER)
-	    logit(LOG_DEBUG, 0,
-		"ignoring probe from non-neighbor %s (%d seconds until next warning)", inet_fmt(src, s1, sizeof(s1)), match->al_ctime + match->al_timer - now);
+	} else {
+	    IF_DEBUG(DEBUG_PEER) {
+		logit(LOG_DEBUG, 0, "Ignoring probe from non-neighbor %s (%d seconds until next warning)",
+		      inet_fmt(src, s1, sizeof(s1)), match->al_ctime + match->al_timer - now);
+	    }
+	}
+
 	return;
     }
 
     update_neighbor(vifi, src, DVMRP_PROBE, p, datalen, level);
 }
-
-struct newrt {
-	u_int32 mask;
-	u_int32 origin;
-	int metric;
-	int pad;
-}; 
 
 static int compare_rts(const void *rt1, const void *rt2)
 {
@@ -827,18 +846,19 @@ static int compare_rts(const void *rt1, const void *rt2)
     u_int32 o1, o2;
 
     if (m1 > m2)
-	return (-1);
+	return -1;
     if (m1 < m2)
-	return (1);
+	return 1;
 
     /* masks are equal */
     o1 = ntohl(r1->origin);
     o2 = ntohl(r2->origin);
     if (o1 > o2)
-	return (-1);
+	return -1;
     if (o1 < o2)
-	return (1);
-    return (0);
+	return 1;
+
+    return 0;
 }
 
 void blaster_alloc(vifi_t vifi)
@@ -849,20 +869,13 @@ void blaster_alloc(vifi_t vifi)
     if (v->uv_blasterbuf)
 	free(v->uv_blasterbuf);
 
-    v->uv_blasterlen = 64*1024;
+    v->uv_blasterlen = 64 * 1024;
     v->uv_blasterbuf = malloc(v->uv_blasterlen);
     v->uv_blastercur = v->uv_blasterend = v->uv_blasterbuf;
     if (v->uv_blastertimer)
 	timer_clearTimer(v->uv_blastertimer);
     v->uv_blastertimer = 0;
 }
-
-struct blaster_hdr {
-    u_int32	bh_src;
-    u_int32	bh_dst;
-    u_int32	bh_level;
-    int		bh_datalen;
-};
 
 /*
  * Queue a route report from a route-blaster.
@@ -876,19 +889,18 @@ static void queue_blaster_report(vifi_t vifi, u_int32 src, u_int32 dst, char *p,
     int bblen = sizeof(*bh) + ((datalen + 3) & ~3);
 
     v = &uvifs[vifi];
-    if (v->uv_blasterend - v->uv_blasterbuf +
-	    		bblen > v->uv_blasterlen) {
+    if (v->uv_blasterend - v->uv_blasterbuf + bblen > v->uv_blasterlen) {
 	int end = v->uv_blasterend - v->uv_blasterbuf;
 	int cur = v->uv_blastercur - v->uv_blasterbuf;
 
 	v->uv_blasterlen *= 2;
-	IF_DEBUG(DEBUG_IF)
-	logit(LOG_DEBUG, 0, "increasing blasterbuf to %d bytes",
-			v->uv_blasterlen);
-	v->uv_blasterbuf = realloc(v->uv_blasterbuf,
-					v->uv_blasterlen);
+	IF_DEBUG(DEBUG_IF) {
+	    logit(LOG_DEBUG, 0, "Increasing blasterbuf to %d bytes", v->uv_blasterlen);
+	}
+
+	v->uv_blasterbuf = realloc(v->uv_blasterbuf, v->uv_blasterlen);
 	if (v->uv_blasterbuf == NULL) {
-	    logit(LOG_WARNING, ENOMEM, "turning off blaster on vif %d", vifi);
+	    logit(LOG_WARNING, ENOMEM, "Turning off blaster on vif %d", vifi);
 	    v->uv_blasterlen = 0;
 	    v->uv_blasterend = v->uv_blastercur = NULL;
 	    v->uv_flags &= ~VIFF_BLASTER;
@@ -902,19 +914,20 @@ static void queue_blaster_report(vifi_t vifi, u_int32 src, u_int32 dst, char *p,
     bh->bh_dst = dst;
     bh->bh_level = level;
     bh->bh_datalen = datalen;
-    memmove	((char *)(bh + 1),	p,	datalen);
+    memmove((char *)(bh + 1), p, datalen);
     v->uv_blasterend += bblen;
 
     if (v->uv_blastertimer == 0) {
-	int *i = (int *)malloc(sizeof(int *));
+	int *i;
 
-	if (i == NULL)
-		logit(LOG_ERR, 0, "out of memory");
+	i = (int *)malloc(sizeof(int *));
+	if (i == NULL) {
+	    logit(LOG_ERR, 0, "Malloc failed in route.c:queue_blaster_report()\n");
+	    return;		/* NOTREACHED */
+	}
 
 	*i = vifi;
-
-	v->uv_blastertimer = timer_setTimer(5,
-					    process_blaster_report, i);
+	v->uv_blastertimer = timer_setTimer(5, process_blaster_report, i);
     }
 }
 
@@ -930,16 +943,19 @@ static void process_blaster_report(void *vifip)
     struct blaster_hdr *bh;
     int i;
 
-    IF_DEBUG(DEBUG_ROUTE)
-    logit(LOG_DEBUG, 0, "processing vif %d blasted routes", vifi);
+    IF_DEBUG(DEBUG_ROUTE) {
+	logit(LOG_DEBUG, 0, "Processing vif %d blasted routes", vifi);
+    }
+
     v = &uvifs[vifi];
     for (i = 0; i < 5; i++) {
 	if (v->uv_blastercur >= v->uv_blasterend)
 		break;
+
 	bh = (struct blaster_hdr *)v->uv_blastercur;
 	v->uv_blastercur += sizeof(*bh) + ((bh->bh_datalen + 3) & ~3);
-	accept_report(bh->bh_src, bh->bh_dst, (char *)(bh + 1),
-				    -bh->bh_datalen, bh->bh_level);
+
+	accept_report(bh->bh_src, bh->bh_dst, (char *)(bh + 1), -bh->bh_datalen, bh->bh_level);
     }
 
     if (v->uv_blastercur >= v->uv_blasterend) {
@@ -947,13 +963,15 @@ static void process_blaster_report(void *vifip)
 	v->uv_blasterend = v->uv_blasterbuf;
 	v->uv_blastertimer = 0;
 	free(vifip);
-	IF_DEBUG(DEBUG_ROUTE)
-	logit(LOG_DEBUG, 0, "finish processing vif %d blaster", vifi);
+
+	IF_DEBUG(DEBUG_ROUTE) {
+	    logit(LOG_DEBUG, 0, "Finish processing vif %d blaster", vifi);
+	}
     } else {
-	IF_DEBUG(DEBUG_ROUTE)
-	logit(LOG_DEBUG, 0, "more blasted routes to come on vif %d", vifi);
-	v->uv_blastertimer = timer_setTimer(1,
-					    process_blaster_report, vifip);
+	IF_DEBUG(DEBUG_ROUTE) {
+	    logit(LOG_DEBUG, 0, "More blasted routes to come on vif %d", vifi);
+	}
+	v->uv_blastertimer = timer_setTimer(1, process_blaster_report, vifip);
     }
 }
 
@@ -964,20 +982,26 @@ static void process_blaster_report(void *vifip)
  * processing later.  If datalen is negative, then this is actually
  * a queued report so actually process it instead of queueing it.
  */
-void
-accept_report(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level)
+void accept_report(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level)
 {
     vifi_t vifi;
     size_t width, i, nrt = 0;
     int metric;
     u_int32 mask;
     u_int32 origin;
-    struct newrt rt[4096];
+    static struct newrt rt[MAX_NUM_RT]; /* Use heap instead of stack */
     struct listaddr *nbr;
 
+    /*
+     * Emulate a stack variable.  We use the heap insted of the stack
+     * to prevent stack overflow on systems that cannot do stack realloc
+     * at runtime, e.g., non-MMU Linux systems.
+     */
+    memset(rt, 0, MAX_NUM_RT * sizeof(rt[0]));
+
     if ((vifi = find_vif(src, dst)) == NO_VIF) {
-	logit(LOG_INFO, 0,
-    	    "ignoring route report from non-neighbor %s", inet_fmt(src, s1, sizeof(s1)));
+	logit(LOG_INFO, 0, "Ignoring route report from non-neighbor %s",
+	      inet_fmt(src, s1, sizeof(s1)));
 	return;
     }
 
@@ -990,41 +1014,38 @@ accept_report(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level)
 	}
     }
 
-    if (!(nbr = update_neighbor(vifi, src, DVMRP_REPORT, NULL, 0, level)))
+    nbr = update_neighbor(vifi, src, DVMRP_REPORT, NULL, 0, level);
+    if (!nbr)
 	return;
 
-    if (datalen > 2*4096) {
-	logit(LOG_INFO, 0,
-    	    "ignoring oversize (%d bytes) route report from %s",
-	    datalen, inet_fmt(src, s1, sizeof(s1)));
+    if (datalen > 2 * 4096) {
+	logit(LOG_INFO, 0, "Ignoring oversized (%d bytes) route report from %s",
+	      datalen, inet_fmt(src, s1, sizeof(s1)));
 	return;
     }
 
-    while (datalen > 0) {	/* Loop through per-mask lists. */
-
+    while (datalen > 0  && nrt < MAX_NUM_RT) { /* Loop through per-mask lists. */
 	if (datalen < 3) {
-	    logit(LOG_WARNING, 0,
-		"received truncated route report from %s", 
-		inet_fmt(src, s1, sizeof(s1)));
+	    logit(LOG_WARNING, 0, "Received truncated route report from %s", 
+		  inet_fmt(src, s1, sizeof(s1)));
 	    return;
 	}
+
 	((u_char *)&mask)[0] = 0xff;            width = 1;
 	if ((((u_char *)&mask)[1] = *p++) != 0) width = 2;
 	if ((((u_char *)&mask)[2] = *p++) != 0) width = 3;
 	if ((((u_char *)&mask)[3] = *p++) != 0) width = 4;
 	if (!inet_valid_mask(ntohl(mask))) {
-	    logit(LOG_WARNING, 0,
-		"%s reports bogus netmask 0x%08x (%s)",
-		inet_fmt(src, s1, sizeof(s1)), ntohl(mask), inet_fmt(mask, s2, sizeof(s2)));
+	    logit(LOG_WARNING, 0, "%s reports bogus netmask 0x%08x (%s)",
+		  inet_fmt(src, s1, sizeof(s1)), ntohl(mask), inet_fmt(mask, s2, sizeof(s2)));
 	    return;
 	}
 	datalen -= 3;
 
 	do {			/* Loop through (origin, metric) pairs */
 	    if (datalen < width + 1) {
-		logit(LOG_WARNING, 0,
-		    "received truncated route report from %s", 
-		    inet_fmt(src, s1, sizeof(s1)));
+		logit(LOG_WARNING, 0, "Received truncated route report from %s", 
+		      inet_fmt(src, s1, sizeof(s1)));
 		return;
 	    }
 	    origin = 0;
@@ -1036,20 +1057,23 @@ accept_report(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level)
 	    rt[nrt].origin = origin;
 	    rt[nrt].metric = (metric & 0x7f);
 	    ++nrt;
-	} while (!(metric & 0x80));
+	} while (!(metric & 0x80) && nrt < MAX_NUM_RT);
     }
 
-    qsort((char*)rt, nrt, sizeof(rt[0]), compare_rts);
+    qsort((char *)rt, nrt, sizeof(rt[0]), compare_rts);
     start_route_updates();
+
     /*
      * If the last entry is default, change mask from 0xff000000 to 0
      */
     if (nrt > 0 && rt[nrt - 1].origin == 0)
 	rt[nrt - 1].mask = 0;
 
-    IF_DEBUG(DEBUG_ROUTE)
-    logit(LOG_DEBUG, 0, "Updating %d routes from %s to %s", nrt,
-		inet_fmt(src, s1, sizeof(s1)), inet_fmt(dst, s2, sizeof(s2)));
+    IF_DEBUG(DEBUG_ROUTE) {
+	logit(LOG_DEBUG, 0, "Updating %d routes from %s to %s", nrt,
+	      inet_fmt(src, s1, sizeof(s1)), inet_fmt(dst, s2, sizeof(s2)));
+    }
+
     for (i = 0; i < nrt; ++i) {
 	if (i > 0 && rt[i].origin == rt[i - 1].origin && rt[i].mask == rt[i - 1].mask) {
 	    logit(LOG_WARNING, 0, "%s reports duplicate route for %s",
@@ -1063,36 +1087,34 @@ accept_report(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level)
 
 	    for (vfe = uvifs[vifi].uv_filter->vf_filter; vfe; vfe = vfe->vfe_next) {
 		if (vfe->vfe_flags & VFEF_EXACT) {
-		    if ((vfe->vfe_addr == rt[i].origin) &&
-			(vfe->vfe_mask == rt[i].mask)) {
-			    match = 1;
-			    break;
+		    if ((vfe->vfe_addr == rt[i].origin) && (vfe->vfe_mask == rt[i].mask)) {
+			match = 1;
+			break;
 		    }
 		} else {
 		    if ((rt[i].origin & vfe->vfe_mask) == vfe->vfe_addr) {
-			    match = 1;
-			    break;
+			match = 1;
+			break;
 		    }
 		}
 	    }
 	    if ((uvifs[vifi].uv_filter->vf_type == VFT_ACCEPT && match == 0) ||
 		(uvifs[vifi].uv_filter->vf_type == VFT_DENY && match == 1)) {
-		    IF_DEBUG(DEBUG_ROUTE)
+		IF_DEBUG(DEBUG_ROUTE) {
 		    logit(LOG_DEBUG, 0, "%s skipped on vif %d because it %s %s",
-			inet_fmts(rt[i].origin, rt[i].mask, s1, sizeof(s1)),
-			vifi,
-			match ? "matches" : "doesn't match",
-			match ? inet_fmts(vfe->vfe_addr, vfe->vfe_mask, s2, sizeof(s2)) :
-				"the filter");
+			  inet_fmts(rt[i].origin, rt[i].mask, s1, sizeof(s1)),
+			  vifi, match ? "matches" : "doesn't match",
+			  match ? inet_fmts(vfe->vfe_addr, vfe->vfe_mask, s2, sizeof(s2))
+			  : "the filter");
+		}
 #if 0
-		    rt[i].metric += vfe->vfe_addmetric;
-		    if (rt[i].metric > UNREACHABLE)
+		rt[i].metric += vfe->vfe_addmetric;
+		if (rt[i].metric > UNREACHABLE)
 #endif
-			rt[i].metric = UNREACHABLE;
+		    rt[i].metric = UNREACHABLE;
 	    }
 	}
-	update_route(rt[i].origin, rt[i].mask, rt[i].metric, 
-		     src, vifi, nbr);
+	update_route(rt[i].origin, rt[i].mask, rt[i].metric, src, vifi, nbr);
     }
 
     if (routes_changed && !delay_change_reports)
@@ -1220,14 +1242,14 @@ static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi,
 	    }
 	    if ((v->uv_filter->vf_type == VFT_ACCEPT && match == 0) ||
 		(v->uv_filter->vf_type == VFT_DENY && match == 1)) {
-		    IF_DEBUG(DEBUG_ROUTE)
+		IF_DEBUG(DEBUG_ROUTE) {
 		    logit(LOG_DEBUG, 0, "%s not reported on vif %d because it %s %s",
-			RT_FMT(r, s1), vifi,
-			match ? "matches" : "doesn't match",
-			match ? inet_fmts(vfe->vfe_addr, vfe->vfe_mask, s2, sizeof(s2)) :
-				"the filter");
-		    nrt++;
-		    continue;
+			  RT_FMT(r, s1), vifi, match ? "matches" : "doesn't match",
+			  match ? inet_fmts(vfe->vfe_addr, vfe->vfe_mask, s2, sizeof(s2))
+			  : "the filter");
+		}
+		nrt++;
+		continue;
 	    }
 	}
 
@@ -1235,12 +1257,13 @@ static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi,
 	 * If there is no room for this route in the current message,
 	 * send it & return how many routes we sent.
 	 */
-	if (datalen + ((r->rt_originmask == mask) ?
-		       (width + 1) :
-		       (r->rt_originwidth + 4)) > MAX_DVMRP_DATA_LEN) {
+	if (datalen + ((r->rt_originmask == mask)
+		       ? (width + 1)
+		       : (r->rt_originwidth + 4)) > MAX_DVMRP_DATA_LEN) {
 	    *(p-1) |= 0x80;
 	    send_on_vif(v, 0, DVMRP_REPORT, datalen);
-	    return (nrt);
+
+	    return nrt;
 	}
 
 	if (r->rt_originmask != mask || datalen == 0) {
@@ -1258,11 +1281,13 @@ static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi,
 	metric = r->rt_metric + admetric;
 	if (metric > UNREACHABLE)
 	    metric = UNREACHABLE;
+
 	if (r->rt_parent != vifi && AVOID_TRANSIT(vifi, r))
 	    metric = UNREACHABLE;
-	*p++ = (r->rt_parent == vifi && metric != UNREACHABLE) ?
-	    (char)(metric + UNREACHABLE) :  /* "poisoned reverse" */
-	    (char)(metric);
+
+	*p++ = (r->rt_parent == vifi && metric != UNREACHABLE)
+	    ? (char)(metric + UNREACHABLE) /* "poisoned reverse" */
+	    : (char)(metric);
 	++nrt;
 	datalen += width + 1;
     }
@@ -1271,7 +1296,7 @@ static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi,
 	send_on_vif(v, 0, DVMRP_REPORT, datalen);
     }
 
-    return (nrt);
+    return nrt;
 }
 
 /*
@@ -1287,7 +1312,7 @@ int report_next_chunk(void)
     static int start_rt;
 
     if (nroutes <= 0)
-	return (0);
+	return 0;
 
     /*
      * find this round's starting route.
@@ -1313,12 +1338,14 @@ int report_next_chunk(void)
 	min = 0;	/* Neighborless router didn't send any routes */
 
     n = min;
-    IF_DEBUG(DEBUG_ROUTE)
-    logit(LOG_INFO, 0, "update %d starting at %d of %d",
-	n, (nroutes - start_rt), nroutes);
+    IF_DEBUG(DEBUG_ROUTE) {
+	logit(LOG_INFO, 0, "update %d starting at %d of %d",
+	      n, (nroutes - start_rt), nroutes);
+    }
 
     start_rt = (start_rt + n) % nroutes;
-    return (n);
+
+    return n;
 }
 
 
@@ -1330,13 +1357,10 @@ void dump_routes(FILE *fp)
     struct rtentry *r;
     vifi_t i;
 
-    fprintf(fp,
-	    "Multicast Routing Table (%u %s)\n%s\n",
-	    nroutes, (nroutes == 1) ? "entry" : "entries",
-	    " Origin-Subnet      From-Gateway    Metric Tmr Fl In-Vif  Out-Vifs");
+    fprintf(fp, "Multicast Routing Table (%u entr%s)\n", nroutes, nroutes == 1 ? "y" : "ies");
+    fputs(" Origin-Subnet      From-Gateway    Metric Tmr Fl In-Vif  Out-Vifs\n", fp);
 
-    for (r = routing_table; r != NULL; r = r->rt_next) {
-
+    for (r = routing_table; r; r = r->rt_next) {
 	fprintf(fp, " %-18s %-15s ",
 		inet_fmts(r->rt_origin, r->rt_originmask, s1, sizeof(s1)),
 		(r->rt_gateway == 0) ? "" : inet_fmt(r->rt_gateway, s2, sizeof(s2)));
@@ -1358,15 +1382,18 @@ void dump_routes(FILE *fp)
 		    !NBRM_ISSETMASK(uvifs[i].uv_nbrmap, r->rt_subordinates))
 			/* Don't print out parenthood of a leaf tunnel. */
 			continue;
+
 		fprintf(fp, " %u", i);
 		if (!NBRM_ISSETMASK(uvifs[i].uv_nbrmap, r->rt_subordinates))
 		    fprintf(fp, "*");
+
 		for (n = uvifs[i].uv_neighbors; n; n = n->al_next) {
 		    if (NBRM_ISSET(n->al_index, r->rt_subordinates)) {
 			fprintf(fp, "%c%d", l, n->al_index);
 			l = ',';
 		    }
 		}
+
 		if (l == ',')
 		    fprintf(fp, "]");
 	    }
@@ -1385,6 +1412,7 @@ struct rtentry *determine_route(u_int32 src)
 	    rt->rt_metric != UNREACHABLE) 
 	    break;
     }
+
     return rt;
 }
 
