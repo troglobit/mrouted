@@ -60,8 +60,10 @@ void age_callout_queue(int elapsed_time)
 	} else {
 	    elapsed_time -= ptr->time;
 	    Q = Q->next;
-	    IF_DEBUG(DEBUG_TIMEOUT)
-	    logit(LOG_DEBUG, 0, "about to call timeout %d (#%d)", ptr->id, i);
+	    IF_DEBUG(DEBUG_TIMEOUT) {
+		logit(LOG_DEBUG, 0, "about to call timeout %d (#%d)", ptr->id, i);
+	    }
+
 	    if (ptr->func)
 		ptr->func(ptr->data);
 	    free(ptr);
@@ -77,12 +79,13 @@ int timer_nextTimer(void)
 {
     if (Q) {
 	if (Q->time < 0) {
-	    logit(LOG_WARNING, 0, "timer_nextTimer top of queue says %d",
-			Q->time);
+	    logit(LOG_WARNING, 0, "timer_nextTimer top of queue says %d", Q->time);
 	    return 0;
 	}
+
 	return Q->time;
     }
+
     return -1;
 }
 
@@ -99,10 +102,11 @@ int timer_setTimer(int delay, cfunc_t action, void *data)
 
     /* create a node */
     node = (struct timeout_q *)malloc(sizeof(struct timeout_q));
-    if (node == 0) {
-	logit(LOG_WARNING, 0, "Malloc Failed in timer_settimer\n");
+    if (!node) {
+	logit(LOG_WARNING, 0, "Malloc failed in timer_setTimer()\n");
 	return -1;
     }
+
     node->func = action;
     node->data = data;
     node->time = delay;
@@ -129,9 +133,12 @@ int timer_setTimer(int delay, cfunc_t action, void *data)
 		else
 		    prev->next = node;
 		ptr->time -= node->time;
+
 		print_Q();
-		IF_DEBUG(DEBUG_TIMEOUT)
-		logit(LOG_DEBUG, 0, "created timeout %d (#%d)", node->id, i);
+		IF_DEBUG(DEBUG_TIMEOUT) {
+		    logit(LOG_DEBUG, 0, "created timeout %d (#%d)", node->id, i);
+		}
+
 		return node->id;
 	    } else  {
 		/* keep moving */
@@ -144,9 +151,12 @@ int timer_setTimer(int delay, cfunc_t action, void *data)
 	}
 	prev->next = node;
     }
+
     print_Q();
-    IF_DEBUG(DEBUG_TIMEOUT)
-    logit(LOG_DEBUG, 0, "created timeout %d (#%d)", node->id, i);
+    IF_DEBUG(DEBUG_TIMEOUT) {
+	logit(LOG_DEBUG, 0, "created timeout %d (#%d)", node->id, i);
+    }
+
     return node->id;
 }
 
@@ -164,6 +174,7 @@ int timer_leftTimer(int timer_id)
 	if (ptr->id == timer_id)
 	    return left;
     }
+
     return -1;
 }
 
@@ -200,19 +211,26 @@ int timer_clearTimer(int timer_id)
 
 	    if (ptr->data)
 		free(ptr->data);
-	    IF_DEBUG(DEBUG_TIMEOUT)
-	    logit(LOG_DEBUG, 0, "deleted timer %d (#%d)", ptr->id, i);
+
+	    IF_DEBUG(DEBUG_TIMEOUT) {
+		logit(LOG_DEBUG, 0, "deleted timer %d (#%d)", ptr->id, i);
+	    }
 	    free(ptr);
+
 	    print_Q();
+
 	    return 1;
 	}
 	prev = ptr;
 	ptr = ptr->next;
 	i++;
     }
-    IF_DEBUG(DEBUG_TIMEOUT)
-    logit(LOG_DEBUG, 0, "failed to delete timer %d (#%d)", timer_id, i);
+
     print_Q();
+    IF_DEBUG(DEBUG_TIMEOUT) {
+	logit(LOG_DEBUG, 0, "failed to delete timer %d (#%d)", timer_id, i);
+    }
+
     return 0;
 }
 
@@ -224,9 +242,10 @@ static void print_Q(void)
 {
     struct timeout_q  *ptr;
 
-    IF_DEBUG(DEBUG_TIMEOUT)
+    IF_DEBUG(DEBUG_TIMEOUT) {
 	for (ptr = Q; ptr; ptr = ptr->next)
 	    logit(LOG_DEBUG, 0, "(%d,%d) ", ptr->id, ptr->time);
+    }
 }
 #endif /* IGMP_DEBUG */
 
