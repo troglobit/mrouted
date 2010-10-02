@@ -3,7 +3,7 @@
 #
 
 # VERSION       ?= $(shell git tag -l | tail -1)
-VERSION      ?= 3.9.3-rc1
+VERSION      ?= 3.9.3-rc2
 NAME          = mrouted
 CONFIG        = $(NAME).conf
 EXECS         = mrouted map-mbone mrinfo mtrace

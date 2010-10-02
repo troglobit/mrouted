@@ -1,4 +1,33 @@
 =============
+Release 3.9.3
+October nn, 2010
+
+  o Fix NULL pointer dereference in conf file parser.  Problem will arise for all
+  interfaces that at one point might not have an address.
+
+  Reported by Dan Kruchinin <dkruchinin@acm.org>
+
+  o Fix problem with running the tunnel directive on OpenVPN, PPTP, L2TP tunnels as
+  well as PPP links.  All of which use a 255.255.255.255 netmask on their interfaces.
+
+  See http://openvpn.net/archive/openvpn-users/2004-04/msg00003.html for original
+  problem report.
+
+  Fix contributed by Dan Kruchinin <dkruchinin@acm.org>
+
+  o route.c:accept_probe(): Fix missing check of malloc() return value.
+
+  o vif.c:SetTimer(): Dito.
+
+  o route.c:accept_report(): Fix potential stack overflow issue.  Also added checks
+  to prevent overstepping array boudaries in local rt[] array when parsing route
+  report messages.
+
+  o Update mrouted.8 with --long-options, missing sections and improve debug help.
+
+  o Cleanup Makefile for use with BSD PMake as well as GNU Make.
+
+=============
 Release 3.9.2
 August 16, 2010
 
