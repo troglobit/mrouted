@@ -21,9 +21,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
-#ifdef SYSV
+#if ((defined(SYSV)) || (defined(__bsdi__)) || ((defined SunOS) && (SunOS < 50)))
 #include <sys/sockio.h>
-#endif
+#endif /* SYSV || bsdi || SunOS 4.x */
 #include <time.h>
 #include <sys/time.h>
 #include <sys/uio.h>
@@ -33,10 +33,10 @@
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
 #include <netinet/igmp.h>
-#ifdef __FreeBSD__      /* sigh */
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #include <osreldate.h>
 #endif /* __FreeBSD__ */
-#if (defined(__bsdi__)) || (defined(__FreeBSD__) && (__FreeBSD_version >= 220000))
+#if (defined(__bsdi__)) || (defined(__FreeBSD__) && (__FreeBSD_version >= 220000)) || defined(__FreeBSD_kernel__)
 #define rtentry kernel_rtentry
 #include <net/route.h>
 #undef rtentry
@@ -55,7 +55,11 @@
 #include <stdlib.h>
 #endif
 #if defined(HAVE_PIDFILE)
+#if defined(OpenBSD) || defined(NetBSD)
 #include <util.h>
+#else
+#include <libutil.h>
+#endif
 #endif
 #ifdef RSRR
 #include <sys/un.h>
