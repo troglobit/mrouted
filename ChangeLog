@@ -1,9 +1,9 @@
 mrouted | Change Log
 
-* Release 3.9.3: October nn, 2010
+* Release 3.9.3: October 11, 2010
 
 ** Changes & New Features
-  - Update mrouted.8 with =--long-options=, missing sections and improve debug help.
+  - Update man page with =--long-options=, missing sections and improve debug help.
 
   - Cleanup Makefile for use with BSD PMake as well as GNU Make.
 
