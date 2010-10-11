@@ -27,7 +27,7 @@ mrouted | Change Log
   - ~vif.c:SetTimer()~: Dito.
 
   - ~route.c:accept_report()~: Fix potential stack overflow issue.  Also added checks
-    to prevent overstepping array boudaries in local ~rt[]~ array when parsing route
+    to prevent overstepping array boundaries in local ~rt[]~ array when parsing route
     report messages.
 
 * Release 3.9.2: August 16, 2010
