@@ -120,12 +120,12 @@ clean: $(SNMPCLEAN)
 	-@$(RM) $(OBJS) $(EXECS)
 
 distclean:
-	-@$(RM) $(OBJS) core $(EXECS) vers.c cfparse.c tags TAGS *.o *.map .*.d *.out tags TAGS
+	-@$(RM) $(OBJS) core $(EXECS) vers.c cfparse.c *.o *.map .*.d *.out tags TAGS
 
 dist:
 	@echo "Building bzip2 tarball of $(PKG) in parent dir..."
 	git archive --format=tar --prefix=$(PKG)/ $(VERSION) | bzip2 >../$(ARCHIVE)
-	@(cd ..; md5sum $(ARCHIVE))
+	@(cd ..; md5sum $(ARCHIVE) | tee $(ARCHIVE).md5)
 
 build-deb:
 	git-buildpackage --git-ignore-new --git-upstream-branch=master
