@@ -354,7 +354,7 @@ extern void		k_leave(u_int32, u_int32);
 extern void		k_init_dvmrp(void);
 extern void		k_stop_dvmrp(void);
 extern void		k_add_vif(vifi_t, struct uvif *);
-extern void		k_del_vif(vifi_t);
+extern void		k_del_vif(vifi_t, struct uvif *);
 extern void		k_add_rg(u_int32, struct gtable *);
 extern int		k_del_rg(u_int32, struct gtable *);
 extern int		k_get_version(void);

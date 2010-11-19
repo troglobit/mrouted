@@ -461,7 +461,7 @@ static void stop_vif(vifi_t vifi)
     /*
      * Delete the interface from the kernel's vif structure.
      */
-    k_del_vif(vifi);
+    k_del_vif(vifi, v);
 
     /*
      * Discard all neighbor addresses.

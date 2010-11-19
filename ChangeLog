@@ -1,5 +1,23 @@
 mrouted | Change Log
 
+* Release 3.9.4: November 19, 2010
+
+** Bug Fixes
+  - ~kern.c:k_del_vif()~ does not work properly in Linux.
+
+    When some interface (known by mrouted) goes down, mrouted tries to remove
+    related VIF by calling ~stop_vif()~, which in turn calls ~k_del_vif()~.  After
+    ~k_del_vif()~ is called, mrouted exits with the following error:
+
+    setsockopt ~MRT_DEL_VIF~ on vif 3: Invalid argument
+
+    The reason for this is due to differences in the Linux and *BSD ~MRT_DEL_VIF~
+    API.  The Linux kernel expects to receive a ~struct vifctl~ associated with the
+    VIF to be deleted, *BSD systems on the other hand expect to receive the index
+    of that VIF.
+
+    Fix contributed by Dan Kruchinin <mailto:dkruchinin@acm.org>
+
 * Release 3.9.3: October 11, 2010
 
 ** Changes & New Features
@@ -344,11 +362,10 @@ following bugs.
 
   - System V and FreeBSD compatibility from John Brezak <mailto:brezak@ch.hp.com>
 
-  - phyint's can have additional subnets configured, for people with
-    multiple subnets on one physical network.  mrouted.conf syntax is
-    altnet 1.2.3.0, or altnet 1.2.3.0/24 if you need to specify
-    a different netmask.  There can be as many altnet statements
-    as you need.
+  - phyint's can have additional subnets configured, for people with multiple
+    subnets on one physical network.  mrouted.conf syntax is altnet 1.2.3.0,
+    or altnet 1.2.3.0/24 if you need to specify a different netmask.  There
+    can be as many altnet statements as you need.
 
   - both mrouted and the kernel now support classless addresses.
 
@@ -359,13 +376,16 @@ following bugs.
     support SNMP and the Multicast MIB
 
   - the packet classifier in the kernel now uses the following udp port
-    ranges:
-      [0, 16384) - lowest priority, unclassified
-      [16384, 32768) - highest priority, i.e. audio
-      [32768, 49152) - medium priority, i.e. whiteboard
-      [49152, 65536) - low priority, i.e. video
-    A future release of a session directory will allocate ports in these
-    ranges.
+    ranges.  A future release of a session directory will allocate ports in
+    these ranges:
+
+    - ~[0, 16384)~: lowest priority, unclassified
+
+    - ~[16384, 32768)~: highest priority, i.e. audio
+
+    - ~[32768, 49152)~: medium priority, i.e. whiteboard
+
+    - ~[49152, 65536)~: low priority, i.e. video
 
   - the configuration code has been modified to default tunnels' ~rate_limit~
     parameters to 500kbps.  This is easily modified with a ~rate_limit~ keyword
@@ -387,11 +407,11 @@ following bugs.
 
 ** Bug Fixes
 
-  - The IGMPv2 query timeout field was interpreted as being in units of
-    200ms as opposed to 100ms, thus the maximum timeout was set to twice
-    the expected value.  This is not fatal, as mrouted always queries
-    twice in the expectation that a packet could get loss, but it does
-    make it less robust in the face of packet loss.
+  - The IGMPv2 query timeout field was interpreted as being in units of 200ms
+    as opposed to 100ms, thus the maximum timeout was set to twice the
+    expected value.  This is not fatal, as mrouted always queries twice in the
+    expectation that a packet could get loss, but it does make it less robust
+    in the face of packet loss.
 
   - IGMP could report membership in local-only groups (i.e. 224.0.0.X)
 

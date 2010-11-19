@@ -177,21 +177,27 @@ void k_leave(u_int32 grp, u_int32 ifa)
 	      inet_fmt(grp, s1, sizeof(s1)), inet_fmt(ifa, s2, sizeof(s2)));
 }
 
+/*
+ * Fill struct vifctl using corresponding fields from struct uvif.
+ */
+static void uvif_to_vifctl(struct vifctl *vc, struct uvif *v)
+{
+    vc->vifc_flags           = v->uv_flags & VIFF_KERNEL_FLAGS;
+    vc->vifc_threshold       = v->uv_threshold;
+    vc->vifc_rate_limit	     = v->uv_rate_limit;
+    vc->vifc_lcl_addr.s_addr = v->uv_lcl_addr;
+    vc->vifc_rmt_addr.s_addr = v->uv_rmt_addr;
+}
 
 /*
  * Add a virtual interface in the kernel.
  */
-void k_add_vif(vifi_t vifi, struct uvif *v)
+void k_add_vif(vifi_t vifi, struct uvif UNUSED *v)
 {
     struct vifctl vc;
 
-    vc.vifc_vifi            = vifi;
-    vc.vifc_flags           = v->uv_flags & VIFF_KERNEL_FLAGS;
-    vc.vifc_threshold       = v->uv_threshold;
-    vc.vifc_rate_limit	    = v->uv_rate_limit;
-    vc.vifc_lcl_addr.s_addr = v->uv_lcl_addr;
-    vc.vifc_rmt_addr.s_addr = v->uv_rmt_addr;
-
+    vc.vifc_vifi = vifi;
+    uvif_to_vifctl(&vc, v);
     if (setsockopt(igmp_socket, IPPROTO_IP, MRT_ADD_VIF, (char *)&vc, sizeof(vc)) < 0)
 	logit(LOG_ERR, errno, "setsockopt MRT_ADD_VIF on vif %d", vifi);
 }
@@ -200,11 +206,28 @@ void k_add_vif(vifi_t vifi, struct uvif *v)
 /*
  * Delete a virtual interface in the kernel.
  */
-void k_del_vif(vifi_t vifi)
+void k_del_vif(vifi_t vifi, struct uvif *v)
 {
-    if (setsockopt(igmp_socket, IPPROTO_IP, MRT_DEL_VIF, (char *)&vifi, sizeof(vifi)) < 0) {
+    /*
+     * Unfortunately Linux setsocopt MRT_DEL_VIF API differs a bit from the *BSD one.
+     * It expects to receive a pointer to struct vifctl that corresponds to the VIF
+     * we're going to delete.  *BSD systems on the other hand exepect only the index
+     * of that VIF.
+     */
+#ifdef __linux__
+    struct vifctl vc;
+
+    vc.vifc_vifi = vifi;
+    uvif_to_vifctl(&vc, v);
+
+    if (setsockopt(igmp_socket, IPPROTO_IP, MRT_DEL_VIF, (char *)&vc, sizeof(vc)) < 0)
+#else /* *BSD et al. */
+    if (setsockopt(igmp_socket, IPPROTO_IP, MRT_DEL_VIF, (char *)&vifi, sizeof(vifi)) < 0)
+#endif /* !__linux__ */
+    {
         if (errno == EADDRNOTAVAIL || errno == EINVAL)
             return;
+
 	logit(LOG_ERR, errno, "setsockopt MRT_DEL_VIF on vif %d", vifi);
     }
 }

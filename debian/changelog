@@ -1,3 +1,10 @@
+mrouted (3.9.4-1) unstable; urgency=low
+
+  * New upstream release.
+  * Fix: mrouted exits with error when trying to remove interface gone down.
+
+ -- Joachim Nilsson <troglobit@vmlinux.org>  Sun,  3 Oct 2010 01:42:00 +0100
+
 mrouted (3.9.3-1) unstable; urgency=low
 
   * New upstream release.
