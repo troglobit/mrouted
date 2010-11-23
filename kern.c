@@ -192,7 +192,7 @@ static void uvif_to_vifctl(struct vifctl *vc, struct uvif *v)
 /*
  * Add a virtual interface in the kernel.
  */
-void k_add_vif(vifi_t vifi, struct uvif UNUSED *v)
+void k_add_vif(vifi_t vifi, struct uvif *v)
 {
     struct vifctl vc;
 
