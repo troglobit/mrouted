@@ -112,11 +112,11 @@ void init_vifs(void)
 	    if (!(v->uv_flags & VIFF_DOWN)) {
 		if (v->uv_flags & VIFF_TUNNEL)
 		    logit(LOG_INFO, 0, "vif #%d, tunnel %s -> %s", vifi,
-				inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)),
-				inet_fmt(v->uv_rmt_addr, s2, sizeof(s2)));
+			  inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)),
+			  inet_fmt(v->uv_rmt_addr, s2, sizeof(s2)));
 		else
 		    logit(LOG_INFO, 0, "vif #%d, phyint %s", vifi,
-				inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)));
+			  inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)));
 		start_vif2(vifi);
 	    } else logit(LOG_INFO, 0,
 		     "%s is not yet up; vif #%u not in service",
@@ -129,10 +129,7 @@ void init_vifs(void)
  * Initialize the passed vif with all appropriate default values.
  * "t" is true if a tunnel, or false if a phyint.
  */
-void
-zero_vif(v, t)
-    struct uvif *v;
-    int t;
+void zero_vif(struct uvif *v, int t)
 {
     v->uv_flags		= 0;
     v->uv_metric	= DEFAULT_METRIC;
