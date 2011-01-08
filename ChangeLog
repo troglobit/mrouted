@@ -1,6 +1,17 @@
 #+TITLE:    mrouted | Change Log
 #+AUTHOR:    Steve Deering, Ajit Thyagarajan, Bill Fenner
 
+* Release 3.9.5: January 8, 2011
+** Changes & New Features
+  - The location of the dump file(s) have been moved from /var/tmp to /var/lib/misc
+    due to the insecure nature of /var/tmp.  See more below.
+
+** Bug Fixes
+  - Ported from pimd after CVE-2011-0007: Insecure file creation in /var/tmp.
+    "On USR1, pimd will write to /var/tmp/pimd.dump a dump of the multicast route
+    table. Since /var/tmp is writable by any user, a user can create a symlink to any
+    file he wants to destroy with the content of the multicast routing table."
+
 * Release 3.9.4: November 19, 2010
 
 ** Bug Fixes

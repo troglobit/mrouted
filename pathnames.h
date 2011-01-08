@@ -10,15 +10,8 @@
 #define __MROUTED_PATHNAMES_H__
 
 #define _PATH_MROUTED_CONF	"/etc/mrouted.conf"
-
-#if (defined(BSD) && (BSD >= 199103)) || defined(__linux__)
 #define _PATH_MROUTED_GENID	"/var/run/mrouted.genid"
-#define _PATH_MROUTED_DUMP	"/var/tmp/mrouted.dump"
-#define _PATH_MROUTED_CACHE	"/var/tmp/mrouted.cache"
-#else  /* Really old system ... */
-#define _PATH_MROUTED_GENID	"/etc/mrouted.genid"
-#define _PATH_MROUTED_DUMP	"/usr/tmp/mrouted.dump"
-#define _PATH_MROUTED_CACHE	"/usr/tmp/mrouted.cache"
-#endif
+#define _PATH_MROUTED_DUMP	"/var/lib/misc/mrouted.dump"
+#define _PATH_MROUTED_CACHE	"/var/lib/misc/mrouted.cache"
 
 #endif /* __MROUTED_PATHNAMES_H__ */
