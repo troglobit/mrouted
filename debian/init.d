@@ -1,5 +1,4 @@
 #! /bin/sh
-#
 ### BEGIN INIT INFO
 # Provides:          mrouted
 # Required-Start:    $remote_fs $syslog
@@ -7,17 +6,15 @@
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 ### END INIT INFO
-#
-# Written by Miquel van Smoorenburg <miquels@cistron.nl>.
-# Modified for Debian GNU/Linux by Ian Murdock <imurdock@gnu.org>.
-# Modified for Debian by Christoph Lameter <clameter@debian.org>
 
-PATH=/bin:/usr/bin:/sbin:/usr/sbin
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/sbin/mrouted
 NAME=mrouted
 DESC=mrouted
 
-test -f $DAEMON || exit 0
+test -x $DAEMON || exit 0
+
+set -e
 
 case "$1" in
         start)
@@ -29,7 +26,7 @@ case "$1" in
                 ;;
         stop)
                 echo -n "Stopping $DESC: "
-                start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid \
+                start-stop-daemon --stop --quiet --oknodo --pidfile /var/run/$NAME.pid \
                         --exec $DAEMON
                 echo "$NAME."
                 ;;
@@ -51,7 +48,7 @@ case "$1" in
                 ;;
         *)
                 N=/etc/init.d/$NAME
-                echo "Usage: $N {start|stop|restart|reload|force-reload}"
+                echo "Usage: $N {start|stop|restart|reload|force-reload}" >&2
                 exit 1
                 ;;
 esac
