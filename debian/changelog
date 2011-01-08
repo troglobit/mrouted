@@ -1,3 +1,10 @@
+mrouted (3.9.5-1) unstable; urgency=low
+
+  * New upstream release.
+  * Fix: Insecure file creation in /var/tmp, files now in /var/lib/misc
+
+ -- Joachim Nilsson <troglobit@vmlinux.org>  Sun,  9 Jan 2011 00:30:00 +0100
+
 mrouted (3.9.4-1) unstable; urgency=low
 
   * New upstream release.
