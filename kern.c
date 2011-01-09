@@ -206,7 +206,7 @@ void k_add_vif(vifi_t vifi, struct uvif *v)
 /*
  * Delete a virtual interface in the kernel.
  */
-void k_del_vif(vifi_t vifi, struct uvif *v)
+void k_del_vif(vifi_t vifi, struct uvif UNUSED *v)
 {
     /*
      * Unfortunately Linux setsocopt MRT_DEL_VIF API differs a bit from the *BSD one.
