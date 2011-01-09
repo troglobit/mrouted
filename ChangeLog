@@ -6,6 +6,8 @@
   - The location of the dump file(s) have been moved from /var/tmp to /var/lib/misc
     due to the insecure nature of /var/tmp.  See more below.
 
+  - Add -r,--show-routes which sends SIGUSR1 to a running daemon.
+
 ** Bug Fixes
   - Ported from pimd after CVE-2011-0007: Insecure file creation in /var/tmp.
     "On USR1, pimd will write to /var/tmp/pimd.dump a dump of the multicast route

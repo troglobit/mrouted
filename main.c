@@ -19,6 +19,7 @@
 #include "defs.h"
 #include <err.h>
 #include <getopt.h>
+#include <paths.h>
 #include <fcntl.h>
 #include <stdarg.h>
 
@@ -147,6 +148,51 @@ static void do_randomize(void)
 #endif
 }
 
+/* Figure out the PID of a running daemon. */
+static pid_t daemon_pid(void)
+{
+    int result;
+    char *path = NULL;
+    FILE *fp;
+    pid_t pid = -1;
+
+    result = asprintf(&path, "%s%s.pid", _PATH_VARRUN, __progname);
+    if (result == -1 || path == NULL)
+	return -1;
+
+    fp = fopen(path, "r");
+    if (!fp) {
+	free(path);
+	return -1;
+    }
+
+    result = fscanf(fp, "%d", &pid);
+    fclose(fp);
+    free(path);
+
+    return pid;
+}
+
+/* Send signal to running daemon and the show resulting file. */
+static void killshow(int signo, char *file)
+{
+    pid_t pid = daemon_pid();
+    char buf[100];
+
+    if (pid > 0) {
+	if (file)
+	    remove(file);
+	kill(pid, signo);
+	if (file) {
+	    int result;
+
+	    usleep(200);
+	    snprintf(buf, sizeof(buf), "cat %s", file);
+	    result = system(buf);
+	}
+    }
+}
+
 static void usage(void)
 {
     size_t i, j, k;
@@ -158,6 +204,7 @@ static void usage(void)
     fputs("  -f, --foreground     Run in foreground, do not detach from calling terminal\n", stderr);
     fputs("  -h, --help           Show this help text\n", stderr);
     fputs("  -p                   Disable pruning.  Deprecated, compatibility option\n", stderr);
+    fputs("  -r, --show-routes    Show state of VIFs and multicast routing tables\n", stderr);
     fprintf(stderr, "  -v, --version        Show %s version\n", __progname);
     fputs("\n", stderr);
 
@@ -204,12 +251,13 @@ int main(int argc, char *argv[])
 	{"foreground", 0, 0, 'f'},
 	{"help", 0, 0, 'h'},
 	{"version", 0, 0, 'v'},
+	{"show-routes", 0, 0, 'r'},
 	{0, 0, 0, 0}
     };
 
     snprintf(versionstring, sizeof(versionstring), "mrouted version %s", todaysversion);
 
-    while ((ch = getopt_long(argc, argv, "c:d::fhpP::v", long_options, NULL)) != EOF) {
+    while ((ch = getopt_long(argc, argv, "c:d::fhpP::rv", long_options, NULL)) != EOF) {
 	switch (ch) {
 	    case 'c':
 		configfilename = optarg;
@@ -270,6 +318,10 @@ int main(int argc, char *argv[])
 		warnx("SNMP support missing, please feel free to submit a patch.");
 #endif
 		break;
+
+	    case 'r':
+		killshow(SIGUSR1, _PATH_MROUTED_DUMP);
+		return 0;
 
 	    case 'v':
 		printf("%s\n", versionstring);
@@ -449,7 +501,7 @@ int main(int argc, char *argv[])
 #endif
     }
 
-    if (pidfile (NULL)) {
+    if (pidfile(NULL)) {
 	warn("Cannot create pidfile");
     }
 
