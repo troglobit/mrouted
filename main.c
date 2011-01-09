@@ -22,6 +22,7 @@
 #include <paths.h>
 #include <fcntl.h>
 #include <stdarg.h>
+#include <sys/stat.h>
 
 #ifdef SNMP
 #include "snmp.h"
@@ -361,6 +362,14 @@ int main(int argc, char *argv[])
 	fprintf(stderr, ")\n");
     }
 
+    /*
+     * Create directory for runtime files
+     */
+    mkdir(_PATH_MROUTED_RUNDIR, 0755);
+
+    /*
+     * Setup logging
+     */
 #ifdef LOG_DAEMON
     (void)openlog("mrouted", LOG_PID, LOG_DAEMON);
     (void)setlogmask(LOG_UPTO(LOG_NOTICE));

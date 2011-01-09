@@ -359,10 +359,10 @@ good-bye messages to all neighboring routers).
 The same as INT.
 .It USR1
 Dumps the internal routing tables to
-.Pa /var/lib/misc/mrouted.dump .
+.Pa /var/run/mrouted/mrouted.dump .
 .It USR2
 Dumps the internal cache tables to
-.Pa /var/lib/misc/mrouted.cache .
+.Pa /var/run/mrouted/mrouted.cache .
 .It QUIT
 Dumps the internal routing tables to stderr (only if
 .Nm
@@ -375,10 +375,10 @@ writes its process ID to
 .Pa /var/run/mrouted.pid
 upon startup.
 .Sh FILES
-.Bl -tag -width /var/lib/misc/mrouted.cache -compact
+.Bl -tag -width /var/run/mrouted/mrouted.cache -compact
 .It Pa /etc/mrouted.conf
-.It Pa /var/lib/misc/mrouted.cache
-.It Pa /var/lib/misc/mrouted.dump
+.It Pa /var/run/mrouted/mrouted.cache
+.It Pa /var/run/mrouted/mrouted.dump
 .It Pa /var/run/mrouted.pid
 .El
 .Sh EXAMPLES

@@ -10,8 +10,9 @@
 #define __MROUTED_PATHNAMES_H__
 
 #define _PATH_MROUTED_CONF	"/etc/mrouted.conf"
-#define _PATH_MROUTED_GENID	"/var/run/mrouted.genid"
-#define _PATH_MROUTED_DUMP	"/var/lib/misc/mrouted.dump"
-#define _PATH_MROUTED_CACHE	"/var/lib/misc/mrouted.cache"
+#define _PATH_MROUTED_RUNDIR    _PATH_VARRUN "mrouted"
+#define _PATH_MROUTED_GENID	_PATH_MROUTED_RUNDIR "/mrouted.genid"
+#define _PATH_MROUTED_DUMP	_PATH_MROUTED_RUNDIR "/mrouted.dump"
+#define _PATH_MROUTED_CACHE	_PATH_MROUTED_RUNDIR "/mrouted.cache"
 
 #endif /* __MROUTED_PATHNAMES_H__ */
