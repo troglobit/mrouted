@@ -12,7 +12,6 @@
 /*
  * Private macros.
  */
-#define RT_ADDR      (struct rtentry *)&routing_table
 #define MAX_NUM_RT   4096
 
 /*
@@ -52,11 +51,11 @@ static struct rtentry *rt_end;		/* pointer to last route entry      */
 static int  init_children_and_leaves (struct rtentry *r, vifi_t parent, int first);
 static int  find_route               (u_int32 origin, u_int32 mask);
 static void create_route             (u_int32 origin, u_int32 mask);
-static void discard_route            (struct rtentry *prev_r);
+static void discard_route            (struct rtentry *this);
 static int  compare_rts              (const void *rt1, const void *rt2);
 static int  report_chunk             (int, struct rtentry *start_rt, vifi_t vifi, u_int32 dst);
 static void queue_blaster_report     (vifi_t vifi, u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level);
-static void process_blaster_report   (void *);
+static void process_blaster_report   (void *vifip);
 
 #ifdef SNMP
 #include <sys/types.h>
@@ -66,7 +65,7 @@ static void process_blaster_report   (void *);
  * Return pointer to a specific route entry.  This must be a separate
  * function from find_route() which modifies rtp.
  */
-struct rtentry * snmp_find_route(u_int32 src, u_int32 mask)
+struct rtentry *snmp_find_route(u_int32 src, u_int32 mask)
 {
     struct rtentry *rt;
 
@@ -106,7 +105,7 @@ int next_route(struct rtentry **rtpp, u_int32 src, u_int32 mask)
 int next_route_child(struct rtentry **rtpp, u_int32 src, u_int32 mask, vifi_t vifi)
 {
    /* Get (S,M) entry */
-   if (!((*rtpp) = snmp_find_route(src,mask)))
+   if (!((*rtpp) = snmp_find_route(src, mask)))
       if (!next_route(rtpp, src, mask))
          return 0;
 
@@ -116,7 +115,7 @@ int next_route_child(struct rtentry **rtpp, u_int32 src, u_int32 mask, vifi_t vi
          if (VIFM_ISSET(*vifi, (*rtpp)->rt_children))
             return 1;
       *vifi = 0;
-   } while( next_route(rtpp, (*rtpp)->rt_origin, (*rtpp)->rt_originmask) );
+   } while (next_route(rtpp, (*rtpp)->rt_origin, (*rtpp)->rt_originmask));
 
    return 0;
 }
@@ -125,10 +124,10 @@ int next_route_child(struct rtentry **rtpp, u_int32 src, u_int32 mask, vifi_t vi
 /*
  * Initialize the routing table and associated variables.
  */
-void init_routes()
+void init_routes(void)
 {
     routing_table        = NULL;
-    rt_end		 = RT_ADDR;
+    rt_end		 = NULL;
     nroutes		 = 0;
     routes_changed       = FALSE;
     delay_change_reports = FALSE;
@@ -156,7 +155,7 @@ static int init_children_and_leaves(struct rtentry *r, vifi_t parent, int first)
 
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
 	if (first || vifi == parent)
-	    r->rt_dominants   [vifi] = 0;
+	    r->rt_dominants[vifi] = 0;
 	if (vifi == parent || uvifs[vifi].uv_flags & VIFF_NOFLOOD ||
 		AVOID_TRANSIT(vifi, r) || (!first && r->rt_dominants[vifi]))
 	    NBRM_CLRMASK(r->rt_subordinates, uvifs[vifi].uv_nbrmap);
@@ -188,7 +187,7 @@ void add_vif_to_routes(vifi_t vifi)
 	if (r->rt_metric != UNREACHABLE &&
 	    !VIFM_ISSET(vifi, r->rt_children)) {
 	    VIFM_SET(vifi, r->rt_children);
-	    r->rt_dominants   [vifi] = 0;
+	    r->rt_dominants[vifi] = 0;
 	    /*XXX isn't uv_nbrmap going to be empty?*/
 	    NBRM_CLRMASK(r->rt_subordinates, v->uv_nbrmap);
 	    update_table_entry(r, r->rt_gateway);
@@ -299,7 +298,7 @@ void delete_neighbor_from_routes(u_int32 addr, vifi_t vifi, u_int index)
  */
 void start_route_updates(void)
 {
-    rtp = RT_ADDR;
+    rtp = routing_table;
 }
 
 
@@ -316,21 +315,22 @@ static int find_route(u_int32 origin, u_int32 mask)
 {
     struct rtentry *r;
 
-    r = rtp->rt_next;
+    r = rtp;
     while (r != NULL) {
 	if (origin == r->rt_origin && mask == r->rt_originmask) {
 	    rtp = r;
-	    return (TRUE);
+	    return TRUE;
 	}
 	if (ntohl(mask) < ntohl(r->rt_originmask) ||
 	    (mask == r->rt_originmask &&
 	     ntohl(origin) < ntohl(r->rt_origin))) {
 	    rtp = r;
 	    r = r->rt_next;
+	} else {
+	    break;
 	}
-	else break;
     }
-    return (FALSE);
+    return FALSE;
 }
 
 /*
@@ -345,62 +345,92 @@ static int find_route(u_int32 origin, u_int32 mask)
 static void create_route(u_int32 origin, u_int32 mask)
 {
     size_t len;
-    struct rtentry *r;
+    struct rtentry *this;
 
-    len = sizeof(struct rtentry) + numvifs * sizeof(u_int32);
-    r = (struct rtentry *)malloc(len);
-    if (r == NULL) {
-	logit(LOG_ERR, 0, "Malloc failed in route.c:create_route()\n");
+    this = (struct rtentry *)malloc(sizeof(struct rtentry));
+    if (!this) {
+	logit(LOG_ERR, errno, "route.c:create_route() - Failed allocating struct rtentry.\n");
 	return;		/* NOTREACHED */
     }
+    memset(this, 0, sizeof(struct rtentry));
 
-    r->rt_origin     = origin;
-    r->rt_originmask = mask;
-    if      (((char *)&mask)[3] != 0) r->rt_originwidth = 4;
-    else if (((char *)&mask)[2] != 0) r->rt_originwidth = 3;
-    else if (((char *)&mask)[1] != 0) r->rt_originwidth = 2;
-    else                              r->rt_originwidth = 1;
-    r->rt_flags        = 0;
-    r->rt_dominants    = (u_int32 *)(r + 1);
-    memset(r->rt_dominants, 0, numvifs * sizeof(u_int32));
+    len = numvifs * sizeof(u_int32);
+    this->rt_dominants = (u_int32 *)malloc(len);
+    if (!this->rt_dominants) {
+	logit(LOG_ERR, errno, "route.c:create_route() - Failed allocating struct rtentry.\n");
+	free(this);
+	return;		/* NOTREACHED */
+    }
+    memset(this->rt_dominants, 0, len);
 
-    r->rt_groups       = NULL;
-    VIFM_CLRALL(r->rt_children);
-    NBRM_CLRALL(r->rt_subordinates);
-    NBRM_CLRALL(r->rt_subordadv);
+    this->rt_origin     = origin;
+    this->rt_originmask = mask;
+    if      (((char *)&mask)[3] != 0) this->rt_originwidth = 4;
+    else if (((char *)&mask)[2] != 0) this->rt_originwidth = 3;
+    else if (((char *)&mask)[1] != 0) this->rt_originwidth = 2;
+    else                              this->rt_originwidth = 1;
+    this->rt_flags = 0;
+    this->rt_groups = NULL;
 
-    r->rt_next = rtp->rt_next;
-    rtp->rt_next = r;
-    r->rt_prev = rtp;
-    if (r->rt_next != NULL)
-      (r->rt_next)->rt_prev = r;
-    else 
-      rt_end = r;
-    rtp = r;
+    VIFM_CLRALL(this->rt_children);
+    NBRM_CLRALL(this->rt_subordinates);
+    NBRM_CLRALL(this->rt_subordadv);
+
+    /* Link in 'this', where rtp points */
+    if (rtp) {
+	this->rt_prev = rtp;
+	this->rt_next = rtp->rt_next;
+	if (this->rt_next)
+	    (this->rt_next)->rt_prev = this;
+	else
+	    rt_end = this;
+	rtp->rt_next = this;
+    } else {
+	routing_table = this;
+	rt_end = this;
+    }
+
+    rtp = this;
     ++nroutes;
 }
 
 
 /*
- * Discard the routing table entry following the one to which 'prev_r' points.
+ * Discard the routing table entry following the one to which 'this' points.
+ *         [.|prev|.]--->[.|this|.]<---[.|next|.]
  */
-static void discard_route(struct rtentry *prev_r)
+static void discard_route(struct rtentry *this)
 {
-    struct rtentry *r;
+    struct rtentry *prev, *next;
 
-    if (!prev_r)
+    if (!this)
 	return;
 
-    r = prev_r->rt_next;
-    uvifs[r->rt_parent].uv_nroutes--;
-    /*???nbr???.al_nroutes--;*/
-    prev_r->rt_next = r->rt_next;
-    if (prev_r->rt_next != NULL)
-      (prev_r->rt_next)->rt_prev = prev_r;
+    /* Find previous and next link */
+    prev = this->rt_prev;
+    next = this->rt_next;
+
+    /* Unlink 'this' */
+    if (prev)
+	prev->rt_next = next;	/* Handles case when 'this' is last link. */
     else
-      rt_end = prev_r;
-    free((char *)r);
+	routing_table = next;	/* 'this' is first link. */
+    if (next)
+	next->rt_prev = prev;
+
+    /* Update the books */
+    uvifs[this->rt_parent].uv_nroutes--;
+    /*???nbr???.al_nroutes--;*/
     --nroutes;
+
+    /* Update meta pointers */
+    if (rtp == this)
+	rtp = next;
+    if (rt_end == this)
+	rt_end = next;
+
+    free(this->rt_dominants);
+    free(this);
 }
 
 
@@ -605,7 +635,7 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
 		 * and vif is no longer a child for me.
 		 */
 		VIFM_CLR(vifi, r->rt_children);
-		r->rt_dominants   [vifi] = src;
+		r->rt_dominants[vifi] = src;
 		/* XXX
 		 * We don't necessarily want to forget about subordinateness
 		 * so that we can become the dominant quickly if the current
@@ -697,21 +727,19 @@ void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_
  */
 void age_routes(void)
 {
-    register struct rtentry *r;
-    register struct rtentry *prev_r;
+    struct rtentry *r, *next;
     extern u_long virtual_time;		/* from main.c */
 
-    for (prev_r = RT_ADDR, r = routing_table;
-	 r != NULL;
-	 prev_r = r, r = r->rt_next) {
+    r = routing_table;
+    while (r != NULL) {
+	next = r->rt_next;
 
 	if ((r->rt_timer += TIMER_INTERVAL) >= ROUTE_DISCARD_TIME) {
 	    /*
 	     * Time to garbage-collect the route entry.
 	     */
 	    del_table_entry(r, 0, DEL_ALL_ROUTES);
-	    discard_route(prev_r);
-	    r = prev_r;
+	    discard_route(r);
 	}
 	else if (r->rt_timer >= ROUTE_EXPIRE_TIME &&
 		 r->rt_metric != UNREACHABLE) {
@@ -747,6 +775,8 @@ void age_routes(void)
 	    }
 	    NBRM_CLRALL(r->rt_subordadv);
 	}
+
+	r = next;
     }
 }
 
@@ -776,10 +806,14 @@ void expire_all_routes(void)
  */
 void free_all_routes(void)
 {
-    struct rtentry *r;
+    struct rtentry *r, *next;
 
-    for (r = routing_table; r != NULL; r = r->rt_next)
+    r = routing_table;
+    while (r != NULL) {
+	next = r->rt_next;
 	discard_route(r);
+	r = next;
+    }
 }
 
 
@@ -1128,14 +1162,14 @@ void accept_report(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 le
  */
 void report(int which_routes, vifi_t vifi, u_int32 dst)
 {
-    struct rtentry *r;
+    struct rtentry *this;
     int i;
 
-    r = rt_end;
-    while (r != RT_ADDR) {
-	i = report_chunk(which_routes, r, vifi, dst);
+    this = rt_end;
+    while (this && this != routing_table) {
+	i = report_chunk(which_routes, this, vifi, dst);
 	while (i-- > 0)
-	    r = r->rt_prev;
+	    this = this->rt_prev;
     }
 }
 
@@ -1206,7 +1240,7 @@ static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi,
     src = v->uv_lcl_addr;
     p = send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN;
 
-    for (r = start_rt; r != RT_ADDR; r = r->rt_prev) {
+    for (r = start_rt; r != routing_table; r = r->rt_prev) {
 	if (which_routes == CHANGED_ROUTES && !(r->rt_flags & RTF_CHANGED)) {
 	    nrt++;
 	    continue;
@@ -1317,9 +1351,9 @@ int report_next_chunk(void)
     /*
      * find this round's starting route.
      */
-    for (sr = rt_end, i = start_rt; --i >= 0; ) {
+    for (sr = rt_end, i = start_rt; sr && --i >= 0; ) {
 	sr = sr->rt_prev;
-	if (sr == RT_ADDR)
+	if (sr == routing_table)
 	    sr = rt_end;
     }
 
