@@ -139,8 +139,9 @@ in a non-pruning mode.  This was previously used in routers for test purposes on
 However, this is no longer supported and this option is only kept for compatibility
 reasons.
 .It Fl r, -show-routes
-Show state of VIFs and multicast routing tables. This is command sends SIGUSR1 to a
-running pimd.
+Show state of VIFs and multicast routing tables. This command sends SIGUSR1 to a
+running mrouted, waits for the dump file to be updated, and then displays the result
+on stdout.
 .El
 .Pp
 .Sh CONFIGURATION
