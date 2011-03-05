@@ -1,14 +1,20 @@
 #+TITLE:    mrouted | Change Log
 #+AUTHOR:    Steve Deering, Ajit Thyagarajan, Bill Fenner
 
-* Release 3.9.5: January 8, 2011
+* Release 3.9.5: March 6, 2011
 ** Changes & New Features
   - The location of the dump file(s) have been moved from /var/tmp to /var/lib/misc
     due to the insecure nature of /var/tmp.  See more below.
 
-  - Add -r,--show-routes which sends SIGUSR1 to a running daemon.
+  - Add -r,--show-routes which sends SIGUSR1 to a running daemon, waits for the
+    file /var/run/mrouted/mrouted.dump to be updated, and then displays the
+    result on stdout.
 
 ** Bug Fixes
+  - The linked list implementation used in route.c caused several problems and
+    as a result has been refactored.  This fixes several SIGSEGV crashes a couple
+    of memory leaks as well as GitHub issue #7.
+
   - Ported from pimd after CVE-2011-0007: Insecure file creation in /var/tmp.
     "On USR1, pimd will write to /var/tmp/pimd.dump a dump of the multicast route
     table. Since /var/tmp is writable by any user, a user can create a symlink to any
