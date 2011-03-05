@@ -3,7 +3,7 @@
 
 * Release 3.9.5: March 5, 2011
 ** Changes & New Features
-  - The location of the dump file(s) have been moved from /var/tmp to /var/lib/misc
+  - The location of dump files have been moved from /var/tmp to /var/run/mrouted
     due to the insecure nature of /var/tmp.  See more below.
 
   - Add -r,--show-routes which sends SIGUSR1 to a running daemon, waits for the
