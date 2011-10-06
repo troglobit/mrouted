@@ -295,10 +295,14 @@ void delete_neighbor_from_routes(u_int32 addr, vifi_t vifi, u_int index)
  * beginning for each update; this relies on having the route reports in
  * a single message be in the same order as the route entries in the routing
  * table.
+ *
+ * find_route() expects rtp to be the preceding entry in the linked list
+ * where route insertion takes place.  We need to be able to insert routes
+ * before at the list head (routing table).
  */
 void start_route_updates(void)
 {
-    rtp = routing_table;
+    rtp = NULL;
 }
 
 
@@ -315,7 +319,11 @@ static int find_route(u_int32 origin, u_int32 mask)
 {
     struct rtentry *r;
 
-    r = rtp;
+    /*
+     * If rtp is NULL, we are preceding routing_table, so our first search
+     * candidate should be the routing_table.
+     */
+    r = rtp ? rtp : routing_table;
     while (r != NULL) {
 	if (origin == r->rt_origin && mask == r->rt_originmask) {
 	    rtp = r;
@@ -386,8 +394,16 @@ static void create_route(u_int32 origin, u_int32 mask)
 	    rt_end = this;
 	rtp->rt_next = this;
     } else {
+	if (routing_table) {
+	    /* Change existing head to this */
+	    this->rt_next = routing_table;
+	    routing_table->rt_prev = this;
+	}
+	else {
+	    /* this is the first route entry that exists */
+	    rt_end = this;
+	}
 	routing_table = this;
-	rt_end = this;
     }
 
     rtp = this;
