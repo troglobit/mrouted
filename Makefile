@@ -42,7 +42,7 @@ MTRACE_OBJS   = mtrace.o $(EXTRA_OBJS)
 #MSTAT_OBJS    = mstat.o $(EXTRA_OBJS)
 
 ## Common
-CFLAGS        = $(MCAST_INCLUDE) $(SNMPDEF) $(RSRRDEF) $(INCLUDES) $(DEFS) $(USERCOMPILE)
+CFLAGS       += $(MCAST_INCLUDE) $(SNMPDEF) $(RSRRDEF) $(INCLUDES) $(DEFS) $(USERCOMPILE)
 CFLAGS       += -O2 -W -Wall -Werror
 #CFLAGS       += -O -g
 LDLIBS        = $(SNMPLIBDIR) $(SNMPLIBS) $(EXTRA_LIBS)
