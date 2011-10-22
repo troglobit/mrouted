@@ -259,9 +259,8 @@ void add_neighbor_to_routes(vifi_t vifi, u_int index)
 void delete_neighbor_from_routes(u_int32 addr, vifi_t vifi, u_int index)
 {
     struct rtentry *r;
-    struct uvif *v;
+    struct uvif *v = &uvifs[vifi];
 
-    v = &uvifs[vifi];
     for (r = routing_table; r != NULL; r = r->rt_next) {
 	if (r->rt_metric != UNREACHABLE) {
 	    if (r->rt_parent == vifi && r->rt_gateway == addr) {
@@ -273,11 +272,10 @@ void delete_neighbor_from_routes(u_int32 addr, vifi_t vifi, u_int index)
 	    } else if (r->rt_dominants[vifi] == addr) {
 		VIFM_SET(vifi, r->rt_children);
 		r->rt_dominants[vifi] = 0;
-		if ((uvifs[vifi].uv_flags & VIFF_NOFLOOD) ||
-				AVOID_TRANSIT(vifi, r))
-		    NBRM_CLRMASK(r->rt_subordinates, uvifs[vifi].uv_nbrmap);
+		if ((v->uv_flags & VIFF_NOFLOOD) || AVOID_TRANSIT(vifi, r))
+		    NBRM_CLRMASK(r->rt_subordinates, v->uv_nbrmap);
 		else
-		    NBRM_SETMASK(r->rt_subordinates, uvifs[vifi].uv_nbrmap);
+		    NBRM_SETMASK(r->rt_subordinates, v->uv_nbrmap);
 		update_table_entry(r, r->rt_gateway);
 	    } else if (NBRM_ISSET(index, r->rt_subordinates)) {
 		NBRM_CLR(index, r->rt_subordinates);
@@ -1249,11 +1247,9 @@ static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi,
     int datalen = 0;
     int width = 0;
     u_int32 mask = 0;
-    u_int32 src;
     int admetric = v->uv_admetric;
     int metric;
 
-    src = v->uv_lcl_addr;
     p = send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN;
 
     for (r = start_rt; r != routing_table; r = r->rt_prev) {

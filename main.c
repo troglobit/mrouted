@@ -185,11 +185,11 @@ static void killshow(int signo, char *file)
 	    remove(file);
 	kill(pid, signo);
 	if (file) {
-	    int result;
-
 	    usleep(200);
 	    snprintf(buf, sizeof(buf), "cat %s", file);
-	    result = system(buf);
+	    if (system(buf)) {
+		warnx("Failed listing file %s\n", file);
+	    }
 	}
     }
 }
