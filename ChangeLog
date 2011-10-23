@@ -1,5 +1,18 @@
 #+TITLE:    mrouted | Change Log
-#+AUTHOR:    Steve Deering, Ajit Thyagarajan, Bill Fenner
+#+AUTHOR:   Steve Deering, Ajit Thyagarajan, Bill Fenner
+
+* Release 3.9.6: October 23, 2011
+** Changes & New Features
+   - The Makefile now accepts CFLAGS from the environment instead of simply
+     overriding. The old USERFLAGS variable, previously intended for this
+     purpose, is still supported for backwards compatibility reasons.
+
+** Bug Fixes
+
+   - Serious regression in route.c, introduced in 3.9.5, caused by the link
+     list refactor. Fix by Seth Hinze <ultrix@gmail.com>
+
+   - Fix GCC 4.6 warnings for unused variables.
 
 * Release 3.9.5: March 5, 2011
 ** Changes & New Features
