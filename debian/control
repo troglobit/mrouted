@@ -1,7 +1,7 @@
 Source: mrouted
 Section: net
 Priority: optional
-Maintainer: Joachim Nilsson <troglobit@vmlinux.org>
+Maintainer: Joachim Nilsson <troglobit@gmail.com>
 Build-Depends: debhelper (>= 7), bison | byacc | btyacc
 Standards-Version: 3.9.1
 

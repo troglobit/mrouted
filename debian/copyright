@@ -1,4 +1,4 @@
-This package was (re)debianized by Joachim Nilsson <troglobit@vmlinux.org> on
+This package was (re)debianized by Joachim Nilsson <troglobit@gmail.com> on
 Mon, 17 Aug 2010 08:32:02 +0100.
 
 An earlier version was debianized by Christoph Martin <christoph.martin@uni-mainz.de>
@@ -9,9 +9,10 @@ that version was later dropped[1] by Debian.
 
 This version is from the same code base, but with quite a few patches applied from
 other sources, most notably OpenBSD. It is currently is available from the following
-locations, primarily GitHub:
+locations:
+
 	http://github.com/troglobit/mrouted/
-	ftp://ftp.vmlinux.org/pub/People/jocke/mrouted/
+	ftp://troglobit.com/mrouted/
 
 Authors:
 	Steve Deering <deering@parc.xerox.com>
