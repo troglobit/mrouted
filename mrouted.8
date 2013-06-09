@@ -352,7 +352,7 @@ responds to the following signals:
 .It HUP
 Restarts
 .Nm mrouted .
-The configuration file is reread every time this signal is evoked.
+The configuration file is reread when SIGHUP is received.
 .It INT
 Terminates execution gracefully (i.e. by sending
 good-bye messages to all neighboring routers).
