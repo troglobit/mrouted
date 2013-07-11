@@ -11,7 +11,7 @@
 
 static int	icmp_socket;
 
-static void	icmp_handler(int, fd_set *);
+static void	icmp_handler(int);
 static char *	icmp_name(struct icmp *);
 
 void init_icmp(void)
@@ -25,7 +25,7 @@ void init_icmp(void)
     logit(LOG_DEBUG, 0, "registering icmp socket fd %d\n", icmp_socket);
 }
 
-static void icmp_handler(int fd, fd_set UNUSED *rfds)
+static void icmp_handler(int fd)
 {
     u_char icmp_buf[RECV_BUF_SIZE];
     struct sockaddr_in from;

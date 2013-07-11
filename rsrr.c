@@ -58,7 +58,7 @@ static socklen_t client_length = sizeof(client_addr);
 static void	rsrr_accept(size_t recvlen);
 static void	rsrr_accept_iq(void);
 static int	rsrr_accept_rq(struct rsrr_rq *route_query, u_char flags, struct gtable *gt_notify);
-static void	rsrr_read(int, fd_set *);
+static void	rsrr_read(int);
 static int	rsrr_send(int sendlen);
 static void	rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query);
 
@@ -95,7 +95,7 @@ void rsrr_init(void)
 }
 
 /* Read a message from the RSRR socket */
-static void rsrr_read(int fd, fd_set UNUSED *rfd)
+static void rsrr_read(int fd)
 {
     ssize_t rsrr_recvlen;
     

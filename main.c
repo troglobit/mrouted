@@ -21,6 +21,7 @@
 #include <getopt.h>
 #include <paths.h>
 #include <fcntl.h>
+#include <poll.h>
 #include <stdarg.h>
 #include <sys/stat.h>
 
@@ -58,8 +59,8 @@ time_t mrouted_init_time;
 #endif
 
 static struct ihandler {
-    int fd;			/* File descriptor		 */
-    ihfunc_t func;		/* Function to call with &fd_set */
+    int fd;			/* File descriptor	*/
+    ihfunc_t func;		/* Function to call	*/
 } ihandlers[NHANDLERS];
 static int nhandlers = 0;
 
@@ -235,9 +236,9 @@ int main(int argc, char *argv[])
     FILE *fp;
     struct timeval tv, difftime, curtime, lasttime, *timeout;
     u_int32 prev_genid;
-    int vers, foreground = 0;
-    fd_set rfds, readers;
-    int nfds, n, i, secs, ch;
+    int foreground = 0;
+    int vers, n, i, secs, ch;
+    struct pollfd *pfd;
     extern char todaysversion[];
     struct sigaction sa;
 #ifdef SNMP
@@ -461,17 +462,15 @@ int main(int argc, char *argv[])
     sigaction(SIGUSR1, &sa, NULL);
     sigaction(SIGUSR2, &sa, NULL);
 
-    FD_ZERO(&readers);
-    if (igmp_socket >= (int)FD_SETSIZE)
-       logit(LOG_ERR, 0, "Descriptor too big");
-    FD_SET(igmp_socket, &readers);
-    nfds = igmp_socket + 1;
+    pfd = calloc(sizeof(struct pollfd), 1 + nhandlers);
+    if (!pfd)
+	err(1, NULL);
+
+    pfd[0].fd = igmp_socket;
+    pfd[0].events = POLLIN;
     for (i = 0; i < nhandlers; i++) {
-	if (ihandlers[i].fd >= (int)FD_SETSIZE)
-	    logit(LOG_ERR, 0, "Descriptor too big");
-	FD_SET(ihandlers[i].fd, &readers);
-	if (ihandlers[i].fd >= nfds)
-	    nfds = ihandlers[i].fd + 1;
+	pfd[i + 1].fd = ihandlers[i].fd;
+	pfd[i + 1].events = POLLIN;
     }
 
     IF_DEBUG(DEBUG_IF)
@@ -534,7 +533,6 @@ int main(int argc, char *argv[])
     gettimeofday(&curtime, NULL);
     lasttime = curtime;
     for(;;) {
-	memmove	((char *)&rfds,	(char *)&readers, sizeof(rfds));
 	secs = timer_nextTimer();
 	if (secs == -1)
 	    timeout = NULL;
@@ -586,26 +584,27 @@ int main(int argc, char *argv[])
 		cdump();
 	    }
 	}
-	if ((n = select(nfds, &rfds, NULL, NULL, timeout)) < 0) {
+
+	if ((n = poll (pfd, nhandlers +1, secs)) < 0) {
 	    if (errno != EINTR)
-		logit(LOG_WARNING, errno, "select failed");
+		logit(LOG_WARNING, errno, "poll failed");
 	    continue;
 	}
 
 	if (n > 0) {
-	    if (FD_ISSET(igmp_socket, &rfds)) {
+	    if (pfd[0].revents & POLLIN) {
 		recvlen = recvfrom(igmp_socket, recv_buf, RECV_BUF_SIZE, 0, NULL, &dummy);
 		if (recvlen < 0) {
-		    if (errno != EINTR) logit(LOG_ERR, errno, "recvfrom");
+		    if (errno != EINTR)
+			logit(LOG_ERR, errno, "recvfrom");
 		    continue;
 		}
 		accept_igmp(recvlen);
 	    }
 
 	    for (i = 0; i < nhandlers; i++) {
-		if (FD_ISSET(ihandlers[i].fd, &rfds)) {
-		    (*ihandlers[i].func)(ihandlers[i].fd, &rfds);
-		}
+		if (pfd[i + 1].revents & POLLIN)
+		    (*ihandlers[i].func)(ihandlers[i].fd);
 	    }
 	}
 

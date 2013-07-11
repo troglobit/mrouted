@@ -69,7 +69,7 @@
 typedef u_int u_int32;
 
 typedef void (*cfunc_t) (void*);
-typedef void (*ihfunc_t) (int, fd_set *);
+typedef void (*ihfunc_t) (int);
 
 #include "dvmrp.h"
 #include "igmpv2.h"
