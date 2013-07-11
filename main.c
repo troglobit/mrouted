@@ -385,8 +385,8 @@ int main(int argc, char *argv[])
     /*
      * Get generation id
      */
-    gettimeofday(&tv, 0);
-    dvmrp_genid = tv.tv_sec;
+    gettimeofday(&tv, NULL);
+    dvmrp_genid = (u_int32)tv.tv_sec;	/* for a while after 2038 */
 
     fp = fopen(genidfilename, "r");
     if (fp != NULL) {
@@ -1045,7 +1045,7 @@ void logit(int severity, int syserr, const char *format, ...)
 	}
 	ringbufinit = 1;
     }
-    gettimeofday(&now,NULL);
+    gettimeofday(&now, NULL);
     now_sec = now.tv_sec;
     thyme = localtime(&now_sec);
     snprintf(logmsg[logmsgno++], LOGMSGSIZE, "%02d:%02d:%02d.%03ld %s err %d",
@@ -1059,7 +1059,7 @@ void logit(int severity, int syserr, const char *format, ...)
      * or if we're debugging.
      */
     if (haveterminal && (debug || severity <= LOG_WARNING)) {
-	gettimeofday(&now,NULL);
+	gettimeofday(&now, NULL);
 	now_sec = now.tv_sec;
 	thyme = localtime(&now_sec);
 	if (!debug)
