@@ -456,7 +456,7 @@ static void discard_route(struct rtentry *this)
  */
 void update_route(u_int32 origin, u_int32 mask, u_int metric, u_int32 src, vifi_t vifi, struct listaddr *n)
 {
-    register struct rtentry *r;
+    struct rtentry *r;
     u_int adj_metric;
 
     /*

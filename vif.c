@@ -201,8 +201,8 @@ void init_installvifs(void)
  */
 void check_vif_state(void)
 {
-    register vifi_t vifi;
-    register struct uvif *v;
+    vifi_t vifi;
+    struct uvif *v;
     struct ifreq ifr;
     static int checking_vifs = 0;
 
@@ -923,8 +923,9 @@ void accept_neighbor_request2(u_int32 src, u_int32 UNUSED dst)
     datalen = 0;
 
     for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
-	register u_int16_t vflags = v->uv_flags;
-	register u_char rflags = 0;
+	u_int16_t vflags = v->uv_flags;
+	u_char rflags = 0;
+
 	if (vflags & VIFF_TUNNEL)
 	    rflags |= DVMRP_NF_TUNNEL;
 	if (vflags & VIFF_SRCRT)
@@ -937,6 +938,7 @@ void accept_neighbor_request2(u_int32 src, u_int32 UNUSED dst)
 	    rflags |= DVMRP_NF_QUERIER;
 	if (vflags & VIFF_LEAF)
 	    rflags |= DVMRP_NF_LEAF;
+
 	ncount = 0;
 	la = v->uv_neighbors;
 	if (la == NULL) {
@@ -971,6 +973,7 @@ void accept_neighbor_request2(u_int32 src, u_int32 UNUSED dst)
 		    datalen = 0;
 		    ncount = 0;
 		}
+
 		/* Put out the header for this neighbor list... */
 		if (ncount == 0) {
 		    /* If it's a one-way tunnel, mark it down. */
@@ -985,6 +988,7 @@ void accept_neighbor_request2(u_int32 src, u_int32 UNUSED dst)
 		    *p++ = 0;
 		    datalen += 4 + 4;
 		}
+
 		/* Don't report one-way peering on phyint at all */
 		if (!(rflags & DVMRP_NF_TUNNEL) && la->al_flags & NBRF_ONEWAY)
 		    continue;
@@ -993,6 +997,7 @@ void accept_neighbor_request2(u_int32 src, u_int32 UNUSED dst)
 		datalen += 4;
 		(*ncount)++;
 	    }
+
 	    if (*ncount == 0) {
 		*(u_int*)p = v->uv_rmt_addr;
 		p += 4;
@@ -1001,6 +1006,7 @@ void accept_neighbor_request2(u_int32 src, u_int32 UNUSED dst)
 	    }
 	}
     }
+
     if (datalen != 0)
 	send_igmp(INADDR_ANY, them, IGMP_DVMRP, DVMRP_NEIGHBORS2,
 		htonl(MROUTED_LEVEL), datalen);

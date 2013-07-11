@@ -231,7 +231,7 @@ static void usage(void)
 
 int main(int argc, char *argv[])
 {
-    register int recvlen;
+    int recvlen;
     socklen_t dummy;
     FILE *fp;
     struct timeval tv, difftime, curtime, lasttime, *timeout;
@@ -698,21 +698,25 @@ static void fasttimer(void UNUSED *arg)
      * otherwise send at least the fraction we should have sent by now.
      */
     if (t >= ROUTE_REPORT_INTERVAL) {
-	register int nleft = nroutes - nsent;
+	int nleft = nroutes - nsent;
+
 	while (nleft > 0) {
 	    if ((n = report_next_chunk()) <= 0)
 		break;
 	    nleft -= n;
 	}
+
 	tlast = 0;
 	nsent = 0;
     } else {
-	register unsigned int ncum = nroutes * t / ROUTE_REPORT_INTERVAL;
+	unsigned int ncum = nroutes * t / ROUTE_REPORT_INTERVAL;
+
 	while (nsent < ncum) {
 	    if ((n = report_next_chunk()) <= 0)
 		break;
 	    nsent += n;
 	}
+
 	tlast = t;
     }
 

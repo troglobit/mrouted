@@ -167,7 +167,7 @@ int igmp_debug_kind(u_int type, u_int code)
  */
 void accept_igmp(size_t recvlen)
 {
-    register u_int32 src, dst, group;
+    u_int32 src, dst, group;
     struct ip *ip;
     struct igmp *igmp;
     int ipdatalen, iphdrlen, igmpdatalen;

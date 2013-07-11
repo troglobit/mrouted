@@ -310,8 +310,7 @@ static void send_prune(struct gtable *gt)
 {
     struct ptable *pt;
     char *p;
-    int i;
-    int datalen;
+    int i, datalen;
     u_int32 dst;
     u_int32 tmp;
     int rexmitting = 0;
@@ -437,9 +436,8 @@ static void send_prune(struct gtable *gt)
  */
 static void send_graft(struct gtable *gt)
 {
-    register char *p;
-    register int i;
-    int datalen;
+    char *p;
+    int i, datalen;
     u_int32 dst;
 
     /* Can't send a graft without an associated route */
@@ -484,9 +482,8 @@ static void send_graft(struct gtable *gt)
  */
 static void send_graft_ack(u_int32 src, u_int32 dst, u_int32 origin, u_int32 grp, vifi_t vifi)
 {
-    register char *p;
-    register int i;
-    int datalen;
+    char *p;
+    int i, datalen;
 
     p = send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN;
     datalen = 0;
@@ -1613,10 +1610,10 @@ void accept_g_ack(u_int32 src, u_int32 dst, char *p, size_t datalen)
  */
 void free_all_prunes(void)
 {
-    register struct rtentry *r;
-    register struct gtable *g, *prev_g;
-    register struct stable *s, *prev_s;
-    register struct ptable *p, *prev_p;
+    struct rtentry *r;
+    struct gtable *g, *prev_g;
+    struct stable *s, *prev_s;
+    struct ptable *p, *prev_p;
 
     for (r = routing_table; r; r = r->rt_next) {
 	g = r->rt_groups;
@@ -1843,7 +1840,7 @@ void age_table_entry(void)
 
 	/* retransmit graft with exponential backoff */
 	if (gt->gt_grftsnt) {
-	    register int y;
+	    int y;
 
 	    y = ++gt->gt_grftsnt;
 	    while (y && !(y & 1))
