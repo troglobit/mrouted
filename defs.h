@@ -230,7 +230,7 @@ extern int		errno;
 #endif
 
 /* main.c */
-extern char *		scaletime(u_long);
+extern char *		scaletime(time_t);
 extern void		logit(int, int, const char *, ...);
 extern int		register_input_handler(int, ihfunc_t);
 
@@ -253,9 +253,9 @@ extern void		send_ipip(u_int32, u_int32, int, int, u_int32, int, struct uvif *);
 /* callout.c */
 extern void		callout_init(void);
 extern void		free_all_callouts(void);
-extern void		age_callout_queue(int);
+extern void		age_callout_queue(time_t);
 extern int		timer_nextTimer(void);
-extern int		timer_setTimer(int, cfunc_t, void *);
+extern int		timer_setTimer(time_t, cfunc_t, void *);
 extern int		timer_clearTimer(int);
 extern int		timer_leftTimer(int);
 

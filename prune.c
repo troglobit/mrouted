@@ -2105,7 +2105,7 @@ void dump_cache(FILE *fp2)
     struct ptable *pt;
     vifi_t i;
     char c;
-    time_t thyme = time(0);
+    time_t thyme = time(NULL);
 
     fprintf(fp2,
 	    "Multicast Routing Cache Table (%d entries)\n%s", kroutes,

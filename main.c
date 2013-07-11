@@ -959,7 +959,7 @@ static void resetlogging(void *arg)
 }
 
 #define SCALETIMEBUFLEN 20
-char *scaletime(u_long t)
+char *scaletime(time_t t)
 {
     static char buf1[SCALETIMEBUFLEN];
     static char buf2[SCALETIMEBUFLEN];

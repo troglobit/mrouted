@@ -18,7 +18,7 @@ struct timeout_q {
 	int	   	 id;
 	cfunc_t          func;	  	/* function to call */
 	void	   	 *data;		/* func's data */
-	int	       	 time;		/* time offset to next event*/
+	time_t	       	 time;		/* time offset to next event*/
 };
 
 #ifdef IGMP_DEBUG
@@ -48,7 +48,7 @@ void free_all_callouts(void)
  * elapsed_time seconds have passed; perform all the events that should
  * happen.
  */
-void age_callout_queue(int elapsed_time)
+void age_callout_queue(time_t elapsed_time)
 {
     struct timeout_q *ptr;
     int i = 0;
@@ -91,11 +91,11 @@ int timer_nextTimer(void)
 
 /*
  * sets the timer
- * @delay:  number of units for timeout
+ * @delay:  number of seconds for timeout
  * @action: function to be called on timeout
  * @data:   what to call the timeout function with
  */
-int timer_setTimer(int delay, cfunc_t action, void *data)
+int timer_setTimer(time_t delay, cfunc_t action, void *data)
 {
     struct     timeout_q  *ptr, *node, *prev;
     int i = 0;
@@ -164,7 +164,7 @@ int timer_setTimer(int delay, cfunc_t action, void *data)
 int timer_leftTimer(int timer_id)
 {
     struct timeout_q *ptr;
-    int left = 0;
+    time_t left = 0;
 
     if (!timer_id)
 	return -1;
