@@ -25,10 +25,6 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 
-#ifdef SNMP
-#include "snmp.h"
-#endif
-
 extern char *configfilename;
 char versionstring[MAX_VERSION_LEN];
 
@@ -52,12 +48,7 @@ int debug = 0;
 extern char *__progname;
 time_t mrouted_init_time;
 
-#ifdef SNMP
-#define NHANDLERS	34
-#else
 #define NHANDLERS	2
-#endif
-
 static struct ihandler {
     int fd;			/* File descriptor	*/
     ihfunc_t func;		/* Function to call	*/
@@ -241,12 +232,6 @@ int main(int argc, char *argv[])
     struct pollfd *pfd;
     extern char todaysversion[];
     struct sigaction sa;
-#ifdef SNMP
-    const char *errstr;
-    struct timeval  timeout, *tvp = &timeout;
-    struct timeval  sched, *svp = &sched, now, *nvp = &now;
-    int index, block;
-#endif
     struct option long_options[] = {
 	{"config", 1, 0, 'c'},
 	{"debug", 2, 0, 'd'},
@@ -259,7 +244,7 @@ int main(int argc, char *argv[])
 
     snprintf(versionstring, sizeof(versionstring), "mrouted version %s", todaysversion);
 
-    while ((ch = getopt_long(argc, argv, "c:d::fhpP::rv", long_options, NULL)) != EOF) {
+    while ((ch = getopt_long(argc, argv, "c:d::fhprv", long_options, NULL)) != EOF) {
 	switch (ch) {
 	    case 'c':
 		configfilename = optarg;
@@ -303,22 +288,6 @@ int main(int argc, char *argv[])
 
 	    case 'p':
 		warnx("Disabling pruning is no longer supported.");
-		break;
-
-	    case 'P':
-#ifdef SNMP
-		if (!optarg)
-		    dest_port = DEFAULT_PORT;
-		else {
-		    dest_port = strtonum(optarg, 1, 65535, &errstr);
-		    if (errstr) {
-			warnx("destination port %s", errstr);
-			dest_port = DEFAULT_PORT;
-		    }
-		}
-#else
-		warnx("SNMP support missing, please feel free to submit a patch.");
-#endif
 		break;
 
 	    case 'r':
@@ -433,20 +402,6 @@ int main(int argc, char *argv[])
 		PROTOCOL_VERSION, MROUTED_VERSION);
 #endif
 
-#ifdef SNMP
-    if (i = snmp_init())
-       return i;
-
-    gettimeofday(nvp, 0);
-    if (nvp->tv_usec < 500000L){
-	    svp->tv_usec = nvp->tv_usec + 500000L;
-	    svp->tv_sec = nvp->tv_sec;
-    } else {
-	    svp->tv_usec = nvp->tv_usec - 500000L;
-	    svp->tv_sec = nvp->tv_sec + 1;
-    }
-#endif /* SNMP */
-
     init_vifs();
 
 #ifdef RSRR
@@ -541,31 +496,7 @@ int main(int argc, char *argv[])
 	    timeout->tv_sec = secs;
 	    timeout->tv_usec = 0;
 	}
-#ifdef SNMP
-   THIS IS BROKEN
-   if (nvp->tv_sec > svp->tv_sec
-       || (nvp->tv_sec == svp->tv_sec && nvp->tv_usec > svp->tv_usec)){
-       alarmTimer(nvp);
-       eventTimer(nvp);
-       if (nvp->tv_usec < 500000L){
-      svp->tv_usec = nvp->tv_usec + 500000L;
-      svp->tv_sec = nvp->tv_sec;
-       } else {
-      svp->tv_usec = nvp->tv_usec - 500000L;
-      svp->tv_sec = nvp->tv_sec + 1;
-       }
-   }
 
-	tvp =  &timeout;
-	tvp->tv_sec = 0;
-	tvp->tv_usec = 500000L;
-
-	block = 0;
-	snmp_select_info(&nfds, &rfds, tvp, &block);
-	if (block == 1)
-		tvp = NULL; /* block without timeout */
-	if ((n = select(nfds, &rfds, NULL, NULL, tvp)) < 0)
-#endif
 	if (sighandled) {
 	    if (sighandled & GOT_SIGINT) {
 		sighandled &= ~GOT_SIGINT;
@@ -608,11 +539,6 @@ int main(int argc, char *argv[])
 	    }
 	}
 
-#ifdef SNMP
-	THIS IS BROKEN
-	snmp_read(&rfds);
-	snmp_timeout(); /* poll */
-#endif
 	/*
 	 * Handle timeout queue.
 	 *
@@ -784,10 +710,6 @@ static void timer(void UNUSED *arg)
 	 */
 	report_to_all_neighbors(CHANGED_ROUTES);
     }
-
-#ifdef SNMP
-    sync_timer();
-#endif
 
     /*
      * Advance virtual time

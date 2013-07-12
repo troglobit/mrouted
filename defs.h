@@ -359,21 +359,6 @@ extern void		k_add_rg(u_int32, struct gtable *);
 extern int		k_del_rg(u_int32, struct gtable *);
 extern int		k_get_version(void);
 
-#ifdef SNMP
-/* prune.c */
-extern struct gtable *	find_grp(u_int32);
-extern struct stable *	find_grp_src(struct gtable *, u_int32);
-extern int		next_grp_src_mask(struct gtable **, struct stable **, u_int32, u_int32, u_int32);
-extern void		refresh_sg(struct sioc_sg_req *, struct gtable *, struct stable *);
-extern int		next_child(struct gtable **, struct stable **,
-                                   u_int32, u_int32, u_int32, vifi_t *);
-
-/* route.c */
-extern struct rtentry * snmp_find_route(u_int32, u_int32);
-extern int		next_route(struct rtentry **, u_int32, u_int32);
-extern int		next_route_child(struct rtentry **, u_int32, u_int32, vifi_t *);
-#endif
-
 #ifdef RSRR
 /* prune.c */
 extern struct gtable	*kernel_table;

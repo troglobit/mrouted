@@ -57,69 +57,6 @@ static int  report_chunk             (int, struct rtentry *start_rt, vifi_t vifi
 static void queue_blaster_report     (vifi_t vifi, u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 level);
 static void process_blaster_report   (void *vifip);
 
-#ifdef SNMP
-#include <sys/types.h>
-#include "snmp.h"
-
-/*
- * Return pointer to a specific route entry.  This must be a separate
- * function from find_route() which modifies rtp.
- */
-struct rtentry *snmp_find_route(u_int32 src, u_int32 mask)
-{
-    struct rtentry *rt;
-
-   for (rt = routing_table; rt; rt = rt->rt_next) {
-      if (src == rt->rt_origin && mask == rt->rt_originmask)
-         return rt;
-   }
-
-   return NULL;
-}
-
-/*
- * Find next route entry > specification 
- */
-int next_route(struct rtentry **rtpp, u_int32 src, u_int32 mask)
-{
-   struct rtentry *rt, *rbest = NULL;
-
-   /* Among all entries > spec, find "lowest" one in order */
-   for (rt = routing_table; rt; rt=rt->rt_next) {
-      if ((ntohl(rt->rt_origin) > ntohl(src) 
-          || (ntohl(rt->rt_origin) == ntohl(src) 
-             && ntohl(rt->rt_originmask) > ntohl(mask)))
-       && (!rbest || (ntohl(rt->rt_origin) < ntohl(rbest->rt_origin))
-          || (ntohl(rt->rt_origin) == ntohl(rbest->rt_origin)
-             && ntohl(rt->rt_originmask) < ntohl(rbest->rt_originmask))))
-               rbest = rt;
-   }
-   (*rtpp) = rbest;
-
-   return (*rtpp)!=0;
-}
-
-/*
- * Given a routing table entry, and a vifi, find the next vifi/entry
- */
-int next_route_child(struct rtentry **rtpp, u_int32 src, u_int32 mask, vifi_t vifi)
-{
-   /* Get (S,M) entry */
-   if (!((*rtpp) = snmp_find_route(src, mask)))
-      if (!next_route(rtpp, src, mask))
-         return 0;
-
-   /* Continue until we get one with a valid next vif */
-   do {
-      for (; (*rtpp)->rt_children && *vifi<numvifs; (*vifi)++)
-         if (VIFM_ISSET(*vifi, (*rtpp)->rt_children))
-            return 1;
-      *vifi = 0;
-   } while (next_route(rtpp, (*rtpp)->rt_origin, (*rtpp)->rt_originmask));
-
-   return 0;
-}
-#endif	/* SNMP */
 
 /*
  * Initialize the routing table and associated variables.

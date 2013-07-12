@@ -30,8 +30,6 @@ IGMP_OBJS     = igmp.o inet.o kern.o
 # This magic trick looks like a comment, but works on BSD PMake
 #include <config.mk>
 include config.mk
-#include <snmp.mk>
-include snmp.mk
 
 ROUTER_OBJS   = config.o cfparse.o main.o route.o vif.o prune.o callout.o \
 		icmp.o ipip.o vers.o $(RSRR_OBJS) $(EXTRA_OBJS)
@@ -42,10 +40,10 @@ MTRACE_OBJS   = mtrace.o $(EXTRA_OBJS)
 #MSTAT_OBJS    = mstat.o $(EXTRA_OBJS)
 
 ## Common
-CFLAGS       += $(MCAST_INCLUDE) $(SNMPDEF) $(RSRRDEF) $(INCLUDES) $(DEFS) $(USERCOMPILE)
+CFLAGS       += $(MCAST_INCLUDE) $(RSRRDEF) $(INCLUDES) $(DEFS) $(USERCOMPILE)
 CFLAGS       += -O2 -W -Wall -Werror
 #CFLAGS       += -O -g
-LDLIBS        = $(SNMPLIBDIR) $(SNMPLIBS) $(EXTRA_LIBS)
+LDLIBS        = $(EXTRA_LIBS)
 LDFLAGS      += -Wl,-Map,$@.map
 OBJS          = $(IGMP_OBJS) $(ROUTER_OBJS) $(MAPPER_OBJS) $(MRINFO_OBJS) \
 		$(MTRACE_OBJS) $(MSTAT_OBJS)
@@ -116,7 +114,7 @@ mstat: $(MSTAT_OBJS) $(CMULIBS)
 	@printf "  LINK    $@\n"
 	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(MSTAT_OBJS) $(LDLIBS)
 
-clean: $(SNMPCLEAN)
+clean:
 	-@$(RM) $(OBJS) $(EXECS)
 
 distclean:
@@ -151,6 +149,3 @@ rcflow2:
 TAGS:
 	@etags $(SRCS)
 
-snmpclean:
-	-(cd snmpd; make clean)
-	-(cd snmplib; make clean)

@@ -80,16 +80,10 @@ the "ipip" kernel module loaded or as built-in.
 Several signals are supported, for querying status, or simply for reloading the
 configuration.  See the man page for details.
 
-MROUTED 3.8
-===========
-Mrouted 3.8 has two optional features: SNMP and RSRR.  RSRR support is
-required for running RSVP; the SNMP code, with the help of the ISODE snmpd,
-implements both the Multicast MIB and the DVMRP MIB.
-
 RSRR
 ----
-Routing Support for Resource Reservations (RSRR) was contributed by
-Daniel Zappala <daniel@isi.edu>.
+Routing Support for Resource Reservations (RSRR) is required for running
+RSVP and was contributed by Daniel Zappala <daniel@isi.edu>.
 
 Note: This has not been tested in many years ...
 
@@ -119,38 +113,6 @@ unsolicited Route Reply containing the new routing information.  The initial
 release of mrouted 3.5 did not support route change notification and always
 returned a Route Reply with the notification bit cleared.  This release of
 mrouted provides route change notification when possible.
-
-SNMP
-----
-SNMP support was contributed by David Thaler <thalerd@eecs.umich.edu>.
-Note: This has not been tested in many years ...
-
-To enable SNMP support, uncomment the six lines near the top of the Makefile
-below the description of SNMP support.
-
-To link the SNMP-capable mrouted, you need the CMU libraries.  See
-http://nic.merit.edu/~mbone/ for a full mrouted-snmp distribution.
-
-Make sure to add the "sysName", "sysContact", "sysVersion" and "sysLocation"
-variables to your /etc/mrouted.conf if you want them to provide anything
-other than default values.
-
-Example:
-
-sysName	"tibia"
-sysContact "Bill Fenner <fenner@parc.xerox.com> +1 415 812-4816"
-sysVersion "SunOS 4.1.3 and mrouted 3.8"
-sysLocation "MAXC room, PARC building 35"
-
-The SNMP version of mrouted has an additional command line flag:
-
-  -P snmp_port
-
-     Specifies a port for SNMP communication (default 161).  This option
-     should be used when another SNMP daemon already exists.  The preferred
-     alternate port in this case is port 9161.
-
-The mstat(8) program allows querying of statistics using SNMP.
 
 Footnotes
 ---------

@@ -1,5 +1,16 @@
 #+TITLE:    mrouted | Change Log
-#+AUTHOR:   Steve Deering, Ajit Thyagarajan, Bill Fenner
+#+AUTHOR:   Steve Deering, Ajit Thyagarajan, Bill Fenner, Joachim Nilsson
+
+* Release 3.9.7: UNRELEASED
+** Changes & New Features
+   - SNMP Support removed.  It never compiled and would have likely
+     needed a complete refactor to support modern AgentX.
+
+** Bug Fixes
+   - Change from select() to poll() due to descriptor limits, e.g., on BSD.
+   - UNIX 2038 first audit, inspired by OpenBSD.  Cleanup type confusion
+     int/u_long where it should be time_t.  Also, clarify that genid is
+     OK, since it's used and stored as unsigned 32-bit integer.
 
 * Release 3.9.6: October 23, 2011
 ** Changes & New Features

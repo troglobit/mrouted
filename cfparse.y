@@ -258,27 +258,19 @@ stmt	: error
 	}
 	| SYSNAM STRING
 	{
-#ifdef SNMP
-	    set_sysName($2);
-#endif /* SNMP */
+	    /* Removed SNMP support */
 	}
 	| SYSCONTACT STRING
 	{
-#ifdef SNMP
-	    set_sysContact($2);
-#endif /* SNMP */
+	    /* Removed SNMP support */
 	}
         | SYSVERSION STRING
 	{
-#ifdef SNMP
-	    set_sysVersion($2);
-#endif /* SNMP */
+	    /* Removed SNMP support */
 	}
 	| SYSLOCATION STRING
 	{
-#ifdef SNMP
-	    set_sysLocation($2);
-#endif /* SNMP */
+	    /* Removed SNMP support */
 	}
 	;
 
@@ -667,22 +659,16 @@ static char *next_word(void)
                 return NULL;
             p = buf;
         }
+
         while (*p && (*p == ' ' || *p == '\t'))	/* skip whitespace */
             p++;
+
         if (*p == '#') {
             p = NULL;		/* skip comments */
             continue;
         }
+
         q = p;
-#ifdef SNMP
-        if (*p == '"') {
-            p++;
-            while (*p && *p != '"' && *p != '\n')
-                p++;		/* find next whitespace */
-            if (*p == '"')
-                p++;
-        } else
-#endif
         while (*p && *p != ' ' && *p != '\t' && *p != '\n')
             p++;		/* find next whitespace */
         *p++ = '\0';	/* null-terminate string */
@@ -739,7 +725,7 @@ static struct keyword {
 	{ "rexmit_prunes",	REXMIT_PRUNES, REXMIT_PRUNES2 },
 	{ "passive",		PASSIVE, 0 },
 	{ "beside",		BESIDE, 0 },
-#ifdef SNMP
+#if 0 /* Removed SNMP support */
 	{ "sysName",		SYSNAM, 0 },
 	{ "sysContact",		SYSCONTACT, 0 },
 	{ "sysVersion",		SYSVERSION, 0 },
@@ -767,15 +753,18 @@ static int yylex(void)
         yylval.num = 1;
         return BOOLEAN;
     }
+
     if (!strcmp(q,"off") || !strcmp(q,"no")) {
         yylval.num = 0;
         return BOOLEAN;
     }
+
     if (!strcmp(q,"default")) {
         yylval.addrmask.mask = 0;
         yylval.addrmask.addr = 0;
         return ADDRMASK;
     }
+
     if (sscanf(q,"%[.0-9]/%u%c",s1,&n,s2) == 2) {
         if ((addr = inet_parse(s1,1)) != 0xffffffff) {
             yylval.addrmask.mask = n;
@@ -784,6 +773,7 @@ static int yylex(void)
         }
         /* fall through to returning STRING */
     }
+
     if (sscanf(q,"%[.0-9]%c",s1,s2) == 1) {
         if ((addr = inet_parse(s1,4)) != 0xffffffff &&
             inet_valid_host(addr)) { 
@@ -791,23 +781,19 @@ static int yylex(void)
             return ADDR;
         }
     }
+
     if (sscanf(q,"0x%8x%c", &n, s1) == 1) {
         yylval.addr = n;
         return ADDR;
     }
+
     if (sscanf(q,"%u%c",&n,s1) == 1) {
         yylval.num = n;
         return NUMBER;
     }
-#ifdef SNMP
-    if (*q=='"') {
-        if (q[ strlen(q)-1 ]=='"')
-            q[ strlen(q)-1 ]='\0'; /* trash trailing quote */
-        yylval.ptr = q+1;
-        return STRING;
-    }
-#endif
+
     yylval.ptr = q;
+
     return STRING;
 }
 
