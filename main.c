@@ -44,6 +44,8 @@ static int sighandled = 0;
 int cache_lifetime 	= DEFAULT_CACHE_LIFETIME;
 int prune_lifetime	= AVERAGE_PRUNE_LIFETIME;
 
+int vifstatedefault = 0;
+
 int debug = 0;
 extern char *__progname;
 time_t mrouted_init_time;
@@ -196,6 +198,7 @@ static void usage(void)
     fputs("  -d, --debug[=LEVEL]  Debug level, see below for valid levels\n", stderr);
     fputs("  -f, --foreground     Run in foreground, do not detach from calling terminal\n", stderr);
     fputs("  -h, --help           Show this help text\n", stderr);
+    fputs("  -N, --no-interfaces  disable all interfaces by default \n", stderr);
     fputs("  -p                   Disable pruning.  Deprecated, compatibility option\n", stderr);
     fputs("  -r, --show-routes    Show state of VIFs and multicast routing tables\n", stderr);
     fprintf(stderr, "  -v, --version        Show %s version\n", __progname);
@@ -239,13 +242,18 @@ int main(int argc, char *argv[])
 	{"help", 0, 0, 'h'},
 	{"version", 0, 0, 'v'},
 	{"show-routes", 0, 0, 'r'},
+	{"no-intefaces", 0, 0, 'N'},
 	{0, 0, 0, 0}
     };
 
     snprintf(versionstring, sizeof(versionstring), "mrouted version %s", todaysversion);
 
-    while ((ch = getopt_long(argc, argv, "c:d::fhprv", long_options, NULL)) != EOF) {
+    while ((ch = getopt_long(argc, argv, "Nc:d::fhprv", long_options, NULL)) != EOF) {
 	switch (ch) {
+	    case 'N':
+		vifstatedefault = VIFF_DISABLED;
+		break;
+
 	    case 'c':
 		configfilename = optarg;
 		break;

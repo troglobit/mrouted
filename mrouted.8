@@ -82,6 +82,9 @@ with two dashes (`-').  The options are as follows:
 .Bl -tag -width Ds
 .It Fl h, -help
 Print a help message and exit.
+.It Fl N, -no-interfaces
+Assume all interfaces are disabled unless explicitly enabled with 
+.Cm phyint enabled
 .It Fl f, -foreground
 Run in foreground, do not detach from the calling terminal.
 .It Fl c, -config=FILE
@@ -175,7 +178,7 @@ There are five types of configuration commands:
 .Cm boundary
 .Ar boundary-name | scoped-addr Ns / Ns Ar mask-len
 .Oc
-.Op Cm disable
+.Op Cm disable | enable
 .br
 .Op Cm metric Ar m
 .Op Cm rate_limit Ar b
