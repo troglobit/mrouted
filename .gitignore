@@ -1,0 +1,17 @@
+*~
+*.bak
+*.o
+
+/*-stamp
+/debian/files
+/debian/mrouted*.debhelper
+/debian/mrouted/
+/debian/*.substvars
+/debian/*.log
+/map-mbone
+/mrinfo
+/mrouted
+/mtrace
+/*.map
+/cfparse.c
+/vers.c
