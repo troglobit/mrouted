@@ -82,6 +82,11 @@ with two dashes (`-').  The options are as follows:
 .Bl -tag -width Ds
 .It Fl h, -help
 Print a help message and exit.
+.It Fl M, -missing-ok
+If an interface doesn't exist, print a warning and continue, instead of erroring out.
+Helps when configuring vpn and other dynamic interfaces.  Of course, you'd have to
+restart the daemon for it to start listening on such an interface if it didn't exist
+when the daemon was started.
 .It Fl N, -no-interfaces
 Assume all interfaces are disabled unless explicitly enabled with 
 .Cm phyint enabled

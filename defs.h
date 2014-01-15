@@ -137,6 +137,7 @@ extern u_int32		allrtrs_group;
 extern u_int32		dvmrp_group;
 extern u_int32		dvmrp_genid;
 extern int		vifstatedefault;
+extern int		missingok;
 
 #define	IF_DEBUG(l)	if (debug && debug & (l))
 
