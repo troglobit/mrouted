@@ -516,7 +516,7 @@ int main(int argc, char *argv[])
 	    }
 	}
 
-	if ((n = poll (pfd, nhandlers +1, secs)) < 0) {
+	if ((n = poll (pfd, nhandlers + 1, secs * 1000)) < 0) {
 	    if (errno != EINTR)
 		logit(LOG_WARNING, errno, "poll failed");
 	    continue;
