@@ -112,8 +112,10 @@ stmt	: error
 		    break;
 	    }
 
-	    if (vifi == numvifs)
+	    if (vifi == numvifs && !missingok)
 		fatal("%s is not a configured interface", inet_fmt($2, s1, sizeof(s1)));
+	    if (vifi == numvifs)
+		warn("%s is not a configured interface, continuing", inet_fmt($2, s1, sizeof(s1)));
 	}
 	ifmods
 	| TUNNEL interface addrname
@@ -531,7 +533,7 @@ interface: ADDR
 	| STRING
 	{
 	    $$ = valid_if($1);
-	    if ($$ == 0)
+	    if ($$ == 0 && !missingok)
 		fatal("Invalid interface name %s",$1);
 	}
 	;
