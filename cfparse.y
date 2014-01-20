@@ -69,7 +69,7 @@ int numbounds = 0;			/* Number of named boundaries */
 
 %token CACHE_LIFETIME PRUNE_LIFETIME PRUNING BLACK_HOLE NOFLOOD
 %token PHYINT TUNNEL NAME
-%token DISABLE IGMPV1 SRCRT BESIDE
+%token DISABLE ENABLE IGMPV1 SRCRT BESIDE
 %token METRIC THRESHOLD RATE_LIMIT BOUNDARY NETMASK ALTNET ADVERT_METRIC
 %token FILTER ACCEPT DENY EXACT BIDIR REXMIT_PRUNES REXMIT_PRUNES2
 %token PASSIVE ALLOW_NONPRUNERS
@@ -112,8 +112,10 @@ stmt	: error
 		    break;
 	    }
 
-	    if (vifi == numvifs)
+	    if (vifi == numvifs && !missingok)
 		fatal("%s is not a configured interface", inet_fmt($2, s1, sizeof(s1)));
+	    if (vifi == numvifs)
+		warn("%s is not a configured interface, continuing", inet_fmt($2, s1, sizeof(s1)));
 	}
 	ifmods
 	| TUNNEL interface addrname
@@ -302,6 +304,7 @@ ifmods	: /* empty */
 
 ifmod	: mod
 	| DISABLE		{ v->uv_flags |= VIFF_DISABLED; }
+	| ENABLE		{ v->uv_flags &= ~VIFF_DISABLED; }
 	| IGMPV1		{ v->uv_flags |= VIFF_IGMPV1; }
 	| NETMASK addrname
 	{
@@ -530,7 +533,7 @@ interface: ADDR
 	| STRING
 	{
 	    $$ = valid_if($1);
-	    if ($$ == 0)
+	    if ($$ == 0 && !missingok)
 		fatal("Invalid interface name %s",$1);
 	}
 	;
@@ -699,6 +702,7 @@ static struct keyword {
 	{ "phyint",		PHYINT, 0 },
 	{ "tunnel",		TUNNEL, 0 },
 	{ "disable",		DISABLE, 0 },
+	{ "enable",		ENABLE, 0 },
 	{ "metric",		METRIC, 0 },
 	{ "advert_metric",	ADVERT_METRIC, 0 },
 	{ "threshold",		THRESHOLD, 0 },
