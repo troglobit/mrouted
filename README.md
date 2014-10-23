@@ -1,6 +1,6 @@
 README for mrouted, the DVMRP Multicast Routing Daemon
 ======================================================
-[![Build Status](https://travis-ci.org/troglobit/mrouted.png?branch=master)](https://travis-ci.org/troglobit/mrouted)
+[![Build Status](https://travis-ci.org/troglobit/mrouted.png?branch=master)](https://travis-ci.org/troglobit/mrouted)[![Coverity Scan Status](https://scan.coverity.com/projects/3320/badge.svg)](https://scan.coverity.com/projects/3320)
 
 mrouted is an implementation of the DVMRP multicast routing protocol. It
 turns a UNIX workstation into a DVMRP multicast router with tunnel
