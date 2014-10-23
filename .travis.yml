@@ -1,0 +1,6 @@
+# Travis CI integration -- https://travis-ci.org/troglobit/mrouted
+language: c
+compiler:
+  - gcc
+
+script: make
