@@ -29,8 +29,8 @@ static void icmp_handler(int fd)
 {
     uint8_t icmp_buf[RECV_BUF_SIZE];
     struct sockaddr_in from;
-    socklen_t fromlen;
-    ssize_t recvlen;
+    socklen_t fromlen = sizeof(from);
+    ssize_t len;
     int iphdrlen, ipdatalen;
     struct icmp *icmp;
     struct ip *ip;
@@ -38,32 +38,40 @@ static void icmp_handler(int fd)
     struct uvif *v;
     uint32_t src;
 
-    fromlen = sizeof(from);
-    recvlen = recvfrom(fd, icmp_buf, RECV_BUF_SIZE, 0,
-			    (struct sockaddr *)&from, &fromlen);
-    if (recvlen < 0) {
-	if (errno != EINTR)
-	    logit(LOG_WARNING, errno, "icmp_socket recvfrom");
+    memset(icmp_buf, 0, sizeof(icmp_buf));
+    while ((len = recvfrom(fd, icmp_buf, sizeof(icmp_buf), 0, (struct sockaddr *)&from, &fromlen)) < 0) {
+	if (errno == EINTR)
+	    continue;
+
+	logit(LOG_WARNING, errno, "ICMP");
 	return;
     }
-    ip = (struct ip *)icmp_buf;
-    iphdrlen = ip->ip_hl << 2;
+
+    ip        = (struct ip *)icmp_buf;
+    iphdrlen  = (int)ip->ip_hl << 2;
     ipdatalen = ntohs(ip->ip_len) - iphdrlen;
-    if (iphdrlen + ipdatalen != recvlen) {
-	IF_DEBUG(DEBUG_ICMP)
-	logit(LOG_DEBUG, 0, "hdr %d data %d != rcv %d", iphdrlen, ipdatalen, recvlen);
+
+    if (iphdrlen + ipdatalen != len) {
 	/* Malformed ICMP, just return. */
+	IF_DEBUG(DEBUG_ICMP) {
+	    logit(LOG_DEBUG, 0, "hdr %d data %d != rcv %d", iphdrlen, ipdatalen, len);
+	}
+
 	return;
     }
+
     if (ipdatalen < ICMP_MINLEN + (int)sizeof(struct ip)) {
 	/* Not enough data for us to be interested in it. */
 	return;
     }
+
     src = ip->ip_src.s_addr;
     icmp = (struct icmp *)(icmp_buf + iphdrlen);
-    IF_DEBUG(DEBUG_ICMP)
-    logit(LOG_DEBUG, 0, "got ICMP type %d from %s",
-	  icmp->icmp_type, inet_fmt(src, s1, sizeof(s1)));
+    IF_DEBUG(DEBUG_ICMP) {
+	logit(LOG_DEBUG, 0, "got ICMP type %d from %s",
+	      icmp->icmp_type, inet_fmt(src, s1, sizeof(s1)));
+    }
+
     /*
      * Eventually:
      * have registry of ICMP listeners, by type, code and ICMP_ID
