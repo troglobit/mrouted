@@ -2206,7 +2206,8 @@ void accept_mtrace(u_int32 src, u_int32 dst, u_int32 group, char *data, u_int8_t
 	 * RESP packets travel hop-by-hop so this either traversed
 	 * a tunnel or came from a directly attached mrouter.
 	 */
-	if ((vifi = find_vif(src, dst)) == NO_VIF) {
+	vifi = find_vif(src, dst);
+	if (vifi == NO_VIF) {
 	    IF_DEBUG(DEBUG_TRACE) {
 		logit(LOG_DEBUG, 0, "Wrong interface for packet");
 	    }
@@ -2223,7 +2224,6 @@ void accept_mtrace(u_int32 src, u_int32 dst, u_int32 group, char *data, u_int8_t
 
     /* copy the packet to the sending buffer */
     p = send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN;
-    
     memmove(p, data, datalen);
     p += datalen;
     
@@ -2247,7 +2247,6 @@ void accept_mtrace(u_int32 src, u_int32 dst, u_int32 group, char *data, u_int8_t
 
     resp->tr_qarr    = htonl(((tp.tv_sec + JAN_1970) << 16) + 
 				((tp.tv_usec << 10) / 15625));
-
     resp->tr_rproto  = PROTO_DVMRP;
     resp->tr_outaddr = (vifi == NO_VIF) ? dst : uvifs[vifi].uv_lcl_addr;
     resp->tr_fttl    = (vifi == NO_VIF) ? 0 : uvifs[vifi].uv_threshold;
@@ -2265,20 +2264,22 @@ void accept_mtrace(u_int32 src, u_int32 dst, u_int32 group, char *data, u_int8_t
     /*
      * fill in scoping & pruning information
      */
-    if (rt)
+    if (rt) {
 	for (gt = rt->rt_groups; gt; gt = gt->gt_next) {
 	    if (gt->gt_mcastgrp >= group)
 		break;
 	}
-    else
+    } else {
 	gt = NULL;
+    }
 
     if (gt && gt->gt_mcastgrp == group) {
 	struct stable *st;
 
-	for (st = gt->gt_srctbl; st; st = st->st_next)
+	for (st = gt->gt_srctbl; st; st = st->st_next) {
 	    if (qry->tr_src == st->st_origin)
 		break;
+	}
 
 	sg_req.src.s_addr = qry->tr_src;
 	sg_req.grp.s_addr = group;
@@ -2288,11 +2289,11 @@ void accept_mtrace(u_int32 src, u_int32 dst, u_int32 group, char *data, u_int8_t
 	else
 	    resp->tr_pktcnt = htonl(st ? st->st_savpkt : 0xffffffff);
 
-	if (VIFM_ISSET(vifi, gt->gt_scope))
+	if (vifi != NO_VIF && VIFM_ISSET(vifi, gt->gt_scope)) {
 	    resp->tr_rflags = TR_SCOPED;
-	else if (gt->gt_prsent_timer)
+	} else if (gt->gt_prsent_timer) {
 	    resp->tr_rflags = TR_PRUNED;
-	else if (!VIFM_ISSET(vifi, gt->gt_grpmems)) {
+	} else if (vifi != NO_VIF && !VIFM_ISSET(vifi, gt->gt_grpmems)) {
 	    if (!NBRM_ISEMPTY(uvifs[vifi].uv_nbrmap) &&
 		SUBS_ARE_PRUNED(rt->rt_subordinates,
 				uvifs[vifi].uv_nbrmap, gt->gt_prunes))
@@ -2304,14 +2305,14 @@ void accept_mtrace(u_int32 src, u_int32 dst, u_int32 group, char *data, u_int8_t
 	if ((vifi != NO_VIF && scoped_addr(vifi, group)) ||
 	    (rt && scoped_addr(rt->rt_parent, group)))
 	    resp->tr_rflags = TR_SCOPED;
-	else if (rt && !VIFM_ISSET(vifi, rt->rt_children))
+	else if (rt && vifi != NO_VIF && !VIFM_ISSET(vifi, rt->rt_children))
 	    resp->tr_rflags = TR_NO_FWD;
     }
 
     /*
      *  if no rte exists, set NO_RTE error
      */
-    if (rt == NULL) {
+    if (!rt) {
 	src = dst;		/* the dst address of resp. pkt */
 	resp->tr_inaddr   = 0;
 	resp->tr_rflags   = TR_NO_RTE;
@@ -2328,13 +2329,14 @@ void accept_mtrace(u_int32 src, u_int32 dst, u_int32 group, char *data, u_int8_t
 	src = uvifs[rt->rt_parent].uv_lcl_addr;
 	resp->tr_inaddr = src;
 	resp->tr_rmtaddr = rt->rt_gateway;
-	if (!VIFM_ISSET(vifi, rt->rt_children)) {
+	if (vifi != NO_VIF && !VIFM_ISSET(vifi, rt->rt_children)) {
 	    IF_DEBUG(DEBUG_TRACE) {
 		logit(LOG_DEBUG, 0, "Destination %s not on forwarding tree for src %s",
 		      inet_fmt(qry->tr_dst, s1, sizeof(s1)), inet_fmt(qry->tr_src, s2, sizeof(s2)));
 	    }
 	    resp->tr_rflags = TR_WRONG_IF;
 	}
+
 	if (rt->rt_metric >= UNREACHABLE) {
 	    resp->tr_rflags = TR_NO_RTE;
 	    /* Hack to send reply directly */
