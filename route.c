@@ -1316,7 +1316,8 @@ int report_next_chunk(void)
      * all our neighbors.
      */
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
-	if (!NBRM_ISEMPTY(v->uv_nbrmap)) {
+	/* sr might turn up NULL above ... */
+	if (sr && !NBRM_ISEMPTY(v->uv_nbrmap)) {
 	    n = report_chunk(ALL_ROUTES, sr, vifi, v->uv_dst_addr);
 	    if (n < min)
 		min = n;
