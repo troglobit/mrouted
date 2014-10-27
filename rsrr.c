@@ -57,7 +57,7 @@ static socklen_t client_length = sizeof(client_addr);
  */
 static void	rsrr_accept(size_t recvlen);
 static void	rsrr_accept_iq(void);
-static int	rsrr_accept_rq(struct rsrr_rq *route_query, u_char flags, struct gtable *gt_notify);
+static int	rsrr_accept_rq(struct rsrr_rq *route_query, uint8_t flags, struct gtable *gt_notify);
 static void	rsrr_read(int);
 static int	rsrr_send(int sendlen);
 static void	rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query);
@@ -218,14 +218,14 @@ static void rsrr_accept_iq(void)
  * change notification.
  */
 /* XXX: must modify if your routing table structure/search is different */
-static int rsrr_accept_rq(struct rsrr_rq *route_query, u_char flags, struct gtable *gt_notify)
+static int rsrr_accept_rq(struct rsrr_rq *route_query, uint8_t flags, struct gtable *gt_notify)
 {
     struct rsrr_header *rsrr = (struct rsrr_header *)rsrr_send_buf;
     struct rsrr_rr *route_reply;
     struct gtable *gt,local_g;
     struct rtentry *r;
     int sendlen;
-    u_long mcastgrp;
+    uint32_t mcastgrp;
     
     /* Set up message */
     rsrr->version = 1;
@@ -407,7 +407,7 @@ static void rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query)
 void rsrr_cache_send(struct gtable *gt, int notify)
 {
     struct rsrr_cache *rc, **rcnp;
-    u_char flags = 0;
+    uint8_t flags = 0;
 
     if (notify) {
 	BIT_SET(flags, RSRR_NOTIFICATION_BIT);

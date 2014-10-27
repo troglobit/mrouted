@@ -24,24 +24,24 @@
  */
 struct rtentry {
     struct rtentry  *rt_next;		/* link to next entry MUST BE FIRST */
-    u_int32	     rt_origin;		/* subnet origin of multicasts      */
-    u_int32	     rt_originmask;	/* subnet mask for origin           */
-    short	     rt_originwidth;	/* # bytes of origin subnet number  */
-    u_char	     rt_metric;		/* cost of route back to origin     */
-    u_char	     rt_flags;		/* RTF_ flags defined below         */
-    u_int32	     rt_gateway;	/* first-hop gateway back to origin */
+    uint32_t	     rt_origin;		/* subnet origin of multicasts      */
+    uint32_t	     rt_originmask;	/* subnet mask for origin           */
+    uint16_t	     rt_originwidth;	/* # bytes of origin subnet number  */
+    uint8_t	     rt_metric;		/* cost of route back to origin     */
+    uint8_t	     rt_flags;		/* RTF_ flags defined below         */
+    uint32_t	     rt_gateway;	/* first-hop gateway back to origin */
     vifi_t	     rt_parent;	    	/* incoming vif (ie towards origin) */
     vifbitmap_t	     rt_children;	/* outgoing children vifs           */
-    u_int32	    *rt_dominants;      /* per vif dominant gateways        */
+    uint32_t	    *rt_dominants;      /* per vif dominant gateways        */
     nbrbitmap_t	     rt_subordinates;   /* bitmap of subordinate gateways   */
     nbrbitmap_t	     rt_subordadv;      /* recently advertised subordinates */
-    u_int	     rt_timer;		/* for timing out the route entry   */
+    uint32_t	     rt_timer;		/* for timing out the route entry   */
     struct rtentry  *rt_prev;		/* link to previous entry           */
     struct gtable   *rt_groups;		/* link to active groups 	    */
 };
 
-#define	RTF_CHANGED		0x01	/* route changed but not reported   */
-#define	RTF_HOLDDOWN		0x04	/* this route is in holddown	    */
+#define	RTF_CHANGED	0x01		/* route changed but not reported   */
+#define	RTF_HOLDDOWN	0x04		/* this route is in holddown	    */
 
 #define ALL_ROUTES	0		/* possible arguments to report()   */
 #define CHANGED_ROUTES	1		/*  and report_to_all_neighbors()   */

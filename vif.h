@@ -23,7 +23,7 @@
  */
 #ifndef VIFM_SET
 
-typedef	u_int32 vifbitmap_t;
+typedef	uint32_t vifbitmap_t;
 
 #define	VIFM_SET(n, m)			((m) |=  (1 << (n)))
 #define	VIFM_CLR(n, m)			((m) &= ~(1 << (n)))
@@ -48,7 +48,7 @@ typedef	u_int32 vifbitmap_t;
  * containing two variables of a native machine type.  If you
  * have a native type that's bigger than a long, define it below.
  */
-#define	NBRTYPE		u_long
+#define	NBRTYPE		uint32_t
 #define NBRBITS		sizeof(NBRTYPE) * 8
 
 typedef struct {
@@ -101,17 +101,17 @@ struct blastinfo {
  * (Note: all addresses, subnet numbers and masks are kept in NETWORK order.)
  */
 struct uvif {
-    u_int	     uv_flags;	    /* VIFF_ flags defined below            */
-    u_char	     uv_metric;     /* cost of this vif                     */
-    u_char	     uv_admetric;   /* advertised cost of this vif          */
-    u_char	     uv_threshold;  /* min ttl required to forward on vif   */
-    u_int	     uv_rate_limit; /* rate limit on this vif               */
-    u_int32	     uv_lcl_addr;   /* local address of this vif            */
-    u_int32	     uv_rmt_addr;   /* remote end-point addr (tunnels only) */
-    u_int32	     uv_dst_addr;   /* destination for DVMRP/PIM messages   */
-    u_int32	     uv_subnet;     /* subnet number         (phyints only) */
-    u_int32	     uv_subnetmask; /* subnet mask           (phyints only) */
-    u_int32	     uv_subnetbcast;/* subnet broadcast addr (phyints only) */
+    uint32_t	     uv_flags;	    /* VIFF_ flags defined below            */
+    uint8_t	     uv_metric;     /* cost of this vif                     */
+    uint8_t	     uv_admetric;   /* advertised cost of this vif          */
+    uint8_t	     uv_threshold;  /* min ttl required to forward on vif   */
+    uint32_t	     uv_rate_limit; /* rate limit on this vif               */
+    uint32_t	     uv_lcl_addr;   /* local address of this vif            */
+    uint32_t	     uv_rmt_addr;   /* remote end-point addr (tunnels only) */
+    uint32_t	     uv_dst_addr;   /* destination for DVMRP/PIM messages   */
+    uint32_t	     uv_subnet;     /* subnet number         (phyints only) */
+    uint32_t	     uv_subnetmask; /* subnet mask           (phyints only) */
+    uint32_t	     uv_subnetbcast;/* subnet broadcast addr (phyints only) */
     char	     uv_name[IFNAMSIZ]; /* interface name                   */
     struct listaddr *uv_groups;     /* list of local groups  (phyints only) */
     struct listaddr *uv_neighbors;  /* list of neighboring routers          */
@@ -126,7 +126,7 @@ struct uvif {
     struct blastinfo uv_blaster;    /* Info about route blasters	    */
     int		     uv_nbrup;	    /* Counter for neighbor up events       */
     int		     uv_icmp_warn;  /* To rate-limit ICMP warnings	    */
-    u_int	     uv_nroutes;    /* # of routes with this vif as parent  */
+    uint32_t	     uv_nroutes;    /* # of routes with this vif as parent  */
     struct ip 	    *uv_encap_hdr;  /* Pre-formed header to encapsulate msgs*/
 };
 
@@ -160,16 +160,16 @@ struct uvif {
 
 struct phaddr {
     struct phaddr   *pa_next;
-    u_int32	     pa_subnet;		/* extra subnet			*/
-    u_int32	     pa_subnetmask;	/* netmask of extra subnet	*/
-    u_int32	     pa_subnetbcast;	/* broadcast of extra subnet	*/
+    uint32_t	     pa_subnet;		/* extra subnet			*/
+    uint32_t	     pa_subnetmask;	/* netmask of extra subnet	*/
+    uint32_t	     pa_subnetbcast;	/* broadcast of extra subnet	*/
 };
 
 /* The Access Control List (list with scoped addresses) member */
 struct vif_acl {
     struct vif_acl  *acl_next;	    /* next acl member         */
-    u_int32	     acl_addr;	    /* Group address           */
-    u_int32	     acl_mask;	    /* Group addr. mask        */
+    uint32_t	     acl_addr;	    /* Group address           */
+    uint32_t	     acl_mask;	    /* Group addr. mask        */
 };
 
 struct vif_filter {
@@ -183,33 +183,33 @@ struct vif_filter {
 
 struct vf_element {
     struct vf_element  *vfe_next;
-    u_int32		vfe_addr;
-    u_int32		vfe_mask;
+    uint32_t		vfe_addr;
+    uint32_t		vfe_mask;
     int			vfe_flags;
 #define	VFEF_EXACT	0x0001
 };
 
 struct listaddr {
     struct listaddr *al_next;		/* link to next addr, MUST BE FIRST */
-    u_int32	     al_addr;		/* local group or neighbor address  */
-    u_long	     al_timer;		/* for timing out group or neighbor */
+    uint32_t	     al_addr;		/* local group or neighbor address  */
+    uint32_t	     al_timer;		/* for timing out group or neighbor */
     time_t	     al_ctime;		/* entry creation time		    */
     union {
 	struct {
-    	    u_int32  alur_genid;	/* generation id for neighbor       */
-	    u_int    alur_nroutes;	/* # of routes w/ nbr as parent	    */
-    	    u_char   alur_pv;		/* router protocol version	    */
-    	    u_char   alur_mv;		/* router mrouted version	    */
-    	    u_char   alur_index;	/* neighbor index		    */
+    	    uint32_t  alur_genid;	/* generation id for neighbor       */
+	    uint32_t    alur_nroutes;	/* # of routes w/ nbr as parent	    */
+    	    uint8_t   alur_pv;		/* router protocol version	    */
+    	    uint8_t   alur_mv;		/* router mrouted version	    */
+    	    uint8_t   alur_index;	/* neighbor index		    */
 	} alu_router;
 	struct {
-    	    u_int32  alug_reporter;	/* a host which reported membership */
-    	    u_long   alug_timerid;	/* timer for group membership	    */
-    	    u_long   alug_query;	/* timer for repeated leave query   */
-    	    u_char   alug_old;		/* time since heard old report      */
+    	    uint32_t  alug_reporter;	/* a host which reported membership */
+    	    uint32_t   alug_timerid;	/* timer for group membership	    */
+    	    uint32_t   alug_query;	/* timer for repeated leave query   */
+    	    uint8_t   alug_old;		/* time since heard old report      */
 	} alu_group;
     } al_alu;
-    u_int16_t	     al_flags;		/* flags related to this neighbor   */
+    uint16_t	     al_flags;		/* flags related to this neighbor   */
 };
 #define	al_genid	al_alu.alu_router.alur_genid
 #define	al_nroutes	al_alu.alu_router.alur_nroutes

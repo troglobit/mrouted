@@ -27,7 +27,7 @@ void init_icmp(void)
 
 static void icmp_handler(int fd)
 {
-    u_char icmp_buf[RECV_BUF_SIZE];
+    uint8_t icmp_buf[RECV_BUF_SIZE];
     struct sockaddr_in from;
     socklen_t fromlen;
     ssize_t recvlen;
@@ -36,7 +36,7 @@ static void icmp_handler(int fd)
     struct ip *ip;
     vifi_t i;
     struct uvif *v;
-    u_int32 src;
+    uint32_t src;
 
     fromlen = sizeof(from);
     recvlen = recvfrom(fd, icmp_buf, RECV_BUF_SIZE, 0,

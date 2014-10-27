@@ -43,7 +43,7 @@ static void stop_vif(vifi_t vifi);
 static void age_old_hosts(void);
 static void send_probe_on_vif(struct uvif *v);
 static void send_query(struct uvif *v);
-static int info_version(u_char *p);
+static int info_version(uint8_t *p);
 static void DelVif(void *arg);
 static int SetTimer(vifi_t vifi, struct listaddr *g);
 static int DeleteTimer(int id);
@@ -253,10 +253,10 @@ void check_vif_state(void)
  * sent "beside" the tunnel, as required by earlier versions of mrouted,
  * then just send the message.
  */
-void send_on_vif(struct uvif *v, u_int32 dst, int code, size_t datalen)
+void send_on_vif(struct uvif *v, uint32_t dst, int code, size_t datalen)
 {
-    u_int32 group = htonl(MROUTED_LEVEL | 
-			((v->uv_flags & VIFF_LEAF) ? 0 : LEAF_FLAGS));
+    uint32_t group = htonl(MROUTED_LEVEL |
+			   ((v->uv_flags & VIFF_LEAF) ? 0 : LEAF_FLAGS));
 
     /*
      * The UNIX kernel will not decapsulate unicasts.
@@ -341,7 +341,7 @@ static void start_vif(vifi_t vifi)
 static void start_vif2(vifi_t vifi)
 {
     struct uvif *v;
-    u_int32 src;
+    uint32_t src;
     struct phaddr *p;
 
     v   = &uvifs[vifi];
@@ -512,7 +512,7 @@ void stop_all_vifs(void)
  * Find the virtual interface from which an incoming packet arrived,
  * based on the packet's source and destination IP addresses.
  */
-vifi_t find_vif(u_int32 src, u_int32 dst)
+vifi_t find_vif(uint32_t src, uint32_t dst)
 {
     vifi_t vifi;
     struct uvif *v;
@@ -586,7 +586,7 @@ void query_groups(void)
  * IGMP version mismatches, perform querier election, and
  * handle group-specific queries when we're not the querier.
  */
-void accept_membership_query(u_int32 src, u_int32 dst, u_int32 group, int tmo)
+void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo)
 {
     vifi_t vifi;
     struct uvif *v;
@@ -695,7 +695,7 @@ void accept_membership_query(u_int32 src, u_int32 dst, u_int32 group, int tmo)
 /*
  * Process an incoming group membership report.
  */
-void accept_group_report(u_int32 src, u_int32 dst, u_int32 group, int r_type)
+void accept_group_report(uint32_t src, uint32_t dst, uint32_t group, int r_type)
 {
     vifi_t vifi;
     struct uvif *v;
@@ -768,7 +768,7 @@ void accept_group_report(u_int32 src, u_int32 dst, u_int32 group, int r_type)
 /*
  * Process an incoming IGMPv2 Leave Group message.
  */
-void accept_leave_message(u_int32 src, u_int32 dst, u_int32 group)
+void accept_leave_message(uint32_t src, uint32_t dst, uint32_t group)
 {
     vifi_t vifi;
     struct uvif *v;
@@ -851,14 +851,14 @@ void probe_for_neighbors(void)
 /*
  * Send a list of all of our neighbors to the requestor, `src'.
  */
-void accept_neighbor_request(u_int32 src, u_int32 UNUSED dst)
+void accept_neighbor_request(uint32_t src, uint32_t UNUSED dst)
 {
     vifi_t vifi;
     struct uvif *v;
-    u_char *p, *ncount;
+    uint8_t *p, *ncount;
     struct listaddr *la;
     int	datalen;
-    u_int32 temp_addr, them = src;
+    uint32_t temp_addr, them = src;
 
 #define PUT_ADDR(a)	temp_addr = ntohl(a); \
 			*p++ = temp_addr >> 24; \
@@ -866,7 +866,7 @@ void accept_neighbor_request(u_int32 src, u_int32 UNUSED dst)
 			*p++ = (temp_addr >> 8) & 0xFF; \
 			*p++ = temp_addr & 0xFF;
 
-    p = (u_char *) (send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN);
+    p = (uint8_t *) (send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN);
     datalen = 0;
 
     for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
@@ -881,7 +881,7 @@ void accept_neighbor_request(u_int32 src, u_int32 UNUSED dst)
 	    if (datalen + (ncount == 0 ? 4 + 3 + 4 : 4) > MAX_DVMRP_DATA_LEN) {
 		send_igmp(INADDR_ANY, them, IGMP_DVMRP, DVMRP_NEIGHBORS,
 			  htonl(MROUTED_LEVEL), datalen);
-		p = (u_char *) (send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN);
+		p = (uint8_t *) (send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN);
 		datalen = 0;
 		ncount = 0;
 	    }
@@ -910,21 +910,21 @@ void accept_neighbor_request(u_int32 src, u_int32 UNUSED dst)
 /*
  * Send a list of all of our neighbors to the requestor, `src'.
  */
-void accept_neighbor_request2(u_int32 src, u_int32 UNUSED dst)
+void accept_neighbor_request2(uint32_t src, uint32_t UNUSED dst)
 {
     vifi_t vifi;
     struct uvif *v;
-    u_char *p, *ncount;
+    uint8_t *p, *ncount;
     struct listaddr *la;
     int	datalen;
-    u_int32 them = src;
+    uint32_t them = src;
 
-    p = (u_char *) (send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN);
+    p = (uint8_t *) (send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN);
     datalen = 0;
 
     for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
-	u_int16_t vflags = v->uv_flags;
-	u_char rflags = 0;
+	uint16_t vflags = v->uv_flags;
+	uint8_t rflags = 0;
 
 	if (vflags & VIFF_TUNNEL)
 	    rflags |= DVMRP_NF_TUNNEL;
@@ -951,16 +951,16 @@ void accept_neighbor_request2(u_int32 src, u_int32 UNUSED dst)
 	    if (datalen > MAX_DVMRP_DATA_LEN - 12) {
 		send_igmp(INADDR_ANY, them, IGMP_DVMRP, DVMRP_NEIGHBORS2,
 			  htonl(MROUTED_LEVEL), datalen);
-		p = (u_char *) (send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN);
+		p = (uint8_t *) (send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN);
 		datalen = 0;
 	    }
-	    *(u_int*)p = v->uv_lcl_addr;
+	    *(uint32_t*)p = v->uv_lcl_addr;
 	    p += 4;
 	    *p++ = v->uv_metric;
 	    *p++ = v->uv_threshold;
 	    *p++ = rflags;
 	    *p++ = 1;
-	    *(u_int*)p =  v->uv_rmt_addr;
+	    *(uint32_t*)p =  v->uv_rmt_addr;
 	    p += 4;
 	    datalen += 12;
 	} else {
@@ -969,7 +969,7 @@ void accept_neighbor_request2(u_int32 src, u_int32 UNUSED dst)
 		if (datalen + (ncount == 0 ? 4+4+4 : 4) > MAX_DVMRP_DATA_LEN) {
 		    send_igmp(INADDR_ANY, them, IGMP_DVMRP, DVMRP_NEIGHBORS2,
 			      htonl(MROUTED_LEVEL), datalen);
-		    p = (u_char *) (send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN);
+		    p = (uint8_t *) (send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN);
 		    datalen = 0;
 		    ncount = 0;
 		}
@@ -979,7 +979,7 @@ void accept_neighbor_request2(u_int32 src, u_int32 UNUSED dst)
 		    /* If it's a one-way tunnel, mark it down. */
 		    if (rflags & DVMRP_NF_TUNNEL && la->al_flags & NBRF_ONEWAY)
 			rflags |= DVMRP_NF_DOWN;
-		    *(u_int*)p = v->uv_lcl_addr;
+		    *(uint32_t*)p = v->uv_lcl_addr;
 		    p += 4;
 		    *p++ = v->uv_metric;
 		    *p++ = v->uv_threshold;
@@ -992,14 +992,14 @@ void accept_neighbor_request2(u_int32 src, u_int32 UNUSED dst)
 		/* Don't report one-way peering on phyint at all */
 		if (!(rflags & DVMRP_NF_TUNNEL) && la->al_flags & NBRF_ONEWAY)
 		    continue;
-		*(u_int*)p = la->al_addr;
+		*(uint32_t*)p = la->al_addr;
 		p += 4;
 		datalen += 4;
 		(*ncount)++;
 	    }
 
 	    if (*ncount == 0) {
-		*(u_int*)p = v->uv_rmt_addr;
+		*(uint32_t*)p = v->uv_rmt_addr;
 		p += 4;
 		datalen += 4;
 		(*ncount)++;
@@ -1012,13 +1012,13 @@ void accept_neighbor_request2(u_int32 src, u_int32 UNUSED dst)
 		htonl(MROUTED_LEVEL), datalen);
 }
 
-void accept_info_request(u_int32 src, u_int32 UNUSED dst, u_char *p, size_t datalen)
+void accept_info_request(uint32_t src, uint32_t UNUSED dst, uint8_t *p, size_t datalen)
 {
-    u_char *q;
+    uint8_t *q;
     int len;
     int outlen = 0;
 
-    q = (u_char *) (send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN);
+    q = (uint8_t *) (send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN);
 
     /* To be general, this must deal properly with breaking up over-sized
      * packets.  That implies passing a length to each function, and
@@ -1054,7 +1054,7 @@ void accept_info_request(u_int32 src, u_int32 UNUSED dst, u_char *p, size_t data
 /*
  * Information response -- return version string
  */
-static int info_version(u_char *p)
+static int info_version(uint8_t *p)
 {
     int len;
 
@@ -1076,7 +1076,7 @@ static int info_version(u_char *p)
 /*
  * Process an incoming neighbor-list message.
  */
-void accept_neighbors(u_int32_t src, u_int32_t dst, u_char UNUSED *p, size_t UNUSED datalen, u_int32_t UNUSED level)
+void accept_neighbors(uint32_t src, uint32_t dst, uint8_t UNUSED *p, size_t UNUSED datalen, uint32_t UNUSED level)
 {
     logit(LOG_INFO, 0, "Ignoring spurious DVMRP neighbor list from %s to %s",
 	  inet_fmt(src, s1, sizeof(s1)), inet_fmt(dst, s2, sizeof(s2)));
@@ -1086,7 +1086,7 @@ void accept_neighbors(u_int32_t src, u_int32_t dst, u_char UNUSED *p, size_t UNU
 /*
  * Process an incoming neighbor-list message.
  */
-void accept_neighbors2(u_int32 src, u_int32 dst, u_char UNUSED *p, size_t UNUSED datalen, u_int32 UNUSED level)
+void accept_neighbors2(uint32_t src, uint32_t dst, uint8_t UNUSED *p, size_t UNUSED datalen, uint32_t UNUSED level)
 {
     IF_DEBUG(DEBUG_PKT) {
 	logit(LOG_DEBUG, 0, "Ignoring spurious DVMRP neighbor list2 from %s to %s",
@@ -1097,7 +1097,7 @@ void accept_neighbors2(u_int32 src, u_int32 dst, u_char UNUSED *p, size_t UNUSED
 /*
  * Process an incoming info reply message.
  */
-void accept_info_reply(u_int32 src, u_int32 dst, u_char UNUSED *p, size_t UNUSED datalen)
+void accept_info_reply(uint32_t src, uint32_t dst, uint8_t UNUSED *p, size_t UNUSED datalen)
 {
     IF_DEBUG(DEBUG_PKT) {
 	logit(LOG_DEBUG, 0, "Ignoring spurious DVMRP info reply from %s to %s",
@@ -1111,7 +1111,7 @@ void accept_info_reply(u_int32 src, u_int32 dst, u_char UNUSED *p, size_t UNUSED
  * 'msgtype' is the type of DVMRP message received from the neighbor.
  * Return the neighbor entry if 'addr' is a valid neighbor, FALSE otherwise.
  */
-struct listaddr *update_neighbor(vifi_t vifi, u_int32 addr, int msgtype, char *p, size_t datalen, u_int32 level)
+struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *p, size_t datalen, uint32_t level)
 {
     struct uvif *v;
     struct listaddr *n;
@@ -1120,8 +1120,8 @@ struct listaddr *update_neighbor(vifi_t vifi, u_int32 addr, int msgtype, char *p
     int has_genid = 0;
     int in_router_list = 0;
     int dvmrpspec = 0;
-    u_int32 genid;
-    u_int32 send_tables = 0;
+    uint32_t genid;
+    uint32_t send_tables = 0;
     size_t i;
     int do_reset = FALSE;
 
@@ -1158,7 +1158,7 @@ struct listaddr *update_neighbor(vifi_t vifi, u_int32 addr, int msgtype, char *p
      */
     if (msgtype == DVMRP_PROBE && ((pv == 3 && mv > 2) ||
 				   (pv > 3 && pv < 10))) {
-	u_int32 router;
+	uint32_t router;
 
 	IF_DEBUG(DEBUG_PEER) {
 	    logit(LOG_DEBUG, 0, "Checking probe from %s (%d.%d) on vif %d",
@@ -1438,7 +1438,7 @@ void age_vifs(void)
     vifi_t vifi;
     struct uvif *v;
     struct listaddr *a, *prev_a;
-    u_int32 addr;
+    uint32_t addr;
 
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v ) {
 	if (v->uv_leaf_timer && (v->uv_leaf_timer -= TIMER_INTERVAL == 0)) {
@@ -1449,7 +1449,7 @@ void age_vifs(void)
 	     a = v->uv_neighbors;
 	     a != NULL;
 	     prev_a = a, a = a->al_next) {
-	    u_long exp_time;
+	    uint32_t exp_time;
 	    int idx;
 
 	    if (((a->al_pv == 3) && (a->al_mv >= 3)) ||
@@ -1510,7 +1510,7 @@ void age_vifs(void)
 /*
  * Returns the neighbor info struct for a given neighbor
  */
-struct listaddr *neighbor_info(vifi_t vifi, u_int32 addr)
+struct listaddr *neighbor_info(vifi_t vifi, uint32_t addr)
 {
     struct listaddr *u;
 
@@ -1675,7 +1675,7 @@ void dump_vifs(FILE *fp)
 	if (v->uv_flags & VIFF_BLASTER)
 	    fprintf(fp, "                  blasterbuf size: %dk\n",
 			v->uv_blasterlen / 1024);
-	fprintf(fp, "                      Nbr bitmaps: 0x%08lx%08lx\n",/*XXX*/
+	fprintf(fp, "                      Nbr bitmaps: 0x%08x%08x\n",/*XXX*/
 			v->uv_nbrmap.hi, v->uv_nbrmap.lo);
 	if (v->uv_prune_lifetime != 0)
 	    fprintf(fp, "                   Prune Lifetime: %d seconds\n",

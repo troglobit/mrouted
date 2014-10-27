@@ -60,7 +60,7 @@ static int nhandlers = 0;
 
 static struct debugname {
     char	*name;
-    u_int32_t	 level;
+    uint32_t	 level;
     size_t	 nchars;
 } debugnames[] = {
     {	"packet",	DEBUG_PKT,	2	},
@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
     socklen_t dummy;
     FILE *fp;
     struct timeval tv, difftime, curtime, lasttime, *timeout;
-    u_int32 prev_genid;
+    uint32_t prev_genid;
     int foreground = 0;
     int vers, n, i, secs, ch;
     struct pollfd *pfd;
@@ -370,7 +370,7 @@ int main(int argc, char *argv[])
      * Get generation id
      */
     gettimeofday(&tv, NULL);
-    dvmrp_genid = (u_int32)tv.tv_sec;	/* for a while after 2038 */
+    dvmrp_genid = (uint32_t)tv.tv_sec;	/* for a while after 2038 */
 
     fp = fopen(genidfilename, "r");
     if (fp != NULL) {
@@ -678,7 +678,7 @@ static void fasttimer(void UNUSED *arg)
  * avoid unwanted synchronization with other routers.
  */
 
-u_long virtual_time = 0;
+uint32_t virtual_time = 0;
 
 
 /*
@@ -1028,11 +1028,11 @@ void logit(int severity, int syserr, const char *format, ...)
 }
 
 #ifdef DEBUG_MFC
-void md_log(int what, u_int32 origin, u_int32 mcastgrp)
+void md_log(int what, uint32_t origin, uint32_t mcastgrp)
 {
     static FILE *f = NULL;
     struct timeval tv;
-    u_int32 buf[4];
+    uint32_t buf[4];
 
     if (!f) {
 	if ((f = fopen("/tmp/mrouted.clog", "w")) == NULL) {
@@ -1046,7 +1046,7 @@ void md_log(int what, u_int32 origin, u_int32 mcastgrp)
     buf[2] = origin;
     buf[3] = mcastgrp;
 
-    fwrite(buf, sizeof(u_int32), 4, f);
+    fwrite(buf, sizeof(uint32_t), 4, f);
 }
 #endif
 

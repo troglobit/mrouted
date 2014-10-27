@@ -102,7 +102,7 @@ void k_hdr_include(int bool)
  */
 void k_set_ttl(int t)
 {
-    u_char ttl;
+    uint8_t ttl;
 
     ttl = t;
     if (setsockopt(igmp_socket, IPPROTO_IP, IP_MULTICAST_TTL, (char *)&ttl, sizeof(ttl)) < 0)
@@ -117,7 +117,7 @@ void k_set_ttl(int t)
  */
 void k_set_loop(int flag)
 {
-    u_char loop;
+    uint8_t loop;
 
     loop = flag;
     if (setsockopt(igmp_socket, IPPROTO_IP, IP_MULTICAST_LOOP, (char *)&loop, sizeof(loop)) < 0)
@@ -128,7 +128,7 @@ void k_set_loop(int flag)
 /*
  * Set the IP_MULTICAST_IF option on local interface ifa.
  */
-void k_set_if(u_int32 ifa)
+void k_set_if(uint32_t ifa)
 {
     struct in_addr adr;
 
@@ -145,7 +145,7 @@ void k_set_if(u_int32 ifa)
 /*
  * Join a multicast group.
  */
-void k_join(u_int32 grp, u_int32 ifa)
+void k_join(uint32_t grp, uint32_t ifa)
 {
     struct ip_mreq mreq;
 
@@ -161,7 +161,7 @@ void k_join(u_int32 grp, u_int32 ifa)
 /*
  * Leave a multicast group.
  */
-void k_leave(u_int32 grp, u_int32 ifa)
+void k_leave(uint32_t grp, uint32_t ifa)
 {
     struct ip_mreq mreq;
 
@@ -232,7 +232,7 @@ void k_del_vif(vifi_t vifi, struct uvif UNUSED *v)
 /*
  * Adds a (source, mcastgrp) entry to the kernel
  */
-void k_add_rg(u_int32 origin, struct gtable *g)
+void k_add_rg(uint32_t origin, struct gtable *g)
 {
     struct mfcctl mc;
     vifi_t i;
@@ -263,7 +263,7 @@ void k_add_rg(u_int32 origin, struct gtable *g)
 /*
  * Deletes a (source, mcastgrp) entry from the kernel
  */
-int k_del_rg(u_int32 origin, struct gtable *g)
+int k_del_rg(uint32_t origin, struct gtable *g)
 {
     struct mfcctl mc;
 
@@ -333,7 +333,7 @@ int k_get_vif_count(vifi_t vifi, int *icount, int *ocount, int *ibytes, int *oby
 /*
  * Get counters for a desired source and group.
  */
-int k_get_sg_count(u_int32 src, u_int32 grp, int *pktcnt, int *bytecnt, int *wrong_if)
+int k_get_sg_count(uint32_t src, uint32_t grp, int *pktcnt, int *bytecnt, int *wrong_if)
 {
     struct sioc_sg_req sgreq;
     int retval = 0;

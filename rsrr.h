@@ -78,10 +78,10 @@
  * the header and a list of vifs.
  */
 struct rsrr_header {
-    u_char version;			/* RSRR Version, currently 1 */
-    u_char type;			/* type of message, as defined above */
-    u_char flags;			/* flags; defined by type */
-    u_char num;				/* number; defined by type */
+    uint8_t version;			/* RSRR Version, currently 1 */
+    uint8_t type;			/* type of message, as defined above */
+    uint8_t flags;			/* flags; defined by type */
+    uint8_t num;			/* number; defined by type */
 };
 
 /* Definition of a vif as seen by the reservation protocol.
@@ -104,9 +104,9 @@ struct rsrr_header {
  * packets are sent.
  */
 struct rsrr_vif {
-    u_char id;				/* vif id */
-    u_char threshold;			/* vif threshold ttl */
-    u_int16_t status;			/* vif status bitmask */
+    uint8_t id;				/* vif id */
+    uint8_t threshold;			/* vif threshold ttl */
+    uint16_t status;			/* vif status bitmask */
     struct in_addr local_addr;		/* vif local address */
 };
 
@@ -121,7 +121,7 @@ struct rsrr_vif {
 struct rsrr_rq {
     struct in_addr dest_addr;		/* destination */
     struct in_addr source_addr;		/* source */
-    u_long query_id;			/* query ID */
+    uint32_t query_id;			/* query ID */
 };
 
 /* Definition of an RSRR Route Reply.
@@ -135,8 +135,8 @@ struct rsrr_rq {
 struct rsrr_rr {
     struct in_addr dest_addr;		/* destination */
     struct in_addr source_addr;		/* source */
-    u_long query_id;			/* query ID */
-    u_int16_t in_vif;			/* incoming vif */
-    u_int16_t reserved;			/* reserved */
-    u_long out_vif_bm;			/* outgoing vif bitmask */
+    uint32_t query_id;			/* query ID */
+    uint16_t in_vif;			/* incoming vif */
+    uint16_t reserved;			/* reserved */
+    uint32_t out_vif_bm;		/* outgoing vif bitmask */
 };

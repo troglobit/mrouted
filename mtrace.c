@@ -73,8 +73,8 @@
 #define MULTICAST_TTL_MAX 192	/* Maximum TTL allowed (protect low-BW links */
 
 struct resp_buf {
-    u_long qtime;		/* Time query was issued */
-    u_long rtime;		/* Time response was received */
+    uint32_t qtime;		/* Time query was issued */
+    uint32_t rtime;		/* Time response was received */
     int	len;			/* Number of reports or length of data */
     struct igmp igmp;		/* IGMP header */
     union {
@@ -103,58 +103,54 @@ int multicast = FALSE;
 int statint = 10;
 int verbose = 0;
 
-u_int32_t defgrp;			/* Default group if not specified */
-u_int32_t query_cast;			/* All routers multicast addr */
-u_int32_t resp_cast;			/* Mtrace response multicast addr */
+uint32_t defgrp;			/* Default group if not specified */
+uint32_t query_cast;			/* All routers multicast addr */
+uint32_t resp_cast;			/* Mtrace response multicast addr */
 
-u_int32_t lcl_addr = 0;			/* This host address, in NET order */
-u_int32_t dst_netmask;			/* netmask to go with qdst */
+uint32_t lcl_addr = 0;			/* This host address, in NET order */
+uint32_t dst_netmask;			/* netmask to go with qdst */
 
 /*
  * Query/response parameters, all initialized to zero and set later
  * to default values or from options.
  */
-u_int32_t qsrc  = 0;		/* Source address in the query */
-u_int32_t qgrp  = 0;		/* Group address in the query */
-u_int32_t qdst  = 0;		/* Destination (receiver) address in query */
-u_char    qno   = 0;		/* Max number of hops to query */
-u_int32_t raddr = 0;		/* Address where response should be sent */
-int       qttl  = 0;		/* TTL for the query packet */
-u_char    rttl  = 0;		/* TTL for the response packet */
-u_int32_t gwy   = 0;		/* User-supplied last-hop router address */
-u_int32_t tdst  = 0;		/* Address where trace is sent (last-hop) */
+uint32_t qsrc  = 0;		/* Source address in the query */
+uint32_t qgrp  = 0;		/* Group address in the query */
+uint32_t qdst  = 0;		/* Destination (receiver) address in query */
+uint8_t  qno   = 0;		/* Max number of hops to query */
+uint32_t raddr = 0;		/* Address where response should be sent */
+int      qttl  = 0;		/* TTL for the query packet */
+uint8_t  rttl  = 0;		/* TTL for the response packet */
+uint32_t gwy   = 0;		/* User-supplied last-hop router address */
+uint32_t tdst  = 0;		/* Address where trace is sent (last-hop) */
 
 vifi_t  numvifs;		/* to keep loader happy */
 				/* (see kern.c) */
 
-char *			inet_name(u_int32_t addr);
-u_int32_t		host_addr(char *name);
-/* u_int is promoted u_char */
-char *			proto_type(u_int type);
-char *			flag_type(u_int type);
+char *			inet_name(uint32_t addr);
+uint32_t		host_addr(char *name);
+/* uint32_t is promoted uint8_t */
+char *			proto_type(uint32_t type);
+char *			flag_type(uint32_t type);
 
-u_int32_t		get_netmask(int s, u_int32_t dst);
+uint32_t		get_netmask(int s, uint32_t dst);
 int			get_ttl(struct resp_buf *buf);
-int			t_diff(u_long a, u_long b);
-u_long			fixtime(u_long time);
-int			send_recv(u_int32_t dst, int type, int code,
-				  int tries, struct resp_buf *save);
-char *			print_host(u_int32_t addr);
-char *			print_host2(u_int32_t addr1, u_int32_t addr2);
+int			t_diff(uint32_t a, uint32_t b);
+uint32_t		fixtime(uint32_t time);
+int			send_recv(uint32_t dst, int type, int code, int tries, struct resp_buf *save);
+char *			print_host(uint32_t addr);
+char *			print_host2(uint32_t addr1, uint32_t addr2);
 void			print_trace(int index, struct resp_buf *buf);
 int			what_kind(struct resp_buf *buf, char *why);
 char *			scale(int *hop);
-void			stat_line(struct tr_resp *r, struct tr_resp *s,
-				  int have_next, int *res);
-void			fixup_stats(struct resp_buf *base,
-				    struct resp_buf *prev, struct resp_buf *new);
-int			print_stats(struct resp_buf *base,
-				    struct resp_buf *prev, struct resp_buf *new);
+void			stat_line(struct tr_resp *r, struct tr_resp *s, int have_next, int *res);
+void			fixup_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf *new);
+int			print_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf *new);
 void			check_vif_state(void);
-u_long			byteswap(u_long v);
+uint32_t		byteswap(uint32_t v);
 
 
-char *inet_name(u_int32_t addr)
+char *inet_name(uint32_t addr)
 {
     struct hostent *e;
 
@@ -163,14 +159,14 @@ char *inet_name(u_int32_t addr)
     return e ? e->h_name : "?";
 }
 
-u_int32_t host_addr(char *name)
+uint32_t host_addr(char *name)
 {
     struct hostent *e = (struct hostent *)0;
-    u_int32_t  addr;
+    uint32_t addr;
     int	i, dots = 3;
-    char	buf[40];
-    char	*ip = name;
-    char	*op = buf;
+    char buf[40];
+    char *ip = name;
+    char *op = buf;
 
     /*
      * Undo BSD's favor -- take fewer than 4 octets as net/subnet address
@@ -201,7 +197,7 @@ u_int32_t host_addr(char *name)
 }
 
 
-char *proto_type(u_int type)
+char *proto_type(uint32_t type)
 {
     static char buf[80];
 
@@ -221,7 +217,7 @@ char *proto_type(u_int type)
 }
 
 
-char *flag_type(u_int type)
+char *flag_type(uint32_t type)
 {
     static char buf[80];
 
@@ -257,10 +253,10 @@ char *flag_type(u_int type)
  * local net, use that one; in either case, verify that the local
  * address is valid.
  */
-u_int32_t get_netmask(int UNUSED s, u_int32_t dst)
+uint32_t get_netmask(int UNUSED s, uint32_t dst)
 {
-    u_int32_t if_addr, if_mask;
-    u_int32_t retval = 0xFFFFFFFF;
+    uint32_t if_addr, if_mask;
+    uint32_t retval = 0xFFFFFFFF;
     int found = FALSE;
     struct ifaddrs *ifap, *ifa;
 
@@ -294,7 +290,7 @@ int get_ttl(struct resp_buf *buf)
 {
     int rno;
     struct tr_resp *b;
-    u_int ttl;
+    uint32_t ttl;
 
     if (buf && (rno = buf->len) > 0) {
 	b = buf->resps + rno - 1;
@@ -316,7 +312,7 @@ int get_ttl(struct resp_buf *buf)
  * Calculate the difference between two 32-bit NTP timestamps and return
  * the result in milliseconds.
  */
-int t_diff(u_long a, u_long b)
+int t_diff(uint32_t a, uint32_t b)
 {
     int d = a - b;
 
@@ -328,7 +324,7 @@ int t_diff(u_long a, u_long b)
  * This is possible because (JAN_1970 mod 64K) is quite close to 32K,
  * so correct and incorrect times will be far apart.
  */
-u_long fixtime(u_long time)
+uint32_t fixtime(uint32_t time)
 {
     if (abs((int)(time-base.qtime)) > 0x3FFFFFFF)
         time = ((time & 0xFFFF0000) + (JAN_1970 << 16)) +
@@ -339,20 +335,20 @@ u_long fixtime(u_long time)
 /*
  * Swap bytes for poor little-endian machines that don't byte-swap
  */
-u_long byteswap(u_long v)
+uint32_t byteswap(uint32_t v)
 {
     return ((v << 24) | ((v & 0xff00) << 8) |
 	    ((v >> 8) & 0xff00) | (v >> 24));
 }
 
-int send_recv(u_int32_t dst, int type, int code, int tries, struct resp_buf *save)
+int send_recv(uint32_t dst, int type, int code, int tries, struct resp_buf *save)
 {
     struct timeval tq, tr, tv;
     struct ip *ip;
     struct igmp *igmp;
     struct tr_query *query, *rquery;
     size_t ipdatalen, iphdrlen;
-    u_int32_t local, group;
+    uint32_t local, group;
     int datalen;
     struct pollfd pfd[1];
     int count, len, i;
@@ -403,9 +399,9 @@ int send_recv(u_int32_t dst, int type, int code, int tries, struct resp_buf *sav
 	 * by duplicate responses
 	 */
 #ifdef SYSV    
-	query->tr_qid  = ((u_int32_t)lrand48() >> 8);
+	query->tr_qid  = ((uint32_t)lrand48() >> 8);
 #else
-	query->tr_qid  = ((u_int32_t)random() >> 8);
+	query->tr_qid  = ((uint32_t)random() >> 8);
 #endif
 
 	/*
@@ -482,10 +478,10 @@ int send_recv(u_int32_t dst, int type, int code, int tries, struct resp_buf *sav
 		     * addresses in the response.
 		     */
 		    if (ip->ip_src.s_addr != dst) {
-			u_int32_t *p = (u_int32_t *)(igmp + 1);
-			u_int32_t *ep = p + (len >> 2);
+			uint32_t *p = (uint32_t *)(igmp + 1);
+			uint32_t *ep = p + (len >> 2);
 			while (p < ep) {
-			    u_int32_t laddr = *p++;
+			    uint32_t laddr = *p++;
 			    int n = ntohl(*p++) & 0xFF;
 			    if (laddr == dst) {
 				ep = p + 1;		/* ensure p < ep after loop */
@@ -522,7 +518,7 @@ int send_recv(u_int32_t dst, int type, int code, int tries, struct resp_buf *sav
 		     */
 		    if (igmp->igmp_type == IGMP_MTRACE) {
 			struct tr_resp *r = (struct tr_resp *)(rquery+1) + len - 1;
-			u_int32_t smask;
+			uint32_t smask;
 
 			VAL_TO_MASK(smask, r->tr_smask);
 			if (len < code && (r->tr_inaddr & smask) != (qsrc & smask)
@@ -583,7 +579,7 @@ void passive_mode(void)
     size_t len;
     ssize_t recvlen;
     socklen_t dummy = 0;
-    u_int32_t smask;
+    uint32_t smask;
 
     if (raddr) {
 	if (IN_MULTICAST(ntohl(raddr))) k_join(raddr, INADDR_ANY);
@@ -682,7 +678,7 @@ void passive_mode(void)
     }
 }
 
-char *print_host(u_int32_t addr)
+char *print_host(uint32_t addr)
 {
     return print_host2(addr, 0);
 }
@@ -693,7 +689,7 @@ char *print_host(u_int32_t addr)
  * sometimes get the name from the incoming interface.  This might be
  * confusing but should be slightly more helpful than just a "?".
  */
-char *print_host2(u_int32_t addr1, u_int32_t addr2)
+char *print_host2(uint32_t addr1, uint32_t addr2)
 {
     char *name;
 
@@ -742,18 +738,18 @@ void print_trace(int index, struct resp_buf *buf)
  */
 int what_kind(struct resp_buf *buf, char *why)
 {
-    u_int32_t smask;
+    uint32_t smask;
     int retval;
     int hops = buf->len;
     struct tr_resp *r = buf->resps + hops - 1;
-    u_int32_t next = r->tr_rmtaddr;
+    uint32_t next = r->tr_rmtaddr;
 
     retval = send_recv(next, IGMP_DVMRP, DVMRP_ASK_NEIGHBORS2, 1, &incr[0]);
     print_host(next);
     if (retval) {
-	u_int32_t version = ntohl(incr[0].igmp.igmp_group.s_addr);
-	u_int32_t *p = (u_int32_t *)incr[0].ndata;
-	u_int32_t *ep = p + (incr[0].len >> 2);
+	uint32_t version = ntohl(incr[0].igmp.igmp_group.s_addr);
+	uint32_t *p = (uint32_t *)incr[0].ndata;
+	uint32_t *ep = p + (incr[0].len >> 2);
 	char *type = "";
 	retval = 0;
 	switch (version & 0xFF) {
@@ -778,7 +774,7 @@ int what_kind(struct resp_buf *buf, char *why)
 	       why);
 	VAL_TO_MASK(smask, r->tr_smask);
 	while (p < ep) {
-	    u_int32_t laddr = *p++;
+	    uint32_t laddr = *p++;
 	    int flags = (ntohl(*p) & 0xFF00) >> 8;
 	    int n = ntohl(*p++) & 0xFF;
 	    if (!(flags & (DVMRP_NF_DOWN | DVMRP_NF_DISABLED)) &&
@@ -989,15 +985,15 @@ int print_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf *n
 {
     int rtt, hop;
     char *ms;
-    u_int32_t smask;
+    uint32_t smask;
     int rno = base->len - 1;
     struct tr_resp *b = base->resps + rno;
     struct tr_resp *p = prev->resps + rno;
     struct tr_resp *n = new->resps + rno;
     int *r = reset + rno;
-    u_long resptime = new->rtime;
-    u_long qarrtime = fixtime(ntohl(n->tr_qarr));
-    u_int ttl = n->tr_fttl;
+    uint32_t resptime = new->rtime;
+    uint32_t qarrtime = fixtime(ntohl(n->tr_qarr));
+    uint32_t ttl = n->tr_fttl;
     int first = (base == prev);
 
     VAL_TO_MASK(smask, b->tr_smask);
@@ -1087,10 +1083,10 @@ int main(int argc, char *argv[])
     struct timeval tv;
     struct resp_buf *prev, *new;
     struct tr_resp *r;
-    u_int32_t smask;
+    uint32_t smask;
     int rno;
     int hops, nexthop, tries;
-    u_int32_t lastout = 0;
+    uint32_t lastout = 0;
     int numstats = 1;
     int waittime;
     int seed, ch;
@@ -1211,7 +1207,7 @@ int main(int argc, char *argv[])
 		argv++, argc--;
 	    }
 	    if (IN_MULTICAST(ntohl(qdst))) {
-		u_int32_t temp = qdst;
+		uint32_t temp = qdst;
 		qdst = qgrp;
 		qgrp = temp;
 		if (IN_MULTICAST(ntohl(qdst))) usage();
@@ -1636,67 +1632,67 @@ void logit(int severity, int syserr, const char *format, ...)
 }
 
 /* dummies */
-void accept_probe(u_int32_t UNUSED src, u_int32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen, u_int32_t UNUSED level)
+void accept_probe(uint32_t UNUSED src, uint32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen, uint32_t UNUSED level)
 {
 }
 
-void accept_group_report(u_int32_t UNUSED src, u_int32_t UNUSED dst, u_int32_t UNUSED group, int UNUSED r_type)
+void accept_group_report(uint32_t UNUSED src, uint32_t UNUSED dst, uint32_t UNUSED group, int UNUSED r_type)
 {
 }
 
-void accept_neighbor_request2(u_int32_t UNUSED src, u_int32_t UNUSED dst)
+void accept_neighbor_request2(uint32_t UNUSED src, uint32_t UNUSED dst)
 {
 }
 
-void accept_report(u_int32_t UNUSED src, u_int32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen, u_int32_t UNUSED level)
+void accept_report(uint32_t UNUSED src, uint32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen, uint32_t UNUSED level)
 {
 }
 
-void accept_neighbor_request(u_int32_t UNUSED src, u_int32_t UNUSED dst)
+void accept_neighbor_request(uint32_t UNUSED src, uint32_t UNUSED dst)
 {
 }
 
-void accept_prune(u_int32_t UNUSED src, u_int32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen)
+void accept_prune(uint32_t UNUSED src, uint32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen)
 {
 }
 
-void accept_graft(u_int32_t UNUSED src, u_int32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen)
+void accept_graft(uint32_t UNUSED src, uint32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen)
 {
 }
 
-void accept_g_ack(u_int32_t UNUSED src, u_int32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen)
+void accept_g_ack(uint32_t UNUSED src, uint32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen)
 {
 }
 
-void add_table_entry(u_int32_t UNUSED origin, u_int32_t UNUSED mcastgrp)
+void add_table_entry(uint32_t UNUSED origin, uint32_t UNUSED mcastgrp)
 {
 }
 
-void accept_leave_message(u_int32_t UNUSED src, u_int32_t UNUSED dst, u_int32_t UNUSED group)
+void accept_leave_message(uint32_t UNUSED src, uint32_t UNUSED dst, uint32_t UNUSED group)
 {
 }
 
-void accept_mtrace(u_int32_t UNUSED src, u_int32_t UNUSED dst, u_int32_t UNUSED group, char UNUSED *data, u_int8_t UNUSED no, size_t UNUSED datalen)
+void accept_mtrace(uint32_t UNUSED src, uint32_t UNUSED dst, uint32_t UNUSED group, char UNUSED *data, uint8_t UNUSED no, size_t UNUSED datalen)
 {
 }
 
-void accept_membership_query(u_int32_t UNUSED src, u_int32_t UNUSED dst, u_int32_t UNUSED group, int UNUSED tmo)
+void accept_membership_query(uint32_t UNUSED src, uint32_t UNUSED dst, uint32_t UNUSED group, int UNUSED tmo)
 {
 }
 
-void accept_neighbors(u_int32_t UNUSED src, u_int32_t UNUSED dst, u_char UNUSED *p, size_t UNUSED datalen, u_int32_t UNUSED level)
+void accept_neighbors(uint32_t UNUSED src, uint32_t UNUSED dst, uint8_t UNUSED *p, size_t UNUSED datalen, uint32_t UNUSED level)
 {
 }
 
-void accept_neighbors2(u_int32_t UNUSED src, u_int32_t UNUSED dst, u_char UNUSED *p, size_t UNUSED datalen, u_int32_t UNUSED level)
+void accept_neighbors2(uint32_t UNUSED src, uint32_t UNUSED dst, uint8_t UNUSED *p, size_t UNUSED datalen, uint32_t UNUSED level)
 {
 }
 
-void accept_info_request(u_int32_t UNUSED src, u_int32_t UNUSED dst, u_char UNUSED *p, size_t UNUSED datalen)
+void accept_info_request(uint32_t UNUSED src, uint32_t UNUSED dst, uint8_t UNUSED *p, size_t UNUSED datalen)
 {
 }
 
-void accept_info_reply(u_int32_t UNUSED src, u_int32_t UNUSED dst, u_char UNUSED *p, size_t UNUSED datalen)
+void accept_info_reply(uint32_t UNUSED src, uint32_t UNUSED dst, uint8_t UNUSED *p, size_t UNUSED datalen)
 {
 }
 

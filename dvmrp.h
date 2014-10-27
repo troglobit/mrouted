@@ -129,14 +129,14 @@
  * Various protocol constants (all times in seconds)
  */
 				        /* address for multicast DVMRP msgs */
-#define INADDR_DVMRP_GROUP	(u_int32)0xe0000004     /* 224.0.0.4 */
+#define INADDR_DVMRP_GROUP	(uint32_t)0xe0000004     /* 224.0.0.4 */
 /*
  * The IGMPv2 <netinet/in.h> defines INADDR_ALLRTRS_GROUP, but earlier
  * ones don't, so we define it conditionally here.
  */
 #ifndef INADDR_ALLRTRS_GROUP
 					/* address for multicast mtrace msg */
-#define INADDR_ALLRTRS_GROUP	(u_int32)0xe0000002	/* 224.0.0.2 */
+#define INADDR_ALLRTRS_GROUP	(uint32_t)0xe0000002	/* 224.0.0.2 */
 #endif
 
 #define ROUTE_MAX_REPORT_DELAY	5	/* max delay for reporting changes  */

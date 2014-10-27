@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <ctype.h>
 #include <errno.h>
@@ -65,9 +66,6 @@
 #include <sys/un.h>
 #endif /* RSRR */
 
-/*XXX*/
-typedef u_int u_int32;
-
 typedef void (*cfunc_t) (void*);
 typedef void (*ihfunc_t) (int);
 
@@ -104,8 +102,8 @@ typedef void (*ihfunc_t) (int);
 #define LEAF_FLAGS	(( vifs_with_neighbors == 1 ) ? 0x010000 : 0)
 			    /* more for IGMP 'group' field of DVMRP messages */
 
-#define	DEL_RTE_GROUP		0
-#define	DEL_ALL_ROUTES		1
+#define	DEL_RTE_GROUP	0
+#define	DEL_ALL_ROUTES	1
 			    /* for Deleting kernel table entries */
 
 #define JAN_1970	2208988800UL	/* 1970 - 1900 in seconds */
@@ -132,10 +130,10 @@ typedef void (*ihfunc_t) (int);
 extern char		*recv_buf;
 extern char		*send_buf;
 extern int		igmp_socket;
-extern u_int32		allhosts_group;
-extern u_int32		allrtrs_group;
-extern u_int32		dvmrp_group;
-extern u_int32		dvmrp_genid;
+extern uint32_t		allhosts_group;
+extern uint32_t		allrtrs_group;
+extern uint32_t		dvmrp_group;
+extern uint32_t		dvmrp_genid;
 extern int		vifstatedefault;
 extern int		missingok;
 
@@ -230,10 +228,10 @@ extern int		register_input_handler(int, ihfunc_t);
 /* igmp.c */
 extern void		init_igmp(void);
 extern void		accept_igmp(size_t);
-extern size_t		build_igmp(u_int32, u_int32, int, int, u_int32, int);
-extern void		send_igmp(u_int32, u_int32, int, int, u_int32, int);
-extern char *		igmp_packet_kind(u_int, u_int);
-extern int		igmp_debug_kind(u_int, u_int);
+extern size_t		build_igmp(uint32_t, uint32_t, int, int, uint32_t, int);
+extern void		send_igmp(uint32_t, uint32_t, int, int, uint32_t, int);
+extern char *		igmp_packet_kind(uint32_t, uint32_t);
+extern int		igmp_debug_kind(uint32_t, uint32_t);
 
 /* icmp.c */
 extern void		init_icmp(void);
@@ -241,7 +239,7 @@ extern void		init_icmp(void);
 /* ipip.c */
 extern void		init_ipip(void);
 extern void		init_ipip_on_vif(struct uvif *);
-extern void		send_ipip(u_int32, u_int32, int, int, u_int32, int, struct uvif *);
+extern void		send_ipip(uint32_t, uint32_t, int, int, uint32_t, int, struct uvif *);
 
 /* callout.c */
 extern void		callout_init(void);
@@ -255,21 +253,21 @@ extern int		timer_leftTimer(int);
 /* route.c */
 extern void		init_routes(void);
 extern void		start_route_updates(void);
-extern void		update_route(u_int32, u_int32, u_int, u_int32, vifi_t, struct listaddr *);
+extern void		update_route(uint32_t, uint32_t, uint32_t, uint32_t, vifi_t, struct listaddr *);
 extern void		age_routes(void);
 extern void		expire_all_routes(void);
 extern void		free_all_routes(void);
-extern void		accept_probe(u_int32, u_int32, char *, size_t, u_int32);
-extern void		accept_report(u_int32, u_int32, char *, size_t, u_int32);
-extern struct rtentry *	determine_route(u_int32 src);
-extern void		report(int, vifi_t, u_int32);
+extern void		accept_probe(uint32_t, uint32_t, char *, size_t, uint32_t);
+extern void		accept_report(uint32_t, uint32_t, char *, size_t, uint32_t);
+extern struct rtentry *	determine_route(uint32_t src);
+extern void		report(int, vifi_t, uint32_t);
 extern void		report_to_all_neighbors(int);
 extern int		report_next_chunk(void);
 extern void		blaster_alloc(vifi_t);
 extern void		add_vif_to_routes(vifi_t);
 extern void		delete_vif_from_routes(vifi_t);
-extern void		add_neighbor_to_routes(vifi_t, u_int);
-extern void		delete_neighbor_from_routes(u_int32, vifi_t, u_int);
+extern void		add_neighbor_to_routes(vifi_t, uint32_t);
+extern void		delete_neighbor_from_routes(uint32_t, vifi_t, uint32_t);
 extern void		dump_routes(FILE *fp);
 
 /* vif.c */
@@ -277,24 +275,24 @@ extern void		init_vifs(void);
 extern void		zero_vif(struct uvif *, int);
 extern void		init_installvifs(void);
 extern void		check_vif_state(void);
-extern void		send_on_vif(struct uvif *, u_int32, int, size_t);
-extern vifi_t		find_vif(u_int32, u_int32);
+extern void		send_on_vif(struct uvif *, uint32_t, int, size_t);
+extern vifi_t		find_vif(uint32_t, uint32_t);
 extern void		age_vifs(void);
 extern void		dump_vifs(FILE *);
 extern void		stop_all_vifs(void);
-extern struct listaddr *neighbor_info(vifi_t, u_int32);
-extern void		accept_group_report(u_int32, u_int32, u_int32, int);
+extern struct listaddr *neighbor_info(vifi_t, uint32_t);
+extern void		accept_group_report(uint32_t, uint32_t, uint32_t, int);
 extern void		query_groups(void);
 extern void		probe_for_neighbors(void);
-extern struct listaddr *update_neighbor(vifi_t, u_int32, int, char *, size_t, u_int32);
-extern void		accept_neighbor_request(u_int32, u_int32);
-extern void		accept_neighbor_request2(u_int32, u_int32);
-extern void		accept_info_request(u_int32, u_int32, u_char *, size_t);
-extern void		accept_info_reply(u_int32, u_int32, u_char *, size_t);
-extern void		accept_neighbors(u_int32, u_int32, u_char *, size_t, u_int32);
-extern void		accept_neighbors2(u_int32, u_int32, u_char *, size_t, u_int32);
-extern void		accept_leave_message(u_int32, u_int32, u_int32);
-extern void		accept_membership_query(u_int32, u_int32, u_int32, int);
+extern struct listaddr *update_neighbor(vifi_t, uint32_t, int, char *, size_t, uint32_t);
+extern void		accept_neighbor_request(uint32_t, uint32_t);
+extern void		accept_neighbor_request2(uint32_t, uint32_t);
+extern void		accept_info_request(uint32_t, uint32_t, uint8_t *, size_t);
+extern void		accept_info_reply(uint32_t, uint32_t, uint8_t *, size_t);
+extern void		accept_neighbors(uint32_t, uint32_t, uint8_t *, size_t, uint32_t);
+extern void		accept_neighbors2(uint32_t, uint32_t, uint8_t *, size_t, uint32_t);
+extern void		accept_leave_message(uint32_t, uint32_t, uint32_t);
+extern void		accept_membership_query(uint32_t, uint32_t, uint32_t, int);
 
 /* config.c */
 extern void		config_vifs_from_kernel(void);
@@ -303,53 +301,52 @@ extern void		config_vifs_from_kernel(void);
 extern void		config_vifs_from_file(void);
 
 /* inet.c */
-extern int		inet_valid_host(u_int32);
-extern int		inet_valid_mask(u_int32);
-extern int		inet_valid_subnet(u_int32, u_int32);
-extern char *		inet_fmt(u_int32, char *, size_t);
-extern char *		inet_fmts(u_int32, u_int32, char *, size_t);
-extern u_int32		inet_parse(char *, int);
-extern int		inet_cksum(u_int16_t *, u_int);
+extern int		inet_valid_host(uint32_t);
+extern int		inet_valid_mask(uint32_t);
+extern int		inet_valid_subnet(uint32_t, uint32_t);
+extern char *		inet_fmt(uint32_t, char *, size_t);
+extern char *		inet_fmts(uint32_t, uint32_t, char *, size_t);
+extern uint32_t		inet_parse(char *, int);
+extern int		inet_cksum(uint16_t *, uint32_t);
 
 /* prune.c */
 extern unsigned		kroutes;
 extern void		determine_forwvifs(struct gtable *);
 extern void		send_prune_or_graft(struct gtable *);
-extern void		add_table_entry(u_int32, u_int32);
-extern void 		del_table_entry(struct rtentry *,
-					u_int32, u_int);
-extern void		update_table_entry(struct rtentry *, u_int32);
-extern int		find_src_grp(u_int32, u_int32, u_int32);
+extern void		add_table_entry(uint32_t, uint32_t);
+extern void 		del_table_entry(struct rtentry *, uint32_t, uint32_t);
+extern void		update_table_entry(struct rtentry *, uint32_t);
+extern int		find_src_grp(uint32_t, uint32_t, uint32_t);
 extern void		init_ktable(void);
 extern void		steal_sources(struct rtentry *);
-extern void		reset_neighbor_state(vifi_t, u_int32);
-extern int		grplst_mem(vifi_t, u_int32);
+extern void		reset_neighbor_state(vifi_t, uint32_t);
+extern int		grplst_mem(vifi_t, uint32_t);
 extern void		free_all_prunes(void);
 extern void 		age_table_entry(void);
 extern void		dump_cache(FILE *);
-extern void 		update_lclgrp(vifi_t, u_int32);
-extern void		delete_lclgrp(vifi_t, u_int32);
-extern void		chkgrp_graft(vifi_t, u_int32);
-extern void 		accept_prune(u_int32, u_int32, char *, size_t);
-extern void		accept_graft(u_int32, u_int32, char *, size_t);
-extern void 		accept_g_ack(u_int32, u_int32, char *, size_t);
-/* u_int is promoted u_char */
-extern void		accept_mtrace(u_int32, u_int32, u_int32, char *, u_int8_t, size_t);
+extern void 		update_lclgrp(vifi_t, uint32_t);
+extern void		delete_lclgrp(vifi_t, uint32_t);
+extern void		chkgrp_graft(vifi_t, uint32_t);
+extern void 		accept_prune(uint32_t, uint32_t, char *, size_t);
+extern void		accept_graft(uint32_t, uint32_t, char *, size_t);
+extern void 		accept_g_ack(uint32_t, uint32_t, char *, size_t);
+/* uint32_t is promoted uint8_t */
+extern void		accept_mtrace(uint32_t, uint32_t, uint32_t, char *, uint8_t, size_t);
 
 /* kern.c */
 extern void		k_set_rcvbuf(int, int);
 extern void		k_hdr_include(int);
 extern void		k_set_ttl(int);
 extern void		k_set_loop(int);
-extern void		k_set_if(u_int32);
-extern void		k_join(u_int32, u_int32);
-extern void		k_leave(u_int32, u_int32);
+extern void		k_set_if(uint32_t);
+extern void		k_join(uint32_t, uint32_t);
+extern void		k_leave(uint32_t, uint32_t);
 extern void		k_init_dvmrp(void);
 extern void		k_stop_dvmrp(void);
 extern void		k_add_vif(vifi_t, struct uvif *);
 extern void		k_del_vif(vifi_t, struct uvif *);
-extern void		k_add_rg(u_int32, struct gtable *);
-extern int		k_del_rg(u_int32, struct gtable *);
+extern void		k_add_rg(uint32_t, struct gtable *);
+extern int		k_del_rg(uint32_t, struct gtable *);
 extern int		k_get_version(void);
 
 #ifdef RSRR

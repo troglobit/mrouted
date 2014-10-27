@@ -20,8 +20,8 @@ static void		warn(char *fmt, ...);
 static void		yyerror(char *s);
 static char *		next_word(void);
 static int		yylex(void);
-static u_int32		valid_if(char *s);
-static const char *	ifconfaddr(u_int32_t a);
+static uint32_t		valid_if(char *s);
+static const char *	ifconfaddr(uint32_t a);
 int			yyparse(void);
 
 static FILE *f;
@@ -42,8 +42,8 @@ static int noflood = 0;
 static int rexmit = VIFF_REXMIT_PRUNES;
 
 struct addrmask {
-	u_int32	addr;
-	int	mask;
+	uint32_t addr;
+	int mask;
 };
 
 struct boundnam {
@@ -63,7 +63,7 @@ int numbounds = 0;			/* Number of named boundaries */
 	int num;
 	char *ptr;
 	struct addrmask addrmask;
-	u_int32 addr;
+	uint32_t addr;
 	struct vf_element *filterelem;
 };
 
@@ -308,7 +308,7 @@ ifmod	: mod
 	| IGMPV1		{ v->uv_flags |= VIFF_IGMPV1; }
 	| NETMASK addrname
 	{
-	    u_int32 subnet, mask;
+	    uint32_t subnet, mask;
 
 	    mask = $2;
 	    subnet = v->uv_lcl_addr & mask;
@@ -622,14 +622,14 @@ filtelem : ADDRMASK
 %%
 static void fatal(char *fmt, ...)
 {
-	va_list ap;
-	char buf[MAXHOSTNAMELEN + 100];
+    va_list ap;
+    char buf[MAXHOSTNAMELEN + 100];
 
-	va_start(ap, fmt);
-	vsnprintf(buf, sizeof(buf), fmt, ap);
-	va_end(ap);
+    va_start(ap, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
 
-	logit(LOG_ERR, 0, "%s: %s near line %d", configfilename, buf, lineno);
+    logit(LOG_ERR, 0, "%s: %s near line %d", configfilename, buf, lineno);
 }
 
 static void warn(char *fmt, ...)
@@ -741,7 +741,7 @@ static struct keyword {
 
 static int yylex(void)
 {
-    u_int32 addr, n;
+    uint32_t addr, n;
     char *q;
     struct keyword *w;
 
@@ -819,7 +819,7 @@ void config_vifs_from_file(void)
     fclose(f);
 }
 
-static u_int32 valid_if(char *s)
+static uint32_t valid_if(char *s)
 {
     vifi_t vifi;
     struct uvif *v;
@@ -832,7 +832,7 @@ static u_int32 valid_if(char *s)
     return 0;
 }
 
-static const char *ifconfaddr(u_int32_t a)
+static const char *ifconfaddr(uint32_t a)
 {
     static char ifname[IFNAMSIZ];
     struct ifaddrs *ifap, *ifa;

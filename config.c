@@ -20,7 +20,7 @@ config_vifs_from_kernel()
     struct ifaddrs *ifa, *ifap;
     register struct uvif *v;
     register vifi_t vifi;
-    u_int32 addr, mask, subnet;
+    uint32_t addr, mask, subnet;
     int flags;
 
     if (getifaddrs(&ifap) < 0)
