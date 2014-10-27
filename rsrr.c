@@ -100,7 +100,7 @@ static void rsrr_read(int fd)
     ssize_t rsrr_recvlen;
     
     memset(&client_addr, 0, sizeof(client_addr));
-    rsrr_recvlen = recvfrom(fd, rsrr_recv_buf, sizeof(rsrr_recv_buf),
+    rsrr_recvlen = recvfrom(fd, rsrr_recv_buf, RSRR_MAX_LEN,
 			    0, (struct sockaddr *)&client_addr, &client_length);
     if (rsrr_recvlen < 0) {	
 	if (errno != EINTR)
