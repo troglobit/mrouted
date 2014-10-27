@@ -1120,7 +1120,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
     int has_genid = 0;
     int in_router_list = 0;
     int dvmrpspec = 0;
-    uint32_t genid;
+    uint32_t genid = 0;
     uint32_t send_tables = 0;
     size_t i;
     int do_reset = FALSE;
