@@ -1,17 +1,18 @@
-README for mrouted, the DVMRP Multicast Routing Daemon
-======================================================
+README
+======
 [![Build Status](https://travis-ci.org/troglobit/mrouted.png?branch=master)](https://travis-ci.org/troglobit/mrouted)[![Coverity Scan Status](https://scan.coverity.com/projects/3320/badge.svg)](https://scan.coverity.com/projects/3320)
 
-mrouted is an implementation of the DVMRP multicast routing protocol. It
-turns a UNIX workstation into a DVMRP multicast router with tunnel
-support, in order to cross non-multicast-aware routers.
+mrouted is a 3-clause BSD licensed implementation of the DVMRP multicast
+routing protocol.  It can run on any UNIX based system, from embedded
+Linux systems to workstations, turning them into multicast routers with
+tunnel support, which can be used to cross non-multicast-aware routers.
 
 DVMRP is a distance vector based protocol, derived from RIP, suitable
 for closely located multicast users in smaller networks.  It simply
 floods all multicast streams to all routers, i.e. implicit join.  This
 is also known as "flood and prune" since you can opt out from groups you
 do not want. For a detailed explanation of the protocol, consult
-RFC 1075.
+[RFC 1075](http://tools.ietf.org/html/rfc1075).
 
 
 History
@@ -29,16 +30,19 @@ beta as a de facto stable release, with (mostly) minor patches for
 system adaptations.  Over time however many dropped support, but Debian
 and OpenBSD kept it under their wings.
 
-In March 2003 OpenBSD, led by the fearless Theo de Raadt, managed to
-convince Stanford to release mrouted under a fully free license, the BSD
-license [1].  Nevertheless, in February 2005 Debian finally dropped [2]
-mrouted as an "obsolete protocol".
+In March 2003 [OpenBSD](http://www.openbsd.org/), led by the fearless
+Theo de Raadt, managed to convince Stanford to release mrouted under a
+fully free license, the
+[3-clause BSD license](http://www.openbsd.org/cgi-bin/cvsweb/src/usr.sbin/mrouted/LICENSE).
+Unfortunately, in February 2005
+[Debian dropped mrouted](http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=288112)
+as an "obsolete protocol".
 
 For a long time the OpenBSD team remained the sole guardian of this
-project.  In 2010 this effort at GitHub started, with the intent of
-bringing mrouted back to life.  The 3.9.x stable series represent the
-first releases in over a decade.  Patches from all over the Internet,
-including OpenBSD, have been merged.
+project.  In 2010 [Joachim Nilsson](http://troglobit.com) revived
+mrouted on [GitHub](https://github.com/troglobit/mrouted).  The 3.9.x
+stable series represent the first releases in over a decade.  Patches
+from all over the Internet, including OpenBSD, have been merged.
 
 
 Bugs
@@ -51,7 +55,7 @@ at:
 
   http://github.com/troglobit/mrouted/issues
 
-Mrouted contain "hacks" to recognize Cisco IOS's pseudo-DVMRP
+mrouted contain "hacks" to recognize Cisco IOS's pseudo-DVMRP
 implementation to yield all "DVMRP" versions of 10 and higher to IOS.
 Previous pre-release versions of mrouted 3.9.0 made the assumption that
 the IOS bug that causes it to use the IOS version number instead of the
@@ -61,16 +65,16 @@ DVMRP version number would be fixed by the time 12.0 was out.
 Configuring
 -----------
 
-By default mrouted reads its configuration file from /etc/mrouted.conf.
-You can override the default by specifying an alternate file when
-invoking mrouted.
+mrouted reads its configuration file from `/etc/mrouted.conf`.  You can
+override the default by specifying an alternate file when invoking
+mrouted.
 
     mrouted -f /path/file.conf
 
-The mrouted daemon can reconfigure itself at runtime if you change the
-configuration file, simply send the process a SIGHUP to activate new
-changes to the file.  The PID is saved automatically to the file
-`/var/run/mrouted.pid` at start.
+mrouted can be reconfigured at runtime if you change the configuration
+file, simply send the process a `SIGHUP` to activate new changes to the
+file.  The PID is saved automatically to the file `/var/run/mrouted.pid`
+for your convenience.
 
 By default, mrouted configures itself to act as a multicast router on
 all multicast capable interfaces, excluding the loopback interface that
@@ -85,10 +89,10 @@ See the man page for further details.
 Running
 -------
 
-The mrouted daemon must run as root.
+mrouted must run as root.
 
-For the native mrouted tunnel to work in Linux based systes you need to
-have the "ipip" kernel module loaded or as built-in.
+For the native mrouted tunnel to work in Linux based systems, you need
+to have the "ipip" kernel module loaded or as built-in.
 
     modprobe ipip
 
@@ -130,9 +134,3 @@ routing information.  The initial release of mrouted 3.5 did not support
 route change notification and always returned a Route Reply with the
 notification bit cleared.  This release of mrouted provides route change
 notification when possible.
-
-Footnotes
----------
-
-[1]: http://www.openbsd.org/cgi-bin/cvsweb/src/usr.sbin/mrouted/LICENSE
-[2]: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=288112
