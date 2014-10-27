@@ -776,7 +776,8 @@ void accept_probe(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 lev
     vifi_t vifi;
     static struct listaddr *unknowns = NULL;
 
-    if ((vifi = find_vif(src, dst)) == NO_VIF) {
+    vifi = find_vif(src, dst);
+    if (vifi == NO_VIF) {
 	struct listaddr *a, **prev;
 	struct listaddr *match = NULL;
 	time_t now = time(0);
@@ -784,17 +785,21 @@ void accept_probe(u_int32 src, u_int32 dst, char *p, size_t datalen, u_int32 lev
 	for (prev = &unknowns, a = *prev; a; a = *prev) {
 	    if (a->al_addr == src)
 		match = a;
+
 	    if (a->al_ctime + 2 * a->al_timer < (u_long)now) {
 		/* We haven't heard from it in a long time */
 		*prev = a->al_next;
+		if (match == a)
+		    match = NULL;
 		free(a);
 	    } else {
 		prev = &a->al_next;
 	    }
 	}
-	if (match == NULL) {
+
+	if (!match) {
 	    match = *prev = (struct listaddr *)malloc(sizeof(struct listaddr));
-	    if (match == NULL) {
+	    if (!match) {
 		logit(LOG_ERR, 0, "Malloc failed in route.c:accept_probe()\n");
 		return;		/* NOTREACHED */
 	    }
