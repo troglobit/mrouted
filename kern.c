@@ -17,13 +17,9 @@ int curttl = 0;
  */
 void k_init_dvmrp(void)
 {
-#ifdef OLD_KERNEL
-    if (setsockopt(igmp_socket, IPPROTO_IP, MRT_INIT, (char *)NULL, 0) < 0) {
-#else
     int v = 1;
 
     if (setsockopt(igmp_socket, IPPROTO_IP, MRT_INIT, (char *)&v, sizeof(int)) < 0) {
-#endif
 	if (errno == EADDRINUSE)
 	    logit(LOG_ERR, 0, "Another multicast routing application is already running.");
 	else
@@ -247,9 +243,6 @@ void k_add_rg(u_int32 origin, struct gtable *g)
     /* copy table values so that setsockopt can process it */
     memset(&mc, 0, sizeof(mc));
     mc.mfcc_origin.s_addr = origin;
-#ifdef OLD_KERNEL
-    mc.mfcc_originmask.s_addr = 0xffffffff;
-#endif
     mc.mfcc_mcastgrp.s_addr = g->gt_mcastgrp;
     mc.mfcc_parent = g->gt_route ? g->gt_route->rt_parent : NO_VIF;
     for (i = 0; i < numvifs; i++)
@@ -280,9 +273,6 @@ int k_del_rg(u_int32 origin, struct gtable *g)
     /* copy table values so that setsockopt can process it */
     memset(&mc, 0, sizeof(mc));
     mc.mfcc_origin.s_addr = origin;
-#ifdef OLD_KERNEL
-    mc.mfcc_originmask.s_addr = 0xffffffff;
-#endif
     mc.mfcc_mcastgrp.s_addr = g->gt_mcastgrp;
 
     /* write to kernel space */
@@ -304,9 +294,6 @@ int k_del_rg(u_int32 origin, struct gtable *g)
  */
 int k_get_version(void)
 {
-#ifdef OLD_KERNEL
-    return -1;
-#else
     int vers;
     socklen_t len = sizeof(vers);
 
@@ -314,7 +301,6 @@ int k_get_version(void)
 	logit(LOG_ERR, errno, "getsockopt MRT_VERSION: perhaps your kernel is too old?");
 
     return vers;
-#endif
 }
 
 #if 0

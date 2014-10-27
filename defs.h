@@ -184,15 +184,6 @@ extern char             versionstring[MAX_VERSION_LEN];
 extern int		errno;
 #endif
 
-#ifdef OLD_KERNEL
-#define	MRT_INIT	DVMRP_INIT
-#define	MRT_DONE	DVMRP_DONE
-#define	MRT_ADD_VIF	DVMRP_ADD_VIF
-#define	MRT_DEL_VIF	DVMRP_DEL_VIF
-#define	MRT_ADD_MFC	DVMRP_ADD_MFC
-#define	MRT_DEL_MFC	DVMRP_DEL_MFC
-#endif
-
 #ifndef IGMP_PIM
 #define	IGMP_PIM	0x14
 #endif

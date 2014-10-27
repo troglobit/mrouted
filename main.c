@@ -395,7 +395,7 @@ int main(int argc, char *argv[])
     init_ipip();
     init_routes();
     init_ktable();
-#ifndef OLD_KERNEL
+
     /*
      * Unfortunately, you can't k_get_version() unless you've
      * k_init_dvmrp()'d.  Now that we want to move the
@@ -410,12 +410,9 @@ int main(int argc, char *argv[])
     /*XXX
      * This function must change whenever the kernel version changes
      */
-    if ((((vers >> 8) & 0xff) != 3) ||
-	 ((vers & 0xff) != 5))
+    if ((((vers >> 8) & 0xff) != 3) || ((vers & 0xff) != 5))
 	logit(LOG_ERR, 0, "kernel (v%d.%d)/mrouted (v%d.%d) version mismatch",
-		(vers >> 8) & 0xff, vers & 0xff,
-		PROTOCOL_VERSION, MROUTED_VERSION);
-#endif
+	      (vers >> 8) & 0xff, vers & 0xff, PROTOCOL_VERSION, MROUTED_VERSION);
 
     init_vifs();
 
