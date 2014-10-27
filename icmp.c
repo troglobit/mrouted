@@ -48,7 +48,7 @@ static void icmp_handler(int fd)
     }
 
     ip        = (struct ip *)icmp_buf;
-    iphdrlen  = (int)ip->ip_hl << 2;
+    iphdrlen  = ip->ip_hl << 2;
     ipdatalen = ntohs(ip->ip_len) - iphdrlen;
 
     if (iphdrlen + ipdatalen != len) {
