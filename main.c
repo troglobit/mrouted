@@ -176,13 +176,14 @@ static void killshow(int signo, char *file)
     char buf[100];
 
     if (pid > 0) {
-	if (file)
-	    remove(file);
+	if (file && -1 == remove(file) && errno != ENOENT)
+	    warn("Failed removing %s, may be showing stale information", file);
+
 	kill(pid, signo);
 	if (file) {
 	    usleep(200);
 	    snprintf(buf, sizeof(buf), "cat %s", file);
-	    if (system(buf)) {
+	    if (-1 == system(buf)) {
 		warnx("Failed listing file %s\n", file);
 	    }
 	}
@@ -350,7 +351,8 @@ int main(int argc, char *argv[])
     /*
      * Create directory for runtime files
      */
-    mkdir(_PATH_MROUTED_RUNDIR, 0755);
+    if (-1 == mkdir(_PATH_MROUTED_RUNDIR, 0755) && errno != EEXIST)
+	err(1, "Failed creating %s directory for runtime files", _PATH_MROUTED_RUNDIR);
 
     /*
      * Setup logging
