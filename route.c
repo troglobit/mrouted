@@ -908,10 +908,9 @@ static void queue_blaster_report(vifi_t vifi, uint32_t src, uint32_t dst, char *
     v->uv_blasterend += bblen;
 
     if (v->uv_blastertimer == 0) {
-	int *i;
+	int *i = malloc(sizeof(int));
 
-	i = (int *)malloc(sizeof(int *));
-	if (i == NULL) {
+	if (!i) {
 	    logit(LOG_ERR, 0, "Malloc failed in route.c:queue_blaster_report()\n");
 	    return;		/* NOTREACHED */
 	}
