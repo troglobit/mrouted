@@ -413,7 +413,7 @@ static void send_prune(struct gtable *gt)
 	gt->gt_prsent_timer > gt->gt_prune_rexmit) {
 	struct gtable **arg;
 
-	arg = (struct gtable **)malloc(sizeof(struct gtable **));
+	arg = malloc(sizeof(struct gtable *));
 	if (!arg) {
 	    logit(LOG_ERR, 0, "Malloc failed in prune.c:send_prune()\n");
 	    return;		/* NOTREACHED */
@@ -584,8 +584,8 @@ void add_table_entry(uint32_t origin, uint32_t mcastgrp)
     }
 
     if (gt == NULL || gt->gt_mcastgrp != mcastgrp) {
-	gt = (struct gtable *)malloc(sizeof(struct gtable));
-	if (gt == NULL) {
+	gt = malloc(sizeof(struct gtable));
+	if (!gt) {
 	    logit(LOG_ERR, 0, "Malloc failed in prune.c:add_table_entry()\n");
 	    return;		/* NOTREACHED */
 	}
@@ -650,8 +650,8 @@ void add_table_entry(uint32_t origin, uint32_t mcastgrp)
     }
 
     if (st == NULL || st->st_origin != origin) {
-	st = (struct stable *)malloc(sizeof(struct stable));
-	if (st == NULL) {
+	st = malloc(sizeof(struct stable));
+	if (!st) {
 	    logit(LOG_ERR, 0, "Malloc failed in prune.c:add_table_entry()\n");
 	    return;		/* NOTREACHED */
 	}
@@ -1172,8 +1172,8 @@ void accept_prune(uint32_t src, uint32_t dst, char *p, size_t datalen)
 	    }
 
 	    /* allocate space for the prune structure */
-	    pt = (struct ptable *)(malloc(sizeof(struct ptable)));
-	    if (pt == NULL) {
+	    pt = malloc(sizeof(struct ptable));
+	    if (!pt) {
 		logit(LOG_ERR, 0, "pt: ran out of memory");
 		return;		/* NOTREACHED */
 	    }
