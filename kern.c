@@ -245,6 +245,7 @@ void k_add_rg(u_int32 origin, struct gtable *g)
     md_log(MD_ADD, origin, g->gt_mcastgrp);
 #endif
     /* copy table values so that setsockopt can process it */
+    memset(&mc, 0, sizeof(mc));
     mc.mfcc_origin.s_addr = origin;
 #ifdef OLD_KERNEL
     mc.mfcc_originmask.s_addr = 0xffffffff;
@@ -277,6 +278,7 @@ int k_del_rg(u_int32 origin, struct gtable *g)
     md_log(MD_DEL, origin, g->gt_mcastgrp);
 #endif
     /* copy table values so that setsockopt can process it */
+    memset(&mc, 0, sizeof(mc));
     mc.mfcc_origin.s_addr = origin;
 #ifdef OLD_KERNEL
     mc.mfcc_originmask.s_addr = 0xffffffff;
