@@ -484,18 +484,17 @@ void accept_neighbors2(uint32_t src, uint32_t UNUSED dst, uint8_t *p, size_t dat
 		old_neighbors = ifc_n->neighbors;
 		for (nb_i = ifc_i->neighbors; nb_i; nb_i = next_nb_i) {
 		    next_nb_i = nb_i->next;
-		    for (nb_n = old_neighbors; nb_n; nb_n = nb_n->next)
+		    for (nb_n = old_neighbors; nb_n; nb_n = nb_n->next) {
 			if (nb_i->addr == nb_n->addr) {
-			    if (nb_i->metric != nb_n->metric
-				|| nb_i->threshold != nb_i->threshold)
-				logit(LOG_WARNING, 0,
-				    "inconsistent %s for neighbor %s of %s",
-				    "metric/threshold",
+			    if (nb_i->metric != nb_n->metric || nb_i->threshold != nb_n->threshold)
+				logit(LOG_WARNING, 0, "inconsistent metric/threshold for neighbor %s of %s",
 				    inet_fmt(nb_i->addr, s1, sizeof(s1)),
 				    inet_fmt(node->addr, s2, sizeof(s2)));
 			    free(nb_i);
 			    break;
 			}
+		    }
+
 		    if (!nb_n) { /* no match for this neighbor yet */
 			nb_i->next = ifc_n->neighbors;
 			ifc_n->neighbors = nb_i;
