@@ -220,7 +220,7 @@ void check_vif_state(void)
 
 	if (v->uv_flags & VIFF_DISABLED) continue;
 
-	strncpy(ifr.ifr_name, v->uv_name, IFNAMSIZ);
+	memcpy(ifr.ifr_name, v->uv_name, sizeof(ifr.ifr_name));
 	if (ioctl(udp_socket, SIOCGIFFLAGS, (char *)&ifr) < 0)
 	    logit(LOG_ERR, errno, "Failed ioctl SIOCGIFFLAGS for %s", ifr.ifr_name);
 
