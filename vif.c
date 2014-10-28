@@ -43,7 +43,7 @@ static void stop_vif(vifi_t vifi);
 static void age_old_hosts(void);
 static void send_probe_on_vif(struct uvif *v);
 static void send_query(struct uvif *v);
-static int info_version(uint8_t *p);
+static int info_version(uint8_t *p, size_t plen);
 static void DelVif(void *arg);
 static int SetTimer(vifi_t vifi, struct listaddr *g);
 static int DeleteTimer(int id);
@@ -1030,7 +1030,8 @@ void accept_info_request(uint32_t src, uint32_t UNUSED dst, uint8_t *p, size_t d
 	len = 0;
 	switch (*p) {
 	    case DVMRP_INFO_VERSION:
-		len = info_version(q);
+		/* Never let version be more than 100 bytes, see below for more. */
+		len = info_version(q, sizeof(versionstring));
 		break;
 
 	    case DVMRP_INFO_NEIGHBORS:
@@ -1054,7 +1055,7 @@ void accept_info_request(uint32_t src, uint32_t UNUSED dst, uint8_t *p, size_t d
 /*
  * Information response -- return version string
  */
-static int info_version(uint8_t *p)
+static int info_version(uint8_t *p, size_t plen)
 {
     int len;
 
@@ -1062,13 +1063,14 @@ static int info_version(uint8_t *p)
     p++;	/* skip over length */
     *p++ = 0;	/* zero out */
     *p++ = 0;	/* reserved fields */
+
     /* XXX: We use sizeof(versionstring) instead of the available 
      *      space in send_buf[] because that buffer is 8192 bytes.
      *      It is not very likely our versionstring will ever be
      *      as long as 100 bytes, but it's better to limit the amount
      *      of data copied to send_buf since we do not want to risk
      *      sending MAX size frames. */
-    len = strlcpy((char *)p, versionstring, sizeof(versionstring));
+    len = strlcpy((char *)p, versionstring, plen);
 
     return ((len + 3) / 4);
 }
