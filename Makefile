@@ -114,6 +114,10 @@ mstat: $(MSTAT_OBJS) $(CMULIBS)
 	@printf "  LINK    $@\n"
 	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(MSTAT_OBJS) $(LDLIBS)
 
+# Runs Clang scan-build on the whole tree
+check: clean
+	@scan-build $(MAKE) all
+
 clean:
 	-@$(RM) $(OBJS) $(EXECS)
 
