@@ -1040,14 +1040,15 @@ void delete_lclgrp(vifi_t vifi, uint32_t mcastgrp)
 
 	if (g->gt_mcastgrp == mcastgrp && VIFM_ISSET(vifi, g->gt_grpmems)) {
 	    if (g->gt_route == NULL ||
-		SUBS_ARE_PRUNED(g->gt_route->rt_subordinates,
-			uvifs[vifi].uv_nbrmap, g->gt_prunes)) {
+		SUBS_ARE_PRUNED(g->gt_route->rt_subordinates, uvifs[vifi].uv_nbrmap, g->gt_prunes)) {
 		VIFM_CLR(vifi, g->gt_grpmems);
 
-		IF_DEBUG(DEBUG_CACHE) {
-		    logit(LOG_DEBUG, 0, "Delete lclgrp (%s %s) gm:%x",
-			  RT_FMT(g->gt_route, s1),
-			  inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)), g->gt_grpmems);
+		if (g->gt_route) {
+		    IF_DEBUG(DEBUG_CACHE) {
+			logit(LOG_DEBUG, 0, "Delete lclgrp (%s %s) gm:%x",
+			      RT_FMT(g->gt_route, s1),
+			      inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)), g->gt_grpmems);
+		    }
 		}
 
 		prun_add_ttls(g);
@@ -1061,7 +1062,7 @@ void delete_lclgrp(vifi_t vifi, uint32_t mcastgrp)
 		 * If there are no more members of this particular group,
 		 *  send prune upstream
 		 */
-		if (VIFM_ISEMPTY(g->gt_grpmems) && g->gt_route->rt_gateway)
+		if (VIFM_ISEMPTY(g->gt_grpmems) && g->gt_route && g->gt_route->rt_gateway)
 		    send_prune(g);
 	    }
 	}
