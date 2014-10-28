@@ -162,7 +162,9 @@ static pid_t daemon_pid(void)
 	return -1;
     }
 
-    result = fscanf(fp, "%d", &pid);
+    if (!fscanf(fp, "%d", &pid))
+	pid = -1;		/* Failed reading PID */
+
     fclose(fp);
     free(path);
 
