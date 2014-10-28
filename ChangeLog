@@ -1,7 +1,7 @@
 #+TITLE:    mrouted | Change Log
 #+AUTHOR:   David Waitzman, Craig Partridge, Steve Deering, Ajit Thyagarajan, Bill Fenner, Joachim Nilsson
 
-* Release 3.9.7: UNRELEASED
+* Release 3.9.7: October XX, 2014
 ** Changes & New Features
    - SNMP Support removed.  It never compiled and would have likely
      needed a complete refactor to support modern AgentX.
@@ -16,6 +16,7 @@
 ** Bug Fixes
    - Fix issue with older BSD kernels, mainly for current FreeBSD 10 and
      older, that don't really give RAW sockets but byte swap ip_len field
+   - Build fixes for FreeBSD, should make maintaining ports easier :)
    - Change from select() to poll() due to descriptor limits, e.g., on BSD.
    - UNIX 2038 first audit, inspired by OpenBSD.  Cleanup type confusion
      int/u_long where it should be time_t.  Also, clarify that genid is
