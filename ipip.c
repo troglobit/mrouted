@@ -86,7 +86,9 @@ void send_ipip(uint32_t src, uint32_t dst, int type, int code, uint32_t group, i
 
     ip = v->uv_encap_hdr;
     ip->ip_len = 2 * MIN_IP_HEADER_LEN + IGMP_MINLEN + datalen;
+#ifndef HAVE_IP_HDRINCL_BSD_ORDER
     ip->ip_len = htons(ip->ip_len);
+#endif
 
     memset(&sdst, 0, sizeof(sdst));
     sdst.sin_family = AF_INET;

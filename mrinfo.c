@@ -461,7 +461,11 @@ int main(int argc, char *argv[])
 		src = ip->ip_src.s_addr;
 		dst = ip->ip_dst.s_addr;
 		iphdrlen = ip->ip_hl << 2;
+#ifdef HAVE_IP_HDRINCL_BSD_ORDER
+		ipdatalen = ip->ip_len - iphdrlen;
+#else
 		ipdatalen = ntohs(ip->ip_len) - iphdrlen;
+#endif
 		if (iphdrlen + ipdatalen != (size_t)recvlen) {
 		    logit(LOG_WARNING, 0,
 		      "packet shorter (%u bytes) than hdr+data length (%u+%u)",

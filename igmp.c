@@ -196,7 +196,11 @@ void accept_igmp(size_t recvlen)
     }
 
     iphdrlen  = ip->ip_hl << 2;
+#ifdef HAVE_IP_HDRINCL_BSD_ORDER
+    ipdatalen = ip->ip_len - iphdrlen;
+#else
     ipdatalen = ntohs(ip->ip_len) - iphdrlen;
+#endif
     if ((size_t)(iphdrlen + ipdatalen) != recvlen) {
 	logit(LOG_WARNING, 0,
 	    "received packet from %s shorter (%u bytes) than hdr+data length (%u+%u)",
@@ -346,7 +350,11 @@ size_t build_igmp(uint32_t src, uint32_t dst, int type, int code, uint32_t group
     ip                      = (struct ip *)send_buf;
     ip->ip_src.s_addr       = src;
     ip->ip_dst.s_addr       = dst;
+#ifdef HAVE_IP_HDRINCL_BSD_ORDER
+    ip->ip_len              = len;
+#else
     ip->ip_len              = htons(len);
+#endif
     if (IN_MULTICAST(ntohl(dst))) {
 	ip->ip_ttl = curttl;
     } else {

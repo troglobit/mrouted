@@ -49,7 +49,11 @@ static void icmp_handler(int fd)
 
     ip        = (struct ip *)icmp_buf;
     iphdrlen  = ip->ip_hl << 2;
+#ifdef HAVE_IP_HDRINCL_BSD_ORDER
+    ipdatalen = ip->ip_len - iphdrlen;
+#else
     ipdatalen = ntohs(ip->ip_len) - iphdrlen;
+#endif
 
     if (iphdrlen + ipdatalen != len) {
 	/* Malformed ICMP, just return. */

@@ -451,7 +451,11 @@ int send_recv(uint32_t dst, int type, int code, int tries, struct resp_buf *save
 		continue;
 
 	    iphdrlen = ip->ip_hl << 2;
+#ifdef HAVE_IP_HDRINCL_BSD_ORDER
+	    ipdatalen = ip->ip_len - iphdrlen;
+#else
 	    ipdatalen = ntohs(ip->ip_len) - iphdrlen;
+#endif
 	    if (iphdrlen + ipdatalen != (size_t)recvlen) {
 		fprintf(stderr, "packet shorter (%zd bytes) than hdr+data len (%zu+%zu)\n",
 			recvlen, iphdrlen, ipdatalen);
@@ -604,7 +608,11 @@ void passive_mode(void)
 	    continue;
 
 	iphdrlen = ip->ip_hl << 2;
+#ifdef HAVE_IP_HDRINCL_BSD_ORDER
+	ipdatalen = ip->ip_len - iphdrlen;
+#else
 	ipdatalen = ntohs(ip->ip_len) - iphdrlen;
+#endif
 	if (iphdrlen + ipdatalen != (size_t)recvlen) {
 	    fprintf(stderr, "packet shorter (%zd bytes) than hdr+data len (%zu+%zu)\n",
 		    recvlen, iphdrlen, ipdatalen);
