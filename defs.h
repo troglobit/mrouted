@@ -22,9 +22,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
-#if ((defined(SYSV)) || (defined(__bsdi__)) || ((defined SunOS) && (SunOS < 50)))
+#if defined(__bsdi__) || (defined(SunOS) && SunOS < 50)
 #include <sys/sockio.h>
-#endif /* SYSV || bsdi || SunOS 4.x */
+#endif /* bsdi || SunOS 4.x */
 #include <time.h>
 #include <sys/time.h>
 #include <sys/uio.h>
@@ -36,7 +36,7 @@
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #include <osreldate.h>
 #endif /* __FreeBSD__ */
-#if (defined(__bsdi__)) || (defined(__FreeBSD__) && (__FreeBSD_version >= 220000)) || defined(__FreeBSD_kernel__)
+#if defined(__bsdi__) || (defined(__FreeBSD__) && __FreeBSD_version >= 220000) || defined(__FreeBSD_kernel__)
 #define rtentry kernel_rtentry
 #include <net/route.h>
 #undef rtentry
@@ -127,11 +127,7 @@ typedef void (*ihfunc_t) (int);
 #define BIT_TST(X,n)     ((X) & 1 << (n))
 #endif /* RSRR */
 
-#ifdef SYSV
-#define setlinebuf(s)	setvbuf(s, NULL, _IOLBF, 0)
-#endif
-
-#if defined(_AIX) || (defined(BSD) && (BSD >= 199103))
+#if defined(_AIX) || (defined(BSD) && BSD >= 199103)
 #define	HAVE_SA_LEN
 #endif
 

@@ -123,11 +123,7 @@ static void do_randomize(void)
    unsigned int seed;
 
    /* Setup a fallback seed based on quasi random. */
-#ifdef SYSV
-   seed = time(NULL);
-#else
    seed = time(NULL) ^ gethostid();
-#endif
    seed = rol32(seed, seed);
 
    fd = open("/dev/urandom", O_RDONLY);
@@ -137,11 +133,7 @@ static void do_randomize(void)
        close(fd);
   }
 
-#ifdef SYSV
-   srand48(seed);
-#else
-   srandom(seed);
-#endif
+   srand(seed);
 }
 
 /* Figure out the PID of a running daemon. */
@@ -464,9 +456,6 @@ int main(int argc, char *argv[])
 	(void)open("/", 0);
 	(void)dup2(0, 1);
 	(void)dup2(0, 2);
-#ifdef SYSV
-	(void)setpgrp();
-#else
 #ifdef TIOCNOTTY
 	n = open("/dev/tty", 2);
 	if (n >= 0) {
@@ -476,7 +465,6 @@ int main(int argc, char *argv[])
 #else
 	if (setsid() < 0)
 	    perror("setsid");
-#endif
 #endif
     }
 

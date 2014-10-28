@@ -89,13 +89,13 @@ done
 
 ## Solaris 2.5, gcc
 #INCLUDES     =
-#DEFS        += -DSYSV -DSUNOS5 -DSunOS=55
+#DEFS        += -DSUNOS5 -DSunOS=55
 ## Solaris 2.5, cc
 #INCLUDES     =
-#DEFS        += -DSYSV -DSUNOS5 -DSunOS=55
+#DEFS        += -DSUNOS5 -DSunOS=55
 ## Solaris 2.6
 #INCLUDES     =
-#DEFS        += -DSYSV -DSUNOS5 -DSunOS=56
+#DEFS        += -DSUNOS5 -DSunOS=56
 ## Solaris 2.x
 #EXTRA_OBJS   = strlcpy.o pidfile.o strtonum.o
 #EXTRA_LIBS   = -L/usr/ucblib -lucb -L/usr/lib -lsocket -lnsl
