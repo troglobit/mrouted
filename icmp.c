@@ -49,6 +49,13 @@ static void icmp_handler(int fd)
 
     ip        = (struct ip *)icmp_buf;
     iphdrlen  = ip->ip_hl << 2;
+
+    /* Sanity check resulting header size */
+    if (iphdrlen > 60) {
+	logit(LOG_WARNING, 0, "Received an invadlid ICMP frame.");
+	return;
+    }
+
 #ifdef HAVE_IP_HDRINCL_BSD_ORDER
     ipdatalen = ip->ip_len - iphdrlen;
 #else
