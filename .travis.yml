@@ -15,7 +15,8 @@ addons:
       name: "troglobit/mrouted"
       description: "mrouted | The Original Multicast Routing Daemon"
     notification_email: troglobit@gmail.com
+    build_command_prepend: "./configure --enable-rsrr"
     build_command:   "make"
     branch_pattern: master
 
-script: make
+script: ./configure --enable-rsrr && make

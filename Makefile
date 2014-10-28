@@ -19,17 +19,12 @@ sysconfdir   ?= /etc
 datadir       = $(prefix)/share/doc/mrouted
 mandir        = $(prefix)/share/man/man8
 
-# Uncomment the following three lines if you want to use RSRR (Routing
-# Support for Resource Reservations), currently used by RSVP.
-RSRRDEF       = -DRSRR
-RSRR_OBJS     = rsrr.o
-
-IGMP_SRCS     = igmp.c inet.c kern.c
-IGMP_OBJS     = igmp.o inet.o kern.o
-
 # This magic trick looks like a comment, but works on BSD PMake
 #include <config.mk>
 include config.mk
+
+IGMP_SRCS     = igmp.c inet.c kern.c
+IGMP_OBJS     = igmp.o inet.o kern.o
 
 ROUTER_OBJS   = config.o cfparse.o main.o route.o vif.o prune.o callout.o \
 		icmp.o ipip.o vers.o $(RSRR_OBJS) $(EXTRA_OBJS)
@@ -40,7 +35,7 @@ MTRACE_OBJS   = mtrace.o $(EXTRA_OBJS)
 #MSTAT_OBJS    = mstat.o $(EXTRA_OBJS)
 
 ## Common
-CFLAGS       += $(MCAST_INCLUDE) $(RSRRDEF) $(INCLUDES) $(DEFS) $(USERCOMPILE)
+CFLAGS       += $(MCAST_INCLUDE) $(INCLUDES) $(DEFS) $(USERCOMPILE)
 CFLAGS       += -O2 -W -Wall -Werror
 #CFLAGS       += -O -g
 LDLIBS        = $(EXTRA_LIBS)

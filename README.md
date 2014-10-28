@@ -46,6 +46,34 @@ mrouted on [GitHub](https://github.com/troglobit/mrouted).  The 3.9.x
 stable series represent the first releases in over a decade.  Patches
 from all over the Internet, including OpenBSD, have been merged.
 
+mrouted is primarily developed on Linux and should work as-is out of the
+box on all major distributions.  Other UNIX variants should also work,
+but are not as thoroughly tested.  For some tips and details, see the
+`configure` script.
+
+
+Building
+--------
+
+When building mrouted from source you first need to run the `configure`
+script to generate the file `config.mk`.  The script relies on Bourne
+shell standard features as well as expr and uname.  Any optional mrouted
+features, such as `--enable-rsrr` are activated here as well.
+
+**Example:**
+
+    ./configure --enable-rsrr
+    make
+
+    sudo make install
+
+The Makefile supports de facto standard environment variables such as
+`prefix` and `DESTDIR` for the install process.  E.g., to install mrouted
+to `/usr` instead of the default `/usr/local`, but redirect to a binary
+package directory in `/tmp`:
+
+    VERSION=3.9.7-1 prefix=/usr DESTDIR=/tmp/mrouted-3.9.7-1 make clean install
+
 
 Running
 -------
@@ -58,8 +86,8 @@ to have the "ipip" kernel module loaded or as built-in:
     modprobe ipip
 
 
-Configuring
------------
+Configuration
+-------------
 
 mrouted reads its configuration file from `/etc/mrouted.conf`.  You can
 override the default by specifying an alternate file when invoking
