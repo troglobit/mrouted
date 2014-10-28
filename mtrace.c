@@ -552,7 +552,7 @@ int send_recv(uint32_t dst, int type, int code, int tries, struct resp_buf *save
 		save->rtime = ((tr.tv_sec + JAN_1970) << 16) +
 		    (tr.tv_usec << 10) / 15625;
 		save->len = len;
-		bcopy((char *)igmp, (char *)&save->igmp, ipdatalen);
+		memmove((char *)&save->igmp, (char *)igmp, ipdatalen);
 	    }
 	    return recvlen;
 	}
@@ -642,7 +642,7 @@ void passive_mode(void)
 	base.rtime = ((tr.tv_sec + JAN_1970) << 16) +
 	    (tr.tv_usec << 10) / 15625;
 	base.len = len;
-	bcopy((char *)igmp, (char *)&base.igmp, ipdatalen);
+	memmove((char *)&base.igmp, (char *)igmp, ipdatalen);
 	/*
 	 * If the user specified which traces to monitor,
 	 * only accept traces that correspond to the
