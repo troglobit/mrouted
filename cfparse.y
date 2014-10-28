@@ -327,8 +327,10 @@ ifmod	: mod
 	    struct phaddr *ph;
 
 	    ph = (struct phaddr *)malloc(sizeof(struct phaddr));
-	    if (ph == NULL)
+	    if (!ph) {
 		fatal("out of memory");
+		return 0;	/* Never reached */
+	    }
 
 	    if ($2.mask) {
 		VAL_TO_MASK(ph->pa_subnetmask, $2.mask);
@@ -408,8 +410,10 @@ mod	: THRESHOLD NUMBER
 	    struct vif_acl *v_acl;
 
 	    v_acl = (struct vif_acl *)malloc(sizeof(struct vif_acl));
-	    if (v_acl == NULL)
+	    if (!v_acl) {
 		fatal("out of memory");
+		return 0;	/* Never reached */
+	    }
 
 	    VAL_TO_MASK(v_acl->acl_mask, $2.mask);
 	    v_acl->acl_addr = $2.addr & v_acl->acl_mask;
@@ -468,8 +472,10 @@ mod	: THRESHOLD NUMBER
 		struct vif_filter *v_filter;
 
 		v_filter = (struct vif_filter *)malloc(sizeof(struct vif_filter));
-		if (v_filter == NULL)
+		if (!v_filter) {
 		    fatal("out of memory");
+		    return 0;	/* Never reached */
+		}
 
 		v_filter->vf_flags = 0;
 		v_filter->vf_type = VFT_ACCEPT;
@@ -492,12 +498,14 @@ mod	: THRESHOLD NUMBER
 	}
 	| DENY filter
 	{
-	    if (v->uv_filter == NULL) {
+	    if (!v->uv_filter) {
 		struct vif_filter *v_filter;
 
 		v_filter = (struct vif_filter *)malloc(sizeof(struct vif_filter));
-		if (v_filter == NULL)
+		if (!v_filter) {
 		    fatal("out of memory");
+		    return 0;	/* Never reached */
+		}
 
 		v_filter->vf_flags = 0;
 		v_filter->vf_type = VFT_DENY;
@@ -520,8 +528,10 @@ mod	: THRESHOLD NUMBER
 	}
 	| BIDIR
 	{
-	    if (v->uv_filter == NULL)
+	    if (!v->uv_filter) {
 		fatal("bidir goes after filters");
+		return 0;	/* Never reached */
+	    }
 	    v->uv_filter->vf_flags |= VFF_BIDIR;
 	}
 	;
@@ -546,8 +556,10 @@ addrname: ADDR
 	{
 	    struct hostent *hp;
 
-	    if ((hp = gethostbyname($1)) == NULL || hp->h_length != sizeof($$))
+	    if ((hp = gethostbyname($1)) == NULL || hp->h_length != sizeof($$)) {
 		fatal("No such host %s", $1);
+		return 0;	/* Never reached */
+	    }
 
 	    if (hp->h_addr_list[1])
 		fatal("Hostname %s does not %s", $1, "map to a unique address");
@@ -609,8 +621,10 @@ filtelem : ADDRMASK
 	    struct vf_element *vfe;
 
 	    vfe = (struct vf_element *)malloc(sizeof(struct vf_element));
-	    if (vfe == NULL)
+	    if (!vfe) {
 		fatal("out of memory");
+		return 0;	/* Never reached */
+	    }
 
 	    vfe->vfe_addr = $1.addr;
 	    VAL_TO_MASK(vfe->vfe_mask, $1.mask);

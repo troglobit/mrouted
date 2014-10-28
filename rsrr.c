@@ -384,8 +384,10 @@ static void rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query)
      * front of list.
      */
     rc = (struct rsrr_cache *)malloc(sizeof(struct rsrr_cache));
-    if (rc == NULL)
-	logit(LOG_ERR, 0, "Ran out of memory in rsrr_cache()");
+    if (!rc) {
+	logit(LOG_ERR, errno, "Ran out of memory in rsrr_cache()");
+	return;			/* Never reached */
+    }
 
     rc->route_query.source_addr.s_addr = route_query->source_addr.s_addr;
     rc->route_query.dest_addr.s_addr = route_query->dest_addr.s_addr;

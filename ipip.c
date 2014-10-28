@@ -47,15 +47,18 @@ void init_ipip_on_vif(struct uvif *v)
     struct ip *ip;
 
     ip = v->uv_encap_hdr = (struct ip *)malloc(sizeof(struct ip));
-    if (ip == NULL)
-	logit(LOG_ERR, 0, "out of memory");
-    memset(ip, 0, sizeof(struct ip));
+    if (!ip) {
+	logit(LOG_ERR, errno, "Out of memory when setting up IPIP tunnel");
+	return;			/* Never reached */
+    }
+
     /*
      * Fields zeroed that aren't filled in later:
      * - IP ID (let the kernel fill it in)
      * - Offset (we don't send fragments)
      * - Checksum (let the kernel fill it in)
      */
+    memset(ip, 0, sizeof(struct ip));
     ip->ip_v   = IPVERSION;
     ip->ip_hl  = sizeof(struct ip) >> 2;
     ip->ip_tos = 0xc0;		/* Internet Control */
