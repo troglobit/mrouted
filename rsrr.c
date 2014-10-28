@@ -250,39 +250,43 @@ static int rsrr_accept_rq(struct rsrr_rq *route_query, uint8_t flags, struct gta
      * due to a Route Change Notification event.  Use the kernel table entry
      * to supply the routing info.
      */
-    if (gt_notify) {
+    if (gt_notify && gt_notify->gt_route) {
 	/* Set flags */
 	rsrr->flags = flags;
+
 	/* Include the routing entry. */
 	route_reply->in_vif = gt_notify->gt_route->rt_parent;
-	if (BIT_TST(flags,RSRR_NOTIFICATION_BIT))
+
+	if (BIT_TST(flags, RSRR_NOTIFICATION_BIT))
 	    route_reply->out_vif_bm = gt_notify->gt_grpmems;
 	else
 	    route_reply->out_vif_bm = 0;
-    } else if (find_src_grp(route_query->source_addr.s_addr, 0,
-			    route_query->dest_addr.s_addr)) {
+
+    } else if (find_src_grp(route_query->source_addr.s_addr, 0, route_query->dest_addr.s_addr)) {
 
 	/* Found kernel entry. Code taken from add_table_entry() */
 	gt = gtp ? gtp->gt_gnext : kernel_table;
 	
 	/* Include the routing entry. */
-	route_reply->in_vif = gt->gt_route->rt_parent;
-	route_reply->out_vif_bm = gt->gt_grpmems;
+	if (gt && gt->gt_route) {
+	    route_reply->in_vif     = gt->gt_route->rt_parent;
+	    route_reply->out_vif_bm = gt->gt_grpmems;
 
-	/* Cache reply if using route change notification. */
-	if (BIT_TST(flags, RSRR_NOTIFICATION_BIT)) {
-	    /* TODO: XXX: Originally the rsrr_cache() call was first, but
-	     * I think this is incorrect, because rsrr_cache() checks the
-	     * rsrr_send_buf "flag" first.
-	     */
-	    BIT_SET(rsrr->flags, RSRR_NOTIFICATION_BIT);
-	    rsrr_cache(gt, route_query);
+	    /* Cache reply if using route change notification. */
+	    if (BIT_TST(flags, RSRR_NOTIFICATION_BIT)) {
+		/* TODO: XXX: Originally the rsrr_cache() call was first, but
+		 * I think this is incorrect, because rsrr_cache() checks the
+		 * rsrr_send_buf "flag" first.
+		 */
+		BIT_SET(rsrr->flags, RSRR_NOTIFICATION_BIT);
+		rsrr_cache(gt, route_query);
+	    }
 	}
     } else {
+
 	/* No kernel entry; use routing table. */
 	r = determine_route(route_query->source_addr.s_addr);
-	
-	if (r != NULL) {
+	if (r) {
 	    /* We need to mimic what will happen if a data packet
 	     * is forwarded by multicast routing -- the kernel will
 	     * make an upcall and mrouted will install a route in the kernel.
@@ -339,6 +343,7 @@ static int rsrr_send(int sendlen)
 	logit(LOG_WARNING, 0,
 	    "Sent only %d out of %d bytes on RSRR socket\n", error, sendlen);
     }
+
     return error;
 }
 
@@ -352,11 +357,9 @@ static void rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query)
     struct rsrr_header *rsrr = (struct rsrr_header *)rsrr_send_buf;
 
     rcnp = &gt->gt_rsrr_cache;
-    while ((rc = *rcnp) != NULL) {
-	if ((rc->route_query.source_addr.s_addr == 
-	     route_query->source_addr.s_addr) &&
-	    (rc->route_query.dest_addr.s_addr == 
-	     route_query->dest_addr.s_addr) &&
+    while ((rc = *rcnp)) {
+	if ((rc->route_query.source_addr.s_addr == route_query->source_addr.s_addr) &&
+	    (rc->route_query.dest_addr.s_addr == route_query->dest_addr.s_addr) &&
 	    (!strcmp(rc->client_addr.sun_path,client_addr.sun_path))) {
 	    /* Cache entry already exists.
 	     * Check if route notification bit has been cleared.
@@ -375,8 +378,10 @@ static void rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query)
 			  rc->route_query.query_id, rc->client_addr.sun_path);
 		}
 	    }
+
 	    return;
 	}
+
 	rcnp = &rc->next;
     }
 
@@ -396,6 +401,7 @@ static void rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query)
     rc->client_length = client_length;
     rc->next = gt->gt_rsrr_cache;
     gt->gt_rsrr_cache = rc;
+
     IF_DEBUG(DEBUG_RSRR) {
 	logit(LOG_DEBUG, 0, "Cached query id %ld from client %s\n",
 	      rc->route_query.query_id, rc->client_addr.sun_path);
@@ -416,11 +422,11 @@ void rsrr_cache_send(struct gtable *gt, int notify)
     }
 
     rcnp = &gt->gt_rsrr_cache;
-    while ((rc = *rcnp) != NULL) {
+    while ((rc = *rcnp)) {
 	if (rsrr_accept_rq(&rc->route_query, flags, gt) < 0) {
 	    IF_DEBUG(DEBUG_RSRR) {
 		logit(LOG_DEBUG, 0, "Deleting cached query id %ld from client %s\n",
-		      rc->route_query.query_id,rc->client_addr.sun_path);
+		      rc->route_query.query_id, rc->client_addr.sun_path);
 	    }
 	    /* Delete cache entry. */
 	    *rcnp = rc->next;
