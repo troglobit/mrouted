@@ -83,18 +83,21 @@ with two dashes (`-').  The options are as follows:
 .It Fl h, -help
 Print a help message and exit.
 .It Fl M, -missing-ok
-If an interface doesn't exist, print a warning and continue, instead of
-erroring out.  Helps when configuring vpn and other dynamic interfaces.
-Of course, you'd have to restart the daemon for it to start listening on
-such an interface if it didn't exist when the daemon was started.
+If an interface does not yet exist, print a warning and continue.
+Useful with VPN and other dynamic interfaces.  However,
+.Nm mrouted
+must be restarted to start listening on such interfaces, if they did not
+exist when
+.Nm
+was started.
 .It Fl N, -no-interfaces
 Assume all interfaces are disabled unless explicitly enabled with
-.Cm phyint enabled
+.Cm phyint enable
 .It Fl f, -foreground
 Run in foreground, do not detach from the calling terminal.
 .It Fl c, -config=FILE
-Specify an alternative configuration file, instead of the default
-.Pa /etc/mrouted.conf .
+Specify an alternative configuration file, default
+.Pa /etc/mrouted.conf
 .It Fl d, -debug[=LEVEL[,LEVEL...]
 By default,
 .Nm
@@ -167,7 +170,7 @@ There are five types of configuration commands:
 .Bl -item -offset indent
 .It
 .Cm cache_lifetime
-.Ar ct
+.Ar <SEC>
 .It
 .Cm name
 .Ar boundary-name | scoped-addr Ns / Ns Ar mask-len
@@ -178,16 +181,20 @@ There are five types of configuration commands:
 .Cm altnet
 .Ar network Ns / Ns Ar mask-len
 .Oc
-.br
+.Bl -item -offset indent
 .Oo
 .Cm boundary
 .Ar boundary-name | scoped-addr Ns / Ns Ar mask-len
 .Oc
+.br
 .Op Cm disable | enable
 .br
-.Op Cm metric Ar m
-.Op Cm rate_limit Ar b
-.Op Cm threshold Ar t
+.Op Cm metric Ar <1-31>
+.br
+.Op Cm rate_limit Ar kbps
+.br
+.Op Cm threshold Ar ttl
+.El
 .It
 .Cm pruning
 .Op Cm off | on
@@ -195,14 +202,18 @@ There are five types of configuration commands:
 .Cm tunnel
 .Ar local-addr
 .Ar remote-addr
-.br
+.Bl -item -offset indent
 .Oo
 .Cm boundary
 .Ar boundary-name | scoped-addr Ns / Ns Ar mask-len
 .Oc
-.Op Cm metric Ar m
-.Op Cm rate_limit Ar b
-.Op Cm threshold Ar t
+.br
+.Op Cm metric Ar <1-31>
+.br
+.Op Cm rate_limit Ar kbps
+.br
+.Op Cm threshold Ar ttl
+.El
 .El
 .Pp
 The file format is free-form: whitespace (including newlines) is not
@@ -279,27 +290,24 @@ Packets belonging to this address will not be forwarded on a scoped interface.
 The boundary option accepts either a name or a boundary spec.
 .Pp
 .Cm metric
-is the "cost" associated with sending a datagram on the given
-interface or tunnel; it may be used to influence the choice of routes.
-The metric defaults to 1.
-Metrics should be kept as small as possible, because
+is the "cost" associated with sending a datagram on the given interface
+or tunnel; it may be used to influence the choice of routes.  The metric
+defaults to 1.  Metrics should be kept as small as possible, because
 .Nm
 cannot route along paths with a sum of metrics greater than 31.
 .Pp
 .Cm rate_limit
-allows the network administrator to specify a
-certain bandwidth in Kbits/second which would be allocated to multicast
-traffic.
-It defaults to 500Kbps on tunnels, and 0 (unlimited) on physical interfaces.
+allows the network administrator to specify a certain bandwidth in kbps
+which would be allocated to multicast traffic.  It defaults to 500 kbps
+on tunnels, and 0 (unlimited) on physical interfaces.
 .Pp
 .Cm threshold
-is the minimum IP time-to-live required for a multicast datagram
-to be forwarded to the given interface or tunnel.
-It is used to control the scope of multicast datagrams.
-(The TTL of forwarded packets is only compared to the threshold,
-it is not decremented by the threshold.
-Every multicast router decrements the TTL by 1.)
-The default threshold is 1.
+is the minimum IP time-to-live required for a multicast datagram to be
+forwarded to the given interface or tunnel.  It is used to control the
+scope of multicast datagrams.  (The TTL of forwarded packets is only
+compared to the threshold, it is not decremented by the threshold.
+Every multicast router decrements the TTL by 1.)  The default threshold
+is 1.
 .Pp
 In general, all
 .Nm
@@ -322,35 +330,38 @@ school.
 #
 # mrouted.conf example
 #
+
 # Name our boundaries to make it easier.
 name LOCAL 239.255.0.0/16
 name EE 239.254.0.0/16
-#
+
 # le1 is our gateway to compsci, don't forward our
 # local groups to them.
 phyint le1 boundary EE
-#
+
 # le2 is our interface on the classroom net, it has four
 # different length subnets on it.
-# Note that you can use either an ip address or an
-# interface name
-phyint 172.16.12.38 boundary EE altnet 172.16.15.0/26
-	altnet 172.16.15.128/26 altnet 172.16.48.0/24
-#
+# Note that you can use either an IP address or an interface name
+phyint 172.16.12.38 boundary EE
+       altnet 172.16.15.0/26
+       altnet 172.16.15.128/26
+       altnet 172.16.48.0/24
+
 # atm0 is our ATM interface, which doesn't properly
 # support multicasting.
 phyint atm0 disable
-#
+
 # This is an internal tunnel to another EE subnet.
 # Remove the default tunnel rate limit, since this
 # tunnel is over Ethernets.
-tunnel 192.168.5.4 192.168.55.101 metric 1 threshold 1
-	rate_limit 0
-#
+tunnel 192.168.5.4 192.168.55.101
+       metric 1 threshold 1 rate_limit 0
+
 # This is our tunnel to the outside world.
 # Careful with those boundaries, Eugene.
-tunnel 192.168.5.4 10.11.12.13 metric 1 threshold 32
-	boundary LOCAL boundary EE
+tunnel 192.168.5.4 10.11.12.13
+       metric 1 threshold 32
+       boundary LOCAL boundary EE
 .Ed
 .Sh SIGNALS
 .Nm
