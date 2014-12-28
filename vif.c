@@ -92,21 +92,24 @@ void init_vifs(void)
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
 	if (!(v->uv_flags & VIFF_DISABLED)) {
 	    ++enabled_vifs;
+
 	    if (!(v->uv_flags & VIFF_TUNNEL)) {
     	    	if (phys_vif == -1)
     	    	    phys_vif = vifi;
+
 		++enabled_phyints;
 	    }
 	}
     }
+
     if (enabled_vifs < 2)
 	logit(LOG_ERR, 0, "Cannot forward: %s",
-	    enabled_vifs == 0 ? "no enabled vifs" : "only one enabled vif");
+	      enabled_vifs == 0 ? "no enabled vifs" : "only one enabled vif");
 
     if (enabled_phyints == 0)
 	logit(LOG_WARNING, 0, "No enabled interfaces, forwarding via tunnels only");
 
-    logit(LOG_INFO, 0, "Installing vifs in mrouted...");
+    logit(LOG_INFO, 0, "Installing vifs in mrouted ...");
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
 	if (!(v->uv_flags & VIFF_DISABLED)) {
 	    if (!(v->uv_flags & VIFF_DOWN)) {
@@ -117,10 +120,12 @@ void init_vifs(void)
 		else
 		    logit(LOG_INFO, 0, "vif #%d, phyint %s", vifi,
 			  inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)));
+
 		start_vif2(vifi);
-	    } else logit(LOG_INFO, 0,
-		     "%s is not yet up; vif #%u not in service",
-		     v->uv_name, vifi);
+	    } else {
+		logit(LOG_INFO, 0, "%s is not yet up; vif #%u not in service",
+		      v->uv_name, vifi);
+	    }
 	}
     }
 }
@@ -218,7 +223,8 @@ void check_vif_state(void)
     checking_vifs = 1;
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
 
-	if (v->uv_flags & VIFF_DISABLED) continue;
+	if (v->uv_flags & VIFF_DISABLED)
+	    continue;
 
 	memcpy(ifr.ifr_name, v->uv_name, sizeof(ifr.ifr_name));
 	if (ioctl(udp_socket, SIOCGIFFLAGS, (char *)&ifr) < 0)
@@ -230,10 +236,10 @@ void check_vif_state(void)
 		      v->uv_name, vifi);
 		v->uv_flags &= ~VIFF_DOWN;
 		start_vif(vifi);
+	    } else {
+		vifs_down = TRUE;
 	    }
-	    else vifs_down = TRUE;
-	}
-	else {
+	} else {
 	    if (!(ifr.ifr_flags & IFF_UP)) {
 		logit(LOG_NOTICE, 0, "%s has gone down; vif #%u taken out of service",
 		    v->uv_name, vifi);
@@ -243,6 +249,7 @@ void check_vif_state(void)
 	    }
 	}
     }
+
     checking_vifs = 0;
 }
 
@@ -255,8 +262,7 @@ void check_vif_state(void)
  */
 void send_on_vif(struct uvif *v, uint32_t dst, int code, size_t datalen)
 {
-    uint32_t group = htonl(MROUTED_LEVEL |
-			   ((v->uv_flags & VIFF_LEAF) ? 0 : LEAF_FLAGS));
+    uint32_t group = htonl(MROUTED_LEVEL | ((v->uv_flags & VIFF_LEAF) ? 0 : LEAF_FLAGS));
 
     /*
      * The UNIX kernel will not decapsulate unicasts.
@@ -521,25 +527,23 @@ vifi_t find_vif(uint32_t src, uint32_t dst)
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
 	if (!(v->uv_flags & (VIFF_DOWN|VIFF_DISABLED))) {
 	    if (v->uv_flags & VIFF_TUNNEL) {
-		if (src == v->uv_rmt_addr && (dst == v->uv_lcl_addr ||
-					      dst == dvmrp_group))
-		    return(vifi);
-	    }
-	    else {
+		if (src == v->uv_rmt_addr && (dst == v->uv_lcl_addr || dst == dvmrp_group))
+		    return vifi;
+	    } else {
 		if ((src & v->uv_subnetmask) == v->uv_subnet &&
-		    ((v->uv_subnetmask == 0xffffffff) ||
-		     (src != v->uv_subnetbcast)))
-		    return(vifi);
-		for (p=v->uv_addrs; p; p=p->pa_next) {
+		    (v->uv_subnetmask == 0xffffffff || src != v->uv_subnetbcast))
+		    return vifi;
+
+		for (p = v->uv_addrs; p; p = p->pa_next) {
 		    if ((src & p->pa_subnetmask) == p->pa_subnet &&
-			((p->pa_subnetmask == 0xffffffff) ||
-			 (src != p->pa_subnetbcast)))
-			return(vifi);
+			(p->pa_subnetmask == 0xffffffff || src != p->pa_subnetbcast))
+			return vifi;
 		}
 	    }
 	}
     }
-    return (NO_VIF);
+
+    return NO_VIF;
 }
 
 static void age_old_hosts(void)
@@ -552,10 +556,12 @@ static void age_old_hosts(void)
      * Decrement the old-hosts-present timer for each
      * active group on each vif.
      */
-    for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++)
-        for (g = v->uv_groups; g != NULL; g = g->al_next)
+    for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
+        for (g = v->uv_groups; g != NULL; g = g->al_next) {
 	    if (g->al_old)
 		g->al_old--;
+	}
+    }
 }
 
 
@@ -578,6 +584,7 @@ void query_groups(void)
 	    send_query(v);
 	}
     }
+
     age_old_hosts();
 }
 
@@ -701,8 +708,8 @@ void accept_group_report(uint32_t src, uint32_t dst, uint32_t group, int r_type)
     struct uvif *v;
     struct listaddr *g;
 
-    if ((vifi = find_vif(src, dst)) == NO_VIF ||
-	(uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
+    vifi = find_vif(src, dst);
+    if (vifi == NO_VIF || (uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
 	logit(LOG_INFO, 0, "Ignoring group membership report from non-adjacent host %s",
 	      inet_fmt(src, s1, sizeof(s1)));
 	return;
@@ -713,7 +720,7 @@ void accept_group_report(uint32_t src, uint32_t dst, uint32_t group, int r_type)
     /*
      * Look for the group in our group list; if found, reset its timer.
      */
-    for (g = v->uv_groups; g != NULL; g = g->al_next) {
+    for (g = v->uv_groups; g; g = g->al_next) {
 	if (group == g->al_addr) {
 	    if (r_type == IGMP_V1_MEMBERSHIP_REPORT)
 		g->al_old = OLD_AGE_THRESHOLD;
@@ -722,10 +729,13 @@ void accept_group_report(uint32_t src, uint32_t dst, uint32_t group, int r_type)
 
 	    /** delete old timers, set a timer for expiration **/
 	    g->al_timer = IGMP_GROUP_MEMBERSHIP_INTERVAL;
+
 	    if (g->al_query)
 		g->al_query = DeleteTimer(g->al_query);
+
 	    if (g->al_timerid)
 		g->al_timerid = DeleteTimer(g->al_timerid);
+
 	    g->al_timerid = SetTimer(vifi, g);	
 	    break;
 	}
@@ -734,14 +744,14 @@ void accept_group_report(uint32_t src, uint32_t dst, uint32_t group, int r_type)
     /*
      * If not found, add it to the list and update kernel cache.
      */
-    if (g == NULL) {
+    if (!g) {
 	g = (struct listaddr *)malloc(sizeof(struct listaddr));
-	if (g == NULL) {
+	if (!g) {
 	    logit(LOG_ERR, 0, "Malloc failed in vif.c:accept_group_report()\n"); /* FATAL! */
 	    return;		/* NOTREACHED */
 	}
 
-	g->al_addr   = group;
+	g->al_addr = group;
 	if (r_type == IGMP_V1_MEMBERSHIP_REPORT)
 	    g->al_old = OLD_AGE_THRESHOLD;
 	else
@@ -774,8 +784,8 @@ void accept_leave_message(uint32_t src, uint32_t dst, uint32_t group)
     struct uvif *v;
     struct listaddr *g;
 
-    if ((vifi = find_vif(src, dst)) == NO_VIF ||
-	(uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
+    vifi = find_vif(src, dst);
+    if (vifi == NO_VIF || (uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
 	logit(LOG_INFO, 0, "Ignoring group leave report from non-adjacent host %s",
 	      inet_fmt(src, s1, sizeof(s1)));
 	return;
@@ -1442,25 +1452,22 @@ void age_vifs(void)
     struct listaddr *a, *prev_a;
     uint32_t addr;
 
-    for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v ) {
-	if (v->uv_leaf_timer && (v->uv_leaf_timer -= TIMER_INTERVAL == 0)) {
+    for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
+	if (v->uv_leaf_timer && (v->uv_leaf_timer -= TIMER_INTERVAL == 0))
 		v->uv_flags |= VIFF_LEAF;
-	}
 
-	for (prev_a = (struct listaddr *)&(v->uv_neighbors),
-	     a = v->uv_neighbors;
-	     a != NULL;
-	     prev_a = a, a = a->al_next) {
+	prev_a = (struct listaddr *)&v->uv_neighbors;
+	for (a = v->uv_neighbors; a; prev_a = a, a = a->al_next) {
 	    uint32_t exp_time;
 	    int idx;
 
-	    if (((a->al_pv == 3) && (a->al_mv >= 3)) ||
-		((a->al_pv > 3) && (a->al_pv < 10)))
+	    if ((a->al_pv == 3 && a->al_mv >= 3) || (a->al_pv > 3 && a->al_pv < 10))
 		exp_time = NEIGHBOR_EXPIRE_TIME;
 	    else
 		exp_time = OLD_NEIGHBOR_EXPIRE_TIME;
 
-	    if ((a->al_timer += TIMER_INTERVAL) < exp_time)
+	    a->al_timer += TIMER_INTERVAL;
+	    if (a->al_timer < exp_time)
 		continue;
 
 	    IF_DEBUG(DEBUG_PEER) {
@@ -1478,8 +1485,8 @@ void age_vifs(void)
 	    idx = a->al_index;
 	    addr = a->al_addr;
 	    prev_a->al_next = a->al_next;
-	    free((char *)a);
-	    a = prev_a;/*XXX use ** */
+	    free(a);
+	    a = prev_a;		/*XXX use ** */
 
 	    delete_neighbor_from_routes(addr, vifi, idx);
 	    reset_neighbor_state(vifi, addr);
@@ -1490,21 +1497,22 @@ void age_vifs(void)
 	    v->uv_leaf_timer = LEAF_CONFIRMATION_TIME;
 	}
 
-	if (v->uv_querier &&
-	    (v->uv_querier->al_timer += TIMER_INTERVAL) >
-		IGMP_OTHER_QUERIER_PRESENT_INTERVAL) {
-	    /*
-	     * The current querier has timed out.  We must become the
-	     * querier.
-	     */
-	    IF_DEBUG(DEBUG_IGMP) {
-		logit(LOG_DEBUG, 0, "Querier %s timed out",
-		      inet_fmt(v->uv_querier->al_addr, s1, sizeof(s1)));
+	if (v->uv_querier) {
+	    v->uv_querier->al_timer += TIMER_INTERVAL;
+	    if (v->uv_querier->al_timer > IGMP_OTHER_QUERIER_PRESENT_INTERVAL) {
+		/*
+		 * The current querier has timed out.  We must become the
+		 * querier.
+		 */
+		IF_DEBUG(DEBUG_IGMP) {
+		    logit(LOG_DEBUG, 0, "Querier %s timed out",
+			  inet_fmt(v->uv_querier->al_addr, s1, sizeof(s1)));
+		}
+		free(v->uv_querier);
+		v->uv_querier = NULL;
+		v->uv_flags |= VIFF_QUERIER;
+		send_query(v);
 	    }
-	    free(v->uv_querier);
-	    v->uv_querier = NULL;
-	    v->uv_flags |= VIFF_QUERIER;
-	    send_query(v);
 	}
     }
 }

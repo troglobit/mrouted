@@ -261,9 +261,9 @@ int main(int argc, char *argv[])
 		break;
 
 	    case 'd':
-		if (!optarg)
+		if (!optarg) {
 		    debug = DEFAULT_DEBUG;
-		else {
+		} else {
 		    char *p,*q;
 		    size_t i, len;
 		    struct debugname *d;
@@ -491,11 +491,11 @@ int main(int argc, char *argv[])
     difftime.tv_usec = 0;
     gettimeofday(&curtime, NULL);
     lasttime = curtime;
-    for(;;) {
+    for (;;) {
 	secs = timer_nextTimer();
-	if (secs == -1)
+	if (secs == -1) {
 	    timeout = NULL;
-	else {
+	} else {
 	    timeout = &tv;
 	    timeout->tv_sec = secs;
 	    timeout->tv_usec = 0;
@@ -566,27 +566,34 @@ int main(int argc, char *argv[])
 		curtime.tv_sec = lasttime.tv_sec + secs;
 		curtime.tv_usec = lasttime.tv_usec;
 		n = -1;	/* don't do this next time through the loop */
-	    } else
+	    } else {
 		gettimeofday(&curtime, NULL);
+	    }
+
 	    difftime.tv_sec = curtime.tv_sec - lasttime.tv_sec;
 	    difftime.tv_usec += curtime.tv_usec - lasttime.tv_usec;
 	    while (difftime.tv_usec > 1000000) {
 		difftime.tv_sec++;
 		difftime.tv_usec -= 1000000;
 	    }
+
 	    if (difftime.tv_usec < 0) {
 		difftime.tv_sec--;
 		difftime.tv_usec += 1000000;
 	    }
+
 	    lasttime = curtime;
 	    if (secs == 0 || difftime.tv_sec > 0)
 		age_callout_queue(difftime.tv_sec);
+
 	    secs = -1;
 	} while (difftime.tv_sec > 0);
     }
+
     logit(LOG_NOTICE, 0, "%s exiting", versionstring);
     cleanup();
-    exit(0);
+
+    return 0;
 }
 
 static void final_init(void *i)

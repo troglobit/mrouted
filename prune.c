@@ -1013,7 +1013,7 @@ void update_lclgrp(vifi_t vifi, uint32_t mcastgrp)
 	    update_kernel(g);
 #ifdef RSRR
 	    /* Send route change notification to reservation protocol. */
-	    rsrr_cache_send(g,1);
+	    rsrr_cache_send(g, 1);
 #endif /* RSRR */
 	}
     }
@@ -1289,7 +1289,7 @@ void chkgrp_graft(vifi_t vifi, uint32_t mcastgrp)
 		update_kernel(g);
 #ifdef RSRR
 		/* Send route change notification to reservation protocol. */
-		rsrr_cache_send(g,1);
+		rsrr_cache_send(g, 1);
 #endif /* RSRR */
 	    }
     }

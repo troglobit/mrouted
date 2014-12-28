@@ -218,10 +218,11 @@ void accept_igmp(size_t recvlen)
 	return;
     }
 
-    IF_DEBUG(DEBUG_PKT|igmp_debug_kind(igmp->igmp_type, igmp->igmp_code))
-    logit(LOG_DEBUG, 0, "RECV %s from %-15s to %s",
-	igmp_packet_kind(igmp->igmp_type, igmp->igmp_code),
-	inet_fmt(src, s1, sizeof(s1)), inet_fmt(dst, s2, sizeof(s2)));
+    IF_DEBUG(DEBUG_PKT|igmp_debug_kind(igmp->igmp_type, igmp->igmp_code)) {
+	logit(LOG_DEBUG, 0, "RECV %s from %-15s to %s",
+	      igmp_packet_kind(igmp->igmp_type, igmp->igmp_code),
+	      inet_fmt(src, s1, sizeof(s1)), inet_fmt(dst, s2, sizeof(s2)));
+    }
 
     switch (igmp->igmp_type) {
 

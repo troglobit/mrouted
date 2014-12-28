@@ -14,8 +14,7 @@
  * Query the kernel to find network interfaces that are multicast-capable
  * and install them in the uvifs array.
  */
-void
-config_vifs_from_kernel()
+void config_vifs_from_kernel(void)
 {
     struct ifaddrs *ifa, *ifap;
     register struct uvif *v;
@@ -25,6 +24,7 @@ config_vifs_from_kernel()
 
     if (getifaddrs(&ifap) < 0)
 	logit(LOG_ERR, errno, "getifaddrs");
+
     /*
      * Loop through all of the interfaces.
      */
@@ -74,7 +74,9 @@ config_vifs_from_kernel()
 		break;
 	    }
 	}
-	if (vifi != numvifs) continue;
+
+	if (vifi != numvifs)
+	    continue;
 
 	/*
 	 * If there is room in the uvifs array, install this interface.
@@ -83,6 +85,7 @@ config_vifs_from_kernel()
 	    logit(LOG_WARNING, 0, "too many vifs, ignoring %s", ifa->ifa_name);
 	    continue;
 	}
+
 	v  = &uvifs[numvifs];
 	zero_vif(v, 0);
 	v->uv_lcl_addr    = addr;
@@ -95,9 +98,9 @@ config_vifs_from_kernel()
 	if (flags & IFF_POINTOPOINT)
 	    v->uv_flags |= VIFF_REXMIT_PRUNES;
 
-	logit(LOG_INFO,0,"installing %s (%s on subnet %s) as vif #%u - rate=%d",
-	    v->uv_name, inet_fmt(addr, s1, sizeof(s1)), inet_fmts(subnet, mask, s2, sizeof(s2)),
-	    numvifs, v->uv_rate_limit);
+	logit(LOG_INFO, 0, "Installing %s (%s on subnet %s) as VIF #%u, rate %d pps",
+	      v->uv_name, inet_fmt(addr, s1, sizeof(s1)), inet_fmts(subnet, mask, s2, sizeof(s2)),
+	      numvifs, v->uv_rate_limit);
 
 	++numvifs;
 
