@@ -1,27 +1,30 @@
 #+TITLE:    mrouted | Change Log
-#+AUTHOR:   David Waitzman, Craig Partridge, Steve Deering, Ajit Thyagarajan, Bill Fenner, Joachim Nilsson
+#+AUTHOR:   David Waitzman, Craig Partridge, Steve Deering, Ajit Thyagarajan, Bill Fenner
 
-* Release 3.9.7: October XX, 2014
+* Release 3.9.7: December 28, 2014
 ** Changes & New Features
    - SNMP Support removed.  It never compiled and would have likely
      needed a complete refactor to support modern AgentX.
-   - Replaced static config.mk with configure script from pimd
-   - RSRR Support disabled by default, use --enable-rsrr to configure script
-   - Add 'enable' to phyint directive and -M/-N command line options,
-     thanks to Joseph Gooch
+   - Replaced static =config.mk= with configure script from pimd
+   - RSRR Support disabled by default, use =--enable-rsrr= to configure script
+   - Add ='enable'= to =phyint= directive and =-M/-N= command line options,
+     thanks to Joseph Gooch (@goochjj)
    - Add David Waitzman and Craig Partridge to list of original authors
      after being contacted by Mr Waitzman :)
-   - Change to use stdint.h types instead of type unsafe homegrown types
+   - Change to use =stdint.h= types instead of type unsafe homegrown types
 
 ** Bug Fixes
    - Fix issue with older BSD kernels, mainly for current FreeBSD 10 and
-     older, that don't really give RAW sockets but byte swap ip_len field
+     older, that don't really give RAW sockets but byte swap =ip_len=
+     field, Olivier Cochard-Labbé (@ocochard)
    - Build fixes for FreeBSD, should make maintaining ports easier :)
-   - Change from select() to poll() due to descriptor limits, e.g., on BSD.
+   - Change from =select()= to =poll()= due to descriptor limits, e.g.,
+     on BSD.
    - UNIX 2038 first audit, inspired by OpenBSD.  Cleanup type confusion
      int/u_long where it should be time_t.  Also, clarify that genid is
      OK, since it's used and stored as unsigned 32-bit integer.
    - Lots of minor fixes detected by Coverity Scan and Clang scan-build
+     https://scan.coverity.com/projects/3320
 
 * Release 3.9.6: October 23, 2011
 ** Changes & New Features
