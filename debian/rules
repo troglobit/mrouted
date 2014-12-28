@@ -19,7 +19,7 @@ endif
 configure: configure-stamp
 configure-stamp:
 	@dh_testdir
-	dh_auto_configure
+	./configure --enable-rsrr
 	@touch $@
 
 build: build-stamp
