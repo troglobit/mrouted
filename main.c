@@ -313,9 +313,8 @@ int main(int argc, char *argv[])
 	}
     }
 
+    /* Check for unsupported command line arguments */
     argc -= optind;
-    argv += optind;
-
     if (argc > 0)
 	usage();
 
