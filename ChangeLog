@@ -1,6 +1,14 @@
 #+TITLE:    mrouted | Change Log
 #+AUTHOR:   David Waitzman, Craig Partridge, Steve Deering, Ajit Thyagarajan, Bill Fenner
 
+* Release 3.9.8: UNRELEASED
+** Bug Fixes
+   - Fix mtrace compilation with Clang 3.5, fix courtesy of FreeBSD.
+     https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=196166 by Dimitry
+     Andric (@DimitryAndric), heads-up by Olivier Cochard-Labbé (@ocochard)
+   - Minor warnings from scan-build (clang) also fixed.  See the GIT log
+     for more details.
+
 * Release 3.9.7: December 28, 2014
 ** Changes & New Features
    - SNMP Support removed.  It never compiled and would have likely
