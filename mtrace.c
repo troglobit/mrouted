@@ -904,6 +904,14 @@ void stat_line(struct tr_resp *r, struct tr_resp *s, int have_next, int *rst)
 }
 
 /*
+ * Calculate the difference between two unsigned 32-bit counters
+ */
+static uint32_t u_diff(uint32_t u, uint32_t v)
+{
+    return (u >= v ? u - v : v - u);
+}
+
+/*
  * A fixup to check if any pktcnt has been reset, and to fix the
  * byteorder bugs in mrouted 3.6 on little-endian machines.
  */
@@ -919,13 +927,8 @@ void fixup_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf *
 
     /* Check for byte-swappers */
     while (--rno >= 0) {
-	int prev_vifout, next_vifout;
-
 	--n; --p; --b; --s;
-	next_vifout = ntohl(n->tr_vifout);
-	prev_vifout = ntohl(p->tr_vifout);
-
-	if (*s || abs(next_vifout - prev_vifout) > 100000) {
+	if (*s || u_diff(ntohl(n->tr_vifout), ntohl(p->tr_vifout)) > 100000) {
 	    /* This host sends byteswapped reports; swap 'em */
 	    if (!*s) {
 		*s = 1;
