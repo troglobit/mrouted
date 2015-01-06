@@ -2,6 +2,9 @@
 #+AUTHOR:   David Waitzman, Craig Partridge, Steve Deering, Ajit Thyagarajan, Bill Fenner
 
 * Release 3.9.8: UNRELEASED
+** Changes & New Features
+   - The mrouted man page has been cleaned up and sections clarfied.
+
 ** Bug Fixes
    - Fix mtrace compilation with Clang 3.5, fix courtesy of FreeBSD.
      https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=196166 by Dimitry
