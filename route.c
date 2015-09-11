@@ -1193,7 +1193,7 @@ static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi,
 
     p = send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN;
 
-    for (r = start_rt; r != routing_table; r = r->rt_prev) {
+    for (r = start_rt; r != NULL; r = r->rt_prev) {
 	if (which_routes == CHANGED_ROUTES && !(r->rt_flags & RTF_CHANGED)) {
 	    nrt++;
 	    continue;
