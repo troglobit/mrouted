@@ -125,7 +125,7 @@ dist:
 	@(cd ..; md5sum $(ARCHIVE) | tee $(ARCHIVE).md5)
 
 build-deb:
-	git-buildpackage --git-ignore-new --git-upstream-branch=master
+	gbp buildpackage --git-ignore-new --git-ignore-branch --git-no-create-orig --git-upstream-branch=master
 
 lint: 
 	@$(LINT) $(LINTFLAGS) $(SRCS)
