@@ -290,19 +290,19 @@ static void create_route(uint32_t origin, uint32_t mask)
     size_t len;
     struct rtentry *this;
 
-    this = (struct rtentry *)malloc(sizeof(struct rtentry));
+    this = malloc(sizeof(struct rtentry));
     if (!this) {
-	logit(LOG_ERR, errno, "route.c:create_route() - Failed allocating struct rtentry.\n");
-	return;		/* NOTREACHED */
+	logit(LOG_ERR, errno, "Failed allocating 'struct rtentry' in %s:%s()", __FILE__, __func__);
+	return;
     }
     memset(this, 0, sizeof(struct rtentry));
 
     len = numvifs * sizeof(uint32_t);
-    this->rt_dominants = (uint32_t *)malloc(len);
+    this->rt_dominants = malloc(len);
     if (!this->rt_dominants) {
-	logit(LOG_ERR, errno, "route.c:create_route() - Failed allocating struct rtentry.\n");
 	free(this);
-	return;		/* NOTREACHED */
+	logit(LOG_ERR, errno, "Failed allocating 'rt_dominants' in %s:%s()", __FILE__, __func__);
+	return;
     }
     memset(this->rt_dominants, 0, len);
 
@@ -798,10 +798,10 @@ void accept_probe(uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t 
 	}
 
 	if (!match) {
-	    match = *prev = (struct listaddr *)malloc(sizeof(struct listaddr));
+	    match = *prev = malloc(sizeof(struct listaddr));
 	    if (!match) {
-		logit(LOG_ERR, 0, "Malloc failed in route.c:accept_probe()\n");
-		return;		/* NOTREACHED */
+		logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
+		return;
 	    }
 
 	    match->al_next = NULL;
@@ -911,8 +911,8 @@ static void queue_blaster_report(vifi_t vifi, uint32_t src, uint32_t dst, char *
 	int *i = malloc(sizeof(int));
 
 	if (!i) {
-	    logit(LOG_ERR, 0, "Malloc failed in route.c:queue_blaster_report()\n");
-	    return;		/* NOTREACHED */
+	    logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
+	    return;
 	}
 
 	*i = vifi;
