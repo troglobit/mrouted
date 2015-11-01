@@ -68,13 +68,18 @@ void rsrr_init(void)
     int servlen;
     struct sockaddr_un serv_addr;
 
-    rsrr_recv_buf = (char *)malloc(RSRR_MAX_LEN);
-    rsrr_send_buf = (char *)malloc(RSRR_MAX_LEN);
-    if (!rsrr_recv_buf || !rsrr_send_buf)
-	logit(LOG_ERR, 0, "Ran out of memory in rsrr_init()");
+    rsrr_recv_buf = malloc(RSRR_MAX_LEN);
+    rsrr_send_buf = malloc(RSRR_MAX_LEN);
+    if (!rsrr_recv_buf || !rsrr_send_buf) {
+	logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
+	return;
+    }
 
-    if ((rsrr_socket = socket(AF_UNIX, SOCK_DGRAM, 0)) < 0)
-	logit(LOG_ERR, errno, "Cannot create RSRR socket");
+    rsrr_socket = socket(AF_UNIX, SOCK_DGRAM, 0);
+    if (rsrr_socket < 0) {
+	logit(LOG_ERR, errno, "Failed creating RSRR socket");
+	return;
+    }
 
     unlink(RSRR_SERV_PATH);
     memset(&serv_addr, 0, sizeof(serv_addr));
@@ -388,10 +393,10 @@ static void rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query)
     /* Cache entry doesn't already exist.  Create one and insert at
      * front of list.
      */
-    rc = (struct rsrr_cache *)malloc(sizeof(struct rsrr_cache));
+    rc = malloc(sizeof(struct rsrr_cache));
     if (!rc) {
-	logit(LOG_ERR, errno, "Ran out of memory in rsrr_cache()");
-	return;			/* Never reached */
+	logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
+	return;
     }
 
     rc->route_query.source_addr.s_addr = route_query->source_addr.s_addr;
