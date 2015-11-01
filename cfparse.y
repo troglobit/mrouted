@@ -15,8 +15,12 @@
 /*
  * Local function declarations
  */
-static void		fatal(char *fmt, ...);
-static void		warn(char *fmt, ...);
+static void		fatal(const char *fmt, ...)
+    __attribute__((__format__ (printf, 1, 2)))
+    __attribute__((__nonnull__ (1)));
+static void		warn(const char *fmt, ...)
+    __attribute__((__format__ (printf, 1, 2)))
+    __attribute__((__nonnull__ (1)));
 static void		yyerror(char *s);
 static char *		next_word(void);
 static int		yylex(void);
@@ -634,7 +638,7 @@ filtelem : ADDRMASK
 	    $$ = vfe;
 	}
 %%
-static void fatal(char *fmt, ...)
+static void fatal(const char *fmt, ...)
 {
     va_list ap;
     char buf[MAXHOSTNAMELEN + 100];
@@ -646,7 +650,7 @@ static void fatal(char *fmt, ...)
     logit(LOG_ERR, 0, "%s: %s near line %d", configfilename, buf, lineno);
 }
 
-static void warn(char *fmt, ...)
+static void warn(const char *fmt, ...)
 {
     va_list ap;
     char buf[200];
