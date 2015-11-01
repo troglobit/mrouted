@@ -411,8 +411,8 @@ static void send_prune(struct gtable *gt)
 
 	arg = malloc(sizeof(struct gtable *));
 	if (!arg) {
-	    logit(LOG_ERR, 0, "Malloc failed in prune.c:send_prune()\n");
-	    return;		/* NOTREACHED */
+	    logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
+	    return;
 	}
 
 	*arg = gt;
@@ -579,11 +579,11 @@ void add_table_entry(uint32_t origin, uint32_t mcastgrp)
 	}
     }
 
-    if (gt == NULL || gt->gt_mcastgrp != mcastgrp) {
+    if (!gt || gt->gt_mcastgrp != mcastgrp) {
 	gt = malloc(sizeof(struct gtable));
 	if (!gt) {
-	    logit(LOG_ERR, 0, "Malloc failed in prune.c:add_table_entry()\n");
-	    return;		/* NOTREACHED */
+	    logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
+	    return;
 	}
 
 	gt->gt_mcastgrp	    = mcastgrp;
@@ -645,11 +645,11 @@ void add_table_entry(uint32_t origin, uint32_t mcastgrp)
 	stnp = &st->st_next;
     }
 
-    if (st == NULL || st->st_origin != origin) {
+    if (!st || st->st_origin != origin) {
 	st = malloc(sizeof(struct stable));
 	if (!st) {
-	    logit(LOG_ERR, 0, "Malloc failed in prune.c:add_table_entry()\n");
-	    return;		/* NOTREACHED */
+	    logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
+	    return;
 	}
 
 	st->st_origin = origin;
@@ -1171,8 +1171,8 @@ void accept_prune(uint32_t src, uint32_t dst, char *p, size_t datalen)
 	    /* allocate space for the prune structure */
 	    pt = malloc(sizeof(struct ptable));
 	    if (!pt) {
-		logit(LOG_ERR, 0, "pt: ran out of memory");
-		return;		/* NOTREACHED */
+		logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
+		return;
 	    }
 		
 	    pt->pt_vifi = vifi;
