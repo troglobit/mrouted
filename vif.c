@@ -639,7 +639,7 @@ void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo
 	    }
 
 	    if (!v->uv_querier) {
-		v->uv_querier = (struct listaddr *)malloc(sizeof(struct listaddr));
+		v->uv_querier = malloc(sizeof(struct listaddr));
 		v->uv_flags &= ~VIFF_QUERIER;
 	    }
 
@@ -745,10 +745,10 @@ void accept_group_report(uint32_t src, uint32_t dst, uint32_t group, int r_type)
      * If not found, add it to the list and update kernel cache.
      */
     if (!g) {
-	g = (struct listaddr *)malloc(sizeof(struct listaddr));
+	g = malloc(sizeof(struct listaddr));
 	if (!g) {
-	    logit(LOG_ERR, 0, "Malloc failed in vif.c:accept_group_report()\n"); /* FATAL! */
-	    return;		/* NOTREACHED */
+	    logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
+	    return;
 	}
 
 	g->al_addr = group;
@@ -1251,10 +1251,10 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 		  (level >> 16) & 0xff, i);
 	}
 
-	n = (struct listaddr *)malloc(sizeof(struct listaddr));
-	if (n == NULL) {
-	    logit(LOG_ERR, 0, "Malloc failed in vif.c:update_neighbor()\n"); /* FATAL! */
-	    return NULL;	/* NOTREACHED */
+	n = malloc(sizeof(struct listaddr));
+	if (!n) {
+	    logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
+	    return NULL;
 	}
 
 	n->al_addr      = addr;
@@ -1746,10 +1746,10 @@ static int SetTimer(vifi_t vifi, struct listaddr *g)
 {
     cbk_t *cbk;
 
-    cbk = (cbk_t *)malloc(sizeof(cbk_t));
+    cbk = malloc(sizeof(cbk_t));
     if (!cbk) {
-	logit(LOG_ERR, 0, "Malloc failed in vif.c:SetTimer()\n");
-	return -1;		/* NOTREACHED */
+	logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
+	return -1;
     }
 
     cbk->g = g;
@@ -1789,9 +1789,9 @@ static int SetQueryTimer(struct listaddr *g, vifi_t vifi, int to_expire, int q_t
 {
     cbk_t *cbk;
 
-    cbk = (cbk_t *)malloc(sizeof(cbk_t));
+    cbk = malloc(sizeof(cbk_t));
     if (!cbk) {
-	logit(LOG_WARNING, 0, "Malloc failed in vif.c:setQueryTimer()\n");
+	logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
 	return -1;
     }
 
