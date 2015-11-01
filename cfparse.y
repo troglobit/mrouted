@@ -330,10 +330,10 @@ ifmod	: mod
 	{
 	    struct phaddr *ph;
 
-	    ph = (struct phaddr *)malloc(sizeof(struct phaddr));
+	    ph = malloc(sizeof(struct phaddr));
 	    if (!ph) {
-		fatal("out of memory");
-		return 0;	/* Never reached */
+		fatal("Failed allocating memory for 'struct phaddr'");
+		return 0;
 	    }
 
 	    if ($2.mask) {
@@ -413,10 +413,10 @@ mod	: THRESHOLD NUMBER
 	{
 	    struct vif_acl *v_acl;
 
-	    v_acl = (struct vif_acl *)malloc(sizeof(struct vif_acl));
+	    v_acl = malloc(sizeof(struct vif_acl));
 	    if (!v_acl) {
-		fatal("out of memory");
-		return 0;	/* Never reached */
+		fatal("Failed allocating memory for 'struct vif_acl'");
+		return 0;
 	    }
 
 	    VAL_TO_MASK(v_acl->acl_mask, $2.mask);
@@ -475,10 +475,10 @@ mod	: THRESHOLD NUMBER
 	    if (v->uv_filter == NULL) {
 		struct vif_filter *v_filter;
 
-		v_filter = (struct vif_filter *)malloc(sizeof(struct vif_filter));
+		v_filter = malloc(sizeof(struct vif_filter));
 		if (!v_filter) {
-		    fatal("out of memory");
-		    return 0;	/* Never reached */
+		    fatal("Failed allocating memory for 'struct vif_filter'");
+		    return 0;
 		}
 
 		v_filter->vf_flags = 0;
@@ -505,10 +505,10 @@ mod	: THRESHOLD NUMBER
 	    if (!v->uv_filter) {
 		struct vif_filter *v_filter;
 
-		v_filter = (struct vif_filter *)malloc(sizeof(struct vif_filter));
+		v_filter = malloc(sizeof(struct vif_filter));
 		if (!v_filter) {
-		    fatal("out of memory");
-		    return 0;	/* Never reached */
+		    fatal("Failed allocating memory for 'struct vif_filter'");
+		    return 0;
 		}
 
 		v_filter->vf_flags = 0;
@@ -624,10 +624,10 @@ filtelem : ADDRMASK
 	{
 	    struct vf_element *vfe;
 
-	    vfe = (struct vf_element *)malloc(sizeof(struct vf_element));
+	    vfe = malloc(sizeof(struct vf_element));
 	    if (!vfe) {
-		fatal("out of memory");
-		return 0;	/* Never reached */
+		fatal("Failed allocating memory for 'struct vf_element'");
+		return 0;
 	    }
 
 	    vfe->vfe_addr = $1.addr;
