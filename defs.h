@@ -186,10 +186,6 @@ extern char		s4[MAX_INET_BUF_LEN];
 #define MAX_VERSION_LEN 100
 extern char             versionstring[MAX_VERSION_LEN];
 
-#if !(defined(BSD) && (BSD >= 199103)) && !defined(__linux__)
-extern int		errno;
-#endif
-
 #ifndef IGMP_PIM
 #define	IGMP_PIM	0x14
 #endif
