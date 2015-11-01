@@ -4,8 +4,13 @@
 * Release 3.9.8: UNRELEASED
 ** Changes & New Features
    - The mrouted man page has been cleaned up and sections clarfied.
+   - Add =-D_DEFAULT_SOURCE= for building on GLIBC v2.20, and later.
+   - Sync with OpenBSD mrouted
 
 ** Bug Fixes
+   - Matt Weber found and fixed a serious bug with DVMRP reports missing
+     subnet (off by one error) which seems to have been introduced in
+     v3.9.5.  Issue #14
    - Fix mtrace compilation with Clang 3.5, fix courtesy of FreeBSD.
      https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=196166 by Dimitry
      Andric (@DimitryAndric), heads-up by Olivier Cochard-Labbé (@ocochard)
