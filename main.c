@@ -44,6 +44,7 @@ static int sighandled = 0;
 int cache_lifetime 	= DEFAULT_CACHE_LIFETIME;
 int prune_lifetime	= AVERAGE_PRUNE_LIFETIME;
 
+int startupdelay = DEFAULT_STARTUP_DELAY;
 int vifstatedefault = 0;
 int missingok = 0;
 
@@ -190,15 +191,16 @@ static void usage(void)
     struct debugname *d;
 
     fprintf(stderr, "Usage: %s [-fhpv] [-c file] [-d [level[,level...]]]\n\n", __progname);
-    fputs("  -c, --config=FILE    Configuration file to use, default /etc/mrouted.conf\n", stderr);
-    fputs("  -d, --debug[=LEVEL]  Debug level, see below for valid levels\n", stderr);
-    fputs("  -f, --foreground     Run in foreground, do not detach from calling terminal\n", stderr);
-    fputs("  -h, --help           Show this help text\n", stderr);
-    fputs("  -N, --no-interfaces  Disable all interfaces by default\n", stderr);
-    fputs("  -M, --missing-ok     Missing interfaces are OK\n", stderr);
-    fputs("  -p                   Disable pruning.  Deprecated, compatibility option\n", stderr);
-    fputs("  -r, --show-routes    Show state of VIFs and multicast routing tables\n", stderr);
-    fprintf(stderr, "  -v, --version        Show %s version\n", __progname);
+    fputs("  -c, --config=FILE          Configuration file to use, default /etc/mrouted.conf\n", stderr);
+    fputs("  -d, --debug[=LEVEL]        Debug level, see below for valid levels\n", stderr);
+    fputs("  -f, --foreground           Run in foreground, do not detach from calling terminal\n", stderr);
+    fputs("  -h, --help                 Show this help text\n", stderr);
+    fputs("  -N, --no-interfaces        Disable all interfaces by default\n", stderr);
+    fputs("  -M, --missing-ok           Missing interfaces are OK\n", stderr);
+    fputs("  -D, --startup-delay=DELAY  Set startup delay before forwarding, default " DSD_STRING " seconds\n", stderr);
+    fputs("  -p                         Disable pruning.  Deprecated, compatibility option\n", stderr);
+    fputs("  -r, --show-routes          Show state of VIFs and multicast routing tables\n", stderr);
+    fprintf(stderr, "  -v, --version              Show %s version\n", __progname);
     fputs("\n", stderr);
 
     j = 0xffffffff;
@@ -241,13 +243,18 @@ int main(int argc, char *argv[])
 	{"show-routes", 0, 0, 'r'},
 	{"no-intefaces", 0, 0, 'N'},
 	{"missing-ok", 0, 0, 'M'},
+	{"startup-delay", 1, 0, 'D'},
 	{0, 0, 0, 0}
     };
 
     snprintf(versionstring, sizeof(versionstring), "mrouted version %s", todaysversion);
 
-    while ((ch = getopt_long(argc, argv, "MNc:d::fhprv", long_options, NULL)) != EOF) {
+    while ((ch = getopt_long(argc, argv, "D:MNc:d::fhprv", long_options, NULL)) != EOF) {
 	switch (ch) {
+	    case 'D':
+		startupdelay = atoi(optarg);
+		break;
+
 	    case 'M':
 		missingok++;
 		break;
@@ -481,7 +488,8 @@ int main(int argc, char *argv[])
      * do a report_to_all_neighbors(ALL_ROUTES) immediately before
      * turning on DVMRP.
      */
-    timer_setTimer(10, final_init, NULL);
+printf("Applying startup delay %d\n", startupdelay);
+    timer_setTimer(startupdelay, final_init, NULL);
 
     /*
      * Main receive loop.
