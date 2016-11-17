@@ -1,8 +1,10 @@
 #+TITLE:    mrouted | Change Log
-#+AUTHOR:   David Waitzman, Craig Partridge, Steve Deering, Ajit Thyagarajan, Bill Fenner
+#+AUTHOR:   David Waitzman, Craig Partridge, Steve Deering, Ajit Thyagarajan, Bill Fenner, Eric Bischoff
 
 * Release 3.9.8: UNRELEASED
 ** Changes & New Features
+   - Added new option =-D= or =--startup-delay= to enable tuning initial
+     delay during which routes are exchanged but not applied.
    - The mrouted man page has been cleaned up and sections clarfied.
    - Add =-D_DEFAULT_SOURCE= for building on GLIBC v2.20, and later.
    - Sync with OpenBSD mrouted
