@@ -488,7 +488,6 @@ int main(int argc, char *argv[])
      * do a report_to_all_neighbors(ALL_ROUTES) immediately before
      * turning on DVMRP.
      */
-printf("Applying startup delay %d\n", startupdelay);
     timer_setTimer(startupdelay, final_init, NULL);
 
     /*
