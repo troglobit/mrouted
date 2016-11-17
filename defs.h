@@ -164,7 +164,6 @@ extern int		missingok;
 
 #define	DEFAULT_DEBUG	0x02de	/* default if "-d" given without value */
 #define DEFAULT_STARTUP_DELAY 10  /* default startup delay before forwarding in seconds */
-#define DSD_STRING           "10" /* same, as string */
 
 extern int		debug;
 extern int		did_final_init;

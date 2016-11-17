@@ -190,18 +190,19 @@ static void usage(void)
     size_t i, j, k;
     struct debugname *d;
 
-    fprintf(stderr, "Usage: %s [-fhpv] [-c file] [-d [level[,level...]]]\n\n", __progname);
-    fputs("  -c, --config=FILE          Configuration file to use, default /etc/mrouted.conf\n", stderr);
-    fputs("  -d, --debug[=LEVEL]        Debug level, see below for valid levels\n", stderr);
-    fputs("  -f, --foreground           Run in foreground, do not detach from calling terminal\n", stderr);
-    fputs("  -h, --help                 Show this help text\n", stderr);
-    fputs("  -N, --no-interfaces        Disable all interfaces by default\n", stderr);
-    fputs("  -M, --missing-ok           Missing interfaces are OK\n", stderr);
-    fputs("  -D, --startup-delay=DELAY  Set startup delay before forwarding, default " DSD_STRING " seconds\n", stderr);
-    fputs("  -p                         Disable pruning.  Deprecated, compatibility option\n", stderr);
-    fputs("  -r, --show-routes          Show state of VIFs and multicast routing tables\n", stderr);
-    fprintf(stderr, "  -v, --version              Show %s version\n", __progname);
-    fputs("\n", stderr);
+    fprintf(stderr,
+	    "Usage: %s [-fhpv] [-c file] [-d [level[,level...]]]\n\n"
+	    "  -c, --config=FILE          Configuration file to use, default /etc/mrouted.conf\n"
+	    "  -d, --debug[=LEVEL]        Debug level, see below for valid levels\n"
+	    "  -f, --foreground           Run in foreground, do not detach from calling terminal\n"
+	    "  -h, --help                 Show this help text\n"
+	    "  -N, --no-interfaces        Disable all interfaces by default\n"
+	    "  -M, --missing-ok           Missing interfaces are OK\n"
+	    "  -D, --startup-delay=DELAY  Set startup delay before forwarding, default %d seconds\n"
+	    "  -p                         Disable pruning.  Deprecated, compatibility option\n"
+	    "  -r, --show-routes          Show state of VIFs and multicast routing tables\n"
+	    "  -v, --version              Show %s version\n"
+	    "\n", __progname, DEFAULT_STARTUP_DELAY, __progname);
 
     j = 0xffffffff;
     k = 0;
