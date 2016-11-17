@@ -100,6 +100,11 @@ explicitly enabled with
 .Cm phyint enable
 in
 .Pa /etc/mrouted.conf
+.It Fl D, -startup-delay=DELAY
+Wait for DELAY seconds before applying the routes. This delay enables
+to exchange routes before starting to forward multicast packets and
+therefore eliminate transient problems at startup, at the cost of a
+momentary black hole. Defaults to 10 seconds.
 .It Fl f, -foreground
 Run in foreground, do not detach from the calling terminal.
 .It Fl c, -config=FILE
