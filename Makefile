@@ -36,7 +36,7 @@ MTRACE_OBJS   = mtrace.o $(EXTRA_OBJS)
 
 ## Common
 CFLAGS       += $(MCAST_INCLUDE) $(INCLUDES) $(DEFS) $(USERCOMPILE)
-CFLAGS       += -O2 -W -Wall -Werror
+CFLAGS       += -O2 -W -Wall -Wextra
 #CFLAGS       += -O -g
 LDLIBS        = $(EXTRA_LIBS)
 LDFLAGS      += -Wl,-Map,$@.map
