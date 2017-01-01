@@ -1,7 +1,7 @@
 #+TITLE:    mrouted | Change Log
 #+AUTHOR:   David Waitzman, Craig Partridge, Steve Deering, Ajit Thyagarajan, Bill Fenner
 
-* Release 3.9.8: UNRELEASED
+* Release 3.9.8: January 1, 2017
 ** Changes & New Features
    - New option =-D= or =--startup-delay= to tune the initial delay
      during which routes are exchanged, but not applied.
