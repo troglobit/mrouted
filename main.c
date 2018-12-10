@@ -898,7 +898,7 @@ static void resetlogging(void *arg)
     timer_setTimer(nxttime, resetlogging, narg);
 }
 
-#define SCALETIMEBUFLEN 20
+#define SCALETIMEBUFLEN 27
 char *scaletime(time_t t)
 {
     static char buf1[SCALETIMEBUFLEN];
