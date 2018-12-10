@@ -464,7 +464,7 @@ int main(int argc, char *argv[])
 	(void)dup2(0, 1);
 	(void)dup2(0, 2);
 #ifdef TIOCNOTTY
-	n = open("/dev/tty", 2);
+	n = open("/dev/tty", O_RDWR);
 	if (n >= 0) {
 	    (void)ioctl(n, TIOCNOTTY, (char *)0);
 	    (void)close(n);
