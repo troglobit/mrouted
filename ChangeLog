@@ -1,5 +1,6 @@
 #+TITLE:    mrouted | Change Log
 #+AUTHOR:   David Waitzman, Craig Partridge, Steve Deering, Ajit Thyagarajan, Bill Fenner
+#+STARTUP: showall
 
 * Release 3.9.8: January 1, 2017
 ** Changes & New Features
