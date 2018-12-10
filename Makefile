@@ -44,7 +44,7 @@ OBJS          = $(IGMP_OBJS) $(ROUTER_OBJS) $(MAPPER_OBJS) $(MRINFO_OBJS) \
 		$(MTRACE_OBJS) $(MSTAT_OBJS)
 SRCS          = $(OBJS:.o=.c)
 MANS          = $(addsuffix .8,$(EXECS))
-DISTFILES     = README AUTHORS LICENSE ChangeLog
+DISTFILES     = README.md AUTHORS LICENSE ChangeLog.org
 
 LINT          = splint
 LINTFLAGS     = $(MCAST_INCLUDE) $(filter-out -W -Wall -Werror, $(CFLAGS)) -posix-lib -weak -skipposixheaders
