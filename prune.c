@@ -309,7 +309,7 @@ static void send_prune(struct gtable *gt)
     uint32_t tmp;
     int rexmitting = 0;
     struct uvif *v;
-    
+
     /*
      * Can't process a prune if we don't have an associated route
      * or if the route points to a local interface.
@@ -320,20 +320,20 @@ static void send_prune(struct gtable *gt)
     /* Don't send a prune to a non-pruning router */
     if (!pruning_neighbor(gt->gt_route->rt_parent, gt->gt_route->rt_gateway))
 	return;
-    
-    v = &uvifs[gt->gt_route->rt_parent];
-    /* 
+
+    /*
      * sends a prune message to the router upstream.
      */
+    v = &uvifs[gt->gt_route->rt_parent];
 #if 0
     dst = v->uv_flags & VIFF_TUNNEL ? dvmrp_group : gt->gt_route->rt_gateway; /*XXX*/
 #else
     dst = gt->gt_route->rt_gateway;
 #endif
-    
+
     p = send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN;
     datalen = 0;
-    
+
     /*
      * determine prune lifetime, if this isn't a retransmission.
      *
@@ -346,9 +346,10 @@ static void send_prune(struct gtable *gt)
 	    l = v->uv_prune_lifetime;
 
 	gt->gt_prsent_timer = JITTERED_VALUE(l);
-	for (pt = gt->gt_pruntbl; pt; pt = pt->pt_next)
+	for (pt = gt->gt_pruntbl; pt; pt = pt->pt_next) {
 	    if (pt->pt_timer < gt->gt_prsent_timer)
 		gt->gt_prsent_timer = pt->pt_timer;
+	}
     } else if (gt->gt_prsent_timer < 0) {
 	IF_DEBUG(DEBUG_PRUNE) {
 	    logit(LOG_DEBUG, 0, "Asked to rexmit? (%s,%s)/%d on vif %d to %s with negative time",
@@ -380,7 +381,7 @@ static void send_prune(struct gtable *gt)
 	}
 	return;
     }
-    
+
     /*
      * If we have a graft pending, cancel graft retransmission
      */
@@ -394,9 +395,9 @@ static void send_prune(struct gtable *gt)
     for (i = 0; i < 4; i++)
 	*p++ = ((char *)&(tmp))[i];
     datalen += 12;
-    
+
     send_on_vif(v, dst, DVMRP_PRUNE, datalen);
-    
+
     IF_DEBUG(DEBUG_PRUNE) {
 	logit(LOG_DEBUG, 0, "%s prune for (%s %s)/%d on vif %d to %s",
 	      rexmitting ? "rexmitted" : "sent",
@@ -456,13 +457,13 @@ static void send_graft(struct gtable *gt)
 
     p = send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN;
     datalen = 0;
-    
+
     for (i = 0; i < 4; i++)
 	*p++ = ((char *)&(gt->gt_route->rt_origin))[i];
     for (i = 0; i < 4; i++)
 	*p++ = ((char *)&(gt->gt_mcastgrp))[i];
     datalen += 8;
-    
+
     send_on_vif(&uvifs[gt->gt_route->rt_parent], dst, DVMRP_GRAFT, datalen);
     IF_DEBUG(DEBUG_PRUNE) {
 	logit(LOG_DEBUG, 0, "Sent graft for (%s %s) to %s on vif %d",
@@ -481,13 +482,13 @@ static void send_graft_ack(uint32_t src, uint32_t dst, uint32_t origin, uint32_t
 
     p = send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN;
     datalen = 0;
-    
+
     for (i = 0; i < 4; i++)
 	*p++ = ((char *)&(origin))[i];
     for (i = 0; i < 4; i++)
 	*p++ = ((char *)&(grp))[i];
     datalen += 8;
-    
+
     if (vifi == NO_VIF)
 	send_igmp(src, dst, IGMP_DVMRP, DVMRP_GRAFT_ACK,
 		  htonl(MROUTED_LEVEL), datalen);
@@ -556,7 +557,7 @@ void add_table_entry(uint32_t origin, uint32_t mcastgrp)
 #ifdef DEBUG_MFC
     md_log(MD_MISS, origin, mcastgrp);
 #endif
-    
+
     r = determine_route(origin);
     prev_gt = NULL;
     if (r == NULL) {
@@ -702,7 +703,7 @@ void reset_neighbor_state(vifi_t vifi, uint32_t addr)
     struct gtable *g;
     struct ptable *pt, **ptnp;
     struct stable *st;
-    
+
     for (g = kernel_table; g; g = g->gt_gnext) {
 	r = g->gt_route;
 
@@ -756,7 +757,7 @@ void reset_neighbor_state(vifi_t vifi, uint32_t addr)
 #ifdef RSRR
 		/* Send route change notification to reservation protocol. */
 		rsrr_cache_send(g,1);
-#endif /* RSRR */
+#endif
 
 		/*
 		 * If removing this prune causes us to start forwarding
@@ -784,7 +785,7 @@ void del_table_entry(struct rtentry *r, uint32_t mcastgrp, uint32_t del_flag)
     struct gtable *g, *prev_g;
     struct stable *st, *prev_st;
     struct ptable *pt, *prev_pt;
-    
+
     if (del_flag == DEL_ALL_ROUTES) {
 	g = r->rt_groups;
 	while (g) {
@@ -828,7 +829,7 @@ void del_table_entry(struct rtentry *r, uint32_t mcastgrp, uint32_t del_flag)
 	    /* Send route change notification to reservation protocol. */
 	    rsrr_cache_send(g,0);
 	    rsrr_cache_clean(g);
-#endif /* RSRR */
+#endif
 	    if (g->gt_rexmit_timer)
 		timer_clearTimer(g->gt_rexmit_timer);
 
@@ -838,8 +839,8 @@ void del_table_entry(struct rtentry *r, uint32_t mcastgrp, uint32_t del_flag)
 	}
 	r->rt_groups = NULL;
     }
-    
-    /* 
+
+    /*
      * Dummy routine - someday this may be needed, so it is just there
      */
     if (del_flag == DEL_RTE_GROUP) {
@@ -894,7 +895,7 @@ void del_table_entry(struct rtentry *r, uint32_t mcastgrp, uint32_t del_flag)
 		/* Send route change notification to reservation protocol. */
 		rsrr_cache_send(g,0);
 		rsrr_cache_clean(g);
-#endif /* RSRR */
+#endif
 		free(g);
 		g = prev_g;
 	    } else {
@@ -975,7 +976,7 @@ void update_table_entry(struct rtentry *r, uint32_t old_parent_gw)
 #ifdef RSRR
 	/* Send route change notification to reservation protocol. */
 	rsrr_cache_send(g,1);
-#endif /* RSRR */
+#endif
     }
 }
 
@@ -986,10 +987,9 @@ void update_lclgrp(vifi_t vifi, uint32_t mcastgrp)
 {
     struct rtentry *r;
     struct gtable *g;
-    
-    IF_DEBUG(DEBUG_MEMBER) {
+
+    IF_DEBUG(DEBUG_MEMBER)
 	logit(LOG_DEBUG, 0, "Group %s joined on vif %d", inet_fmt(mcastgrp, s1, sizeof(s1)), vifi);
-    }
 
     for (g = kernel_table; g; g = g->gt_gnext) {
 	if (ntohl(mcastgrp) < ntohl(g->gt_mcastgrp))
@@ -1014,7 +1014,7 @@ void update_lclgrp(vifi_t vifi, uint32_t mcastgrp)
 #ifdef RSRR
 	    /* Send route change notification to reservation protocol. */
 	    rsrr_cache_send(g, 1);
-#endif /* RSRR */
+#endif
 	}
     }
 }
@@ -1025,10 +1025,9 @@ void update_lclgrp(vifi_t vifi, uint32_t mcastgrp)
 void delete_lclgrp(vifi_t vifi, uint32_t mcastgrp)
 {
     struct gtable *g;
-    
-    IF_DEBUG(DEBUG_MEMBER) {
+
+    IF_DEBUG(DEBUG_MEMBER)
 	logit(LOG_DEBUG, 0, "Group %s left on vif %d", inet_fmt(mcastgrp, s1, sizeof(s1)), vifi);
-    }
 
     for (g = kernel_table; g; g = g->gt_gnext) {
 	if (ntohl(mcastgrp) < ntohl(g->gt_mcastgrp))
@@ -1052,7 +1051,7 @@ void delete_lclgrp(vifi_t vifi, uint32_t mcastgrp)
 #ifdef RSRR
 		/* Send route change notification to reservation protocol. */
 		rsrr_cache_send(g, 1);
-#endif /* RSRR */
+#endif
 
 		/*
 		 * If there are no more members of this particular group,
@@ -1174,7 +1173,7 @@ void accept_prune(uint32_t src, uint32_t dst, char *p, size_t datalen)
 		logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
 		return;
 	    }
-		
+
 	    pt->pt_vifi = vifi;
 	    pt->pt_router = src;
 	    pt->pt_timer = prun_tmr;
@@ -1221,7 +1220,7 @@ void accept_prune(uint32_t src, uint32_t dst, char *p, size_t datalen)
 #ifdef RSRR
 	    /* Send route change notification to reservation protocol. */
 	    rsrr_cache_send(g,1);
-#endif /* RSRR */
+#endif
 	}
 
 	/*
@@ -1230,9 +1229,8 @@ void accept_prune(uint32_t src, uint32_t dst, char *p, size_t datalen)
 	 * interface
 	 * Send a prune message then upstream
 	 */
-	if (VIFM_ISEMPTY(g->gt_grpmems) && r->rt_gateway) {
+	if (VIFM_ISEMPTY(g->gt_grpmems) && r->rt_gateway)
 	    send_prune(g);
-	}
     } else {
 	/*
 	 * There is no kernel entry for this group.  Therefore, we can
@@ -1276,10 +1274,10 @@ void chkgrp_graft(vifi_t vifi, uint32_t mcastgrp)
 
 		/* send graft upwards */
 		send_graft(g);
-	    
+
 		/* update cache timer*/
 		g->gt_timer = CACHE_LIFETIME(cache_lifetime);
-	    
+
 		IF_DEBUG(DEBUG_PRUNE|DEBUG_CACHE) {
 		    logit(LOG_DEBUG, 0, "chkgrp graft (%s %s) gm:%x",
 			  RT_FMT(r, s1), inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)), g->gt_grpmems);
@@ -1290,20 +1288,18 @@ void chkgrp_graft(vifi_t vifi, uint32_t mcastgrp)
 #ifdef RSRR
 		/* Send route change notification to reservation protocol. */
 		rsrr_cache_send(g, 1);
-#endif /* RSRR */
+#endif
 	    }
     }
 }
 
 /* determine the multicast group and src
- * 
- * if it does, then determine if a prune was sent 
- * upstream.
- * if prune sent upstream, send graft upstream and send
- * ack downstream.
- * 
- * if no prune sent upstream, change the forwarding bit
- * for this interface and send ack downstream.
+ *
+ * if it does, then determine if a prune was sent upstream.  if prune
+ * sent upstream, send graft upstream and send ack downstream.
+ *
+ * if no prune sent upstream, change the forwarding bit for this
+ * interface and send ack downstream.
  *
  * if no entry exists for this group send ack downstream.
  */
@@ -1316,13 +1312,13 @@ void accept_graft(uint32_t src, uint32_t dst, char *p, size_t datalen)
     struct rtentry *r;
     struct gtable *g;
     struct ptable *pt, **ptnp;
-    
+
     if (datalen < 8) {
 	logit(LOG_WARNING, 0, "Received non-decipherable graft from %s",
 	      inet_fmt(src, s1, sizeof(s1)));
 	return;
     }
-    
+
     for (i = 0; i< 4; i++)
 	((char *)&graft_src)[i] = *p++;
     for (i = 0; i< 4; i++)
@@ -1375,15 +1371,14 @@ void accept_graft(uint32_t src, uint32_t dst, char *p, size_t datalen)
 #ifdef RSRR
 		/* Send route change notification to reservation protocol. */
 		rsrr_cache_send(g,1);
-#endif /* RSRR */
-		break;				
+#endif
+		break;
 	    } else {
 		ptnp = &pt->pt_next;
 	    }
 	}
 
 	g->gt_timer = CACHE_LIFETIME(cache_lifetime);
-	    
 	if (g->gt_prsent_timer)
 	    /* send graft upwards */
 	    send_graft(g);
@@ -1403,12 +1398,10 @@ void accept_graft(uint32_t src, uint32_t dst, char *p, size_t datalen)
 }
 
 /*
- * find out which group is involved first of all 
- * then determine if a graft was sent.
- * if no graft sent, ignore the message
- * if graft was sent and the ack is from the right 
- * source, remove the graft timer so that we don't 
- * have send a graft again
+ * find out which group is involved first of all then determine if a
+ * graft was sent.  if no graft sent, ignore the message if graft was
+ * sent and the ack is from the right source, remove the graft timer so
+ * that we don't have send a graft again
  */
 void accept_g_ack(uint32_t src, uint32_t dst, char *p, size_t datalen)
 {
@@ -1417,24 +1410,24 @@ void accept_g_ack(uint32_t src, uint32_t dst, char *p, size_t datalen)
     uint32_t 	grft_src;
     uint32_t	grft_grp;
     int 	i;
-    
+
     if ((vifi = find_vif(src, dst)) == NO_VIF) {
 	logit(LOG_INFO, 0, "Ignoring graft ack from non-neighbor %s",
 	      inet_fmt(src, s1, sizeof(s1)));
 	return;
     }
-    
+
     if (datalen > 8) {
 	logit(LOG_WARNING, 0, "Received non-decipherable graft ack from %s",
 	      inet_fmt(src, s1, sizeof(s1)));
 	return;
     }
-    
+
     for (i = 0; i< 4; i++)
 	((char *)&grft_src)[i] = *p++;
     for (i = 0; i< 4; i++)
 	((char *)&grft_grp)[i] = *p++;
-    
+
     IF_DEBUG(DEBUG_PRUNE) {
 	logit(LOG_DEBUG, 0, "%s on vif %d acks graft (%s, %s)", inet_fmt(src, s1, sizeof(s1)),
 	      vifi, inet_fmt(grft_src, s2, sizeof(s2)), inet_fmt(grft_grp, s3, sizeof(s3)));
@@ -1663,9 +1656,11 @@ void age_table_entry(void)
 	 *		and send a prune
 	 */
 	if (VIFM_ISEMPTY(gt->gt_grpmems) && gt->gt_srctbl && r && r->rt_gateway && gt->gt_prsent_timer == 0) {
-	    for (st = gt->gt_srctbl; st; st = st->st_next)
+	    for (st = gt->gt_srctbl; st; st = st->st_next) {
 		if (st->st_ctime != 0)
 		    break;
+	    }
+
 	    if (st != NULL) {
 		logit(LOG_WARNING, 0, "Group members for (%s %s) is empty but no prune state!", RT_FMT(r, s1), inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)));
 		send_prune_or_graft(gt);
@@ -1831,7 +1826,7 @@ void age_table_entry(void)
 		logit(LOG_DEBUG, 0, "Timeout cache entry (%s, %s)",
 		      RT_FMT(r, s1), inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)));
 	    }
-	    
+
 	    if (gt->gt_prev)
 		gt->gt_prev->gt_next = gt->gt_next;
 	    else
@@ -1853,11 +1848,11 @@ void age_table_entry(void)
 	    /* Send route change notification to reservation protocol. */
 	    rsrr_cache_send(gt,0);
 	    rsrr_cache_clean(gt);
-#endif /* RSRR */
+#endif
 	    if (gt->gt_rexmit_timer)
 		timer_clearTimer(gt->gt_rexmit_timer);
 
-	    free((char *)gt);
+	    free(gt);
 	} else {
 	    if (gt->gt_prsent_timer == -1) {
 		/*
@@ -1903,7 +1898,7 @@ void age_table_entry(void)
 	    if (gt->gt_rexmit_timer)
 		timer_clearTimer(gt->gt_rexmit_timer);
 
-	    free((char *)gt);
+	    free(gt);
 	} else {
 	    gtnptr = &gt->gt_next;
 	}
@@ -1924,9 +1919,9 @@ static void expire_prune(vifi_t vifi, struct gtable *gt)
      * send a graft to compensate.
      */
     if (gt->gt_prsent_timer >= MIN_PRUNE_LIFE) {
-	IF_DEBUG(DEBUG_PRUNE) {
+	IF_DEBUG(DEBUG_PRUNE)
 	    logit(LOG_DEBUG, 0, "Prune expired with %d left on prsent_timer", gt->gt_prsent_timer);
-	}
+
         gt->gt_prsent_timer = 0;
 	send_graft(gt);
     }
@@ -1946,7 +1941,7 @@ static void expire_prune(vifi_t vifi, struct gtable *gt)
 #ifdef RSRR
         /* Send route change notification to reservation protocol. */
         rsrr_cache_send(gt,1);
-#endif /* RSRR */
+#endif
     }
 }
 
@@ -1965,11 +1960,11 @@ void dump_cache(FILE *fp2)
 
     fprintf(fp2,
 	    "Multicast Routing Cache Table (%d entries)\n%s", kroutes,
-    " Origin             Mcast-group         CTmr     Age      Ptmr Rx IVif Forwvifs\n");
+	    " Origin             Mcast-group         CTmr     Age      Ptmr Rx IVif Forwvifs\n");
     fprintf(fp2,
-    "<(prunesrc:vif[idx]/tmr) prunebitmap\n%s",
-    ">Source             Lifetime SavPkt         Pkts    Bytes RPFf\n");
-    
+	    "<(prunesrc:vif[idx]/tmr) prunebitmap\n%s",
+	    ">Source             Lifetime SavPkt         Pkts    Bytes RPFf\n");
+
     for (gt = kernel_no_route; gt; gt = gt->gt_next) {
 	if (gt->gt_srctbl) {
 	    fprintf(fp2, " %-18s %-15s %-8s %-8s        - -1 (no route)\n",
@@ -1989,8 +1984,9 @@ void dump_cache(FILE *fp2)
 	fprintf(fp2, " %-8s", scaletime(gt->gt_timer));
 
 	fprintf(fp2, " %-8s %-8s ", scaletime(thyme - gt->gt_ctime),
-			gt->gt_prsent_timer ? scaletime(gt->gt_prsent_timer) :
-					      "       -");
+		gt->gt_prsent_timer
+		? scaletime(gt->gt_prsent_timer)
+		: "       -");
 
 	if (gt->gt_prune_rexmit) {
 	    int i = gt->gt_prune_rexmit;
@@ -2112,8 +2108,6 @@ void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8
 	return;
     }
 
-    qry = (struct tr_query *)data;
-
     /*
      * if it is a packet with all reports filled, drop it
      */
@@ -2123,6 +2117,8 @@ void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8
 	}
 	return;
     }
+
+    qry = (struct tr_query *)data;
 
     IF_DEBUG(DEBUG_TRACE) {
 	logit(LOG_DEBUG, 0, "s: %s g: %s d: %s ", inet_fmt(qry->tr_src, s1, sizeof(s1)),
@@ -2160,9 +2156,9 @@ void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8
 	     * only get N copies, N <= the number of interfaces on the router,
 	     * it is not fatal.
 	     */
-	    IF_DEBUG(DEBUG_TRACE) {
+	    IF_DEBUG(DEBUG_TRACE)
 		logit(LOG_DEBUG, 0, "Ignoring duplicate traceroute packet");
-	    }
+
 	    return;
 	}
 
@@ -2175,7 +2171,7 @@ void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8
 		return;
 	}
 	vifi = find_vif(qry->tr_dst, 0);
-	
+
 	if (vifi == NO_VIF) {
 	    /* The traceroute destination is not on one of my subnet vifs. */
 	    IF_DEBUG(DEBUG_TRACE) {
@@ -2208,19 +2204,18 @@ void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8
 	    errcode = TR_WRONG_IF;
 	}
     }
-    
+
     /* Now that we've decided to send a response, save the qid */
     oqid = qry->tr_qid;
 
-    IF_DEBUG(DEBUG_TRACE) {
+    IF_DEBUG(DEBUG_TRACE)
 	logit(LOG_DEBUG, 0, "Sending traceroute response");
-    }
 
     /* copy the packet to the sending buffer */
     p = send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN;
     memmove(p, data, datalen);
     p += datalen;
-    
+
     /*
      * If there is no room to insert our reply, coopt the previous hop
      * error indication to relay this fact.
@@ -2239,8 +2234,8 @@ void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8
     memset(resp, 0, sizeof(struct tr_resp));
     datalen += RLEN;
 
-    resp->tr_qarr    = htonl(((tp.tv_sec + JAN_1970) << 16) + 
-				((tp.tv_usec << 10) / 15625));
+    resp->tr_qarr    = htonl(((tp.tv_sec + JAN_1970) << 16) +
+			     ((tp.tv_usec << 10) / 15625));
     resp->tr_rproto  = PROTO_DVMRP;
     resp->tr_outaddr = (vifi == NO_VIF) ? dst : uvifs[vifi].uv_lcl_addr;
     resp->tr_fttl    = (vifi == NO_VIF) ? 0 : uvifs[vifi].uv_threshold;
@@ -2278,7 +2273,7 @@ void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8
 	sg_req.src.s_addr = qry->tr_src;
 	sg_req.grp.s_addr = group;
 	if (st && st->st_ctime != 0 &&
-		  ioctl(udp_socket, SIOCGETSGCNT, (char *)&sg_req) >= 0)
+	    ioctl(udp_socket, SIOCGETSGCNT, (char *)&sg_req) >= 0)
 	    resp->tr_pktcnt = htonl(sg_req.pktcnt + st->st_savpkt);
 	else
 	    resp->tr_pktcnt = htonl(st ? st->st_savpkt : 0xffffffff);
@@ -2344,9 +2339,8 @@ sendit:
      * else send to upstream router.  If the upstream router can't handle
      * mtrace, set an error code and send to requestor anyway.
      */
-    IF_DEBUG(DEBUG_TRACE) {
+    IF_DEBUG(DEBUG_TRACE)
 	logit(LOG_DEBUG, 0, "rcount:%u, no:%u", rcount, no);
-    }
 
     if ((rcount + 1 == no) || (rt == NULL) || (rt->rt_metric == 1)) {
 	resptype = IGMP_MTRACE_RESP;

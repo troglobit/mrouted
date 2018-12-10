@@ -15,10 +15,10 @@
 char		*recv_buf; 		     /* input packet buffer         */
 char		*send_buf; 		     /* output packet buffer        */
 int		igmp_socket;		     /* socket for all network I/O  */
-uint32_t		allhosts_group;		     /* All hosts addr in net order */
-uint32_t		allrtrs_group;		     /* All-Routers "  in net order */
-uint32_t		dvmrp_group;		     /* DVMRP grp addr in net order */
-uint32_t		dvmrp_genid;		     /* IGMP generation id          */
+uint32_t	allhosts_group;		     /* All hosts addr in net order */
+uint32_t	allrtrs_group;		     /* All-Routers "  in net order */
+uint32_t	dvmrp_group;		     /* DVMRP grp addr in net order */
+uint32_t	dvmrp_genid;		     /* IGMP generation id          */
 
 /*
  * Local function definitions.
@@ -182,7 +182,7 @@ void accept_igmp(size_t recvlen)
     src       = ip->ip_src.s_addr;
     dst       = ip->ip_dst.s_addr;
 
-    /* 
+    /*
      * this is most likely a message from the kernel indicating that
      * a new src grp pair message has arrived and so, it would be 
      * necessary to install a route into the kernel for this.
@@ -234,7 +234,7 @@ void accept_igmp(size_t recvlen)
 	case IGMP_V2_MEMBERSHIP_REPORT:
 	    accept_group_report(src, dst, group, igmp->igmp_type);
 	    return;
-	    
+
 	case IGMP_V2_LEAVE_GROUP:
 	    accept_leave_message(src, dst, group);
 	    return;
@@ -373,7 +373,7 @@ size_t build_igmp(uint32_t src, uint32_t dst, int type, int code, uint32_t group
     return len;
 }
 
-/* 
+/*
  * Call build_igmp() to build an IGMP message in the output packet buffer.
  * Then send the message from the interface with IP address 'src' to
  * destination 'dst'.

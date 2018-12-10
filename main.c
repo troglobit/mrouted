@@ -475,9 +475,8 @@ int main(int argc, char *argv[])
 #endif
     }
 
-    if (pidfile(NULL)) {
+    if (pidfile(NULL))
 	warn("Cannot create pidfile");
-    }
 
     /* XXX HACK
      * This will cause black holes for the first few seconds after startup,
