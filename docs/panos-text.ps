@@ -1,0 +1,209 @@
+%!PS-Adobe-2.0
+%%Creator: LBL whiteboard
+%%Pages: (atend)
+%%EndComments
+userdict /_$iv$save save put
+
+/sf {   % scale /fontName => -  (set current font)
+    {findfont} stopped {pop /Courier findfont} if
+    exch scalefont setfont
+} bind def
+
+/rf {   % orient scale /fontname => -  (set current font)
+    {findfont} stopped {pop /Courier findfont} if
+    exch scalefont exch matrix rotate
+    makefont setfont
+} bind def
+
+/ws {
+    4 index 6 4 roll moveto sub
+    2 index stringwidth pop sub
+    exch div 0 8#40 4 3 roll
+    widthshow
+} bind def
+
+/as {
+    4 index 6 4 roll moveto sub
+    2 index stringwidth pop sub
+    exch div 0 3 2 roll
+    ashow
+} bind def
+
+%%EndProlog
+%%Page: "ucacgev:1" 1
+-0 -0 translate
+0 setgray
+19 /Helvetica-Bold sf
+5.004 740(mrouted -- set up and administration)5 318.042 ws
+5.004 715( )1 10.008 ws
+5.004 690( )1 10.008 ws
+5.004 665(o JOINING the MBone)3 192.024 ws
+5.004 640( )1 10.008 ws
+5.004 615(  the multicast routing s/w:)5 233.046 ws
+5.004 590(        - mrouted       ftp://ftp.parc.xerox.com/pub/net-research/ipmulti/)16 583.146 ws
+5.004 565(        - CISCO IOS 11.x ftp://ftp-eng.cisco.com/ipmulticast.html)12 530.136 ws
+5.004 540(        - pimd          http://catarina.usc.edu/ahelmy/pimsm-implem/)19 545.184 ws
+5.004 515(        - gated         http://www.gated.org/)18 333.09 ws
+5.004 490( )1 10.008 ws
+5.004 465(  the protocols)3 129.024 ws
+5.004 440(        - DVMRP)9 121.032 ws
+5.004 415(        - PIM)9 88.038 ws
+5.004 390(        + IGMP)9 106.56 ws
+5.004 365( )1 10.008 ws
+5.004 340(  references)2 106.056 ws
+5.004 315(        Deering S., Cheriton D., "Multicast Routing in Datagram )16 524.646 ws
+45.036 290(internetworks and Extended LANs", )4 356.634 ws
+45.036 265(ACM Transactions on Computer Systems, Vol. 8, No. 2 May 1990)10 596.196 ws
+5.004 240( )1 10.008 ws
+5.004 215(        RFC1058 C.Hedrick "Routing Information Protocol", June 1988)14 580.212 ws
+5.004 190( )1 10.008 ws
+5.004 165(        T.Pusateri "Distance Vector Multicast Routing Protocol", )14 534.204 ws
+45.036 140(Work in Progress, August 1997)4 311.112 ws
+5.004 115( )1 10.008 ws
+5.004 90(        mrouted man page)10 206.064 ws
+showpage
+%%Page: "ucacgev:2" 2
+-0 -0 translate
+0 setgray
+19 /Helvetica-Bold sf
+5.004 740(o mrouted \(multicast routing daemon\))4 330.03 ws
+5.004 715( )1 10.008 ws
+5.004 690(        ftp://ftp.parc.xerox.com/pub/net-research/ipmulti/)8 465.12 ws
+5.004 665( )1 10.008 ws
+5.004 640(        - version:)9 126.054 ws
+5.004 615(          mrouted3.8, 3.8.2 \(SNMP support, RSRR\))14 404.1 ws
+5.004 590(          mrouted3.9-beta2 \(route filtering\) **)13 357.084 ws
+5.004 565( )1 10.008 ws
+5.004 540(        - Platforms :)10 150.048 ws
+5.004 515(          sparc-solaris2, i386-bsd, sgi-irix6, sparc-sunos41x)13 486.234 ws
+5.004 490( )1 10.008 ws
+5.004 465(        - kernel multicast support)11 265.086 ws
+5.004 440(                FreeBSD already there in new releases)21 416.214 ws
+5.004 415(                Solaris 2.5.1  multicast patches from:)21 403.182 ws
+5.004 390(                        ftp://playground.sun.com/pub/multicast/)24 468.144 ws
+5.004 365(                standard in 2.6 \(?\))19 240.102 ws
+showpage
+%%Page: "ucacgev:3" 3
+-0 -0 translate
+0 setgray
+19 /Helvetica-Bold sf
+5.004 740(o Distance Vector & Reverse Path Multicasting Concepts)7 491.13 ws
+45.036 690(- Basic Concept)2 181.062 ws
+45.036 665(     Every router has a table with all networks )13 429.192 ws
+45.036 640(     and their respective distance.)8 323.154 ws
+45.036 615(     )5 70.056 ws
+45.036 590(     D\(i,j\)  metric of best route from i to j)14 375.102 ws
+45.036 565(     d\(i,k\)  metric to reach neighbor k)11 349.128 ws
+45.036 540(     )5 70.056 ws
+45.036 515(     D\(i,i\) = 0  all i)10 195.156 ws
+45.036 490(     D\(i,j\) = min_k [d\(i,k\) + D\(k,j\)])10 308.106 ws
+45.036 440(- Keywords)1 142.056 ws
+45.036 415(  Routes:)2 122.04 ws
+45.036 390(     RR \(Route Reports\))7 237.042 ws
+45.036 365(     network/netmask metric)6 276.12 ws
+45.036 340(     Route Updates)6 197.064 ws
+45.036 315(  Dependencies:)2 183.078 ws
+45.036 290(     upstream, downstream \(parent/child in tree rooted )11 505.152 ws
+85.068 265(at the source\))2 203.094 ws
+45.036 240(     Poison Reverse)6 205.11 ws
+45.036 215(     leafs)5 111.078 ws
+45.036 190( Operations: )2 156.06 ws
+45.036 165(     Graft, Prune, Flood,)7 238.086 ws
+45.036 140( Forwarding Cache Entries)3 273.096 ws
+5.004 115( )1 10.008 ws
+showpage
+%%Page: "ucacgev:4" 4
+-0 -0 translate
+0 setgray
+19 /Helvetica-Bold sf
+5.004 765(        )8 45.036 ws
+45.036 740(- multicast VS unicast routing)4 299.088 ws
+5.004 715(          in the mrouted case multicast routing depends on the)18 514.134 ws
+5.004 690(          unicast routing but DVMRP has its own routing table.)18 510.102 ws
+5.004 665( )1 10.008 ws
+5.004 640(        - how the multicast distribution tree \(wrt S,G\) is created)17 519.138 ws
+5.004 615(          Reverse Path Forwarding \(the shortest path !!from the)17 518.112 ws
+5.004 590(          receiver back to the source, routing assymetry\(?\)\))16 483.174 ws
+45.036 540(Pathologies inherent to distance vector routing)5 449.118 ws
+45.036 490(  Route flaps,)3 158.058 ws
+45.036 465(  Black Holes, )4 167.094 ws
+45.036 440(  Counting to infinity)4 220.032 ws
+45.036 415(  Convergence delays)3 230.112 ws
+showpage
+%%Page: "ucacgev:5" 5
+-0 -0 translate
+0 setgray
+19 /Helvetica-Bold sf
+5.004 740(o Steps involved in setting up mrouted )7 342.072 ws
+5.004 715( )1 10.008 ws
+5.004 690(        - where to run mrouted \(local MBone POP\))15 407.088 ws
+5.004 665(                more than one mrouted on the same Ethernet \(?\))24 502.128 ws
+5.004 640(                encapsulation/members on the same interface)20 481.194 ws
+5.004 615( )1 10.008 ws
+5.004 590(        - what the remote tunnel endpoint \(IP address\))15 442.098 ws
+5.004 565( )1 10.008 ws
+5.004 540(        - what network interfaces are used by the tunnels:)16 473.148 ws
+5.004 515(                point to point links \(e.g ATM PVCs\))22 385.092 ws
+5.004 490(                shared medium \(e.g Ethernet\))19 339.12 ws
+5.004 465( )1 10.008 ws
+5.004 440(        - static route  \(to host or interface for p2p links\))18 450.108 ws
+45.036 415(  \(man route\) )4 159.048 ws
+5.004 390(          links reserved only for multicast traffic)15 386.154 ws
+5.004 365( )1 10.008 ws
+5.004 340(        - determine IP connectivity/routing  \(ping/traceroute\))13 494.118 ws
+5.004 315( )1 10.008 ws
+5.004 290(        - create /etc/mrouted.conf)10 265.086 ws
+5.004 265( )1 10.008 ws
+5.004 240(        - run mrouted \(with appropriate debug option if needed\))16 522.072 ws
+showpage
+%%Page: "ucacgev:6" 6
+-0 -0 translate
+0 setgray
+19 /Helvetica-Bold sf
+5.004 740(o Administration)1 148.014 ws
+5.004 715( )1 10.008 ws
+5.004 690(  how to configure/start/stop/debug)4 306.036 ws
+5.004 665( )1 10.008 ws
+5.004 640(        - manually or on system start-up \(e.g rc.local\))15 434.142 ws
+5.004 615( )1 10.008 ws
+5.004 590(        - debugging options \( -d option \))14 322.02 ws
+5.004 565(                packet, prunes, routes, peers, cache, timeout)21 471.204 ws
+5.004 540(                interface, membership, traceroute, igmp)19 428.166 ws
+5.004 515( )1 10.008 ws
+5.004 490(        - signals)9 118.062 ws
+5.004 465(                HUP, INT, TERM, USR1, USR2)20 339.102 ws
+5.004 440( )1 10.008 ws
+5.004 415(        -  files)10 97.056 ws
+5.004 390(        /etc/mrouted.conf)8 196.056 ws
+5.004 365(        /etc/mrouted.pid)8 185.058 ws
+5.004 340(        /tmp/mrouted.dump \(/var/run in FreeBSD\))11 399.078 ws
+5.004 315(        /tmp/mrouted.cache)8 216.072 ws
+5.004 290( )1 10.008 ws
+5.004 265(        - commands, tools)10 204.066 ws
+5.004 240(            mtrace, mrinfo, mstat, \(mview\))15 325.116 ws
+5.004 215(            ping, netstat, ifconfig, route, tcpdump)16 388.08 ws
+45.036 190(    traceroute)4 153.072 ws
+5.004 165( )1 10.008 ws
+5.004 140(        - <phyint>, <tunnel>, <metric>, <threshold>, <rate_limit>)13 525.24 ws
+5.004 115( )1 10.008 ws
+showpage
+%%Page: "ucacgev:7" 7
+-0 -0 translate
+0 setgray
+19 /Helvetica-Bold sf
+5.004 740(        - filtering)9 122.04 ws
+5.004 715(            "input" or "input and output")16 313.164 ws
+5.004 690(            <accept> <bidir> <deny> <exact>)15 348.228 ws
+5.004 665( )1 10.008 ws
+5.004 640(        - administrative scoping)10 252.09 ws
+5.004 615(            <boundary>)12 168.084 ws
+5.004 590( )1 10.008 ws
+5.004 565(        - other configuration options)11 291.042 ws
+5.004 540(            <passive>, <noflood>, <rexmit_prunes>, <cache_lifetime>)15 559.296 ws
+5.004 515( )1 10.008 ws
+5.004 490(        - monitoring)9 150.03 ws
+5.004 465( )1 10.008 ws
+showpage
+%%Trailer
+_$iv$save restore
+%%Pages: 7
