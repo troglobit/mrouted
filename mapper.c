@@ -169,12 +169,15 @@ void logit(int severity, int syserr, const char *format, ...)
 	case 0:
 		if (severity > LOG_WARNING)
 			return;
+		/* fallthrough */
 	case 1:
 		if (severity > LOG_NOTICE)
 			return;
+		/* fallthrough */
 	case 2:
 		if (severity > LOG_INFO)
 			return;
+		/* fallthrough */
 	default:
 		if (severity == LOG_WARNING)
 			fprintf(stderr, "warning - ");
