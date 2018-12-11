@@ -185,7 +185,7 @@ static void killshow(int signo, char *file)
     }
 }
 
-static void usage(void)
+static int usage(int code)
 {
     size_t i, j, k;
     struct debugname *d;
@@ -220,7 +220,7 @@ static void usage(void)
     }
     fputc('\n', stderr);
 
-    exit(1);
+    return code;
 }
 
 int main(int argc, char *argv[])
@@ -288,7 +288,7 @@ int main(int argc, char *argv[])
 				break;
 
 			if (i == ARRAY_LEN(debugnames))
-			    usage();
+			    return usage(0);
 
 			debug |= d->level;
 			p = q;
@@ -301,8 +301,7 @@ int main(int argc, char *argv[])
 		break;
 
 	    case 'h':
-		usage();
-		break;
+		return usage(0);
 
 	    case 'p':
 		warnx("Disabling pruning is no longer supported.");
@@ -317,14 +316,14 @@ int main(int argc, char *argv[])
 		return 0;
 
 	    default:
-		usage();
+		return usage(1);
 	}
     }
 
     /* Check for unsupported command line arguments */
     argc -= optind;
     if (argc > 0)
-	usage();
+	return usage(1);
 
     if (geteuid() != 0) {
 	fprintf(stderr, "%s: must be root\n", __progname);
