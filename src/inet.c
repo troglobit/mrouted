@@ -212,7 +212,6 @@ int inet_cksum(uint16_t *addr, uint32_t len)
 
 /**
  * Local Variables:
- *  version-control: t
  *  indent-tabs-mode: t
  *  c-file-style: "ellemtel"
  *  c-basic-offset: 4

@@ -1408,7 +1408,6 @@ struct rtentry *determine_route(uint32_t src)
 
 /**
  * Local Variables:
- *  version-control: t
  *  indent-tabs-mode: t
  *  c-file-style: "ellemtel"
  *  c-basic-offset: 4

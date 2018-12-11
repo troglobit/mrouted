@@ -1057,7 +1057,6 @@ void md_log(int what, uint32_t origin, uint32_t mcastgrp)
 
 /**
  * Local Variables:
- *  version-control: t
  *  indent-tabs-mode: t
  *  c-file-style: "ellemtel"
  *  c-basic-offset: 4

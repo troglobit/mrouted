@@ -577,7 +577,6 @@ void accept_info_reply(uint32_t UNUSED src, uint32_t UNUSED dst, uint8_t UNUSED 
 
 /**
  * Local Variables:
- *  version-control: t
  *  indent-tabs-mode: t
  *  c-file-style: "ellemtel"
  *  c-basic-offset: 4
