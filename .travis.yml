@@ -11,15 +11,15 @@ compiler:
   - clang
 
 env:
-  apt:
-    packages:
-      - tree
   global:
    # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
    #   via the "travis encrypt" command using the project repo's public key
    - secure: "TXLaXkIDGM9q6K+DGIwAJ5o+HVS6ih4p1c8MHyVkA4m0EdsdB74TVWHwyqQ2vrjlQcuTmYpQH3wCggH9Czo0Vm0Sdn+AROMMlAHQrcw6qPb0iRhZaDGu09n7GhUD0EoKM2y5OwC64Koc2aVSuLpQElQjyEPHLVVAwgwcgYgWS4Q="
 
 addons:
+  apt:
+    packages:
+      - tree
   coverity_scan:
     project:
       name: "troglobit/mrouted"
