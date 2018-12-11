@@ -2,6 +2,21 @@ DVMRP Multicast Routing for UNIX
 ================================
 [![License Badge][]][License] [![Travis Status][]][Travis] [![Coverity Status][]][Coverity Scan]
 
+Table of Contents
+-----------------
+
+* [Introduction](#introduction)
+* [Build & Install](#build--install)
+* [Building from GIT](#building-from-git)
+* [Running](#running)
+* [Configuration](#configuration)
+* [Contributing](#contributing)
+* [Origin & References](#origin--references)
+
+
+Introduction
+------------
+
 mrouted is a [3-clause BSD][BSD License] licensed implementation of the
 DVMRP multicast routing protocol.  It can run on any UNIX based system,
 from embedded Linux systems to workstations, turning them into multicast
@@ -20,8 +35,8 @@ box on all major distributions.  Other UNIX variants should also work,
 but are not as thoroughly tested.
 
 
-Building
---------
+Build & Install
+---------------
 
 The configure script and Makefile supports de facto standard settings
 and environment variables such as `--prefix=PATH` and `DESTDIR=` for the
@@ -128,6 +143,7 @@ including OpenBSD, have been merged.
 
 [1]:               http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=288112
 [License]:         http://www.openbsd.org/cgi-bin/cvsweb/src/usr.sbin/mrouted/LICENSE
+[License Badge]:   https://img.shields.io/badge/License-BSD%203--Clause-blue.svg
 [BSD License]:     http://en.wikipedia.org/wiki/BSD_licenses
 [RFC 1075]:        http://tools.ietf.org/html/rfc1075
 [IP-in-IP]:        https://en.wikipedia.org/wiki/IP_in_IP
