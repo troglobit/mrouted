@@ -12,8 +12,9 @@ AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_YACC
 
+# Check for linux/netlink.h is only to be able to define LINUX below
 AC_HEADER_STDC
-AC_CHECK_HEADERS([fcntl.h ifaddrs.h netinet/igmp.h sys/time.h])
+AC_CHECK_HEADERS([fcntl.h ifaddrs.h netinet/igmp.h sys/time.h linux/netlink.h])
 AC_CHECK_HEADERS([net/if.h], [], [], [
 #include <stdio.h>
 #ifdef STDC_HEADERS
