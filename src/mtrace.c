@@ -18,7 +18,7 @@
  * Xerox PARC).  It attempts to parallel in command syntax and output
  * format the unicast traceroute program written by Van Jacobson (LBL)
  * for the parts where that makes sense.
- * 
+ *
  * Copyright (c) 1998-2001.
  * The University of Southern California/Information Sciences Institute.
  * All rights reserved.
@@ -161,7 +161,7 @@ char *inet_name(uint32_t addr)
 
 uint32_t host_addr(char *name)
 {
-    struct hostent *e = (struct hostent *)0;
+    struct hostent *e = NULL;
     uint32_t addr;
     int	i, dots = 3;
     char buf[40];
@@ -173,9 +173,13 @@ uint32_t host_addr(char *name)
      * if the name is all numeric.
      */
     for (i = sizeof(buf) - 7; i > 0; --i) {
-	if (*ip == '.') --dots;
-	else if (*ip == '\0') break;
-	else if (!isdigit((int)*ip)) dots = 0;  /* Not numeric, don't add zeroes */
+	if (*ip == '.')
+	    --dots;
+	else if (*ip == '\0')
+	    break;
+	else if (!isdigit((int)*ip))
+	    dots = 0;  /* Not numeric, don't add zeroes */
+
 	*op++ = *ip++;
     }
     for (i = 0; i < dots; ++i) {
@@ -184,15 +188,19 @@ uint32_t host_addr(char *name)
     }
     *op = '\0';
 
-    if (dots <= 0) e = gethostbyname(name);
-    if (e) memcpy((char *)&addr, e->h_addr_list[0], e->h_length);
-    else {
+    if (dots <= 0)
+	e = gethostbyname(name);
+
+    if (e) {
+	memcpy((char *)&addr, e->h_addr_list[0], e->h_length);
+    } else {
 	addr = inet_addr(buf);
 	if (addr == INADDR_NONE) {
 	    addr = 0;
 	    printf("Could not parse %s as host name or address\n", name);
 	}
     }
+
     return addr;
 }
 
@@ -203,16 +211,20 @@ char *proto_type(uint32_t type)
 
     switch (type) {
 	case PROTO_DVMRP:
-	    return ("DVMRP");
+	    return "DVMRP";
+
 	case PROTO_MOSPF:
-	    return ("MOSPF");
+	    return "MOSPF";
+
 	case PROTO_PIM:
-	    return ("PIM");
+	    return "PIM";
+
 	case PROTO_CBT:
-	    return ("CBT");
+	    return "CBT";
+
 	default:
-	    (void) snprintf(buf, sizeof buf, "Unknown protocol code %d", type);
-	    return (buf);
+	    snprintf(buf, sizeof buf, "Unknown protocol code %d", type);
+	    return buf;
     }
 }
 
@@ -223,28 +235,37 @@ char *flag_type(uint32_t type)
 
     switch (type) {
 	case TR_NO_ERR:
-	    return ("");
+	    return "";
+
 	case TR_WRONG_IF:
-	    return ("Wrong interface");
+	    return "Wrong interface";
+
 	case TR_PRUNED:
-	    return ("Prune sent upstream");
+	    return "Prune sent upstream";
+
 	case TR_OPRUNED:
-	    return ("Output pruned");
+	    return "Output pruned";
+
 	case TR_SCOPED:
-	    return ("Hit scope boundary");
+	    return "Hit scope boundary";
+
 	case TR_NO_RTE:
-	    return ("No route");
+	    return "No route";
+
 	case TR_OLD_ROUTER:
-	    return ("Next router no mtrace");
+	    return "Next router no mtrace";
+
 	case TR_NO_FWD:
-	    return ("Not forwarding");
+	    return "Not forwarding";
+
 	case TR_NO_SPACE:
-	    return ("No space in packet");
+	    return "No space in packet";
+
 	default:
-	    (void) snprintf(buf, sizeof buf, "Unknown error code %d", type);
-	    return (buf);
+	    snprintf(buf, sizeof buf, "Unknown error code %d", type);
+	    return buf;
     }
-}    
+}
 
 /*
  * If destination is on a local net, get the netmask, else set the
@@ -262,11 +283,13 @@ uint32_t get_netmask(int UNUSED s, uint32_t dst)
 
     if (getifaddrs(&ifap) != 0) {
 	perror("getifaddrs");
-	return (retval);
+	return retval;
     }
+
     for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
-	if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_INET) 
+	if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_INET)
 	    continue;
+
 	if_addr = ((struct sockaddr_in *)ifa->ifa_addr)->sin_addr.s_addr;
 	if_mask = ((struct sockaddr_in *)ifa->ifa_netmask)->sin_addr.s_addr;
 	if ((dst & if_mask) == (if_addr & if_mask)) {
@@ -277,20 +300,22 @@ uint32_t get_netmask(int UNUSED s, uint32_t dst)
 	if (lcl_addr == if_addr)
 	    found = TRUE;
     }
+
     if (!found && lcl_addr != 0) {
 	printf("Interface address is not valid\n");
 	exit(1);
     }
     freeifaddrs(ifap);
-    return (retval);
+
+    return retval;
 }
 
 
 int get_ttl(struct resp_buf *buf)
 {
-    int rno;
     struct tr_resp *b;
     uint32_t ttl;
+    int rno;
 
     if (buf && (rno = buf->len) > 0) {
 	b = buf->resps + rno - 1;
@@ -298,14 +323,21 @@ int get_ttl(struct resp_buf *buf)
 
 	while (--rno > 0) {
 	    --b;
-	    if (ttl < b->tr_fttl) ttl = b->tr_fttl;
-	    else ++ttl;
+	    if (ttl < b->tr_fttl)
+		ttl = b->tr_fttl;
+	    else
+		++ttl;
 	}
+
 	ttl += MULTICAST_TTL_INC;
-	if (ttl < MULTICAST_TTL1) ttl = MULTICAST_TTL1;
-	if (ttl > MULTICAST_TTL_MAX) ttl = MULTICAST_TTL_MAX;
-	return (ttl);
-    } else return(MULTICAST_TTL1);
+	if (ttl < MULTICAST_TTL1)
+	    ttl = MULTICAST_TTL1;
+	if (ttl > MULTICAST_TTL_MAX)
+	    ttl = MULTICAST_TTL_MAX;
+
+	return ttl;
+    } else
+	return(MULTICAST_TTL1);
 }
 
 /*
@@ -316,7 +348,7 @@ int t_diff(uint32_t a, uint32_t b)
 {
     int d = a - b;
 
-    return ((d * 125) >> 13);
+    return (d * 125) >> 13;
 }
 
 /*
@@ -329,7 +361,7 @@ uint32_t fixtime(uint32_t time)
     if (abs((int)(time-base.qtime)) > 0x3FFFFFFF)
         time = ((time & 0xFFFF0000) + (JAN_1970 << 16)) +
 	    ((time & 0xFFFF) << 14) / 15625;
-    return (time);
+    return time;
 }
 
 /*
@@ -363,8 +395,11 @@ int send_recv(uint32_t dst, int type, int code, int tries, struct resp_buf *save
 	group = htonl(MROUTED_LEVEL);
 	datalen = 0;
     }
-    if (IN_MULTICAST(ntohl(dst))) local = lcl_addr;
-    else local = INADDR_ANY;
+
+    if (IN_MULTICAST(ntohl(dst)))
+	local = lcl_addr;
+    else
+	local = INADDR_ANY;
 
     /*
      * If the reply address was not explicitly specified, start off
@@ -385,7 +420,8 @@ int send_recv(uint32_t dst, int type, int code, int tries, struct resp_buf *save
 	if (tries == nqueries && raddr == 0) {
 	    if (i == ((nqueries + 1) >> 1)) {
 		query->tr_raddr = resp_cast;
-		if (rttl == 0) query->tr_rttl = get_ttl(save);
+		if (rttl == 0)
+		    query->tr_rttl = get_ttl(save);
 	    }
 	    if (i <= ((nqueries + 3) >> 2) && rttl == 0) {
 		query->tr_rttl += MULTICAST_TTL_INC;
@@ -423,16 +459,15 @@ int send_recv(uint32_t dst, int type, int code, int tries, struct resp_buf *save
 	    if (count < 0) {
 		if (errno != EINTR) perror("poll");
 		continue;
-	    } else if (count == 0) {
+	    }
+	    if (count == 0) {
 		printf("* ");
 		fflush(stdout);
 		break;
 	    }
 
 	    gettimeofday(&tr, 0);
-	    recvlen = recvfrom(igmp_socket, recv_buf, RECV_BUF_SIZE,
-			       0, (struct sockaddr *)0, &dummy);
-
+	    recvlen = recvfrom(igmp_socket, recv_buf, RECV_BUF_SIZE, 0, NULL, &dummy);
 	    if (recvlen <= 0) {
 		if (recvlen && errno != EINTR) perror("recvfrom");
 		continue;
@@ -442,7 +477,8 @@ int send_recv(uint32_t dst, int type, int code, int tries, struct resp_buf *save
 		fprintf(stderr, "packet too short (%zd bytes) for IP header", recvlen);
 		continue;
 	    }
-	    ip = (struct ip *) recv_buf;
+
+	    ip = (struct ip *)recv_buf;
 	    if (ip->ip_p == 0)	/* ignore cache creation requests */
 		continue;
 
@@ -470,7 +506,8 @@ int send_recv(uint32_t dst, int type, int code, int tries, struct resp_buf *save
 	    switch (igmp->igmp_type) {
 
 		case IGMP_DVMRP:
-		    if (igmp->igmp_code != DVMRP_NEIGHBORS2) continue;
+		    if (igmp->igmp_code != DVMRP_NEIGHBORS2)
+			continue;
 		    len = igmpdatalen;
 		    /*
 		     * Accept DVMRP_NEIGHBORS2 response if it comes from the
@@ -489,13 +526,15 @@ int send_recv(uint32_t dst, int type, int code, int tries, struct resp_buf *save
 			    }
 			    p += n;
 			}
-			if (p >= ep) continue;
+			if (p >= ep)
+			    continue;
 		    }
 		    break;
 
 		case IGMP_MTRACE:	    /* For backward compatibility with 3.3 */
 		case IGMP_MTRACE_RESP:
-		    if (igmpdatalen <= QLEN) continue;
+		    if (igmpdatalen <= QLEN)
+			continue;
 		    if ((igmpdatalen - QLEN) % RLEN) {
 			printf("packet with incorrect datalen\n");
 			continue;
@@ -505,9 +544,12 @@ int send_recv(uint32_t dst, int type, int code, int tries, struct resp_buf *save
 		     * Ignore responses that don't match query.
 		     */
 		    rquery = (struct tr_query *)(igmp + 1);
-		    if (rquery->tr_qid != query->tr_qid) continue;
-		    if (rquery->tr_src != qsrc) continue;
-		    if (rquery->tr_dst != qdst) continue;
+		    if (rquery->tr_qid != query->tr_qid)
+			continue;
+		    if (rquery->tr_src != qsrc)
+			continue;
+		    if (rquery->tr_dst != qdst)
+			continue;
 		    len = (igmpdatalen - QLEN) / RLEN;
 
 		    /*
@@ -554,9 +596,11 @@ int send_recv(uint32_t dst, int type, int code, int tries, struct resp_buf *save
 		save->len = len;
 		memmove((char *)&save->igmp, (char *)igmp, ipdatalen);
 	    }
+
 	    return recvlen;
 	}
     }
+
     return 0;
 }
 
@@ -582,13 +626,16 @@ void passive_mode(void)
     uint32_t smask;
 
     if (raddr) {
-	if (IN_MULTICAST(ntohl(raddr))) k_join(raddr, INADDR_ANY);
-    } else k_join(htonl(0xE0000120), INADDR_ANY);
+	if (IN_MULTICAST(ntohl(raddr)))
+	    k_join(raddr, INADDR_ANY);
+    } else {
+	k_join(htonl(0xE0000120), INADDR_ANY);
+    }
 
     while (1) {
 	recvlen = recvfrom(igmp_socket, recv_buf, RECV_BUF_SIZE,
 			   0, (struct sockaddr *)0, &dummy);
-	gettimeofday(&tr,0);
+	gettimeofday(&tr, 0);
 
 	if (recvlen <= 0) {
 	    if (recvlen && errno != EINTR) perror("recvfrom");
@@ -599,7 +646,8 @@ void passive_mode(void)
 	    fprintf(stderr, "packet too short (%zd bytes) for IP header", recvlen);
 	    continue;
 	}
-	ip = (struct ip *) recv_buf;
+
+	ip = (struct ip *)recv_buf;
 	if (ip->ip_p == 0)	/* ignore cache creation requests */
 	    continue;
 
@@ -615,7 +663,7 @@ void passive_mode(void)
 	    continue;
 	}
 
-	igmp = (struct igmp *) (recv_buf + iphdrlen);
+	igmp = (struct igmp *)(recv_buf + iphdrlen);
 	if (ipdatalen < IGMP_MINLEN) {
 	    fprintf(stderr, "IP data field too short (%zu bytes) for IGMP from %s\n",
 		    ipdatalen, inet_fmt(ip->ip_src.s_addr, s1, sizeof(s1)));
@@ -624,17 +672,17 @@ void passive_mode(void)
 	igmpdatalen = ipdatalen - IGMP_MINLEN;
 
 	switch (igmp->igmp_type) {
-
 	    case IGMP_MTRACE:	    /* For backward compatibility with 3.3 */
 	    case IGMP_MTRACE_RESP:
-		if (igmpdatalen < QLEN) continue;
+		if (igmpdatalen < QLEN)
+		    continue;
+
 		if ((igmpdatalen - QLEN) % RLEN) {
 		    printf("packet with incorrect datalen\n");
 		    continue;
 		}
 
 		len = (igmpdatalen - QLEN)/RLEN;
-
 		break;
 
 	    default:
@@ -699,13 +747,15 @@ char *print_host2(uint32_t addr1, uint32_t addr2)
 
     if (numeric) {
 	printf("%s", inet_fmt(addr1, s1, sizeof(s1)));
-	return ("");
+	return "";
     }
+
     name = inet_name(addr1);
     if (*name == '?' && *(name + 1) == '\0' && addr2 != 0)
 	name = inet_name(addr2);
     printf("%s (%s)", name, inet_fmt(addr1, s1, sizeof(s1)));
-    return (name);
+
+    return name;
 }
 
 /*
@@ -723,7 +773,8 @@ void print_trace(int index, struct resp_buf *buf)
     r = buf->resps + i - 1;
 
     for (; i <= buf->len; ++i, ++r) {
-	if (index > 0) printf("%3d  ", -i);
+	if (index > 0)
+	    printf("%3d  ", -i);
 	name = print_host2(r->tr_outaddr, r->tr_inaddr);
 	printf("  %s  thresh^ %d", proto_type(r->tr_rproto), r->tr_fttl);
 	if (verbose) {
@@ -755,6 +806,7 @@ int what_kind(struct resp_buf *buf, char *why)
 	uint32_t *p = (uint32_t *)incr[0].ndata;
 	uint32_t *ep = p + (incr[0].len >> 2);
 	char *type = "";
+
 	retval = 0;
 	switch (version & 0xFF) {
 	    case 1:
@@ -790,19 +842,26 @@ int what_kind(struct resp_buf *buf, char *why)
 	    }
 	    p += n;
 	}
+
 	return retval;
     }
+
     printf(" %s\n", why);
+
     return 0;
 }
 
 
 char *scale(int *hop)
 {
-    if (*hop > -1000 && *hop < 10000) return (" ms");
+    if (*hop > -1000 && *hop < 10000)
+	return " ms";
+
     *hop /= 1000;
-    if (*hop > -1000 && *hop < 10000) return (" s ");
-    return ("s ");
+    if (*hop > -1000 && *hop < 10000)
+	return " s ";
+
+    return "s ";
 }
 
 /*
@@ -815,8 +874,7 @@ char *scale(int *hop)
 #define BOTH    3
 void stat_line(struct tr_resp *r, struct tr_resp *s, int have_next, int *rst)
 {
-    int timediff = (fixtime(ntohl(s->tr_qarr)) -
-		    fixtime(ntohl(r->tr_qarr))) >> 16;
+    int timediff;
     int v_lost, v_pct;
     int g_lost, g_pct;
     int v_out = ntohl(s->tr_vifout) - ntohl(r->tr_vifout);
@@ -826,7 +884,10 @@ void stat_line(struct tr_resp *r, struct tr_resp *s, int have_next, int *rst)
     int have = NEITHER;
     int res = *rst;
 
-    if (timediff == 0) timediff = 1;
+    timediff = (fixtime(ntohl(s->tr_qarr)) -
+		fixtime(ntohl(r->tr_qarr))) >> 16;
+    if (timediff == 0)
+	timediff = 1;
     v_pps = v_out / timediff;
     g_pps = g_out / timediff;
 
@@ -908,7 +969,7 @@ void stat_line(struct tr_resp *r, struct tr_resp *s, int have_next, int *rst)
  */
 static uint32_t u_diff(uint32_t u, uint32_t v)
 {
-    return (u >= v ? u - v : v - u);
+    return u >= v ? u - v : v - u;
 }
 
 /*
@@ -981,13 +1042,15 @@ void fixup_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf *
 	    *r = res;
     }
 
-    if (rno < 0) return;
+    if (rno < 0)
+	return;
 
     rno = base->len;
     b = base->resps + rno;
     p = prev->resps + rno;
 
-    while (--rno >= 0) (--b)->tr_pktcnt = (--p)->tr_pktcnt;
+    while (--rno >= 0)
+	(--b)->tr_pktcnt = (--p)->tr_pktcnt;
 }
 
 /*
@@ -1046,7 +1109,8 @@ int print_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf *n
 	printf("%-15s %-14s %s\n", inet_fmt(n->tr_outaddr, s1, sizeof(s1)), names[rno],
 	       flag_type(n->tr_rflags));
 
-	if (rno-- < 1) break;
+	if (rno-- < 1)
+	    break;
 
 	printf("     %c     ^      ttl%5d   ", first ? 'v' : '|', ttl);
 	stat_line(p, n, TRUE, r);
@@ -1060,10 +1124,12 @@ int print_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf *n
 	}
 
 	--b, --p, --n, --r;
-	if (ttl < n->tr_fttl) ttl = n->tr_fttl;
-	else ++ttl;
+	if (ttl < n->tr_fttl)
+	    ttl = n->tr_fttl;
+	else
+	    ++ttl;
     }
-	   
+
     printf("     %c      \\__   ttl%5d   ", first ? 'v' : '|', ttl);
     stat_line(p, n, FALSE, r);
     if (!first) {
@@ -1074,6 +1140,7 @@ int print_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf *n
     }
     printf("%-15s %s\n", inet_fmt(qdst, s1, sizeof(s1)), inet_fmt(lcl_addr, s2, sizeof(s2)));
     printf("  Receiver      Query Source\n\n");
+
     return 0;
 }
 
@@ -1211,19 +1278,30 @@ int main(int argc, char *argv[])
 	err(1, "setuid");
 
     if (argc > 0 && (qsrc = host_addr(argv[0]))) {          /* Source of path */
-	if (IN_MULTICAST(ntohl(qsrc))) usage();
-	argv++, argc--;
+	if (IN_MULTICAST(ntohl(qsrc)))
+	    usage();
+
+	argv++;
+	argc--;
+
 	if (argc > 0 && (qdst = host_addr(argv[0]))) {      /* Dest of path */
-	    argv++, argc--;
+	    argv++;
+	    argc--;
+
 	    if (argc > 0 && (qgrp = host_addr(argv[0]))) {  /* Path via group */
-		argv++, argc--;
+		argv++;
+		argc--;
 	    }
+
 	    if (IN_MULTICAST(ntohl(qdst))) {
 		uint32_t temp = qdst;
+
 		qdst = qgrp;
 		qgrp = temp;
-		if (IN_MULTICAST(ntohl(qdst))) usage();
-	    } else if (qgrp && !IN_MULTICAST(ntohl(qgrp))) usage();
+		if (IN_MULTICAST(ntohl(qdst)))
+		    usage();
+	    } else if (qgrp && !IN_MULTICAST(ntohl(qgrp)))
+		usage();
 	}
     }
 
@@ -1232,9 +1310,8 @@ int main(int argc, char *argv[])
 	return(0);
     }
 
-    if (argc > 0 || qsrc == 0) {
+    if (argc > 0 || qsrc == 0)
         usage();
-    }
 
     /*
      * Set useful defaults for as many parameters as possible.
@@ -1243,7 +1320,8 @@ int main(int argc, char *argv[])
     defgrp = htonl(0xE0020001);		/* MBone Audio (224.2.0.1) */
     query_cast = htonl(0xE0000002);	/* All routers multicast addr */
     resp_cast = htonl(0xE0000120);	/* Mtrace response multicast addr */
-    if (qgrp == 0) qgrp = defgrp;
+    if (qgrp == 0)
+	qgrp = defgrp;
 
     /*
      * Get default local address for multicasts to use in setting defaults.
@@ -1256,9 +1334,10 @@ int main(int argc, char *argv[])
     addr.sin_addr.s_addr = qgrp;
     addr.sin_port = htons(2000);	/* Any port above 1024 will do */
 
-    if (((udp = socket(AF_INET, SOCK_DGRAM, 0)) < 0) ||
-	(connect(udp, (struct sockaddr *) &addr, sizeof(addr)) < 0) ||
-	getsockname(udp, (struct sockaddr *) &addr, &addrlen) < 0) {
+    udp = socket(AF_INET, SOCK_DGRAM, 0);
+    if (udp < 0 ||
+	connect(udp, (struct sockaddr *)&addr, sizeof(addr)) < 0 ||
+	getsockname(udp, (struct sockaddr *)&addr, &addrlen) < 0) {
 	perror("Determining local address");
 	exit(1);
     }
@@ -1272,16 +1351,17 @@ int main(int argc, char *argv[])
      * mtrace -i [if_addr] will have to be used.
      */
     if (addr.sin_addr.s_addr == 0) {
-	char myhostname[MAXHOSTNAMELEN];
 	struct hostent *hp;
+	char myhostname[MAXHOSTNAMELEN];
 	int error;
-    
+
 	error = sysinfo(SI_HOSTNAME, myhostname, sizeof(myhostname));
 	if (error == -1) {
 	    perror("Getting my hostname");
 	    exit(1);
 	}
 
+	/* Note: skipped conversion to getaddrinfo() because SunOS 5.x */
 	hp = gethostbyname(myhostname);
 	if (hp == NULL || hp->h_addrtype != AF_INET ||
 	    hp->h_length != sizeof(addr.sin_addr)) {
@@ -1296,10 +1376,12 @@ int main(int argc, char *argv[])
     /*
      * Default destination for path to be queried is the local host.
      */
-    if (qdst == 0) qdst = lcl_addr ? lcl_addr : addr.sin_addr.s_addr;
+    if (qdst == 0)
+	qdst = lcl_addr ? lcl_addr : addr.sin_addr.s_addr;
     dst_netmask = get_netmask(udp, qdst);
     close(udp);
-    if (lcl_addr == 0) lcl_addr = addr.sin_addr.s_addr;
+    if (lcl_addr == 0)
+	lcl_addr = addr.sin_addr.s_addr;
 
     /*
      * Initialize the seed for random query identifiers.
@@ -1313,7 +1395,9 @@ int main(int argc, char *argv[])
      */
     if (gwy && !IN_MULTICAST(ntohl(gwy)))
 	if (send_recv(gwy, IGMP_DVMRP, DVMRP_ASK_NEIGHBORS2, 1, &incr[0])) {
-	    int version = ntohl(incr[0].igmp.igmp_group.s_addr) & 0xFFFF;
+	    int version;
+
+	    version = ntohl(incr[0].igmp.igmp_group.s_addr) & 0xFFFF;
 	    if (version == 0x0303 || version == 0x0503) {
 		printf("Don't use -g to address an mrouted 3.%d, it might crash\n",
 		       (version >> 8) & 0xFF);
@@ -1322,7 +1406,9 @@ int main(int argc, char *argv[])
 	}
 
     printf("Mtrace from %s to %s via group %s\n",
-	   inet_fmt(qsrc, s1, sizeof(s1)), inet_fmt(qdst, s2, sizeof(s2)), inet_fmt(qgrp, s3, sizeof(s3)));
+	   inet_fmt(qsrc, s1, sizeof(s1)),
+	   inet_fmt(qdst, s2, sizeof(s2)),
+	   inet_fmt(qgrp, s3, sizeof(s3)));
 
     if ((qdst & dst_netmask) == (qsrc & dst_netmask)) {
 	printf("Source & receiver are directly connected, no path to trace\n");
@@ -1334,8 +1420,11 @@ int main(int argc, char *argv[])
      * are listening on that multicast address.
      */
     if (raddr) {
-	if (IN_MULTICAST(ntohl(raddr))) k_join(raddr, lcl_addr);
-    } else k_join(resp_cast, lcl_addr);
+	if (IN_MULTICAST(ntohl(raddr)))
+	    k_join(raddr, lcl_addr);
+    } else {
+	k_join(resp_cast, lcl_addr);
+    }
 
     /*
      * If the destination is on the local net, the last-hop router can
@@ -1347,7 +1436,7 @@ int main(int argc, char *argv[])
   restart:
 
     if (gwy == 0) {
-	if ((qdst & dst_netmask) == (lcl_addr & dst_netmask)) 
+	if ((qdst & dst_netmask) == (lcl_addr & dst_netmask))
 	    tdst = query_cast;
 	else
 	    tdst = qgrp;
@@ -1357,8 +1446,10 @@ int main(int argc, char *argv[])
 
     if (IN_MULTICAST(ntohl(tdst))) {
 	k_set_loop(1);	/* If I am running on a router, I need to hear this */
-	if (tdst == query_cast) k_set_ttl(qttl ? qttl : 1);
-	else k_set_ttl(qttl ? qttl : MULTICAST_TTL1);
+	if (tdst == query_cast)
+	    k_set_ttl(qttl ? qttl : 1);
+	else
+	    k_set_ttl(qttl ? qttl : MULTICAST_TTL1);
     }
 
     /*
@@ -1373,7 +1464,7 @@ int main(int argc, char *argv[])
 	hops = qno;
 	tries = nqueries;
 	printf("Querying reverse path, maximum %d hops... ", qno);
-	fflush(stdout); 
+	fflush(stdout);
     }
     base.rtime = 0;
     base.len = 0;
@@ -1491,13 +1582,12 @@ int main(int argc, char *argv[])
 	    lastout = r->tr_outaddr;
 
 	    if (base.len < hops ||
-		r->tr_rmtaddr == 0 ||
-		(r->tr_rflags & 0x80)) {
+		r->tr_rmtaddr == 0 || (r->tr_rflags & 0x80)) {
 		VAL_TO_MASK(smask, r->tr_smask);
 		if (r->tr_rmtaddr) {
-		    if (hops != nexthop) {
+		    if (hops != nexthop)
 			printf("\n%3d  ", -(base.len+1));
-		    }
+
 		    what_kind(&base, r->tr_rflags == TR_OLD_ROUTER ?
 			      "doesn't support mtrace" :
 			      "would be the next hop");
@@ -1545,15 +1635,16 @@ int main(int argc, char *argv[])
     new = &incr[numstats&1];
 
     while (numstats--) {
-	if (waittime < 1) printf("\n");
-	else {
+	if (waittime < 1) {
+	    printf("\n");
+	} else {
 	    printf("Waiting to accumulate statistics... ");
 	    fflush(stdout);
 	    sleep((unsigned)waittime);
 	}
+
 	rno = base.len;
 	recvlen = send_recv(tdst, IGMP_MTRACE, rno, nqueries, new);
-
 	if (recvlen == 0) {
 	    printf("Timed out.\n");
 	    exit(1);
@@ -1593,10 +1684,13 @@ int main(int argc, char *argv[])
      * If the response was multicast back, leave the group
      */
     if (raddr) {
-	if (IN_MULTICAST(ntohl(raddr)))	k_leave(raddr, lcl_addr);
-    } else k_leave(resp_cast, lcl_addr);
+	if (IN_MULTICAST(ntohl(raddr)))
+	    k_leave(raddr, lcl_addr);
+    } else {
+	k_leave(resp_cast, lcl_addr);
+    }
 
-    return (0);
+    return 0;
 }
 
 void check_vif_state(void)
