@@ -15,20 +15,16 @@
 /*
  * Local function declarations
  */
-static void		fatal(const char *fmt, ...)
-    __attribute__((__format__ (printf, 1, 2)))
-    __attribute__((__nonnull__ (1)));
-static void		warn(const char *fmt, ...)
-    __attribute__((__format__ (printf, 1, 2)))
-    __attribute__((__nonnull__ (1)));
-static void		yyerror(char *s);
-static char *		next_word(void);
-static int		yylex(void);
-static uint32_t		valid_if(char *s);
-static const char *	ifconfaddr(uint32_t a);
-int			yyparse(void);
+static void        fatal(const char *fmt, ...);
+static void        warn(const char *fmt, ...);
+static void        yyerror(char *s);
+static char       *next_word(void);
+static int         yylex(void);
+static uint32_t    valid_if(char *s);
+static const char *ifconfaddr(uint32_t addr);
+int                yyparse(void);
 
-static FILE *f;
+static FILE *fp;
 
 char *configfilename = _PATH_MROUTED_CONF;
 
@@ -161,11 +157,11 @@ stmt	: error
 
 	    v = &uvifs[numvifs];
 	    zero_vif(v, 1);
-	    v->uv_flags	= VIFF_TUNNEL | rexmit | noflood;
-	    v->uv_flags |= VIFF_OTUNNEL; /*XXX*/
-	    v->uv_lcl_addr	= $2;
-	    v->uv_rmt_addr	= $3;
-	    v->uv_dst_addr	= $3;
+	    v->uv_flags      = VIFF_TUNNEL | rexmit | noflood;
+	    v->uv_flags     |= VIFF_OTUNNEL; /* XXX */
+	    v->uv_lcl_addr   = $2;
+	    v->uv_rmt_addr   = $3;
+	    v->uv_dst_addr   = $3;
 	    strlcpy(v->uv_name, ffr.ifr_name, sizeof(v->uv_name));
 
 	    if (!(ffr.ifr_flags & IFF_UP)) {
@@ -254,9 +250,9 @@ stmt	: error
 	| NAME STRING boundary
 	{
 	    size_t len = strlen($2) + 1;
-	    if (numbounds >= MAXBOUNDS) {
+
+	    if (numbounds >= MAXBOUNDS)
 		fatal("Too many named boundaries (max %d)", MAXBOUNDS);
-	    }
 
 	    boundlist[numbounds].name = malloc(len);
 	    strlcpy(boundlist[numbounds].name, $2, len);
@@ -481,9 +477,10 @@ mod	: THRESHOLD NUMBER
 		    return 0;
 		}
 
-		v_filter->vf_flags = 0;
-		v_filter->vf_type = VFT_ACCEPT;
+		v_filter->vf_flags  = 0;
+		v_filter->vf_type   = VFT_ACCEPT;
 		v_filter->vf_filter = $2;
+
 		v->uv_filter = v_filter;
 	    } else if (v->uv_filter->vf_type != VFT_ACCEPT) {
 		fatal("Cannot accept and deny");
@@ -511,9 +508,10 @@ mod	: THRESHOLD NUMBER
 		    return 0;
 		}
 
-		v_filter->vf_flags = 0;
-		v_filter->vf_type = VFT_DENY;
+		v_filter->vf_flags  = 0;
+		v_filter->vf_type   = VFT_DENY;
 		v_filter->vf_filter = $2;
+
 		v->uv_filter = v_filter;
 	    } else if (v->uv_filter->vf_type != VFT_DENY) {
 		fatal("Cannot accept and deny");
@@ -548,7 +546,7 @@ interface: ADDR
 	{
 	    $$ = valid_if($1);
 	    if ($$ == 0 && !missingok)
-		fatal("Invalid interface name %s",$1);
+		fatal("Invalid interface name %s", $1);
 	}
 	;
 
@@ -560,7 +558,8 @@ addrname: ADDR
 	{
 	    struct hostent *hp;
 
-	    if ((hp = gethostbyname($1)) == NULL || hp->h_length != sizeof($$)) {
+	    hp = gethostbyname($1);
+	    if (!hp || hp->h_length != sizeof($$)) {
 		fatal("No such host %s", $1);
 		return 0;	/* Never reached */
 	    }
@@ -568,7 +567,7 @@ addrname: ADDR
 	    if (hp->h_addr_list[1])
 		fatal("Hostname %s does not %s", $1, "map to a unique address");
 
-	    memmove (&$$, hp->h_addr_list[0], hp->h_length);
+	    memmove(&$$, hp->h_addr_list[0], hp->h_length);
 	}
 
 bound	: boundary
@@ -587,7 +586,7 @@ bound	: boundary
 	    }
 
 	    if (i == numbounds)
-		fatal("Invalid boundary name %s",$1);
+		fatal("Invalid boundary name %s", $1);
 	}
 	;
 
@@ -670,13 +669,13 @@ static void yyerror(char *s)
 static char *next_word(void)
 {
     static char buf[1024];
-    static char *p=NULL;
+    static char *p = NULL;
     char *q;
 
     while (1) {
         if (!p || !*p) {
             lineno++;
-            if (fgets(buf, sizeof(buf), f) == NULL)
+            if (fgets(buf, sizeof(buf), fp) == NULL)
                 return NULL;
             p = buf;
         }
@@ -759,17 +758,18 @@ static struct keyword {
 
 static int yylex(void)
 {
+    struct keyword *w;
     uint32_t addr, n;
     char *q;
-    struct keyword *w;
 
-    if ((q = next_word()) == NULL) {
+    q = next_word();
+    if (!q)
         return 0;
-    }
 
-    for (w = words; w->word; w++)
+    for (w = words; w->word; w++) {
         if (!strcmp(q, w->word))
             return (state && w->val2) ? w->val2 : w->val1;
+    }
 
     if (!strcmp(q,"on") || !strcmp(q,"yes")) {
         yylval.num = 1;
@@ -788,7 +788,8 @@ static int yylex(void)
     }
 
     if (sscanf(q,"%[.0-9]/%u%c",s1,&n,s2) == 2) {
-        if ((addr = inet_parse(s1,1)) != 0xffffffff) {
+	addr = inet_parse(s1,1);
+        if (addr != 0xffffffff) {
             yylval.addrmask.mask = n;
             yylval.addrmask.addr = addr;
             return ADDRMASK;
@@ -797,8 +798,8 @@ static int yylex(void)
     }
 
     if (sscanf(q,"%[.0-9]%c",s1,s2) == 1) {
-        if ((addr = inet_parse(s1,4)) != 0xffffffff &&
-            inet_valid_host(addr)) { 
+	addr = inet_parse(s1,4);
+        if (addr != 0xffffffff && inet_valid_host(addr)) {
             yylval.addr = addr;
             return ADDR;
         }
@@ -826,7 +827,8 @@ void config_vifs_from_file(void)
     numbounds = 0;
     lineno = 0;
 
-    if ((f = fopen(configfilename, "r")) == NULL) {
+    fp = fopen(configfilename, "r");
+    if (!fp) {
         if (errno != ENOENT)
             logit(LOG_ERR, errno, "Cannot open %s", configfilename);
         return;
@@ -834,15 +836,18 @@ void config_vifs_from_file(void)
 
     yyparse();
 
-    fclose(f);
+    fclose(fp);
 }
 
 static uint32_t valid_if(char *s)
 {
-    vifi_t vifi;
     struct uvif *v;
+    vifi_t vifi;
 
-    for (vifi=0, v=uvifs; vifi<numvifs; vifi++, v++) {
+    if (!s)
+	return 0;
+
+    for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
         if (!strcmp(v->uv_name, s))
             return v->uv_lcl_addr;
     }
@@ -850,28 +855,35 @@ static uint32_t valid_if(char *s)
     return 0;
 }
 
-static const char *ifconfaddr(uint32_t a)
+static const char *ifconfaddr(uint32_t addr)
 {
-    static char ifname[IFNAMSIZ];
     struct ifaddrs *ifap, *ifa;
+    static char buf[IFNAMSIZ];
+    char *ifname = NULL;
 
     if (getifaddrs(&ifap) != 0)
 	return NULL;
 
     for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
-	if (ifa->ifa_addr &&
-	    ifa->ifa_addr->sa_family == AF_INET &&
-	    ((struct sockaddr_in *)ifa->ifa_addr)->sin_addr.s_addr == a) {
-	    strlcpy(ifname, ifa->ifa_name, sizeof(ifname));
-	    freeifaddrs(ifap);
+	struct sockaddr_in *sin;
 
-	    return ifname;
-	}
+	if (!ifa->ifa_addr)
+	    continue;
+	if (ifa->ifa_addr->sa_family != AF_INET)
+	    continue;
+
+	sin = (struct sockaddr_in *)ifa->ifa_addr;
+	if (sin->sin_addr.s_addr != addr)
+	    continue;
+
+	strlcpy(buf, ifa->ifa_name, sizeof(buf));
+	ifname = buf;
+	break;
     }
 
     freeifaddrs(ifap);
 
-    return NULL;
+    return ifname;
 }
 
 /**
