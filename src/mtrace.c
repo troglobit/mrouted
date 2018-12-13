@@ -144,7 +144,6 @@ void			print_trace(int index, struct resp_buf *buf);
 int			what_kind(struct resp_buf *buf, char *why);
 char *			scale(int *hop);
 void			stat_line(struct tr_resp *r, struct tr_resp *s, int have_next, int *res);
-void			fixup_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf *new);
 int			print_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf *new);
 void			check_vif_state(void);
 uint32_t		byteswap(uint32_t v);
@@ -973,87 +972,6 @@ static uint32_t u_diff(uint32_t u, uint32_t v)
 }
 
 /*
- * A fixup to check if any pktcnt has been reset, and to fix the
- * byteorder bugs in mrouted 3.6 on little-endian machines.
- */
-void fixup_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf *new)
-{
-    int rno = base->len;
-    struct tr_resp *b = base->resps + rno;
-    struct tr_resp *p = prev->resps + rno;
-    struct tr_resp *n = new->resps + rno;
-    int *r = reset + rno;
-    int *s = swaps + rno;
-    int res;
-
-    /* Check for byte-swappers */
-    while (--rno >= 0) {
-	--n; --p; --b; --s;
-	if (*s || u_diff(ntohl(n->tr_vifout), ntohl(p->tr_vifout)) > 100000) {
-	    /* This host sends byteswapped reports; swap 'em */
-	    if (!*s) {
-		*s = 1;
-		b->tr_qarr = byteswap(b->tr_qarr);
-		b->tr_vifin = byteswap(b->tr_vifin);
-		b->tr_vifout = byteswap(b->tr_vifout);
-		b->tr_pktcnt = byteswap(b->tr_pktcnt);
-	    }
-
-	    n->tr_qarr = byteswap(n->tr_qarr);
-	    n->tr_vifin = byteswap(n->tr_vifin);
-	    n->tr_vifout = byteswap(n->tr_vifout);
-	    n->tr_pktcnt = byteswap(n->tr_pktcnt);
-	}
-    }
-
-    rno = base->len;
-    b = base->resps + rno;
-    p = prev->resps + rno;
-    n = new->resps + rno;
-
-    while (--rno >= 0) {
-	--n; --p; --b; --r;
-	res = ((ntohl(n->tr_pktcnt) < ntohl(b->tr_pktcnt)) ||
-	       (ntohl(n->tr_pktcnt) < ntohl(p->tr_pktcnt)));
-	if (debug > 2)
-    	    printf("\t\tr=%d, res=%d\n", *r, res);
-	if (*r) {
-	    if (res || *r > 1) {
-		/*
-		 * This router appears to be a 3.4 with that nasty ol'
-		 * neighbor version bug, which causes it to constantly
-		 * reset.  Just nuke the statistics for this node, and
-		 * don't even bother giving it the benefit of the
-		 * doubt from now on.
-		 */
-		p->tr_pktcnt = b->tr_pktcnt = n->tr_pktcnt;
-		r++;
-	    } else {
-		/*
-		 * This is simply the situation that the original
-		 * fixup_stats was meant to deal with -- that a
-		 * 3.3 or 3.4 router deleted a cache entry while
-		 * traffic was still active.
-		 */
-		*r = 0;
-		break;
-	    }
-	} else
-	    *r = res;
-    }
-
-    if (rno < 0)
-	return;
-
-    rno = base->len;
-    b = base->resps + rno;
-    p = prev->resps + rno;
-
-    while (--rno >= 0)
-	(--b)->tr_pktcnt = (--p)->tr_pktcnt;
-}
-
-/*
  * Print responses with statistics for forward path (from src to dst)
  */
 int print_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf *new)
@@ -1666,9 +1584,7 @@ int main(int argc, char *argv[])
 	    goto restart;
 	}
 
-	printf("Results after %d seconds:\n\n",
-	       (int)((new->qtime - base.qtime) >> 16));
-	fixup_stats(&base, prev, new);
+	printf("Results after %d seconds:\n\n", (int)((new->qtime - base.qtime) >> 16));
 	if (print_stats(&base, prev, new)) {
 	    printf("Route changed:\n");
 	    print_trace(1, new);
