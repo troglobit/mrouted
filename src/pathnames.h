@@ -6,8 +6,8 @@
  * The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
  * Leland Stanford Junior University.
  */
-#ifndef __MROUTED_PATHNAMES_H__
-#define __MROUTED_PATHNAMES_H__
+#ifndef MROUTED_PATHNAMES_H_
+#define MROUTED_PATHNAMES_H_
 
 #define _PATH_MROUTED_CONF	"/etc/mrouted.conf"
 #define _PATH_MROUTED_RUNDIR    _PATH_VARRUN "mrouted"
@@ -15,4 +15,4 @@
 #define _PATH_MROUTED_DUMP	_PATH_MROUTED_RUNDIR "/mrouted.dump"
 #define _PATH_MROUTED_CACHE	_PATH_MROUTED_RUNDIR "/mrouted.cache"
 
-#endif /* __MROUTED_PATHNAMES_H__ */
+#endif /* MROUTED_PATHNAMES_H_ */

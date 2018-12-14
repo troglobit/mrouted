@@ -6,8 +6,8 @@
  * The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
  * Leland Stanford Junior University.
  */
-#ifndef __MROUTED_DEFS_H__
-#define __MROUTED_DEFS_H__
+#ifndef MROUTED_DEFS_H_
+#define MROUTED_DEFS_H_
 
 #include <config.h>
 #include <stdio.h>
@@ -64,7 +64,7 @@
 #endif
 #ifdef RSRR
 #include <sys/un.h>
-#endif /* RSRR */
+#endif
 
 typedef void (*cfunc_t) (void*);
 typedef void (*ihfunc_t) (int);
@@ -78,7 +78,7 @@ typedef void (*ihfunc_t) (int);
 #ifdef RSRR
 #include "rsrr.h"
 #include "rsrr_var.h"
-#endif /* RSRR */
+#endif
 
 /*
  * Miscellaneous constants and macros.
@@ -126,7 +126,7 @@ typedef void (*ihfunc_t) (int);
 #define BIT_SET(X,n)     ((X) |= 1 << (n))
 #define BIT_CLR(X,n)     ((X) &= ~(1 << (n)))
 #define BIT_TST(X,n)     ((X) & 1 << (n))
-#endif /* RSRR */
+#endif
 
 #if defined(_AIX) || (defined(BSD) && BSD >= 199103)
 #define	HAVE_SA_LEN
@@ -365,7 +365,7 @@ extern void		rsrr_init(void);
 extern void		rsrr_clean(void);
 extern void		rsrr_cache_send(struct gtable *, int);
 extern void		rsrr_cache_clean(struct gtable *);
-#endif /* RSRR */
+#endif
 
 #ifdef __GNUC__
 # define UNUSED __attribute__((unused))
@@ -383,4 +383,4 @@ long long strtonum(const char *numstr, long long minval, long long maxval, const
 int pidfile(const char *basename);
 #endif
 
-#endif /* __MROUTED_DEFS_H__ */
+#endif /* MROUTED_DEFS_H_ */

@@ -418,7 +418,7 @@ int main(int argc, char *argv[])
 
 #ifdef RSRR
     rsrr_init();
-#endif /* RSRR */
+#endif
 
     sa.sa_handler = handler;
     sa.sa_flags = 0;	/* Interrupt system calls */
@@ -742,7 +742,7 @@ static void cleanup(void)
 	in_cleanup++;
 #ifdef RSRR
 	rsrr_clean();
-#endif /* RSRR */
+#endif
 	expire_all_routes();
 	report_to_all_neighbors(ALL_ROUTES);
 	if (did_final_init)

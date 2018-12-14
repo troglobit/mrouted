@@ -7,8 +7,8 @@
  * Leland Stanford Junior University.
  */
 
-#ifndef __MROUTED_PRUNE_H__
-#define __MROUTED_PRUNE_H__
+#ifndef MROUTED_PRUNE_H_
+#define MROUTED_PRUNE_H_
 
 /*
  * Group table
@@ -42,7 +42,7 @@ struct gtable {
     int		    gt_prune_rexmit;	/* time til prune retransmission    */
 #ifdef RSRR
     struct rsrr_cache *gt_rsrr_cache;	/* RSRR cache                       */
-#endif /* RSRR */
+#endif
 };
 
 /*
@@ -150,4 +150,4 @@ struct tr_resp {
 
 #define NBR_VERS(n)	(((n)->al_pv << 8) + (n)->al_mv)
 
-#endif /* __MROUTED_PRUNE_H__ */
+#endif /* MROUTED_PRUNE_H_ */
