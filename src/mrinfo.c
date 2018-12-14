@@ -97,7 +97,6 @@ char     *inet_name(uint32_t addr);
 void      ask(uint32_t dst);
 void      ask2(uint32_t dst);
 uint32_t  host_addr(char *name);
-void      usage(void);
 
 char *inet_name(uint32_t addr)
 {
@@ -259,14 +258,11 @@ void accept_neighbors2(uint32_t src, uint32_t UNUSED dst, uint8_t *p, size_t dat
 	}
 }
 
-void usage(void)
+int usage(int code)
 {
-	extern char *__progname;
+	printf("Usage: mrinfo [-hn] [-d [level]] [-r count] [-t seconds] [router]\n");
 
-	fprintf(stderr,
-		"Usage: %s [-hn] [-d [level]] [-r count] [-t seconds] [router]\n", __progname);
-
-	exit(1);
+	return code;
 }
 
 int main(int argc, char *argv[])
@@ -294,8 +290,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'h':
-			usage();
-			break;
+			return usage(0);
 
 		case 'n':
 			++nflag;
@@ -305,7 +300,7 @@ int main(int argc, char *argv[])
 			retries = strtonum(optarg, 0, INT_MAX, &errstr);
 			if (errstr) {
 				warnx("retries %s", errstr);
-				usage();
+				return usage(1);
 			}
 			break;
 
@@ -313,12 +308,12 @@ int main(int argc, char *argv[])
 			timeout = strtonum(optarg, 0, INT_MAX, &errstr);
 			if (errstr) {
 				warnx("timeout %s", errstr);
-				usage();
+				return usage(1);
 			}
 			break;
 
 		default:
-			usage();
+			return usage(1);
 		}
 	}
 	argc -= optind;
@@ -338,7 +333,7 @@ int main(int argc, char *argv[])
 	setlinebuf(stderr);
 
 	if (argc > 1)
-		usage();
+		return usage(1);
 	if (argc == 1)
 		host = argv[0];
 	else

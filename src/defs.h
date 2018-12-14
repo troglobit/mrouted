@@ -9,6 +9,7 @@
 #ifndef __MROUTED_DEFS_H__
 #define __MROUTED_DEFS_H__
 
+#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>

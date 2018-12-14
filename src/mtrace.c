@@ -1063,12 +1063,12 @@ int print_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf *n
 }
 
 
-void usage(void)
+int usage(int code)
 {
-    fprintf(stderr, "Usage: mtrace [-lMnpsv] [-g gateway] [-i if_addr] [-m max_hops] [-q nqueries]\n"
-	    "              [-r host] [-S stat_int] [-t ttl] [-w waittime] source [receiver]\n"
-	    "              [group]\n");
-    exit(1);
+    printf("Usage: mtrace [-lMnpsv] [-g gateway] [-i if_addr] [-m max_hops] [-q nqueries]\n"
+	   "              [-r host] [-S stat_int] [-t ttl] [-w waittime] source [receiver]\n"
+	   "              [group]\n");
+    return code;
 }
 
 int main(int argc, char *argv[])
@@ -1090,7 +1090,7 @@ int main(int argc, char *argv[])
     uid_t uid;
     const char *errstr;
 
-    while ((ch = getopt(argc, argv, "d:g:i:lm:Mnpq:r:sS:t:vw:")) != -1) {
+    while ((ch = getopt(argc, argv, "d:g:hi:lm:Mnpq:r:sS:t:vw:")) != -1) {
         switch (ch) {
             case 'd':			/* Unlisted debug print option */
                 debug = strtonum(optarg, 0, 3, &errstr);
@@ -1103,6 +1103,9 @@ int main(int argc, char *argv[])
             case 'g':			/* Last-hop gateway (dest of query) */
 		gwy = host_addr(optarg);
                 break;
+
+	    case 'h':
+		return usage(0);
 
             case 'l':			/* Loop updating stats indefinitely */
 		numstats = 3153600;
@@ -1178,7 +1181,7 @@ int main(int argc, char *argv[])
                 break;
 
             default:
-		usage();
+		return usage(1);
         }
     }
     argc -= optind;
@@ -1197,7 +1200,7 @@ int main(int argc, char *argv[])
 
     if (argc > 0 && (qsrc = host_addr(argv[0]))) {          /* Source of path */
 	if (IN_MULTICAST(ntohl(qsrc)))
-	    usage();
+	    return usage(1);
 
 	argv++;
 	argc--;
@@ -1217,9 +1220,9 @@ int main(int argc, char *argv[])
 		qdst = qgrp;
 		qgrp = temp;
 		if (IN_MULTICAST(ntohl(qdst)))
-		    usage();
+		    return usage(1);
 	    } else if (qgrp && !IN_MULTICAST(ntohl(qgrp)))
-		usage();
+		return usage(1);
 	}
     }
 
@@ -1229,7 +1232,7 @@ int main(int argc, char *argv[])
     }
 
     if (argc > 0 || qsrc == 0)
-        usage();
+        return usage(1);
 
     /*
      * Set useful defaults for as many parameters as possible.

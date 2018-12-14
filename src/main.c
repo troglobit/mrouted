@@ -49,7 +49,6 @@ int vifstatedefault = 0;
 int missingok = 0;
 
 int debug = 0;
-extern char *__progname;
 time_t mrouted_init_time;
 
 #define NHANDLERS	2
@@ -145,7 +144,7 @@ static pid_t daemon_pid(void)
     FILE *fp;
     pid_t pid = -1;
 
-    result = asprintf(&path, "%s%s.pid", _PATH_VARRUN, __progname);
+    result = asprintf(&path, "%s%s.pid", _PATH_VARRUN, PACKAGE_NAME);
     if (result == -1 || path == NULL)
 	return -1;
 
@@ -190,19 +189,18 @@ static int usage(int code)
     size_t i, j, k;
     struct debugname *d;
 
-    fprintf(stderr,
-	    "Usage: %s [-fhpv] [-c file] [-d [level[,level...]]]\n\n"
-	    "  -c, --config=FILE          Configuration file to use, default /etc/mrouted.conf\n"
-	    "  -d, --debug[=LEVEL]        Debug level, see below for valid levels\n"
-	    "  -f, --foreground           Run in foreground, do not detach from calling terminal\n"
-	    "  -h, --help                 Show this help text\n"
-	    "  -N, --no-interfaces        Disable all interfaces by default\n"
-	    "  -M, --missing-ok           Missing interfaces are OK\n"
-	    "  -D, --startup-delay=DELAY  Set startup delay before forwarding, default %d seconds\n"
-	    "  -p                         Disable pruning.  Deprecated, compatibility option\n"
-	    "  -r, --show-routes          Show state of VIFs and multicast routing tables\n"
-	    "  -v, --version              Show %s version\n"
-	    "\n", __progname, DEFAULT_STARTUP_DELAY, __progname);
+    printf("Usage: mrouted [-fhpv] [-c file] [-d [level[,level...]]]\n"
+	   "\n"
+	   "  -c, --config=FILE          Configuration file to use, default /etc/mrouted.conf\n"
+	   "  -d, --debug[=LEVEL]        Debug level, see below for valid levels\n"
+	   "  -f, --foreground           Run in foreground, do not detach from calling terminal\n"
+	   "  -h, --help                 Show this help text\n"
+	   "  -N, --no-interfaces        Disable all interfaces by default\n"
+	   "  -M, --missing-ok           Missing interfaces are OK\n"
+	   "  -D, --startup-delay=DELAY  Set startup delay before forwarding, default %d seconds\n"
+	   "  -p                         Disable pruning.  Deprecated, compatibility option\n"
+	   "  -r, --show-routes          Show state of VIFs and multicast routing tables\n"
+	   "  -v, --version              Show mrouted version\n", DEFAULT_STARTUP_DELAY);
 
     j = 0xffffffff;
     k = 0;
@@ -326,7 +324,7 @@ int main(int argc, char *argv[])
 	return usage(1);
 
     if (geteuid() != 0) {
-	fprintf(stderr, "%s: must be root\n", __progname);
+	fprintf(stderr, "%s: must be root\n", PACKAGE_NAME);
 	exit(1);
     }
     setlinebuf(stderr);
@@ -1002,7 +1000,7 @@ void logit(int severity, int syserr, const char *format, ...)
 	now_sec = now.tv_sec;
 	thyme = localtime(&now_sec);
 	if (!debug)
-	    fprintf(stderr, "%s: ", __progname);
+	    fprintf(stderr, "%s: ", PACKAGE_NAME);
 	fprintf(stderr, "%02d:%02d:%02d.%03ld %s", thyme->tm_hour,
 		    thyme->tm_min, thyme->tm_sec, now.tv_usec / 1000, msg);
 	if (syserr == 0)

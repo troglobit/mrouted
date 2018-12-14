@@ -98,7 +98,6 @@ void       graph_edges(Node *node);
 void       elide_aliases(Node *node);
 void       graph_map(void);
 uint32_t   host_addr(char *name);
-void       usage(void);
 
 Node *find_node(uint32_t addr, Node **ptr)
 {
@@ -831,22 +830,20 @@ uint32_t host_addr(char *name)
     return addr;
 }
 
-void usage(void)
+int usage(int code)
 {
-    extern char *__progname;
+    printf("Usage: map-mbone [-fghn] [-d level] [-r count] [-t seconds] [starting_router]\n"
+	   "\n"
+	   "  -f        Flood the routing graph with queries.  Default unless\n"
+	   "            unless starting_router is given\n"
+	   "  -g        Generate output in GraphEd format\n"
+	   "  -h        Show this help text\n"
+	   "  -n        Numeric, don't look up DNS names for routers\n"
+	   "  -d LEVEL  Set debug level\n"
+	   "  -r COUNT  Set retry count\n"
+	   "  -t SEC    Set timeout in seconds\n");
 
-    fprintf(stderr,
-	    "Usage: %s [-fghn] [-d level] [-r count] [-t seconds] [starting_router]\n\n", __progname);
-    fprintf(stderr, "\t-f  Flood the routing graph with queries\n");
-    fprintf(stderr, "\t    (True by default unless `router' is given)\n");
-    fprintf(stderr, "\t-g  Generate output in GraphEd format\n");
-    fprintf(stderr, "\t-h  Show this help text\n");
-    fprintf(stderr, "\t-n  Don't look up DNS names for routers\n");
-    fprintf(stderr, "\t-d  Set debug level\n");
-    fprintf(stderr, "\t-r  Set retry count\n");
-    fprintf(stderr, "\t-t  Set timeout in seconds\n");
-
-    exit(1);
+    return code;
 }
 
 int main(int argc, char *argv[])
@@ -879,8 +876,7 @@ int main(int argc, char *argv[])
 	      break;
 
 	 case 'h':
-	      usage();
-	      break;
+	      return usage(0);
 
 	 case 'n':
 	      show_names = FALSE;
@@ -890,7 +886,7 @@ int main(int argc, char *argv[])
 	      retries = strtonum(optarg, 0, INT_MAX, &errstr);
 	      if (errstr) {
 		   warnx("retries %s", errstr);
-		   usage();
+		   return usage(1);
 	      }
 	      break;
 
@@ -898,12 +894,12 @@ int main(int argc, char *argv[])
 	      timeout = strtonum(optarg, 0, INT_MAX, &errstr);
 	      if (errstr) {
 		   warnx("timeout %s", errstr);
-		   usage();
+		   return usage(1);
 	      }
 	      break;
 
 	 default:
-	      usage();
+	      return usage(1);
 	 }
     }
 
@@ -918,7 +914,7 @@ int main(int argc, char *argv[])
     }
 
     if (argc > 1)
-	usage();
+	return usage(1);
 
     if (argc == 1 && !(target_addr = host_addr(argv[0]))) {
 	fprintf(stderr, "Unknown host: %s\n", argv[0]);

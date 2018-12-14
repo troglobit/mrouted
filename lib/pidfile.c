@@ -30,6 +30,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <config.h>
 #include <sys/types.h>
 #include <errno.h>
 #include <paths.h>
@@ -42,7 +43,6 @@ static pid_t pidfile_pid;
 
 static void pidfile_cleanup(void);
 
-extern char *__progname;
 
 int
 pidfile(const char *basename)
@@ -52,7 +52,7 @@ pidfile(const char *basename)
 	FILE *f;
 
 	if (basename == NULL)
-		basename = __progname;
+		basename = PACKAGE_NAME;
 
 	if (pidfile_path != NULL) {
 		free(pidfile_path);
