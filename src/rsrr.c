@@ -34,8 +34,6 @@
 
 /* May 1995 -- Added support for Route Change Notification */
 
-#ifdef RSRR
-
 #include "defs.h"
 #include <sys/param.h>
 #ifdef HAVE_SA_LEN
@@ -464,8 +462,6 @@ void rsrr_clean(void)
 {
     unlink(RSRR_SERV_PATH);
 }
-
-#endif /* RSRR */
 
 /**
  * Local Variables:
