@@ -64,8 +64,7 @@ typedef struct interface {
 } Interface;
 
 typedef struct node {
-    uint32_t	addr;		/* IP address of this entry in NET order
-*/
+    uint32_t	addr;		/* IP address of this entry in NET order */
     uint32_t	version;	/* which mrouted version is running */
     int		tries;		/* How many requests sent?  -1 for aliases */
     union {
@@ -76,49 +75,56 @@ typedef struct node {
 } Node;
 
 
-Node   *routers = 0;
-uint32_t	our_addr, target_addr = 0;		/* in NET order */
-int	debug = 0;
-int	retries = DEFAULT_RETRIES;
-int	timeout = DEFAULT_TIMEOUT;
-int	show_names = TRUE;
-vifi_t  numvifs;		/* to keep loader happy */
-				/* (see COPY_TABLES macro called in kern.c) */
+Node     *routers = 0;
+uint32_t  our_addr, target_addr = 0;            /* in NET order */
+int       debug = 0;
+int       retries = DEFAULT_RETRIES;
+int       timeout = DEFAULT_TIMEOUT;
+int       show_names = TRUE;
+vifi_t    numvifs;              /* to keep loader happy */
+                                /* (see COPY_TABLES macro called in kern.c) */
 
-Node *		find_node(uint32_t addr, Node **ptr);
-Interface *	find_interface(uint32_t addr, Node *node);
-Neighbor *	find_neighbor(uint32_t addr, Node *node);
-int		main(int argc, char *argv[]);
-void		ask(uint32_t dst);
-void		ask2(uint32_t dst);
-int		retry_requests(Node *node);
-char *		inet_name(uint32_t addr);
-void		print_map(Node *node);
-char *		graph_name(uint32_t addr, char *buf, size_t len);
-void		graph_edges(Node *node);
-void		elide_aliases(Node *node);
-void		graph_map(void);
-uint32_t	host_addr(char *name);
-void            usage(void);
+Node      *find_node(uint32_t addr, Node **ptr);
+Interface *find_interface(uint32_t addr, Node *node);
+Neighbor  *find_neighbor(uint32_t addr, Node *node);
+int        main(int argc, char *argv[]);
+void       ask(uint32_t dst);
+void       ask2(uint32_t dst);
+int        retry_requests(Node *node);
+char      *inet_name(uint32_t addr);
+void       print_map(Node *node);
+char      *graph_name(uint32_t addr, char *buf, size_t len);
+void       graph_edges(Node *node);
+void       elide_aliases(Node *node);
+void       graph_map(void);
+uint32_t   host_addr(char *name);
+void       usage(void);
 
 Node *find_node(uint32_t addr, Node **ptr)
 {
     Node *n = *ptr;
 
     if (!n) {
-	*ptr = n = (Node *) malloc(sizeof(Node));
+	*ptr = n = (Node *)malloc(sizeof(Node));
+	if (!n)
+	    return NULL;
+
 	n->addr = addr;
 	n->version = 0;
 	n->tries = 0;
 	n->u.interfaces = 0;
 	n->left = n->right = 0;
+
 	return n;
-    } else if (addr == n->addr)
+    }
+
+    if (addr == n->addr)
 	return n;
-    else if (addr < n->addr)
+
+    if (addr < n->addr)
 	return find_node(addr, &(n->left));
-    else
-	return find_node(addr, &(n->right));
+
+    return find_node(addr, &(n->right));
 }
 
 
@@ -265,7 +271,11 @@ void accept_neighbor_request2(uint32_t src, uint32_t dst)
  */
 void accept_neighbors(uint32_t src, uint32_t UNUSED dst, uint8_t *p, size_t datalen, uint32_t level)
 {
-    Node       *node = find_node(src, &routers);
+    Node *node;
+
+    node = find_node(src, &routers);
+    if (!node)
+	return;
 
     if (node->tries == 0)	/* Never heard of 'em; must have hit them at */
 	node->tries = 1;	/* least once, though...*/
@@ -299,11 +309,11 @@ void accept_neighbors(uint32_t src, uint32_t UNUSED dst, uint8_t *p, size_t data
     }
 
     while (datalen > 0) {	/* loop through interfaces */
-	uint32_t		ifc_addr;
-	uint8_t		metric, threshold, ncount;
-	Node   	       *ifc_node;
-	Interface      *ifc;
-	Neighbor       *old_neighbors;
+        uint32_t        ifc_addr;
+        uint8_t         metric, threshold, ncount;
+        Node           *ifc_node;
+        Interface      *ifc;
+        Neighbor       *old_neighbors;
 
 	if (datalen < 4 + 3) {
 	    logit(LOG_WARNING, 0, "received truncated interface record from %s",
@@ -320,6 +330,12 @@ void accept_neighbors(uint32_t src, uint32_t UNUSED dst, uint8_t *p, size_t data
 
 	/* Fix up any alias information */
 	ifc_node = find_node(ifc_addr, &routers);
+	if (!ifc_node) {
+	    logit(LOG_WARNING, 0, "Cannot find node for %s",
+		  inet_fmt(ifc_addr, s1, sizeof(s1)));
+	    continue;
+	}
+
 	if (ifc_node->tries == 0) { /* new node */
 	    ifc_node->tries = -1;
 	    ifc_node->u.alias = node;
@@ -411,6 +427,11 @@ void accept_neighbors(uint32_t src, uint32_t UNUSED dst, uint8_t *p, size_t data
 	    nb->flags = 0;
 
 	    n_node = find_node(neighbor, &routers);
+	    if (!n_node) {
+		logit(LOG_WARNING, 0, "Cannot find node for neighbor %s",
+		      inet_fmt(neighbor, s1, sizeof(s1)));
+		continue;
+	    }
 	    if (n_node->tries == 0  &&  !target_addr) { /* it's a new router */
 		ask(neighbor);
 		n_node->tries = 1;
@@ -423,9 +444,13 @@ void accept_neighbors(uint32_t src, uint32_t UNUSED dst, uint8_t *p, size_t data
 
 void accept_neighbors2(uint32_t src, uint32_t UNUSED dst, uint8_t *p, size_t datalen, uint32_t level)
 {
-    Node       *node = find_node(src, &routers);
-    uint32_t broken_cisco = ((level & 0xffff) == 0x020a); /* 10.2 */
     /* well, only possibly_broken_cisco, but that's too long to type. */
+    uint32_t broken_cisco = ((level & 0xffff) == 0x020a); /* 10.2 */
+    Node *node;
+
+    node = find_node(src, &routers);
+    if (!node)
+	return;
 
     if (node->tries == 0)	/* Never heard of 'em; must have hit them at */
 	node->tries = 1;	/* least once, though...*/
@@ -433,11 +458,11 @@ void accept_neighbors2(uint32_t src, uint32_t UNUSED dst, uint8_t *p, size_t dat
 	node = node->u.alias;
 
     while (datalen > 0) {	/* loop through interfaces */
-	uint32_t		ifc_addr;
-	uint8_t		metric, threshold, ncount, flags;
-	Node   	       *ifc_node;
-	Interface      *ifc;
-	Neighbor       *old_neighbors;
+	Interface *ifc;
+	Neighbor  *old_neighbors;
+	uint32_t   ifc_addr;
+	uint8_t	   metric, threshold, ncount, flags;
+	Node   	  *ifc_node;
 
 	if (datalen < 4 + 4) {
 	    logit(LOG_WARNING, 0, "received truncated interface record from %s",
@@ -460,6 +485,12 @@ void accept_neighbors2(uint32_t src, uint32_t UNUSED dst, uint8_t *p, size_t dat
 
 	/* Fix up any alias information */
 	ifc_node = find_node(ifc_addr, &routers);
+	if (!ifc_node) {
+	    logit(LOG_WARNING, 0, "Cannot find node for %s",
+		  inet_fmt(ifc_addr, s1, sizeof(s1)));
+	    continue;
+	}
+
 	if (ifc_node->tries == 0) { /* new node */
 	    ifc_node->tries = -1;
 	    ifc_node->u.alias = node;
@@ -553,6 +584,12 @@ void accept_neighbors2(uint32_t src, uint32_t UNUSED dst, uint8_t *p, size_t dat
 	    nb->flags = flags | NF_PRESENT;
 
 	    n_node = find_node(neighbor, &routers);
+	    if (!n_node) {
+		logit(LOG_WARNING, 0, "Cannot find node for neighbor %s",
+		      inet_fmt(neighbor, s1, sizeof(s1)));
+		continue;
+	    }
+
 	    if (n_node->tries == 0  &&  !target_addr) { /* it's a new router */
 		ask(neighbor);
 		n_node->tries = 1;
@@ -574,19 +611,20 @@ int retry_requests(Node *node)
 {
     int	result;
 
-    if (node) {
-	result = retry_requests(node->left);
-	if (node->tries > 0  &&  node->tries < retries) {
-	    if (node->version)
-		ask2(node->addr);
-	    else
-		ask(node->addr);
-	    node->tries++;
-	    result = 1;
-	}
-	return retry_requests(node->right) || result;
-    } else
+    if (!node)
 	return 0;
+
+    result = retry_requests(node->left);
+    if (node->tries > 0  &&  node->tries < retries) {
+	if (node->version)
+	    ask2(node->addr);
+	else
+	    ask(node->addr);
+	node->tries++;
+	result = 1;
+    }
+
+    return retry_requests(node->right) || result;
 }
 
 
@@ -602,68 +640,71 @@ char *inet_name(uint32_t addr)
 
 void print_map(Node *node)
 {
-    if (node) {
-	char *name, *addr;
+    char *name, *addr;
 
-	print_map(node->left);
+    if (!node)
+	return;
 
-	addr = inet_fmt(node->addr, s1, sizeof(s1));
-	if (!target_addr
-	    || (node->tries >= 0 && node->u.interfaces)
-	    || (node->tries == -1
-		&& node->u.alias->tries >= 0
-		&& node->u.alias->u.interfaces)) {
-	    if (show_names && (name = inet_name(node->addr)))
-		printf("%s (%s):", addr, name);
-	    else
-		printf("%s:", addr);
-	    if (node->tries < 0)
-		printf(" alias for %s\n\n", inet_fmt(node->u.alias->addr, s1, sizeof(s1)));
-	    else if (!node->u.interfaces)
-		printf(" no response to query\n\n");
-	    else {
-		Interface *ifc;
+    print_map(node->left);
 
-		if (node->version)
-		    printf(" <v%d.%d>", node->version & 0xff,
-					(node->version >> 8) & 0xff);
-		printf("\n");
-		for (ifc = node->u.interfaces; ifc; ifc = ifc->next) {
-		    Neighbor *nb;
-		    char *ifc_name = inet_fmt(ifc->addr, s1, sizeof(s1));
-		    int ifc_len = strlen(ifc_name);
-		    int count = 0;
+    addr = inet_fmt(node->addr, s1, sizeof(s1));
+    if (!target_addr
+	|| (node->tries >= 0 && node->u.interfaces)
+	|| (node->tries == -1
+	    && node->u.alias->tries >= 0
+	    && node->u.alias->u.interfaces)) {
+	if (show_names && (name = inet_name(node->addr)))
+	    printf("%s (%s):", addr, name);
+	else
+	    printf("%s:", addr);
 
-		    printf("    %s:", ifc_name);
-		    for (nb = ifc->neighbors; nb; nb = nb->next) {
-			if (count > 0)
-			    printf("%*s", ifc_len + 5, "");
-			printf("  %s", inet_fmt(nb->addr, s1, sizeof(s1)));
-			if (show_names  &&  (name = inet_name(nb->addr)))
-			    printf(" (%s)", name);
-			printf(" [%d/%d", nb->metric, nb->threshold);
-			if (nb->flags) {
-			    uint16_t flags = nb->flags;
-			    if (flags & DVMRP_NF_TUNNEL)
-				    printf("/tunnel");
-			    if (flags & DVMRP_NF_SRCRT)
-				    printf("/srcrt");
-			    if (flags & DVMRP_NF_QUERIER)
-				    printf("/querier");
-			    if (flags & DVMRP_NF_DISABLED)
-				    printf("/disabled");
-			    if (flags & DVMRP_NF_DOWN)
-				    printf("/down");
-			}
-			printf("]\n");
-			count++;
+	if (node->tries < 0)
+	    printf(" alias for %s\n\n", inet_fmt(node->u.alias->addr, s1, sizeof(s1)));
+	else if (!node->u.interfaces)
+	    printf(" no response to query\n\n");
+	else {
+	    Interface *ifc;
+
+	    if (node->version)
+		printf(" <v%d.%d>", node->version & 0xff,
+		       (node->version >> 8) & 0xff);
+	    printf("\n");
+
+	    for (ifc = node->u.interfaces; ifc; ifc = ifc->next) {
+		Neighbor *nb;
+		char *ifc_name = inet_fmt(ifc->addr, s1, sizeof(s1));
+		int ifc_len = strlen(ifc_name);
+		int count = 0;
+
+		printf("    %s:", ifc_name);
+		for (nb = ifc->neighbors; nb; nb = nb->next) {
+		    if (count > 0)
+			printf("%*s", ifc_len + 5, "");
+		    printf("  %s", inet_fmt(nb->addr, s1, sizeof(s1)));
+		    if (show_names  &&  (name = inet_name(nb->addr)))
+			printf(" (%s)", name);
+		    printf(" [%d/%d", nb->metric, nb->threshold);
+		    if (nb->flags) {
+			uint16_t flags = nb->flags;
+			if (flags & DVMRP_NF_TUNNEL)
+			    printf("/tunnel");
+			if (flags & DVMRP_NF_SRCRT)
+			    printf("/srcrt");
+			if (flags & DVMRP_NF_QUERIER)
+			    printf("/querier");
+			if (flags & DVMRP_NF_DISABLED)
+			    printf("/disabled");
+			if (flags & DVMRP_NF_DOWN)
+			    printf("/down");
 		    }
+		    printf("]\n");
+		    count++;
 		}
-		printf("\n");
 	    }
+	    printf("\n");
 	}
-	print_map(node->right);
     }
+    print_map(node->right);
 }
 
 
@@ -686,64 +727,78 @@ void graph_edges(Node *node)
     Neighbor *nb;
     char name[MAXHOSTNAMELEN];
 
-    if (node) {
-	graph_edges(node->left);
-	if (node->tries >= 0) {
-	    printf("  %d {$ NP %d0 %d0 $} \"%s%s\" \n",
-		   (int) node->addr,
-		   node->addr & 0xFF, (node->addr >> 8) & 0xFF,
-		   graph_name(node->addr, name, sizeof(name)),
-		   node->u.interfaces ? "" : "*");
-	    for (ifc = node->u.interfaces; ifc; ifc = ifc->next)
-		for (nb = ifc->neighbors; nb; nb = nb->next) {
-		    Node *nb_node = find_node(nb->addr, &routers);
-		    Neighbor *nb2;
+    if (!node)
+	return;
 
-		    if (nb_node->tries < 0)
-			nb_node = nb_node->u.alias;
+    graph_edges(node->left);
+    if (node->tries >= 0) {
+	printf("  %d {$ NP %d0 %d0 $} \"%s%s\" \n",
+	       (int) node->addr,
+	       node->addr & 0xFF, (node->addr >> 8) & 0xFF,
+	       graph_name(node->addr, name, sizeof(name)),
+	       node->u.interfaces ? "" : "*");
 
-		    if (node != nb_node &&
-			(!(nb2 = find_neighbor(node->addr, nb_node))
-			 || node->addr < nb_node->addr)) {
-			printf("    %d \"%d/%d",
-			       nb_node->addr, nb->metric, nb->threshold);
-			if (nb2 && (nb2->metric != nb->metric
-				    || nb2->threshold != nb->threshold))
-			    printf(",%d/%d", nb2->metric, nb2->threshold);
-			if (nb->flags & NF_PRESENT)
-			    printf("%s%s",
-				   nb->flags & DVMRP_NF_SRCRT ? "" :
-				   nb->flags & DVMRP_NF_TUNNEL ? "E" : "P",
-				   nb->flags & DVMRP_NF_DOWN ? "D" : "");
-			printf("\"\n");
-		    }
+	for (ifc = node->u.interfaces; ifc; ifc = ifc->next)
+	    for (nb = ifc->neighbors; nb; nb = nb->next) {
+		Neighbor *nb2;
+		Node *nb_node;
+
+		nb_node = find_node(nb->addr, &routers);
+		if (!nb_node) {
+		    logit(LOG_WARNING, 0, "Cannot find node for neighbor %s",
+			  inet_fmt(nb->addr, s1, sizeof(s1)));
+		    continue;
 		}
-	    printf("    ;\n");
-	}
-	graph_edges(node->right);
+
+		if (nb_node->tries < 0)
+		    nb_node = nb_node->u.alias;
+
+		if (node != nb_node &&
+		    (!(nb2 = find_neighbor(node->addr, nb_node))
+		     || node->addr < nb_node->addr)) {
+		    printf("    %d \"%d/%d",
+			   nb_node->addr, nb->metric, nb->threshold);
+		    if (nb2 && (nb2->metric != nb->metric
+				|| nb2->threshold != nb->threshold))
+			printf(",%d/%d", nb2->metric, nb2->threshold);
+		    if (nb->flags & NF_PRESENT)
+			printf("%s%s",
+			       nb->flags & DVMRP_NF_SRCRT ? "" :
+			       nb->flags & DVMRP_NF_TUNNEL ? "E" : "P",
+			       nb->flags & DVMRP_NF_DOWN ? "D" : "");
+		    printf("\"\n");
+		}
+	    }
+	printf("    ;\n");
     }
+    graph_edges(node->right);
 }
 
 void elide_aliases(Node *node)
 {
-    if (node) {
-	elide_aliases(node->left);
-	if (node->tries >= 0) {
-	    Interface *ifc;
+    if (!node)
+	return;
 
-	    for (ifc = node->u.interfaces; ifc; ifc = ifc->next) {
-		Neighbor *nb;
+    elide_aliases(node->left);
+    if (node->tries >= 0) {
+	Interface *ifc;
 
-		for (nb = ifc->neighbors; nb; nb = nb->next) {
-		    Node *nb_node = find_node(nb->addr, &routers);
+	for (ifc = node->u.interfaces; ifc; ifc = ifc->next) {
+	    Neighbor *nb;
 
-		    if (nb_node->tries < 0)
-			nb->addr = nb_node->u.alias->addr;
-		}
+	    for (nb = ifc->neighbors; nb; nb = nb->next) {
+		Node *nb_node;
+
+		nb_node = find_node(nb->addr, &routers);
+		if (!nb_node)
+		    continue;
+
+		if (nb_node->tries < 0)
+		    nb->addr = nb_node->u.alias->addr;
 	    }
 	}
-	elide_aliases(node->right);
     }
+    elide_aliases(node->right);
 }
 
 void graph_map(void)
@@ -765,9 +820,9 @@ uint32_t host_addr(char *name)
     struct hostent *e = gethostbyname(name);
     int addr;
 
-    if (e)
+    if (e) {
 	memcpy(&addr, e->h_addr_list[0], e->h_length);
-    else {
+    } else {
 	addr = inet_addr(name);
 	if (addr == -1)
 	    addr = 0;
@@ -814,18 +869,23 @@ int main(int argc, char *argv[])
 		   }
 	      }
 	      break;
+
 	 case 'f':
 	      flood = TRUE;
 	      break;
+
 	 case 'g':
 	      graph = TRUE;
 	      break;
+
 	 case 'h':
 	      usage();
 	      break;
+
 	 case 'n':
 	      show_names = FALSE;
 	      break;
+
 	 case 'r':
 	      retries = strtonum(optarg, 0, INT_MAX, &errstr);
 	      if (errstr) {
@@ -833,6 +893,7 @@ int main(int argc, char *argv[])
 		   usage();
 	      }
 	      break;
+
 	 case 't':
 	      timeout = strtonum(optarg, 0, INT_MAX, &errstr);
 	      if (errstr) {
@@ -840,6 +901,7 @@ int main(int argc, char *argv[])
 		   usage();
 	      }
 	      break;
+
 	 default:
 	      usage();
 	 }
@@ -857,7 +919,8 @@ int main(int argc, char *argv[])
 
     if (argc > 1)
 	usage();
-    else if (argc == 1 && !(target_addr = host_addr(argv[0]))) {
+
+    if (argc == 1 && !(target_addr = host_addr(argv[0]))) {
 	fprintf(stderr, "Unknown host: %s\n", argv[0]);
 	exit(2);
     }
@@ -897,7 +960,11 @@ int main(int argc, char *argv[])
     ask(target_addr ? target_addr : allhosts_group);
 
     if (target_addr) {
-	Node *n = find_node(target_addr, &routers);
+	Node *n;
+
+	n = find_node(target_addr, &routers);
+	if (!n)
+	    err(1, "Cannot find node for %s", inet_fmt(target_addr, s1, sizeof(s1)));
 
 	n->tries = 1;
 
@@ -907,11 +974,11 @@ int main(int argc, char *argv[])
 
     /* Main receive loop */
     for(;;) {
-	fd_set		fds;
 	struct timeval 	tv;
-	int 		count;
-	ssize_t         recvlen;
 	socklen_t       dummy = 0;
+	ssize_t         recvlen;
+	fd_set		fds;
+	int 		count;
 
 	FD_ZERO(&fds);
 	if (igmp_socket >= (int)FD_SETSIZE)
@@ -944,9 +1011,9 @@ int main(int argc, char *argv[])
 
     printf("\n");
 
-    if (graph)
+    if (graph) {
 	graph_map();
-    else {
+    } else {
 	if (!target_addr)
 	    printf("Multicast Router Connectivity:\n\n");
 	print_map(routers);
