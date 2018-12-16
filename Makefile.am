@@ -1,7 +1,13 @@
+DISTCHECK_CONFIGURE_FLAGS = --with-systemd=$$dc_install_base/$(systemd)
+
 doc_DATA         = README.md ChangeLog.org LICENSE mrouted.conf
 EXTRA_DIST       = README.md ChangeLog.org LICENSE mrouted.conf
 DISTCLEANFILES   = *~ DEADJOE semantic.cache *.gdb *.elf core core.* *.d
 SUBDIRS          = src man
+
+if SYSTEMD
+systemd_DATA     = mrouted.service
+endif
 
 ## Generate MD5 checksum file
 MD5 = md5sum

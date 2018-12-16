@@ -1,0 +1,16 @@
+[Unit]
+Description=Multicast routing daemon, mrouted
+Documentation=man:mrouted
+Documentation=file:@DOCDIR@/README.md
+Documentation=https://github.com/troglobit/mrouted
+# ConditionPathExists=@SYSCONFDIR@/mrouted.conf
+After=network-online.target
+Requires=network-online.target
+
+[Service]
+Type=simple
+ExecStartPre=-/sbin/modprobe ipip
+ExecStart=@SBINDIR@/mrouted -f
+
+[Install]
+WantedBy=multi-user.target
