@@ -24,20 +24,22 @@ case "$1" in
                         --exec $DAEMON
                 echo "$NAME."
                 ;;
+
         stop)
                 echo -n "Stopping $DESC: "
                 start-stop-daemon --stop --quiet --oknodo --pidfile /var/run/$NAME.pid \
                         --exec $DAEMON
                 echo "$NAME."
                 ;;
+
         reload|force-reload)
                 echo -n "Reloading $DESC: "
                 start-stop-daemon --stop --signal 1 --quiet --pidfile /var/run/$NAME.pid \
                         --exec $DAEMON
                 echo "$NAME."
                 ;;
+
         restart)
-                
                 echo -n "Restarting $DESC: "
                 start-stop-daemon --stop --quiet --pidfile \
                         /var/run/$NAME.pid --exec $DAEMON
@@ -46,6 +48,7 @@ case "$1" in
                         /var/run/$NAME.pid --exec $DAEMON
                 echo "$NAME."
                 ;;
+
         *)
                 N=/etc/init.d/$NAME
                 echo "Usage: $N {start|stop|restart|reload|force-reload}" >&2
