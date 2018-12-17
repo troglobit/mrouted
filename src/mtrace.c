@@ -964,14 +964,6 @@ void stat_line(struct tr_resp *r, struct tr_resp *s, int have_next, int *rst)
 }
 
 /*
- * Calculate the difference between two unsigned 32-bit counters
- */
-static uint32_t u_diff(uint32_t u, uint32_t v)
-{
-    return u >= v ? u - v : v - u;
-}
-
-/*
  * Print responses with statistics for forward path (from src to dst)
  */
 int print_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf *new)
