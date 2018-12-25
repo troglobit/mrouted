@@ -174,8 +174,8 @@ void ask2(uint32_t dst)
 void accept_neighbors(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen, uint32_t level)
 {
 	uint8_t *ep = p + datalen;
-#define GET_ADDR(a) (a = ((uint32_t)*p++ << 24), a += ((uint32_t)*p++ << 16), \
-		     a += ((uint32_t)*p++ << 8), a += *p++)
+#define GET_ADDR(a) (a  = ((uint32_t)*p++ << 24), a += ((uint32_t)*p++ << 16), \
+		     a += ((uint32_t)*p++ << 8),  a += *p++)
 
 	printf("%s (%s):\n", inet_fmt(src, s1, sizeof(s1)), inet_name(src));
 	while (p < ep) {

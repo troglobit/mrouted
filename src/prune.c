@@ -129,20 +129,20 @@ void send_prune_or_graft(struct gtable *gt)
 	send_graft(gt);
 }
 
-/* 
+/*
  * Determine if mcastgrp has a listener on vifi
  */
 int grplst_mem(vifi_t vifi, uint32_t mcastgrp)
 {
     struct listaddr *g;
     struct uvif *v;
-    
+
     v = &uvifs[vifi];
-    
+
     for (g = v->uv_groups; g != NULL; g = g->al_next)
-	if (mcastgrp == g->al_addr) 
+	if (mcastgrp == g->al_addr)
 	    return 1;
-    
+
     return 0;
 }
 
@@ -164,9 +164,11 @@ int find_src_grp(uint32_t src, uint32_t mask, uint32_t grp)
     gt = kernel_table;
     while (gt != NULL) {
 	if (grp == gt->gt_mcastgrp &&
-	    (mask ? (gt->gt_route->rt_origin == src &&
-		     gt->gt_route->rt_originmask == mask) :
-		    ((src & gt->gt_route->rt_originmask) ==
+	    (mask
+	     ? (gt->gt_route->rt_origin     == src  &&
+		gt->gt_route->rt_originmask == mask)
+	     :
+	     ((src & gt->gt_route->rt_originmask) ==
 		     gt->gt_route->rt_origin)))
 	    return 1;
 
@@ -178,7 +180,8 @@ int find_src_grp(uint32_t src, uint32_t mask, uint32_t grp)
 	    gtp = gt;
 	    gt = gt->gt_gnext;
 	}
-	else break;
+	else
+	    break;
     }
 
     return 0;
