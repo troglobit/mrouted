@@ -80,7 +80,7 @@ uint32_t  our_addr, target_addr = 0;            /* in NET order */
 int       debug = 0;
 int       retries = DEFAULT_RETRIES;
 int       timeout = DEFAULT_TIMEOUT;
-int       show_names = TRUE;
+int       show_names = 1;
 vifi_t    numvifs;              /* to keep loader happy */
                                 /* (see COPY_TABLES macro called in kern.c) */
 
@@ -848,7 +848,7 @@ int usage(int code)
 
 int main(int argc, char *argv[])
 {
-    int flood = FALSE, graph = FALSE;
+    int flood = 0, graph = 0;
     int ch;
     uid_t uid;
     const char *errstr;
@@ -868,18 +868,18 @@ int main(int argc, char *argv[])
 	      break;
 
 	 case 'f':
-	      flood = TRUE;
+	      flood = 1;
 	      break;
 
 	 case 'g':
-	      graph = TRUE;
+	      graph = 1;
 	      break;
 
 	 case 'h':
 	      return usage(0);
 
 	 case 'n':
-	      show_names = FALSE;
+	      show_names = 0;
 	      break;
 
 	 case 'r':

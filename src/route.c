@@ -66,8 +66,8 @@ void init_routes(void)
     routing_table        = NULL;
     rt_end		 = NULL;
     nroutes		 = 0;
-    routes_changed       = FALSE;
-    delay_change_reports = FALSE;
+    routes_changed       = 0;
+    delay_change_reports = 0;
 }
 
 
@@ -149,7 +149,7 @@ void delete_vif_from_routes(vifi_t vifi)
 		r->rt_timer    = ROUTE_EXPIRE_TIME;
 		r->rt_metric   = UNREACHABLE;
 		r->rt_flags   |= RTF_CHANGED;
-		routes_changed = TRUE;
+		routes_changed = 1;
 	    }
 	    else if (VIFM_ISSET(vifi, r->rt_children)) {
 		VIFM_CLR(vifi, r->rt_children);
@@ -205,7 +205,7 @@ void delete_neighbor_from_routes(uint32_t addr, vifi_t vifi, uint32_t index)
 		r->rt_timer    = ROUTE_EXPIRE_TIME;
 		r->rt_metric   = UNREACHABLE;
 		r->rt_flags   |= RTF_CHANGED;
-		routes_changed = TRUE;
+		routes_changed = 1;
 	    } else if (r->rt_dominants[vifi] == addr) {
 		VIFM_SET(vifi, r->rt_children);
 		r->rt_dominants[vifi] = 0;
@@ -262,7 +262,7 @@ static int find_route(uint32_t origin, uint32_t mask)
     while (r != NULL) {
 	if (origin == r->rt_origin && mask == r->rt_originmask) {
 	    rtp = r;
-	    return TRUE;
+	    return 1;
 	}
 	if (ntohl(mask) < ntohl(r->rt_originmask) ||
 	    (mask == r->rt_originmask &&
@@ -273,7 +273,7 @@ static int find_route(uint32_t origin, uint32_t mask)
 	    break;
 	}
     }
-    return FALSE;
+    return 0;
 }
 
 /*
@@ -481,7 +481,7 @@ void update_route(uint32_t origin, uint32_t mask, uint32_t metric, uint32_t src,
 	r->rt_timer    = 0;
 	r->rt_metric   = adj_metric;
 	r->rt_flags   |= RTF_CHANGED;
-	routes_changed = TRUE;
+	routes_changed = 1;
 	update_table_entry(r, r->rt_gateway);
     } else if (src == r->rt_gateway) {
 	/*
@@ -509,7 +509,7 @@ void update_route(uint32_t origin, uint32_t mask, uint32_t metric, uint32_t src,
 	}
 	r->rt_metric   = adj_metric;
 	r->rt_flags   |= RTF_CHANGED;
-	routes_changed = TRUE;
+	routes_changed = 1;
     } else if (src == 0 ||
 	       (r->rt_gateway != 0 &&
 		(adj_metric < r->rt_metric ||
@@ -558,7 +558,7 @@ void update_route(uint32_t origin, uint32_t mask, uint32_t metric, uint32_t src,
 	r->rt_timer    = 0;
 	r->rt_metric   = adj_metric;
 	r->rt_flags   |= RTF_CHANGED;
-	routes_changed = TRUE;
+	routes_changed = 1;
     } else if (vifi != r->rt_parent) {
 	/*
 	 * The report came from a vif other than the route's parent vif.
@@ -707,7 +707,7 @@ void age_routes(void)
 		del_table_entry(r, 0, DEL_ALL_ROUTES);
 		r->rt_metric   = UNREACHABLE;
 		r->rt_flags   |= RTF_CHANGED;
-		routes_changed = TRUE;
+		routes_changed = 1;
 	    }
 	}
 	else if (virtual_time % (ROUTE_REPORT_INTERVAL * 2) == 0) {
@@ -747,7 +747,7 @@ void expire_all_routes(void)
     for (r = routing_table; r != NULL; r = r->rt_next) {
 	r->rt_metric   = UNREACHABLE;
 	r->rt_flags   |= RTF_CHANGED;
-	routes_changed = TRUE;
+	routes_changed = 1;
     }
 }
 
@@ -1145,7 +1145,7 @@ void report_to_all_neighbors(int which_routes)
      * generating the reports, and clear the flag.
      */
     routes_changed_before = routes_changed;
-    routes_changed = FALSE;
+    routes_changed = 0;
 
 
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
@@ -1171,7 +1171,7 @@ void report_to_all_neighbors(int which_routes)
      * Set a flag to inhibit further reports of changed routes until the
      * next timer interrupt.  This is to alleviate update storms.
      */
-    delay_change_reports = TRUE;
+    delay_change_reports = 1;
 }
 
 /*

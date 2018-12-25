@@ -168,7 +168,8 @@ int find_src_grp(uint32_t src, uint32_t mask, uint32_t grp)
 		     gt->gt_route->rt_originmask == mask) :
 		    ((src & gt->gt_route->rt_originmask) ==
 		     gt->gt_route->rt_origin)))
-	    return TRUE;
+	    return 1;
+
 	if (ntohl(grp) > ntohl(gt->gt_mcastgrp) ||
 	    (grp == gt->gt_mcastgrp &&
 	     (ntohl(mask) < ntohl(gt->gt_route->rt_originmask) ||
@@ -179,7 +180,8 @@ int find_src_grp(uint32_t src, uint32_t mask, uint32_t grp)
 	}
 	else break;
     }
-    return FALSE;
+
+    return 0;
 }
 
 /*

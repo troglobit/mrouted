@@ -110,7 +110,7 @@ void config_vifs_from_kernel(void)
 	 */
 	if (!(flags & IFF_UP)) {
 	    v->uv_flags |= VIFF_DOWN;
-	    vifs_down = TRUE;
+	    vifs_down = 1;
 	}
     }
 

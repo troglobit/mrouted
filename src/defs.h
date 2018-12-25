@@ -96,9 +96,6 @@ typedef void (*ihfunc_t) (int);
 #define HAVE_IP_HDRINCL_BSD_ORDER
 #endif
 
-#define FALSE		0
-#define TRUE		1
-
 #define EQUAL(s1, s2)	(strcmp((s1), (s2)) == 0)
 #define ARRAY_LEN(a)    (sizeof((a)) / sizeof((a)[0]))
 
