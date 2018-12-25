@@ -93,27 +93,9 @@ int       target_level = 0;
 vifi_t    numvifs;              /* to keep loader happy */
 				/* (see COPY_TABLES macro called in kern.c) */
 
-char     *inet_name(uint32_t addr);
 void      ask(uint32_t dst);
 void      ask2(uint32_t dst);
 uint32_t  host_addr(char *name);
-
-char *inet_name(uint32_t addr)
-{
-	struct hostent *e;
-	struct in_addr in;
-
-	if (addr == 0)
-		return "local";
-
-	if (nflag ||
-	    (e = gethostbyaddr((char *)&addr, sizeof(addr), AF_INET)) == NULL) {
-		in.s_addr = addr;
-		return inet_ntoa(in);
-	}
-
-	return e->h_name;
-}
 
 /*
  * Log errors and other messages to stderr, according to the severity of the
@@ -174,10 +156,12 @@ void ask2(uint32_t dst)
 void accept_neighbors(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen, uint32_t level)
 {
 	uint8_t *ep = p + datalen;
+	char *name;
 #define GET_ADDR(a) (a  = ((uint32_t)*p++ << 24), a += ((uint32_t)*p++ << 16), \
 		     a += ((uint32_t)*p++ << 8),  a += *p++)
 
-	printf("%s (%s):\n", inet_fmt(src, s1, sizeof(s1)), inet_name(src));
+	name = inet_name(src, nflag);
+	printf("%s (%s):\n", inet_fmt(src, s1, sizeof(s1)), name ? name : "N/A");
 	while (p < ep) {
 		uint32_t laddr;
 		uint8_t metric;
@@ -195,8 +179,10 @@ void accept_neighbors(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen, ui
 			GET_ADDR(neighbor);
 			neighbor = htonl(neighbor);
 			printf("  %s -> ", inet_fmt(laddr, s1, sizeof(s1)));
+
+			name = inet_name(neighbor, nflag);
 			printf("%s (%s) [%d/%d]\n", inet_fmt(neighbor, s1, sizeof(s1)),
-			       inet_name(neighbor), metric, thresh);
+			       name ? name : "N/A", metric, thresh);
 		}
 	}
 }
@@ -208,8 +194,10 @@ void accept_neighbors2(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen, u
 	/* well, only possibly_broken_cisco, but that's too long to type. */
 	uint32_t majvers = level & 0xff;
 	uint32_t minvers = (level >> 8) & 0xff;
+	char *name;
 
-	printf("%s (%s) [", inet_fmt(src, s1, sizeof(s1)), inet_name(src));
+	name = inet_name(src, nflag);
+	printf("%s (%s) [", inet_fmt(src, s1, sizeof(s1)), name ? name : "N/A");
 	if (majvers == 3 && minvers == 0xff)
 		printf("DVMRPv3 compliant");
 	else
@@ -236,9 +224,11 @@ void accept_neighbors2(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen, u
 			uint32_t neighbor = *(uint32_t*)p;
 
 			p += 4;
+
+			name = inet_name(neighbor, nflag);
 			printf("  %s -> ", inet_fmt(laddr, s1, sizeof(s1)));
 			printf("%s (%s) [%d/%d", inet_fmt(neighbor, s1, sizeof(s1)),
-			       inet_name(neighbor), metric, thresh);
+			       name ? name : "N/A", metric, thresh);
 			if (flags & DVMRP_NF_TUNNEL)
 				printf("/tunnel");
 			if (flags & DVMRP_NF_SRCRT)

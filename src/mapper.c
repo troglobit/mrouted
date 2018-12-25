@@ -91,7 +91,6 @@ int        main(int argc, char *argv[]);
 void       ask(uint32_t dst);
 void       ask2(uint32_t dst);
 int        retry_requests(Node *node);
-char      *inet_name(uint32_t addr);
 void       print_map(Node *node);
 char      *graph_name(uint32_t addr, char *buf, size_t len);
 void       graph_edges(Node *node);
@@ -627,16 +626,6 @@ int retry_requests(Node *node)
 }
 
 
-char *inet_name(uint32_t addr)
-{
-    struct hostent *e;
-
-    e = gethostbyaddr((char *)&addr, sizeof(addr), AF_INET);
-
-    return e ? e->h_name : 0;
-}
-
-
 void print_map(Node *node)
 {
     char *name, *addr;
@@ -652,7 +641,7 @@ void print_map(Node *node)
 	|| (node->tries == -1
 	    && node->u.alias->tries >= 0
 	    && node->u.alias->u.interfaces)) {
-	if (show_names && (name = inet_name(node->addr)))
+	if (show_names && (name = inet_name(node->addr, 0)))
 	    printf("%s (%s):", addr, name);
 	else
 	    printf("%s:", addr);
@@ -680,7 +669,7 @@ void print_map(Node *node)
 		    if (count > 0)
 			printf("%*s", ifc_len + 5, "");
 		    printf("  %s", inet_fmt(nb->addr, s1, sizeof(s1)));
-		    if (show_names  &&  (name = inet_name(nb->addr)))
+		    if (show_names  &&  (name = inet_name(nb->addr, 0)))
 			printf(" (%s)", name);
 		    printf(" [%d/%d", nb->metric, nb->threshold);
 		    if (nb->flags) {
@@ -711,7 +700,7 @@ char *graph_name(uint32_t addr, char *buf, size_t len)
 {
     char *name;
 
-    if (show_names  &&  (name = inet_name(addr)))
+    if (show_names  &&  (name = inet_name(addr, 0)))
        strlcpy(buf, name, len);
     else
 	inet_fmt(addr, buf, sizeof(buf));

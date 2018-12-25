@@ -7,6 +7,9 @@
  * Leland Stanford Junior University.
  */
 
+#include <arpa/inet.h>
+#include <netdb.h>
+
 #include "defs.h"
 
 /*
@@ -91,6 +94,37 @@ int inet_valid_subnet(uint32_t nsubnet, uint32_t nmask)
     }
 
     return 1;
+}
+
+
+/*
+ * Convert an IP address to name
+ */
+char *inet_name(uint32_t addr, int numeric)
+{
+    static char host[NI_MAXHOST];
+    struct sockaddr_in sin;
+    struct sockaddr *sa;
+    struct in_addr in;
+    int rc;
+
+    if (addr == 0)
+	return "local";
+
+    if (numeric) {
+	in.s_addr = addr;
+	return inet_ntoa(in);
+    }
+
+    sin.sin_family = AF_INET;
+    sin.sin_addr.s_addr = addr;
+    sa = (struct sockaddr *)&sin;
+
+    rc = getnameinfo(sa, sizeof(sin), host, sizeof(host), NULL, 0, 0);
+    if (rc)
+	return NULL;
+
+    return host;
 }
 
 

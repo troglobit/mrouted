@@ -307,8 +307,9 @@ extern void		config_vifs_from_file(void);
 extern int		inet_valid_host(uint32_t);
 extern int		inet_valid_mask(uint32_t);
 extern int		inet_valid_subnet(uint32_t, uint32_t);
-extern char *		inet_fmt(uint32_t, char *, size_t);
-extern char *		inet_fmts(uint32_t, uint32_t, char *, size_t);
+extern char            *inet_name(uint32_t, int);
+extern char            *inet_fmt(uint32_t, char *, size_t);
+extern char            *inet_fmts(uint32_t, uint32_t, char *, size_t);
 extern uint32_t		inet_parse(char *, int);
 extern int		inet_cksum(uint16_t *, uint32_t);
 

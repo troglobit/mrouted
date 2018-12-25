@@ -127,7 +127,6 @@ uint32_t tdst  = 0;		/* Address where trace is sent (last-hop) */
 vifi_t  numvifs;		/* to keep loader happy */
 				/* (see kern.c) */
 
-char *			inet_name(uint32_t addr);
 uint32_t		host_addr(char *name);
 /* uint32_t is promoted uint8_t */
 char *			proto_type(uint32_t type);
@@ -148,15 +147,6 @@ int			print_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf 
 void			check_vif_state(void);
 uint32_t		byteswap(uint32_t v);
 
-
-char *inet_name(uint32_t addr)
-{
-    struct hostent *e;
-
-    e = gethostbyaddr((char *)&addr, sizeof(addr), AF_INET);
-
-    return e ? e->h_name : "?";
-}
 
 uint32_t host_addr(char *name)
 {
@@ -749,9 +739,11 @@ char *print_host2(uint32_t addr1, uint32_t addr2)
 	return "";
     }
 
-    name = inet_name(addr1);
-    if (*name == '?' && *(name + 1) == '\0' && addr2 != 0)
-	name = inet_name(addr2);
+    name = inet_name(addr1, 0);
+    if (!name)
+	name = inet_name(addr2, 0);
+    if (!name)
+	name = "?";
     printf("%s (%s)", name, inet_fmt(addr1, s1, sizeof(s1)));
 
     return name;
