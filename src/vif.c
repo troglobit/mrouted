@@ -861,7 +861,7 @@ void probe_for_neighbors(void)
 /*
  * Send a list of all of our neighbors to the requestor, `src'.
  */
-void accept_neighbor_request(uint32_t src, uint32_t UNUSED dst)
+void accept_neighbor_request(uint32_t src, uint32_t dst)
 {
     vifi_t vifi;
     struct uvif *v;
@@ -920,7 +920,7 @@ void accept_neighbor_request(uint32_t src, uint32_t UNUSED dst)
 /*
  * Send a list of all of our neighbors to the requestor, `src'.
  */
-void accept_neighbor_request2(uint32_t src, uint32_t UNUSED dst)
+void accept_neighbor_request2(uint32_t src, uint32_t dst)
 {
     vifi_t vifi;
     struct uvif *v;
@@ -1022,7 +1022,7 @@ void accept_neighbor_request2(uint32_t src, uint32_t UNUSED dst)
 		htonl(MROUTED_LEVEL), datalen);
 }
 
-void accept_info_request(uint32_t src, uint32_t UNUSED dst, uint8_t *p, size_t datalen)
+void accept_info_request(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
 {
     uint8_t *q;
     int len;
@@ -1088,7 +1088,7 @@ static int info_version(uint8_t *p, size_t plen)
 /*
  * Process an incoming neighbor-list message.
  */
-void accept_neighbors(uint32_t src, uint32_t dst, uint8_t UNUSED *p, size_t UNUSED datalen, uint32_t UNUSED level)
+void accept_neighbors(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen, uint32_t level)
 {
     logit(LOG_INFO, 0, "Ignoring spurious DVMRP neighbor list from %s to %s",
 	  inet_fmt(src, s1, sizeof(s1)), inet_fmt(dst, s2, sizeof(s2)));
@@ -1098,7 +1098,7 @@ void accept_neighbors(uint32_t src, uint32_t dst, uint8_t UNUSED *p, size_t UNUS
 /*
  * Process an incoming neighbor-list message.
  */
-void accept_neighbors2(uint32_t src, uint32_t dst, uint8_t UNUSED *p, size_t UNUSED datalen, uint32_t UNUSED level)
+void accept_neighbors2(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen, uint32_t level)
 {
     IF_DEBUG(DEBUG_PKT) {
 	logit(LOG_DEBUG, 0, "Ignoring spurious DVMRP neighbor list2 from %s to %s",
@@ -1109,7 +1109,7 @@ void accept_neighbors2(uint32_t src, uint32_t dst, uint8_t UNUSED *p, size_t UNU
 /*
  * Process an incoming info reply message.
  */
-void accept_info_reply(uint32_t src, uint32_t dst, uint8_t UNUSED *p, size_t UNUSED datalen)
+void accept_info_reply(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
 {
     IF_DEBUG(DEBUG_PKT) {
 	logit(LOG_DEBUG, 0, "Ignoring spurious DVMRP info reply from %s to %s",

@@ -1178,7 +1178,7 @@ void report_to_all_neighbors(int which_routes)
  * Send a route report message to destination 'dst', via virtual interface
  * 'vifi'.  'which_routes' specifies ALL_ROUTES or CHANGED_ROUTES.
  */
-static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi, uint32_t UNUSED dst)
+static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi, uint32_t dst)
 {
     struct rtentry *r;
     char *p;

@@ -367,12 +367,6 @@ extern void		rsrr_cache_send(struct gtable *, int);
 extern void		rsrr_cache_clean(struct gtable *);
 #endif
 
-#ifdef __GNUC__
-# define UNUSED __attribute__((unused))
-#else
-# define UNUSED /*empty*/
-#endif
-
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *dst, const char *src, size_t siz);
 #endif

@@ -273,7 +273,7 @@ char *flag_type(uint32_t type)
  * local net, use that one; in either case, verify that the local
  * address is valid.
  */
-uint32_t get_netmask(int UNUSED s, uint32_t dst)
+uint32_t get_netmask(int s, uint32_t dst)
 {
     uint32_t if_addr, if_mask;
     uint32_t retval = 0xFFFFFFFF;
@@ -1648,67 +1648,67 @@ void logit(int severity, int syserr, const char *format, ...)
 }
 
 /* dummies */
-void accept_probe(uint32_t UNUSED src, uint32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen, uint32_t UNUSED level)
+void accept_probe(uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t level)
 {
 }
 
-void accept_group_report(uint32_t UNUSED src, uint32_t UNUSED dst, uint32_t UNUSED group, int UNUSED r_type)
+void accept_group_report(uint32_t src, uint32_t dst, uint32_t group, int r_type)
 {
 }
 
-void accept_neighbor_request2(uint32_t UNUSED src, uint32_t UNUSED dst)
+void accept_neighbor_request2(uint32_t src, uint32_t dst)
 {
 }
 
-void accept_report(uint32_t UNUSED src, uint32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen, uint32_t UNUSED level)
+void accept_report(uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t level)
 {
 }
 
-void accept_neighbor_request(uint32_t UNUSED src, uint32_t UNUSED dst)
+void accept_neighbor_request(uint32_t src, uint32_t dst)
 {
 }
 
-void accept_prune(uint32_t UNUSED src, uint32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen)
+void accept_prune(uint32_t src, uint32_t dst, char *p, size_t datalen)
 {
 }
 
-void accept_graft(uint32_t UNUSED src, uint32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen)
+void accept_graft(uint32_t src, uint32_t dst, char *p, size_t datalen)
 {
 }
 
-void accept_g_ack(uint32_t UNUSED src, uint32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen)
+void accept_g_ack(uint32_t src, uint32_t dst, char *p, size_t datalen)
 {
 }
 
-void add_table_entry(uint32_t UNUSED origin, uint32_t UNUSED mcastgrp)
+void add_table_entry(uint32_t origin, uint32_t mcastgrp)
 {
 }
 
-void accept_leave_message(uint32_t UNUSED src, uint32_t UNUSED dst, uint32_t UNUSED group)
+void accept_leave_message(uint32_t src, uint32_t dst, uint32_t group)
 {
 }
 
-void accept_mtrace(uint32_t UNUSED src, uint32_t UNUSED dst, uint32_t UNUSED group, char UNUSED *data, uint8_t UNUSED no, size_t UNUSED datalen)
+void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8_t no, size_t datalen)
 {
 }
 
-void accept_membership_query(uint32_t UNUSED src, uint32_t UNUSED dst, uint32_t UNUSED group, int UNUSED tmo)
+void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo)
 {
 }
 
-void accept_neighbors(uint32_t UNUSED src, uint32_t UNUSED dst, uint8_t UNUSED *p, size_t UNUSED datalen, uint32_t UNUSED level)
+void accept_neighbors(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen, uint32_t level)
 {
 }
 
-void accept_neighbors2(uint32_t UNUSED src, uint32_t UNUSED dst, uint8_t UNUSED *p, size_t UNUSED datalen, uint32_t UNUSED level)
+void accept_neighbors2(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen, uint32_t level)
 {
 }
 
-void accept_info_request(uint32_t UNUSED src, uint32_t UNUSED dst, uint8_t UNUSED *p, size_t UNUSED datalen)
+void accept_info_request(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
 {
 }
 
-void accept_info_reply(uint32_t UNUSED src, uint32_t UNUSED dst, uint8_t UNUSED *p, size_t UNUSED datalen)
+void accept_info_reply(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
 {
 }
 

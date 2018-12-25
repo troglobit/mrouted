@@ -627,7 +627,7 @@ static void final_init(void *i)
  * seconds.  Also, every TIMER_INTERVAL seconds it calls timer() to
  * do all the other time-based processing.
  */
-static void fasttimer(void UNUSED *arg)
+static void fasttimer(void *arg)
 {
     static unsigned int tlast;
     static unsigned int nsent;
@@ -689,7 +689,7 @@ uint32_t virtual_time = 0;
  * group querying duties, and drives various timers in routing entries and
  * virtual interface data structures.
  */
-static void timer(void UNUSED *arg)
+static void timer(void *arg)
 {
     age_routes();	/* Advance the timers in the route entries     */
     age_vifs();		/* Advance the timers for neighbors */
