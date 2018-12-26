@@ -44,18 +44,18 @@ static void		send_graft(struct gtable *gt);
 static void		send_graft_ack(uint32_t src, uint32_t dst, uint32_t origin, uint32_t grp, vifi_t vifi);
 static void		update_kernel(struct gtable *g);
 
-/* 
+/*
  * Updates the ttl values for each vif.
  */
 static void prun_add_ttls(struct gtable *gt)
 {
     struct uvif *v;
     vifi_t vifi;
-    
+
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
 	if (VIFM_ISSET(vifi, gt->gt_grpmems))
 	    gt->gt_ttls[vifi] = v->uv_threshold;
-	else 
+	else
 	    gt->gt_ttls[vifi] = 0;
     }
 }
