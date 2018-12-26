@@ -436,7 +436,7 @@ int send_recv(uint32_t dst, int type, int code, int tries, struct resp_buf *save
 	 * Change the qid for each request sent to avoid being confused
 	 * by duplicate responses
 	 */
-	query->tr_qid  = ((uint32_t)rand() >> 8);
+	query->tr_qid  = ((uint32_t)random() >> 8);
 
 	/*
 	 * Set timer to calculate delays, then send query
@@ -1095,8 +1095,8 @@ int main(int argc, char *argv[])
     int hops, nexthop, tries;
     uint32_t lastout = 0;
     int numstats = 1;
-    int waittime;
-    int seed, ch;
+    int waittime, ch;
+    unsigned int seed;
     uid_t uid;
     const char *errstr;
 
@@ -1319,7 +1319,7 @@ int main(int argc, char *argv[])
      */
     gettimeofday(&tv, 0);
     seed = tv.tv_usec ^ lcl_addr;
-    srand(seed);
+    srandom(seed);
 
     /*
      * Protect against unicast queries to mrouted versions that might crash.

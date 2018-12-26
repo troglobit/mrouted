@@ -20,7 +20,7 @@ extern int allow_black_holes;
  * randomize value to obtain a value between .5x and 1.5x
  * in order to prevent synchronization
  */
-#define JITTERED_VALUE(x) ((x) / 2 + (rand() % (x)))
+#define JITTERED_VALUE(x) ((x) / 2 + ((int)random() % (x)))
 #define	CACHE_LIFETIME(x) JITTERED_VALUE(x) /* XXX */
 
 struct gtable *kernel_table;		/* ptr to list of kernel grp entries*/

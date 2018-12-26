@@ -133,7 +133,7 @@ static void do_randomize(void)
        close(fd);
   }
 
-   srand(seed);
+   srandom(seed);
 }
 
 /* Figure out the PID of a running daemon. */
