@@ -923,11 +923,12 @@ void stat_line(struct tr_resp *r, struct tr_resp *s, int have_next, int *rst)
     switch (have) {
 	case BOTH:
 	    v_lost = v_out - (ntohl(s->tr_vifin) - ntohl(r->tr_vifin));
-	    if (v_out) v_pct = (v_lost * 100 + (v_out >> 1)) / v_out;
-	    else v_pct = 0;
+	    v_pct = (v_lost * 100 + (v_out >> 1)) / v_out;
+
 	    if (-100 < v_pct && v_pct < 101 && v_out > 10)
 		snprintf(v_str, sizeof v_str, "%3d", v_pct);
-	    else memcpy(v_str, " --", 4);
+	    else
+		memcpy(v_str, " --", 4);
 
 	    g_lost = g_out - (ntohl(s->tr_pktcnt) - ntohl(r->tr_pktcnt));
 	    if (g_out) g_pct = (g_lost * 100 + (g_out >> 1))/ g_out;
