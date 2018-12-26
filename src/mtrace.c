@@ -503,6 +503,12 @@ int send_recv(uint32_t dst, int type, int code, int tries, struct resp_buf *save
 			ipdatalen, inet_fmt(ip->ip_src.s_addr, s1, sizeof(s1)));
 		continue;
 	    }
+	    if (ipdatalen > MAX_DVMRP_DATA_LEN) {
+		fprintf(stderr,
+			"IP data field too long (%zu bytes) for IGMP from %s\n",
+			ipdatalen, inet_fmt(ip->ip_src.s_addr, s1, sizeof(s1)));
+		continue;
+	    }
 	    igmpdatalen = ipdatalen - IGMP_MINLEN;
 
 	    switch (igmp->igmp_type) {
@@ -668,6 +674,12 @@ void passive_mode(void)
 	igmp = (struct igmp *)(recv_buf + iphdrlen);
 	if (ipdatalen < IGMP_MINLEN) {
 	    fprintf(stderr, "IP data field too short (%zu bytes) for IGMP from %s\n",
+		    ipdatalen, inet_fmt(ip->ip_src.s_addr, s1, sizeof(s1)));
+	    continue;
+	}
+	if (ipdatalen > MAX_DVMRP_DATA_LEN) {
+	    fprintf(stderr,
+		    "IP data field too long (%zu bytes) for IGMP from %s\n",
 		    ipdatalen, inet_fmt(ip->ip_src.s_addr, s1, sizeof(s1)));
 	    continue;
 	}
