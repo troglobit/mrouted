@@ -571,13 +571,13 @@ addrname: ADDR
 		return 0;	/* Never reached */
 	    }
 
+	    if (result->ai_next)
+		fatal("Hostname %s does not %s", $1, "map to a unique address");
+
 	    sin = (struct sockaddr_in *)result->ai_addr;
 	    $$  = sin->sin_addr.s_addr;
 
 	    freeaddrinfo(result);
-
-	    if (result->ai_next)
-		fatal("Hostname %s does not %s", $1, "map to a unique address");
 	}
 
 bound	: boundary
