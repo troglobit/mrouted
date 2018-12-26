@@ -103,7 +103,7 @@ Node *find_node(uint32_t addr, Node **ptr)
     Node *n = *ptr;
 
     if (!n) {
-	*ptr = n = (Node *)malloc(sizeof(Node));
+	*ptr = n = malloc(sizeof(Node));
 	if (!n)
 	    return NULL;
 
@@ -134,7 +134,7 @@ Interface *find_interface(uint32_t addr, Node *node)
 	if (ifc->addr == addr)
 	    return ifc;
 
-    ifc = (Interface *) malloc(sizeof(Interface));
+    ifc = malloc(sizeof(Interface));
     ifc->addr = addr;
     ifc->next = node->u.interfaces;
     node->u.interfaces = ifc;
@@ -416,7 +416,7 @@ void accept_neighbors(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen, ui
 		    goto next_neighbor;
 		}
 
-	    nb = (Neighbor *) malloc(sizeof(Neighbor));
+	    nb = malloc(sizeof(Neighbor));
 	    nb->next = ifc->neighbors;
 	    ifc->neighbors = nb;
 	    nb->addr = neighbor;
@@ -573,7 +573,7 @@ void accept_neighbors2(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen, u
 		    goto next_neighbor;
 		}
 
-	    nb = (Neighbor *) malloc(sizeof(Neighbor));
+	    nb = malloc(sizeof(Neighbor));
 	    nb->next = ifc->neighbors;
 	    ifc->neighbors = nb;
 	    nb->addr = neighbor;
