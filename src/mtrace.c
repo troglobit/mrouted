@@ -150,7 +150,6 @@ uint32_t		byteswap(uint32_t v);
 
 uint32_t host_addr(char *name)
 {
-    struct hostent *e = NULL;
     uint32_t addr;
     int	i, dots = 3;
     char buf[40];
@@ -177,12 +176,26 @@ uint32_t host_addr(char *name)
     }
     *op = '\0';
 
-    if (dots <= 0)
-	e = gethostbyname(name);
+    if (dots <= 0) {
+	struct sockaddr_in *sin;
+	struct addrinfo *result;
+	struct addrinfo hints;
+	int rc;
 
-    if (e) {
-	memcpy((char *)&addr, e->h_addr_list[0], e->h_length);
+	memset(&hints, 0, sizeof(struct addrinfo));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_DGRAM;
+
+	rc = getaddrinfo(name, NULL, &hints, &result);
+	if (rc)
+	    goto fallback;
+
+	sin = (struct sockaddr_in *)result->ai_addr;
+	addr = sin->sin_addr.s_addr;
+
+	freeaddrinfo(result);
     } else {
+      fallback:
 	addr = inet_addr(buf);
 	if (addr == INADDR_NONE) {
 	    addr = 0;

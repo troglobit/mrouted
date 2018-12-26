@@ -96,7 +96,7 @@ char      *graph_name(uint32_t addr, char *buf, size_t len);
 void       graph_edges(Node *node);
 void       elide_aliases(Node *node);
 void       graph_map(void);
-uint32_t   host_addr(char *name);
+
 
 Node *find_node(uint32_t addr, Node **ptr)
 {
@@ -802,23 +802,6 @@ void graph_map(void)
     printf("END\n");
 }
 
-
-uint32_t host_addr(char *name)
-{
-    struct hostent *e = gethostbyname(name);
-    int addr;
-
-    if (e) {
-	memcpy(&addr, e->h_addr_list[0], e->h_length);
-    } else {
-	addr = inet_addr(name);
-	if (addr == -1)
-	    addr = 0;
-    }
-
-    return addr;
-}
-
 int usage(int code)
 {
     printf("Usage: map-mbone [-fghn] [-d level] [-r count] [-t seconds] [starting_router]\n"
@@ -837,10 +820,13 @@ int usage(int code)
 
 int main(int argc, char *argv[])
 {
-    int flood = 0, graph = 0;
-    int ch;
-    uid_t uid;
+    struct sockaddr_in addr;
+    socklen_t addrlen = sizeof(addr);
     const char *errstr;
+    char *host;
+    uid_t uid;
+    int flood = 0, graph = 0;
+    int ch, rc, sd;
 
     while ((ch = getopt(argc, argv, "d::fghnr:t:")) != -1) {
 	 switch (ch) {
@@ -905,9 +891,26 @@ int main(int argc, char *argv[])
     if (argc > 1)
 	return usage(1);
 
-    if (argc == 1 && !(target_addr = host_addr(argv[0]))) {
-	fprintf(stderr, "Unknown host: %s\n", argv[0]);
-	exit(2);
+    if (argc == 1) {
+	struct sockaddr_in *sin;
+	struct addrinfo *result;
+	struct addrinfo hints;
+
+	memset(&hints, 0, sizeof(struct addrinfo));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_DGRAM;
+
+	/* Remote mrouted address */
+	rc = getaddrinfo(argv[0], NULL, &hints, &result);
+	if (rc) {
+	    fprintf(stderr, "Unknown host %s: %s\n", argv[0], gai_strerror(rc));
+	    return 1;
+	}
+
+	sin = (struct sockaddr_in *)result->ai_addr;
+	target_addr = sin->sin_addr.s_addr;
+
+	freeaddrinfo(result);
     }
 
     if (debug)
@@ -919,27 +922,23 @@ int main(int argc, char *argv[])
     if (setuid(uid) == -1)
 	err(1, "setuid");
 
-    {				/* Find a good local address for us. */
-	int udp;
-	struct sockaddr_in addr;
-	socklen_t addrlen = sizeof(addr);
+    /* Find a good local address for us. */
 
-	memset(&addr, 0, sizeof addr);
-	addr.sin_family = AF_INET;
+    memset(&addr, 0, sizeof addr);
+    addr.sin_family = AF_INET;
 #ifdef HAVE_SA_LEN
-	addr.sin_len = sizeof(addr);
+    addr.sin_len = sizeof(addr);
 #endif
-	addr.sin_addr.s_addr = dvmrp_group;
-	addr.sin_port = htons(2000); /* any port over 1024 will do... */
-	if ((udp = socket(AF_INET, SOCK_DGRAM, 0)) < 0
-	    || connect(udp, (struct sockaddr *) &addr, sizeof(addr)) < 0
-	    || getsockname(udp, (struct sockaddr *) &addr, &addrlen) < 0) {
-	    perror("Determining local address");
-	    exit(1);
-	}
-	close(udp);
-	our_addr = addr.sin_addr.s_addr;
+    addr.sin_addr.s_addr = dvmrp_group;
+    addr.sin_port = htons(2000); /* any port over 1024 will do... */
+    if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) < 0
+	|| connect(sd, (struct sockaddr *)&addr, sizeof(addr)) < 0
+	|| getsockname(sd, (struct sockaddr *)&addr, &addrlen) < 0) {
+	perror("Determining local address");
+	exit(1);
     }
+    close(sd);
+    our_addr = addr.sin_addr.s_addr;
 
     /* Send initial seed message to all local routers */
     ask(target_addr ? target_addr : allhosts_group);

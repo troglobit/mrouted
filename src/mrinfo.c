@@ -95,7 +95,6 @@ vifi_t    numvifs;              /* to keep loader happy */
 
 void      ask(uint32_t dst);
 void      ask2(uint32_t dst);
-uint32_t  host_addr(char *name);
 
 /*
  * Log errors and other messages to stderr, according to the severity of the
@@ -257,13 +256,13 @@ int usage(int code)
 
 int main(int argc, char *argv[])
 {
-	int tries, trynew, curaddr, ch;
 	struct timeval et;
-	struct hostent *hp;
-	struct hostent bogus;
-	char *host;
-	uid_t uid;
+	struct addrinfo *result, *rp;
+	struct addrinfo hints;
 	const char *errstr;
+	uid_t uid;
+	char *host;
+	int tries, trynew, ch, rc;
 
 	while ((ch = getopt(argc, argv, "d::hnr:t:")) != -1) {
 		switch (ch) {
@@ -329,50 +328,44 @@ int main(int argc, char *argv[])
 	else
 		host = "127.0.0.1";
 
-	if ((target_addr = inet_addr(host)) != INADDR_NONE) {
-		hp = &bogus;
-		hp->h_length = sizeof(target_addr);
-		if (!(hp->h_addr_list = (char **)calloc(2, sizeof(char *))))
-			err(1, "Not enough memory");
-		if (!(hp->h_addr_list[0] = malloc(hp->h_length)))
-			err(1, "Not enough memory");
-		memcpy(hp->h_addr_list[0], &target_addr, hp->h_length);
-		hp->h_addr_list[1] = 0;
-	} else {
-		hp = gethostbyname(host);
+	memset(&hints, 0, sizeof(struct addrinfo));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_DGRAM;
+
+	rc = getaddrinfo(host, NULL, &hints, &result);
+	if (rc) {
+		fprintf(stderr, "mrinfo: %s\n", gai_strerror(rc));
+		return 1;
 	}
 
-	if (hp == NULL || hp->h_length != sizeof(target_addr)) {
-		fprintf(stderr, "mrinfo: %s: no such host\n", argv[0]);
-		exit(1);
-	}
 	if (debug)
 		fprintf(stderr, "Debug level %u\n", debug);
 
 	/* Check all addresses; mrouters often have unreachable interfaces */
-	for (curaddr = 0; hp->h_addr_list[curaddr] != NULL; curaddr++) {
-		memcpy(&target_addr, hp->h_addr_list[curaddr], hp->h_length);
-		{			/* Find a good local address for us. */
-			int     udp;
-			struct sockaddr_in addr;
-			socklen_t addrlen = sizeof(addr);
+	for (rp = result; rp; rp = rp->ai_next) {
+		struct sockaddr_in *sin;
+		struct sockaddr sa;
+		socklen_t len = sizeof(sa);
+		int sd;
 
-			memset(&addr, 0, sizeof addr);
-			addr.sin_family = AF_INET;
-#ifdef HAVE_SA_LEN
-			addr.sin_len = sizeof(addr);
-#endif
-			addr.sin_addr.s_addr = target_addr;
-			addr.sin_port = htons(2000); /* any port over 1024 will do... */
-			if ((udp = socket(AF_INET, SOCK_DGRAM, 0)) < 0
-			    || connect(udp, (struct sockaddr *)&addr, sizeof(addr)) < 0
-			    || getsockname(udp, (struct sockaddr *) & addr, &addrlen) < 0) {
-				perror("Determining local address");
-				exit(1);
-			}
-			close(udp);
-			our_addr = addr.sin_addr.s_addr;
+		/* Find a good local address for us. */
+		sd = socket(AF_INET, SOCK_DGRAM, 0);
+		if (sd < 0
+		    || connect(sd, rp->ai_addr, rp->ai_addrlen) < 0
+		    || getsockname(sd, &sa, &len) < 0) {
+			perror("Determining local address");
+			freeaddrinfo(result);
+			exit(1);
 		}
+		close(sd);
+
+		/* Our local address */
+		sin = (struct sockaddr_in *)&sa;
+		our_addr = sin->sin_addr.s_addr;
+
+		/* Remote mrouted address */
+		sin = (struct sockaddr_in *)rp->ai_addr;
+		target_addr = sin->sin_addr.s_addr;
 
 		tries = 0;
 		trynew = 1;
@@ -506,6 +499,7 @@ int main(int argc, char *argv[])
 				} else {
 					accept_neighbors(src, dst, (uint8_t *)(igmp + 1),
 							 igmpdatalen, ntohl(group));
+					freeaddrinfo(result);
 					exit(0);
 				}
 				break;
@@ -513,10 +507,13 @@ int main(int argc, char *argv[])
 			case DVMRP_NEIGHBORS2:
 				accept_neighbors2(src, dst, (uint8_t *)(igmp + 1),
 						  igmpdatalen, ntohl(group));
+				freeaddrinfo(result);
 				exit(0);
 			}
 		}
 	}
+
+	freeaddrinfo(result);
 	exit(1);
 }
 
