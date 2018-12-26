@@ -701,9 +701,9 @@ char *graph_name(uint32_t addr, char *buf, size_t len)
     char *name;
 
     if (show_names  &&  (name = inet_name(addr, 0)))
-       strlcpy(buf, name, len);
+	strlcpy(buf, name, len);
     else
-	inet_fmt(addr, buf, sizeof(buf));
+	inet_fmt(addr, buf, len);
 
     return buf;
 }
