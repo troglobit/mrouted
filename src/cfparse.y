@@ -166,7 +166,7 @@ stmt	: error
 
 	    if (!(ffr.ifr_flags & IFF_UP)) {
 		v->uv_flags |= VIFF_DOWN;
-		vifs_down = TRUE;
+		vifs_down = 1;
 	    }
 	}
 	tunnelmods
@@ -556,18 +556,28 @@ addrname: ADDR
 	}
 	| STRING
 	{
-	    struct hostent *hp;
+	    struct sockaddr_in *sin;
+	    struct addrinfo *result;
+	    struct addrinfo hints;
+	    int rc;
 
-	    hp = gethostbyname($1);
-	    if (!hp || hp->h_length != sizeof($$)) {
+	    memset(&hints, 0, sizeof(struct addrinfo));
+	    hints.ai_family = AF_INET;
+	    hints.ai_socktype = SOCK_DGRAM;
+
+	    rc = getaddrinfo($1, NULL, &hints, &result);
+	    if (rc) {
 		fatal("No such host %s", $1);
 		return 0;	/* Never reached */
 	    }
 
-	    if (hp->h_addr_list[1])
+	    if (result->ai_next)
 		fatal("Hostname %s does not %s", $1, "map to a unique address");
 
-	    memmove(&$$, hp->h_addr_list[0], hp->h_length);
+	    sin = (struct sockaddr_in *)result->ai_addr;
+	    $$  = sin->sin_addr.s_addr;
+
+	    freeaddrinfo(result);
 	}
 
 bound	: boundary

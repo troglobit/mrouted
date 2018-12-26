@@ -5,10 +5,8 @@ language: c
 # Use docker for quicker builds, it now allows https://docs.travis-ci.com/user/apt/
 sudo: false
 
-# Test build with both GCC and Clang (LLVM)
 compiler:
   - gcc
-  - clang
 
 env:
   global:
@@ -25,7 +23,7 @@ addons:
       name: "troglobit/mrouted"
       description: "mrouted | The Original Multicast Routing Daemon"
     notification_email: troglobit@gmail.com
-    build_command_prepend: "./autogen.sh && ./configure --enable-rsrr"
+    build_command_prepend: "./autogen.sh && ./configure --enable-rsrr --prefix="
     build_command: "make clean all"
     branch_pattern: dev
 

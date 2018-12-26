@@ -96,9 +96,6 @@ typedef void (*ihfunc_t) (int);
 #define HAVE_IP_HDRINCL_BSD_ORDER
 #endif
 
-#define FALSE		0
-#define TRUE		1
-
 #define EQUAL(s1, s2)	(strcmp((s1), (s2)) == 0)
 #define ARRAY_LEN(a)    (sizeof((a)) / sizeof((a)[0]))
 
@@ -310,8 +307,9 @@ extern void		config_vifs_from_file(void);
 extern int		inet_valid_host(uint32_t);
 extern int		inet_valid_mask(uint32_t);
 extern int		inet_valid_subnet(uint32_t, uint32_t);
-extern char *		inet_fmt(uint32_t, char *, size_t);
-extern char *		inet_fmts(uint32_t, uint32_t, char *, size_t);
+extern char            *inet_name(uint32_t, int);
+extern char            *inet_fmt(uint32_t, char *, size_t);
+extern char            *inet_fmts(uint32_t, uint32_t, char *, size_t);
 extern uint32_t		inet_parse(char *, int);
 extern int		inet_cksum(uint16_t *, uint32_t);
 
@@ -365,12 +363,6 @@ extern void		rsrr_init(void);
 extern void		rsrr_clean(void);
 extern void		rsrr_cache_send(struct gtable *, int);
 extern void		rsrr_cache_clean(struct gtable *);
-#endif
-
-#ifdef __GNUC__
-# define UNUSED __attribute__((unused))
-#else
-# define UNUSED /*empty*/
 #endif
 
 #ifndef HAVE_STRLCPY

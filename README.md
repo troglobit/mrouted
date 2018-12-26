@@ -1,5 +1,5 @@
-DVMRP Multicast Routing for UNIX
-================================
+Simple Multicast Routing for UNIX
+=================================
 [![License Badge][]][License] [![Travis Status][]][Travis] [![Coverity Status][]][Coverity Scan]
 
 Table of Contents
@@ -26,7 +26,7 @@ DVMRP is a distance vector based protocol, derived from RIP, suitable
 for closely located multicast users in smaller networks.  It uses the
 "flood and prune" method, where multicast is flooded until neighboring
 routers opt out from unwanted multicast groups.  For a more thorough
-explanation of the protocol, [RFC 1075][].
+explanation of the protocol see [RFC 1075][].
 
 This version of mrouted has [RSRR][] support for running RSVP.
 

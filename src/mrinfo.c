@@ -93,27 +93,8 @@ int       target_level = 0;
 vifi_t    numvifs;              /* to keep loader happy */
 				/* (see COPY_TABLES macro called in kern.c) */
 
-char     *inet_name(uint32_t addr);
 void      ask(uint32_t dst);
 void      ask2(uint32_t dst);
-uint32_t  host_addr(char *name);
-
-char *inet_name(uint32_t addr)
-{
-	struct hostent *e;
-	struct in_addr in;
-
-	if (addr == 0)
-		return "local";
-
-	if (nflag ||
-	    (e = gethostbyaddr((char *)&addr, sizeof(addr), AF_INET)) == NULL) {
-		in.s_addr = addr;
-		return inet_ntoa(in);
-	}
-
-	return e->h_name;
-}
 
 /*
  * Log errors and other messages to stderr, according to the severity of the
@@ -171,13 +152,15 @@ void ask2(uint32_t dst)
 /*
  * Process an incoming neighbor-list message.
  */
-void accept_neighbors(uint32_t src, uint32_t UNUSED dst, uint8_t *p, size_t datalen, uint32_t UNUSED level)
+void accept_neighbors(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen, uint32_t level)
 {
 	uint8_t *ep = p + datalen;
-#define GET_ADDR(a) (a = ((uint32_t)*p++ << 24), a += ((uint32_t)*p++ << 16), \
-		     a += ((uint32_t)*p++ << 8), a += *p++)
+	char *name;
+#define GET_ADDR(a) (a  = ((uint32_t)*p++ << 24), a += ((uint32_t)*p++ << 16), \
+		     a += ((uint32_t)*p++ << 8),  a += *p++)
 
-	printf("%s (%s):\n", inet_fmt(src, s1, sizeof(s1)), inet_name(src));
+	name = inet_name(src, nflag);
+	printf("%s (%s):\n", inet_fmt(src, s1, sizeof(s1)), name ? name : "N/A");
 	while (p < ep) {
 		uint32_t laddr;
 		uint8_t metric;
@@ -195,21 +178,25 @@ void accept_neighbors(uint32_t src, uint32_t UNUSED dst, uint8_t *p, size_t data
 			GET_ADDR(neighbor);
 			neighbor = htonl(neighbor);
 			printf("  %s -> ", inet_fmt(laddr, s1, sizeof(s1)));
+
+			name = inet_name(neighbor, nflag);
 			printf("%s (%s) [%d/%d]\n", inet_fmt(neighbor, s1, sizeof(s1)),
-			       inet_name(neighbor), metric, thresh);
+			       name ? name : "N/A", metric, thresh);
 		}
 	}
 }
 
-void accept_neighbors2(uint32_t src, uint32_t UNUSED dst, uint8_t *p, size_t datalen, uint32_t level)
+void accept_neighbors2(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen, uint32_t level)
 {
 	uint8_t *ep = p + datalen;
 	uint32_t broken_cisco = ((level & 0xffff) == 0x020a); /* 10.2 */
 	/* well, only possibly_broken_cisco, but that's too long to type. */
 	uint32_t majvers = level & 0xff;
 	uint32_t minvers = (level >> 8) & 0xff;
+	char *name;
 
-	printf("%s (%s) [", inet_fmt(src, s1, sizeof(s1)), inet_name(src));
+	name = inet_name(src, nflag);
+	printf("%s (%s) [", inet_fmt(src, s1, sizeof(s1)), name ? name : "N/A");
 	if (majvers == 3 && minvers == 0xff)
 		printf("DVMRPv3 compliant");
 	else
@@ -236,9 +223,11 @@ void accept_neighbors2(uint32_t src, uint32_t UNUSED dst, uint8_t *p, size_t dat
 			uint32_t neighbor = *(uint32_t*)p;
 
 			p += 4;
+
+			name = inet_name(neighbor, nflag);
 			printf("  %s -> ", inet_fmt(laddr, s1, sizeof(s1)));
 			printf("%s (%s) [%d/%d", inet_fmt(neighbor, s1, sizeof(s1)),
-			       inet_name(neighbor), metric, thresh);
+			       name ? name : "N/A", metric, thresh);
 			if (flags & DVMRP_NF_TUNNEL)
 				printf("/tunnel");
 			if (flags & DVMRP_NF_SRCRT)
@@ -267,13 +256,13 @@ int usage(int code)
 
 int main(int argc, char *argv[])
 {
-	int tries, trynew, curaddr, ch;
 	struct timeval et;
-	struct hostent *hp;
-	struct hostent bogus;
-	char *host;
-	uid_t uid;
+	struct addrinfo *result, *rp;
+	struct addrinfo hints;
 	const char *errstr;
+	uid_t uid;
+	char *host;
+	int tries, trynew, ch, rc;
 
 	while ((ch = getopt(argc, argv, "d::hnr:t:")) != -1) {
 		switch (ch) {
@@ -339,50 +328,44 @@ int main(int argc, char *argv[])
 	else
 		host = "127.0.0.1";
 
-	if ((target_addr = inet_addr(host)) != INADDR_NONE) {
-		hp = &bogus;
-		hp->h_length = sizeof(target_addr);
-		if (!(hp->h_addr_list = (char **)calloc(2, sizeof(char *))))
-			err(1, "Not enough memory");
-		if (!(hp->h_addr_list[0] = malloc(hp->h_length)))
-			err(1, "Not enough memory");
-		memcpy(hp->h_addr_list[0], &target_addr, hp->h_length);
-		hp->h_addr_list[1] = 0;
-	} else {
-		hp = gethostbyname(host);
+	memset(&hints, 0, sizeof(struct addrinfo));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_DGRAM;
+
+	rc = getaddrinfo(host, NULL, &hints, &result);
+	if (rc) {
+		fprintf(stderr, "mrinfo: %s\n", gai_strerror(rc));
+		return 1;
 	}
 
-	if (hp == NULL || hp->h_length != sizeof(target_addr)) {
-		fprintf(stderr, "mrinfo: %s: no such host\n", argv[0]);
-		exit(1);
-	}
 	if (debug)
 		fprintf(stderr, "Debug level %u\n", debug);
 
 	/* Check all addresses; mrouters often have unreachable interfaces */
-	for (curaddr = 0; hp->h_addr_list[curaddr] != NULL; curaddr++) {
-		memcpy(&target_addr, hp->h_addr_list[curaddr], hp->h_length);
-		{			/* Find a good local address for us. */
-			int     udp;
-			struct sockaddr_in addr;
-			socklen_t addrlen = sizeof(addr);
+	for (rp = result; rp; rp = rp->ai_next) {
+		struct sockaddr_in *sin;
+		struct sockaddr sa;
+		socklen_t len = sizeof(sa);
+		int sd;
 
-			memset(&addr, 0, sizeof addr);
-			addr.sin_family = AF_INET;
-#ifdef HAVE_SA_LEN
-			addr.sin_len = sizeof(addr);
-#endif
-			addr.sin_addr.s_addr = target_addr;
-			addr.sin_port = htons(2000); /* any port over 1024 will do... */
-			if ((udp = socket(AF_INET, SOCK_DGRAM, 0)) < 0
-			    || connect(udp, (struct sockaddr *)&addr, sizeof(addr)) < 0
-			    || getsockname(udp, (struct sockaddr *) & addr, &addrlen) < 0) {
-				perror("Determining local address");
-				exit(1);
-			}
-			close(udp);
-			our_addr = addr.sin_addr.s_addr;
+		/* Find a good local address for us. */
+		sd = socket(AF_INET, SOCK_DGRAM, 0);
+		if (sd < 0
+		    || connect(sd, rp->ai_addr, rp->ai_addrlen) < 0
+		    || getsockname(sd, &sa, &len) < 0) {
+			perror("Determining local address");
+			freeaddrinfo(result);
+			exit(1);
 		}
+		close(sd);
+
+		/* Our local address */
+		sin = (struct sockaddr_in *)&sa;
+		our_addr = sin->sin_addr.s_addr;
+
+		/* Remote mrouted address */
+		sin = (struct sockaddr_in *)rp->ai_addr;
+		target_addr = sin->sin_addr.s_addr;
 
 		tries = 0;
 		trynew = 1;
@@ -516,6 +499,7 @@ int main(int argc, char *argv[])
 				} else {
 					accept_neighbors(src, dst, (uint8_t *)(igmp + 1),
 							 igmpdatalen, ntohl(group));
+					freeaddrinfo(result);
 					exit(0);
 				}
 				break;
@@ -523,57 +507,60 @@ int main(int argc, char *argv[])
 			case DVMRP_NEIGHBORS2:
 				accept_neighbors2(src, dst, (uint8_t *)(igmp + 1),
 						  igmpdatalen, ntohl(group));
+				freeaddrinfo(result);
 				exit(0);
 			}
 		}
 	}
+
+	freeaddrinfo(result);
 	exit(1);
 }
 
 /* dummies */
-void accept_probe(uint32_t UNUSED src, uint32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen, uint32_t UNUSED level)
+void accept_probe(uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t level)
 {
 }
-void accept_group_report(uint32_t UNUSED src, uint32_t UNUSED dst, uint32_t UNUSED group, int UNUSED r_type)
+void accept_group_report(uint32_t src, uint32_t dst, uint32_t group, int r_type)
 {
 }
-void accept_report(uint32_t UNUSED src, uint32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen, uint32_t UNUSED level)
+void accept_report(uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t level)
 {
 }
-void accept_neighbor_request(uint32_t UNUSED src, uint32_t UNUSED dst)
+void accept_neighbor_request(uint32_t src, uint32_t dst)
 {
 }
-void accept_neighbor_request2(uint32_t UNUSED src, uint32_t UNUSED dst)
+void accept_neighbor_request2(uint32_t src, uint32_t dst)
 {
 }
-void accept_prune(uint32_t UNUSED src, uint32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen)
+void accept_prune(uint32_t src, uint32_t dst, char *p, size_t datalen)
 {
 }
-void accept_graft(uint32_t UNUSED src, uint32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen)
+void accept_graft(uint32_t src, uint32_t dst, char *p, size_t datalen)
 {
 }
-void accept_g_ack(uint32_t UNUSED src, uint32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen)
+void accept_g_ack(uint32_t src, uint32_t dst, char *p, size_t datalen)
 {
 }
-void add_table_entry(uint32_t UNUSED origin, uint32_t UNUSED mcastgrp)
+void add_table_entry(uint32_t origin, uint32_t mcastgrp)
 {
 }
 void check_vif_state(void)
 {
 }
-void accept_leave_message(uint32_t UNUSED src, uint32_t UNUSED dst, uint32_t UNUSED group)
+void accept_leave_message(uint32_t src, uint32_t dst, uint32_t group)
 {
 }
-void accept_mtrace(uint32_t UNUSED src, uint32_t UNUSED dst, uint32_t UNUSED group, char UNUSED *data, uint8_t UNUSED no, size_t UNUSED datalen)
+void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8_t no, size_t datalen)
 {
 }
-void accept_membership_query(uint32_t UNUSED src, uint32_t UNUSED dst, uint32_t UNUSED group, int UNUSED tmo)
+void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo)
 {
 }
-void accept_info_request(uint32_t UNUSED src, uint32_t UNUSED dst, uint8_t UNUSED *p, size_t UNUSED datalen)
+void accept_info_request(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
 {
 }
-void accept_info_reply(uint32_t UNUSED src, uint32_t UNUSED dst, uint8_t UNUSED *p, size_t UNUSED datalen)
+void accept_info_reply(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
 {
 }
 

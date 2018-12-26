@@ -96,10 +96,10 @@ int swaps[MAXHOPS];			/* To get around 3.6 bug, ... */
 
 int timeout = DEFAULT_TIMEOUT;
 int nqueries = DEFAULT_RETRIES;
-int numeric = FALSE;
+int numeric = 0;
 int debug = 0;
-int passive = FALSE;
-int multicast = FALSE;
+int passive = 0;
+int multicast = 0;
 int statint = 10;
 int verbose = 0;
 
@@ -127,7 +127,6 @@ uint32_t tdst  = 0;		/* Address where trace is sent (last-hop) */
 vifi_t  numvifs;		/* to keep loader happy */
 				/* (see kern.c) */
 
-char *			inet_name(uint32_t addr);
 uint32_t		host_addr(char *name);
 /* uint32_t is promoted uint8_t */
 char *			proto_type(uint32_t type);
@@ -149,18 +148,8 @@ void			check_vif_state(void);
 uint32_t		byteswap(uint32_t v);
 
 
-char *inet_name(uint32_t addr)
-{
-    struct hostent *e;
-
-    e = gethostbyaddr((char *)&addr, sizeof(addr), AF_INET);
-
-    return e ? e->h_name : "?";
-}
-
 uint32_t host_addr(char *name)
 {
-    struct hostent *e = NULL;
     uint32_t addr;
     int	i, dots = 3;
     char buf[40];
@@ -187,12 +176,26 @@ uint32_t host_addr(char *name)
     }
     *op = '\0';
 
-    if (dots <= 0)
-	e = gethostbyname(name);
+    if (dots <= 0) {
+	struct sockaddr_in *sin;
+	struct addrinfo *result;
+	struct addrinfo hints;
+	int rc;
 
-    if (e) {
-	memcpy((char *)&addr, e->h_addr_list[0], e->h_length);
+	memset(&hints, 0, sizeof(struct addrinfo));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_DGRAM;
+
+	rc = getaddrinfo(name, NULL, &hints, &result);
+	if (rc)
+	    goto fallback;
+
+	sin = (struct sockaddr_in *)result->ai_addr;
+	addr = sin->sin_addr.s_addr;
+
+	freeaddrinfo(result);
     } else {
+      fallback:
 	addr = inet_addr(buf);
 	if (addr == INADDR_NONE) {
 	    addr = 0;
@@ -273,11 +276,11 @@ char *flag_type(uint32_t type)
  * local net, use that one; in either case, verify that the local
  * address is valid.
  */
-uint32_t get_netmask(int UNUSED s, uint32_t dst)
+uint32_t get_netmask(int s, uint32_t dst)
 {
     uint32_t if_addr, if_mask;
     uint32_t retval = 0xFFFFFFFF;
-    int found = FALSE;
+    int found = 0;
     struct ifaddrs *ifap, *ifa;
 
     if (getifaddrs(&ifap) != 0) {
@@ -297,7 +300,7 @@ uint32_t get_netmask(int UNUSED s, uint32_t dst)
 		lcl_addr = if_addr;
 	}
 	if (lcl_addr == if_addr)
-	    found = TRUE;
+	    found = 1;
     }
 
     if (!found && lcl_addr != 0) {
@@ -433,7 +436,7 @@ int send_recv(uint32_t dst, int type, int code, int tries, struct resp_buf *save
 	 * Change the qid for each request sent to avoid being confused
 	 * by duplicate responses
 	 */
-	query->tr_qid  = ((uint32_t)rand() >> 8);
+	query->tr_qid  = ((uint32_t)random() >> 8);
 
 	/*
 	 * Set timer to calculate delays, then send query
@@ -446,7 +449,7 @@ int send_recv(uint32_t dst, int type, int code, int tries, struct resp_buf *save
 	 */
 	pfd[0].fd = igmp_socket;
 	pfd[0].events = POLLIN;
-	while (TRUE) {
+	while (1) {
 	    gettimeofday(&tv, 0);
 	    tv.tv_sec = tq.tv_sec + timeout - tv.tv_sec;
 	    tv.tv_usec = tq.tv_usec - tv.tv_usec;
@@ -497,6 +500,12 @@ int send_recv(uint32_t dst, int type, int code, int tries, struct resp_buf *save
 	    if (ipdatalen < IGMP_MINLEN) {
 		fprintf(stderr,
 			"IP data field too short (%zu bytes) for IGMP from %s\n",
+			ipdatalen, inet_fmt(ip->ip_src.s_addr, s1, sizeof(s1)));
+		continue;
+	    }
+	    if (ipdatalen > MAX_DVMRP_DATA_LEN) {
+		fprintf(stderr,
+			"IP data field too long (%zu bytes) for IGMP from %s\n",
 			ipdatalen, inet_fmt(ip->ip_src.s_addr, s1, sizeof(s1)));
 		continue;
 	    }
@@ -668,6 +677,12 @@ void passive_mode(void)
 		    ipdatalen, inet_fmt(ip->ip_src.s_addr, s1, sizeof(s1)));
 	    continue;
 	}
+	if (ipdatalen > MAX_DVMRP_DATA_LEN) {
+	    fprintf(stderr,
+		    "IP data field too long (%zu bytes) for IGMP from %s\n",
+		    ipdatalen, inet_fmt(ip->ip_src.s_addr, s1, sizeof(s1)));
+	    continue;
+	}
 	igmpdatalen = ipdatalen - IGMP_MINLEN;
 
 	switch (igmp->igmp_type) {
@@ -749,9 +764,11 @@ char *print_host2(uint32_t addr1, uint32_t addr2)
 	return "";
     }
 
-    name = inet_name(addr1);
-    if (*name == '?' && *(name + 1) == '\0' && addr2 != 0)
-	name = inet_name(addr2);
+    name = inet_name(addr1, 0);
+    if (!name)
+	name = inet_name(addr2, 0);
+    if (!name)
+	name = "?";
     printf("%s (%s)", name, inet_fmt(addr1, s1, sizeof(s1)));
 
     return name;
@@ -906,11 +923,12 @@ void stat_line(struct tr_resp *r, struct tr_resp *s, int have_next, int *rst)
     switch (have) {
 	case BOTH:
 	    v_lost = v_out - (ntohl(s->tr_vifin) - ntohl(r->tr_vifin));
-	    if (v_out) v_pct = (v_lost * 100 + (v_out >> 1)) / v_out;
-	    else v_pct = 0;
+	    v_pct = (v_lost * 100 + (v_out >> 1)) / v_out;
+
 	    if (-100 < v_pct && v_pct < 101 && v_out > 10)
 		snprintf(v_str, sizeof v_str, "%3d", v_pct);
-	    else memcpy(v_str, " --", 4);
+	    else
+		memcpy(v_str, " --", 4);
 
 	    g_lost = g_out - (ntohl(s->tr_pktcnt) - ntohl(r->tr_pktcnt));
 	    if (g_out) g_pct = (g_lost * 100 + (g_out >> 1))/ g_out;
@@ -1010,8 +1028,8 @@ int print_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf *n
 	printf("\t\t\t\treset: %d\n", *r);
     }
 
-    while (TRUE) {
-	if ((n->tr_inaddr != b->tr_inaddr) || (n->tr_inaddr != b->tr_inaddr))
+    while (1) {
+	if ((n->tr_inaddr != b->tr_inaddr) || (p->tr_inaddr != b->tr_inaddr))
 	    return 1;		/* Route changed */
 
 	if ((n->tr_inaddr != n->tr_outaddr))
@@ -1023,14 +1041,14 @@ int print_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf *n
 	    break;
 
 	printf("     %c     ^      ttl%5d   ", first ? 'v' : '|', ttl);
-	stat_line(p, n, TRUE, r);
+	stat_line(p, n, 1, r);
 	if (!first) {
 	    resptime = qarrtime;
 	    qarrtime = fixtime(ntohl((n-1)->tr_qarr));
 	    hop = t_diff(resptime, qarrtime);
 	    ms = scale(&hop);
 	    printf("     v     |      hop%5d%s", hop, ms);
-	    stat_line(b, n, TRUE, r);
+	    stat_line(b, n, 1, r);
 	}
 
 	--b, --p, --n, --r;
@@ -1041,12 +1059,12 @@ int print_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf *n
     }
 
     printf("     %c      \\__   ttl%5d   ", first ? 'v' : '|', ttl);
-    stat_line(p, n, FALSE, r);
+    stat_line(p, n, 0, r);
     if (!first) {
 	hop = t_diff(qarrtime, new->qtime);
 	ms = scale(&hop);
 	printf("     v         \\  hop%5d%s", hop, ms);
-	stat_line(b, n, FALSE, r);
+	stat_line(b, n, 0, r);
     }
     printf("%-15s %s\n", inet_fmt(qdst, s1, sizeof(s1)), inet_fmt(lcl_addr, s2, sizeof(s2)));
     printf("  Receiver      Query Source\n\n");
@@ -1077,8 +1095,8 @@ int main(int argc, char *argv[])
     int hops, nexthop, tries;
     uint32_t lastout = 0;
     int numstats = 1;
-    int waittime;
-    int seed, ch;
+    int waittime, ch;
+    unsigned int seed;
     uid_t uid;
     const char *errstr;
 
@@ -1112,15 +1130,15 @@ int main(int argc, char *argv[])
                 break;
 
             case 'M':			/* Use multicast for response */
-		multicast = TRUE;
+		multicast = 1;
 		break;
 
             case 'n':			/* Don't reverse map host addresses */
-		numeric = TRUE;
+		numeric = 1;
 		break;
 
             case 'p':			/* Passive listen for traces */
-		passive = TRUE;
+		passive = 1;
 		break;
 
             case 'q':			/* Number of query retries */
@@ -1157,7 +1175,7 @@ int main(int argc, char *argv[])
                 break;
 
             case 'v':			/* Verbosity */
-		verbose = TRUE;
+		verbose = 1;
 		break;
 
             case 'w':			/* Time to wait for packet arrival */
@@ -1301,7 +1319,7 @@ int main(int argc, char *argv[])
      */
     gettimeofday(&tv, 0);
     seed = tv.tv_usec ^ lcl_addr;
-    srand(seed);
+    srandom(seed);
 
     /*
      * Protect against unicast queries to mrouted versions that might crash.
@@ -1648,67 +1666,67 @@ void logit(int severity, int syserr, const char *format, ...)
 }
 
 /* dummies */
-void accept_probe(uint32_t UNUSED src, uint32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen, uint32_t UNUSED level)
+void accept_probe(uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t level)
 {
 }
 
-void accept_group_report(uint32_t UNUSED src, uint32_t UNUSED dst, uint32_t UNUSED group, int UNUSED r_type)
+void accept_group_report(uint32_t src, uint32_t dst, uint32_t group, int r_type)
 {
 }
 
-void accept_neighbor_request2(uint32_t UNUSED src, uint32_t UNUSED dst)
+void accept_neighbor_request2(uint32_t src, uint32_t dst)
 {
 }
 
-void accept_report(uint32_t UNUSED src, uint32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen, uint32_t UNUSED level)
+void accept_report(uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t level)
 {
 }
 
-void accept_neighbor_request(uint32_t UNUSED src, uint32_t UNUSED dst)
+void accept_neighbor_request(uint32_t src, uint32_t dst)
 {
 }
 
-void accept_prune(uint32_t UNUSED src, uint32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen)
+void accept_prune(uint32_t src, uint32_t dst, char *p, size_t datalen)
 {
 }
 
-void accept_graft(uint32_t UNUSED src, uint32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen)
+void accept_graft(uint32_t src, uint32_t dst, char *p, size_t datalen)
 {
 }
 
-void accept_g_ack(uint32_t UNUSED src, uint32_t UNUSED dst, char UNUSED *p, size_t UNUSED datalen)
+void accept_g_ack(uint32_t src, uint32_t dst, char *p, size_t datalen)
 {
 }
 
-void add_table_entry(uint32_t UNUSED origin, uint32_t UNUSED mcastgrp)
+void add_table_entry(uint32_t origin, uint32_t mcastgrp)
 {
 }
 
-void accept_leave_message(uint32_t UNUSED src, uint32_t UNUSED dst, uint32_t UNUSED group)
+void accept_leave_message(uint32_t src, uint32_t dst, uint32_t group)
 {
 }
 
-void accept_mtrace(uint32_t UNUSED src, uint32_t UNUSED dst, uint32_t UNUSED group, char UNUSED *data, uint8_t UNUSED no, size_t UNUSED datalen)
+void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8_t no, size_t datalen)
 {
 }
 
-void accept_membership_query(uint32_t UNUSED src, uint32_t UNUSED dst, uint32_t UNUSED group, int UNUSED tmo)
+void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo)
 {
 }
 
-void accept_neighbors(uint32_t UNUSED src, uint32_t UNUSED dst, uint8_t UNUSED *p, size_t UNUSED datalen, uint32_t UNUSED level)
+void accept_neighbors(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen, uint32_t level)
 {
 }
 
-void accept_neighbors2(uint32_t UNUSED src, uint32_t UNUSED dst, uint8_t UNUSED *p, size_t UNUSED datalen, uint32_t UNUSED level)
+void accept_neighbors2(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen, uint32_t level)
 {
 }
 
-void accept_info_request(uint32_t UNUSED src, uint32_t UNUSED dst, uint8_t UNUSED *p, size_t UNUSED datalen)
+void accept_info_request(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
 {
 }
 
-void accept_info_reply(uint32_t UNUSED src, uint32_t UNUSED dst, uint8_t UNUSED *p, size_t UNUSED datalen)
+void accept_info_reply(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
 {
 }
 

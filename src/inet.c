@@ -7,6 +7,9 @@
  * Leland Stanford Junior University.
  */
 
+#include <arpa/inet.h>
+#include <netdb.h>
+
 #include "defs.h"
 
 /*
@@ -43,10 +46,10 @@ int inet_valid_mask(uint32_t mask)
 {
     if (~(((mask & -mask) - 1) | mask) != 0) {
 	/* Mask is not contiguous */
-	return FALSE;
+	return 0;
     }
 
-    return TRUE;
+    return 1;
 }
 
 /*
@@ -65,7 +68,8 @@ int inet_valid_subnet(uint32_t nsubnet, uint32_t nmask)
     subnet = ntohl(nsubnet);
     mask   = ntohl(nmask);
 
-    if ((subnet & mask) != subnet) return FALSE;
+    if ((subnet & mask) != subnet)
+	return 0;
 
     if (subnet == 0)
 	return mask == 0;
@@ -73,22 +77,54 @@ int inet_valid_subnet(uint32_t nsubnet, uint32_t nmask)
     if (IN_CLASSA(subnet)) {
 	if (mask < 0xff000000 ||
 	    (subnet & 0xff000000) == 0x7f000000 ||
-	    (subnet & 0xff000000) == 0x00000000) return FALSE;
+	    (subnet & 0xff000000) == 0x00000000)
+	    return 0;
     }
     else if (IN_CLASSD(subnet) || IN_BADCLASS(subnet)) {
 	/* Above Class C address space */
-	return FALSE;
+	return 0;
     }
     if (subnet & ~mask) {
 	/* Host bits are set in the subnet */
-	return FALSE;
+	return 0;
     }
     if (!inet_valid_mask(mask)) {
 	/* Netmask is not contiguous */
-	return FALSE;
+	return 0;
     }
 
-    return TRUE;
+    return 1;
+}
+
+
+/*
+ * Convert an IP address to name
+ */
+char *inet_name(uint32_t addr, int numeric)
+{
+    static char host[NI_MAXHOST];
+    struct sockaddr_in sin;
+    struct sockaddr *sa;
+    struct in_addr in;
+    int rc;
+
+    if (addr == 0)
+	return "local";
+
+    if (numeric) {
+	in.s_addr = addr;
+	return inet_ntoa(in);
+    }
+
+    sin.sin_family = AF_INET;
+    sin.sin_addr.s_addr = addr;
+    sa = (struct sockaddr *)&sin;
+
+    rc = getnameinfo(sa, sizeof(sin), host, sizeof(host), NULL, 0, 0);
+    if (rc)
+	return NULL;
+
+    return host;
 }
 
 

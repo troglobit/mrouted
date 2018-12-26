@@ -20,7 +20,7 @@ extern int allow_black_holes;
  * randomize value to obtain a value between .5x and 1.5x
  * in order to prevent synchronization
  */
-#define JITTERED_VALUE(x) ((x) / 2 + (rand() % (x)))
+#define JITTERED_VALUE(x) ((x) / 2 + ((int)random() % (x)))
 #define	CACHE_LIFETIME(x) JITTERED_VALUE(x) /* XXX */
 
 struct gtable *kernel_table;		/* ptr to list of kernel grp entries*/
@@ -44,18 +44,18 @@ static void		send_graft(struct gtable *gt);
 static void		send_graft_ack(uint32_t src, uint32_t dst, uint32_t origin, uint32_t grp, vifi_t vifi);
 static void		update_kernel(struct gtable *g);
 
-/* 
+/*
  * Updates the ttl values for each vif.
  */
 static void prun_add_ttls(struct gtable *gt)
 {
     struct uvif *v;
     vifi_t vifi;
-    
+
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
 	if (VIFM_ISSET(vifi, gt->gt_grpmems))
 	    gt->gt_ttls[vifi] = v->uv_threshold;
-	else 
+	else
 	    gt->gt_ttls[vifi] = 0;
     }
 }
@@ -129,20 +129,20 @@ void send_prune_or_graft(struct gtable *gt)
 	send_graft(gt);
 }
 
-/* 
+/*
  * Determine if mcastgrp has a listener on vifi
  */
 int grplst_mem(vifi_t vifi, uint32_t mcastgrp)
 {
     struct listaddr *g;
     struct uvif *v;
-    
+
     v = &uvifs[vifi];
-    
+
     for (g = v->uv_groups; g != NULL; g = g->al_next)
-	if (mcastgrp == g->al_addr) 
+	if (mcastgrp == g->al_addr)
 	    return 1;
-    
+
     return 0;
 }
 
@@ -164,11 +164,14 @@ int find_src_grp(uint32_t src, uint32_t mask, uint32_t grp)
     gt = kernel_table;
     while (gt != NULL) {
 	if (grp == gt->gt_mcastgrp &&
-	    (mask ? (gt->gt_route->rt_origin == src &&
-		     gt->gt_route->rt_originmask == mask) :
-		    ((src & gt->gt_route->rt_originmask) ==
+	    (mask
+	     ? (gt->gt_route->rt_origin     == src  &&
+		gt->gt_route->rt_originmask == mask)
+	     :
+	     ((src & gt->gt_route->rt_originmask) ==
 		     gt->gt_route->rt_origin)))
-	    return TRUE;
+	    return 1;
+
 	if (ntohl(grp) > ntohl(gt->gt_mcastgrp) ||
 	    (grp == gt->gt_mcastgrp &&
 	     (ntohl(mask) < ntohl(gt->gt_route->rt_originmask) ||
@@ -177,9 +180,11 @@ int find_src_grp(uint32_t src, uint32_t mask, uint32_t grp)
 	    gtp = gt;
 	    gt = gt->gt_gnext;
 	}
-	else break;
+	else
+	    break;
     }
-    return FALSE;
+
+    return 0;
 }
 
 /*

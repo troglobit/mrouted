@@ -64,7 +64,7 @@ void init_vifs(void)
 
     numvifs = 0;
     vifs_with_neighbors = 0;
-    vifs_down = FALSE;
+    vifs_down = 0;
 
     /*
      * Configure the vifs based on the interface configuration of the
@@ -219,7 +219,7 @@ void check_vif_state(void)
     if (checking_vifs)
 	return;
 
-    vifs_down = FALSE;
+    vifs_down = 0;
     checking_vifs = 1;
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
 
@@ -237,7 +237,7 @@ void check_vif_state(void)
 		v->uv_flags &= ~VIFF_DOWN;
 		start_vif(vifi);
 	    } else {
-		vifs_down = TRUE;
+		vifs_down = 1;
 	    }
 	} else {
 	    if (!(ifr.ifr_flags & IFF_UP)) {
@@ -245,7 +245,7 @@ void check_vif_state(void)
 		    v->uv_name, vifi);
 		stop_vif(vifi);
 		v->uv_flags |= VIFF_DOWN;
-		vifs_down = TRUE;
+		vifs_down = 1;
 	    }
 	}
     }
@@ -861,7 +861,7 @@ void probe_for_neighbors(void)
 /*
  * Send a list of all of our neighbors to the requestor, `src'.
  */
-void accept_neighbor_request(uint32_t src, uint32_t UNUSED dst)
+void accept_neighbor_request(uint32_t src, uint32_t dst)
 {
     vifi_t vifi;
     struct uvif *v;
@@ -920,7 +920,7 @@ void accept_neighbor_request(uint32_t src, uint32_t UNUSED dst)
 /*
  * Send a list of all of our neighbors to the requestor, `src'.
  */
-void accept_neighbor_request2(uint32_t src, uint32_t UNUSED dst)
+void accept_neighbor_request2(uint32_t src, uint32_t dst)
 {
     vifi_t vifi;
     struct uvif *v;
@@ -1022,7 +1022,7 @@ void accept_neighbor_request2(uint32_t src, uint32_t UNUSED dst)
 		htonl(MROUTED_LEVEL), datalen);
 }
 
-void accept_info_request(uint32_t src, uint32_t UNUSED dst, uint8_t *p, size_t datalen)
+void accept_info_request(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
 {
     uint8_t *q;
     int len;
@@ -1088,7 +1088,7 @@ static int info_version(uint8_t *p, size_t plen)
 /*
  * Process an incoming neighbor-list message.
  */
-void accept_neighbors(uint32_t src, uint32_t dst, uint8_t UNUSED *p, size_t UNUSED datalen, uint32_t UNUSED level)
+void accept_neighbors(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen, uint32_t level)
 {
     logit(LOG_INFO, 0, "Ignoring spurious DVMRP neighbor list from %s to %s",
 	  inet_fmt(src, s1, sizeof(s1)), inet_fmt(dst, s2, sizeof(s2)));
@@ -1098,7 +1098,7 @@ void accept_neighbors(uint32_t src, uint32_t dst, uint8_t UNUSED *p, size_t UNUS
 /*
  * Process an incoming neighbor-list message.
  */
-void accept_neighbors2(uint32_t src, uint32_t dst, uint8_t UNUSED *p, size_t UNUSED datalen, uint32_t UNUSED level)
+void accept_neighbors2(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen, uint32_t level)
 {
     IF_DEBUG(DEBUG_PKT) {
 	logit(LOG_DEBUG, 0, "Ignoring spurious DVMRP neighbor list2 from %s to %s",
@@ -1109,7 +1109,7 @@ void accept_neighbors2(uint32_t src, uint32_t dst, uint8_t UNUSED *p, size_t UNU
 /*
  * Process an incoming info reply message.
  */
-void accept_info_reply(uint32_t src, uint32_t dst, uint8_t UNUSED *p, size_t UNUSED datalen)
+void accept_info_reply(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
 {
     IF_DEBUG(DEBUG_PKT) {
 	logit(LOG_DEBUG, 0, "Ignoring spurious DVMRP info reply from %s to %s",
@@ -1135,7 +1135,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
     uint32_t genid = 0;
     uint32_t send_tables = 0;
     size_t i;
-    int do_reset = FALSE;
+    int do_reset = 0;
 
     v = &uvifs[vifi];
 
@@ -1386,7 +1386,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 	    (n->al_mv != mv) ||
 	    (has_genid && n->al_genid != genid)) {
 
-	    do_reset = TRUE;
+	    do_reset = 1;
 	    IF_DEBUG(DEBUG_PEER) {
 		logit(LOG_DEBUG, 0, "Version/genid change neighbor %s [old:%d.%d/%8x, new:%d.%d/%8x]",
 		      inet_fmt(addr, s1, sizeof(s1)),
