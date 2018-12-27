@@ -40,10 +40,10 @@ void init_igmp(void)
     if ((igmp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_IGMP)) < 0) 
 	logit(LOG_ERR, errno, "IGMP socket");
 
-    k_hdr_include(1);	/* include IP header when sending */
+    k_hdr_include(TRUE);	/* include IP header when sending */
     k_set_rcvbuf(256*1024,48*1024);	/* lots of input buffering        */
     k_set_ttl(1);		/* restrict multicasts to one hop */
-    k_set_loop(0);		/* disable multicast loopback     */
+    k_set_loop(FALSE);		/* disable multicast loopback     */
 
     ip         = (struct ip *)send_buf;
     memset(ip, 0, sizeof(struct ip));
@@ -390,7 +390,7 @@ void send_igmp(uint32_t src, uint32_t dst, int type, int code, uint32_t group, i
 	k_set_if(src);
 	if (type != IGMP_DVMRP || dst == allhosts_group) {
 	    setloop = 1;
-	    k_set_loop(1);
+	    k_set_loop(TRUE);
 	}
     }
 
@@ -410,7 +410,7 @@ void send_igmp(uint32_t src, uint32_t dst, int type, int code, uint32_t group, i
     }
 
     if (setloop)
-	    k_set_loop(0);
+	    k_set_loop(FALSE);
 
     IF_DEBUG(DEBUG_PKT|igmp_debug_kind(type, code))
     logit(LOG_DEBUG, 0, "SENT %s from %-15s to %s",

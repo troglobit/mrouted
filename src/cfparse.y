@@ -166,7 +166,7 @@ stmt	: error
 
 	    if (!(ffr.ifr_flags & IFF_UP)) {
 		v->uv_flags |= VIFF_DOWN;
-		vifs_down = 1;
+		vifs_down = TRUE;
 	    }
 	}
 	tunnelmods

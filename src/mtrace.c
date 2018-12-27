@@ -96,10 +96,10 @@ int swaps[MAXHOPS];			/* To get around 3.6 bug, ... */
 
 int timeout = DEFAULT_TIMEOUT;
 int nqueries = DEFAULT_RETRIES;
-int numeric = 0;
+int numeric = FALSE;
 int debug = 0;
-int passive = 0;
-int multicast = 0;
+int passive = FALSE;
+int multicast = FALSE;
 int statint = 10;
 int verbose = 0;
 
@@ -280,7 +280,7 @@ uint32_t get_netmask(int s, uint32_t dst)
 {
     uint32_t if_addr, if_mask;
     uint32_t retval = 0xFFFFFFFF;
-    int found = 0;
+    int found = FALSE;
     struct ifaddrs *ifap, *ifa;
 
     if (getifaddrs(&ifap) != 0) {
@@ -300,7 +300,7 @@ uint32_t get_netmask(int s, uint32_t dst)
 		lcl_addr = if_addr;
 	}
 	if (lcl_addr == if_addr)
-	    found = 1;
+	    found = TRUE;
     }
 
     if (!found && lcl_addr != 0) {
@@ -449,7 +449,7 @@ int send_recv(uint32_t dst, int type, int code, int tries, struct resp_buf *save
 	 */
 	pfd[0].fd = igmp_socket;
 	pfd[0].events = POLLIN;
-	while (1) {
+	while (TRUE) {
 	    gettimeofday(&tv, 0);
 	    tv.tv_sec = tq.tv_sec + timeout - tv.tv_sec;
 	    tv.tv_usec = tq.tv_usec - tv.tv_usec;
@@ -1028,7 +1028,7 @@ int print_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf *n
 	printf("\t\t\t\treset: %d\n", *r);
     }
 
-    while (1) {
+    while (TRUE) {
 	if ((n->tr_inaddr != b->tr_inaddr) || (p->tr_inaddr != b->tr_inaddr))
 	    return 1;		/* Route changed */
 
@@ -1041,14 +1041,14 @@ int print_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf *n
 	    break;
 
 	printf("     %c     ^      ttl%5d   ", first ? 'v' : '|', ttl);
-	stat_line(p, n, 1, r);
+	stat_line(p, n, TRUE, r);
 	if (!first) {
 	    resptime = qarrtime;
 	    qarrtime = fixtime(ntohl((n-1)->tr_qarr));
 	    hop = t_diff(resptime, qarrtime);
 	    ms = scale(&hop);
 	    printf("     v     |      hop%5d%s", hop, ms);
-	    stat_line(b, n, 1, r);
+	    stat_line(b, n, TRUE, r);
 	}
 
 	--b, --p, --n, --r;
@@ -1059,12 +1059,12 @@ int print_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf *n
     }
 
     printf("     %c      \\__   ttl%5d   ", first ? 'v' : '|', ttl);
-    stat_line(p, n, 0, r);
+    stat_line(p, n, FALSE, r);
     if (!first) {
 	hop = t_diff(qarrtime, new->qtime);
 	ms = scale(&hop);
 	printf("     v         \\  hop%5d%s", hop, ms);
-	stat_line(b, n, 0, r);
+	stat_line(b, n, FALSE, r);
     }
     printf("%-15s %s\n", inet_fmt(qdst, s1, sizeof(s1)), inet_fmt(lcl_addr, s2, sizeof(s2)));
     printf("  Receiver      Query Source\n\n");
@@ -1130,15 +1130,15 @@ int main(int argc, char *argv[])
                 break;
 
             case 'M':			/* Use multicast for response */
-		multicast = 1;
+		multicast = TRUE;
 		break;
 
             case 'n':			/* Don't reverse map host addresses */
-		numeric = 1;
+		numeric = TRUE;
 		break;
 
             case 'p':			/* Passive listen for traces */
-		passive = 1;
+		passive = TRUE;
 		break;
 
             case 'q':			/* Number of query retries */
@@ -1175,7 +1175,7 @@ int main(int argc, char *argv[])
                 break;
 
             case 'v':			/* Verbosity */
-		verbose = 1;
+		verbose = TRUE;
 		break;
 
             case 'w':			/* Time to wait for packet arrival */

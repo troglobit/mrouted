@@ -80,7 +80,7 @@ uint32_t  our_addr, target_addr = 0;            /* in NET order */
 int       debug = 0;
 int       retries = DEFAULT_RETRIES;
 int       timeout = DEFAULT_TIMEOUT;
-int       show_names = 1;
+int       show_names = TRUE;
 vifi_t    numvifs;              /* to keep loader happy */
                                 /* (see COPY_TABLES macro called in kern.c) */
 
@@ -825,7 +825,7 @@ int main(int argc, char *argv[])
     const char *errstr;
     char *host;
     uid_t uid;
-    int flood = 0, graph = 0;
+    int flood = FALSE, graph = FALSE;
     int ch, rc, sd;
 
     while ((ch = getopt(argc, argv, "d::fghnr:t:")) != -1) {
@@ -843,18 +843,18 @@ int main(int argc, char *argv[])
 	      break;
 
 	 case 'f':
-	      flood = 1;
+	      flood = TRUE;
 	      break;
 
 	 case 'g':
-	      graph = 1;
+	      graph = TRUE;
 	      break;
 
 	 case 'h':
 	      return usage(0);
 
 	 case 'n':
-	      show_names = 0;
+	      show_names = FALSE;
 	      break;
 
 	 case 'r':

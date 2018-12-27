@@ -64,7 +64,7 @@ void init_vifs(void)
 
     numvifs = 0;
     vifs_with_neighbors = 0;
-    vifs_down = 0;
+    vifs_down = FALSE;
 
     /*
      * Configure the vifs based on the interface configuration of the
@@ -219,7 +219,7 @@ void check_vif_state(void)
     if (checking_vifs)
 	return;
 
-    vifs_down = 0;
+    vifs_down = FALSE;
     checking_vifs = 1;
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
 
@@ -237,7 +237,7 @@ void check_vif_state(void)
 		v->uv_flags &= ~VIFF_DOWN;
 		start_vif(vifi);
 	    } else {
-		vifs_down = 1;
+		vifs_down = TRUE;
 	    }
 	} else {
 	    if (!(ifr.ifr_flags & IFF_UP)) {
@@ -245,7 +245,7 @@ void check_vif_state(void)
 		    v->uv_name, vifi);
 		stop_vif(vifi);
 		v->uv_flags |= VIFF_DOWN;
-		vifs_down = 1;
+		vifs_down = TRUE;
 	    }
 	}
     }
@@ -1135,7 +1135,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
     uint32_t genid = 0;
     uint32_t send_tables = 0;
     size_t i;
-    int do_reset = 0;
+    int do_reset = FALSE;
 
     v = &uvifs[vifi];
 
@@ -1386,7 +1386,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 	    (n->al_mv != mv) ||
 	    (has_genid && n->al_genid != genid)) {
 
-	    do_reset = 1;
+	    do_reset = TRUE;
 	    IF_DEBUG(DEBUG_PEER) {
 		logit(LOG_DEBUG, 0, "Version/genid change neighbor %s [old:%d.%d/%8x, new:%d.%d/%8x]",
 		      inet_fmt(addr, s1, sizeof(s1)),

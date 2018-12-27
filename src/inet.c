@@ -46,10 +46,10 @@ int inet_valid_mask(uint32_t mask)
 {
     if (~(((mask & -mask) - 1) | mask) != 0) {
 	/* Mask is not contiguous */
-	return 0;
+	return FALSE;
     }
 
-    return 1;
+    return TRUE;
 }
 
 /*
@@ -68,8 +68,7 @@ int inet_valid_subnet(uint32_t nsubnet, uint32_t nmask)
     subnet = ntohl(nsubnet);
     mask   = ntohl(nmask);
 
-    if ((subnet & mask) != subnet)
-	return 0;
+    if ((subnet & mask) != subnet) return FALSE;
 
     if (subnet == 0)
 	return mask == 0;
@@ -77,23 +76,22 @@ int inet_valid_subnet(uint32_t nsubnet, uint32_t nmask)
     if (IN_CLASSA(subnet)) {
 	if (mask < 0xff000000 ||
 	    (subnet & 0xff000000) == 0x7f000000 ||
-	    (subnet & 0xff000000) == 0x00000000)
-	    return 0;
+	    (subnet & 0xff000000) == 0x00000000) return FALSE;
     }
     else if (IN_CLASSD(subnet) || IN_BADCLASS(subnet)) {
 	/* Above Class C address space */
-	return 0;
+	return FALSE;
     }
     if (subnet & ~mask) {
 	/* Host bits are set in the subnet */
-	return 0;
+	return FALSE;
     }
     if (!inet_valid_mask(mask)) {
 	/* Netmask is not contiguous */
-	return 0;
+	return FALSE;
     }
 
-    return 1;
+    return TRUE;
 }
 
 

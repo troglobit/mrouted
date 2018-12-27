@@ -716,7 +716,7 @@ static void timer(void *arg)
 	    check_vif_state();
     }
 
-    delay_change_reports = 0;
+    delay_change_reports = FALSE;
     if (routes_changed) {
 	/*
 	 * Some routes have changed since the last timer interrupt, but
