@@ -1096,7 +1096,7 @@ void accept_prune(uint32_t src, uint32_t dst, char *p, size_t datalen)
     
     /* Check if enough data is present */
     if (datalen < 12) {
-	logit(LOG_WARNING, 0, "Non-decipherable prune from %s",
+	logit(LOG_INFO, 0, "Non-decipherable prune from %s",
 	      inet_fmt(src, s1, sizeof(s1)));
 	return;
     }
@@ -1111,7 +1111,7 @@ void accept_prune(uint32_t src, uint32_t dst, char *p, size_t datalen)
     
     if (prun_tmr <= MIN_PRUNE_LIFE) {
 	IF_DEBUG(DEBUG_PRUNE) {
-	    logit(LOG_DEBUG, 0, "Ignoring prune from %s on vif %d for (%s %s)/%d because its lifetime is too short",
+	    logit(LOG_INFO, 0, "Ignoring prune from %s on vif %d for (%s %s)/%d, lifetime too short",
 		  inet_fmt(src, s1, sizeof(s1)), vifi,
 		  inet_fmt(prun_src, s2, sizeof(s2)), inet_fmt(prun_grp, s3, sizeof(s3)), prun_tmr);
 	}
@@ -1139,7 +1139,7 @@ void accept_prune(uint32_t src, uint32_t dst, char *p, size_t datalen)
 
 	if (!VIFM_ISSET(vifi, r->rt_children)) {
 	    IF_DEBUG(DEBUG_PRUNE) {
-		logit(LOG_WARNING, 0, "Prune received from non-child %s for (%s %s) (dominant on vif %d is %s)",
+		logit(LOG_INFO, 0, "Ignoring prune from non-child %s for (%s %s) (dominant on vif %d is %s)",
 		      inet_fmt(src, s1, sizeof(s1)), inet_fmt(prun_src, s2, sizeof(s2)),
 		      inet_fmt(prun_grp, s3, sizeof(s3)), vifi, inet_fmt(r->rt_dominants[vifi], s4, sizeof(s4)));
 	    }
@@ -1165,7 +1165,7 @@ void accept_prune(uint32_t src, uint32_t dst, char *p, size_t datalen)
 	    struct listaddr *n = neighbor_info(vifi, src);
 
 	    if (!n) {
-		logit(LOG_WARNING, 0, "Prune from non-neighbor %s on vif %d!?",
+		logit(LOG_INFO, 0, "Prune from non-neighbor %s on vif %d!?",
 		      inet_fmt(src, s1, sizeof(s1)), vifi);
 		return;
 	    }
@@ -1317,7 +1317,7 @@ void accept_graft(uint32_t src, uint32_t dst, char *p, size_t datalen)
     struct ptable *pt, **ptnp;
 
     if (datalen < 8) {
-	logit(LOG_WARNING, 0, "Received non-decipherable graft from %s",
+	logit(LOG_INFO, 0, "Received non-decipherable graft from %s",
 	      inet_fmt(src, s1, sizeof(s1)));
 	return;
     }
@@ -1421,7 +1421,7 @@ void accept_g_ack(uint32_t src, uint32_t dst, char *p, size_t datalen)
     }
 
     if (datalen > 8) {
-	logit(LOG_WARNING, 0, "Received non-decipherable graft ack from %s",
+	logit(LOG_INFO, 0, "Received non-decipherable graft ack from %s",
 	      inet_fmt(src, s1, sizeof(s1)));
 	return;
     }
@@ -2106,7 +2106,7 @@ void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8
 	    return;
 	}
     } else {
-	logit(LOG_WARNING, 0, "Non decipherable traceroute request received from %s to %s",
+	logit(LOG_INFO, 0, "Non decipherable traceroute request received from %s to %s",
 	      inet_fmt(src, s1, sizeof(s1)), inet_fmt(dst, s2, sizeof(s2)));
 	return;
     }

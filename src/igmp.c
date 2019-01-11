@@ -173,8 +173,7 @@ void accept_igmp(size_t recvlen)
     int ipdatalen, iphdrlen, igmpdatalen;
 
     if (recvlen < sizeof(struct ip)) {
-	logit(LOG_WARNING, 0,
-	    "received packet too short (%u bytes) for IP header", recvlen);
+	logit(LOG_INFO, 0, "received packet too short (%u bytes) for IP header", recvlen);
 	return;
     }
 
@@ -188,9 +187,7 @@ void accept_igmp(size_t recvlen)
      * necessary to install a route into the kernel for this.
      */
     if (ip->ip_p == 0) {
-	if (src == 0 || dst == 0)
-	    logit(LOG_WARNING, 0, "kernel request not accurate");
-	else
+	if (src != 0 && dst != 0)
 	    add_table_entry(src, dst);
 	return;
     }
@@ -202,7 +199,7 @@ void accept_igmp(size_t recvlen)
     ipdatalen = ntohs(ip->ip_len) - iphdrlen;
 #endif
     if ((size_t)(iphdrlen + ipdatalen) != recvlen) {
-	logit(LOG_WARNING, 0,
+	logit(LOG_INFO, 0,
 	    "received packet from %s shorter (%u bytes) than hdr+data length (%u+%u)",
 	    inet_fmt(src, s1, sizeof(s1)), recvlen, iphdrlen, ipdatalen);
 	return;
@@ -212,7 +209,7 @@ void accept_igmp(size_t recvlen)
     group       = igmp->igmp_group.s_addr;
     igmpdatalen = ipdatalen - IGMP_MINLEN;
     if (igmpdatalen < 0) {
-	logit(LOG_WARNING, 0,
+	logit(LOG_INFO, 0,
 	    "received IP data field too short (%u bytes) for IGMP, from %s",
 	    ipdatalen, inet_fmt(src, s1, sizeof(s1)));
 	return;
