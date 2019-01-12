@@ -9,6 +9,15 @@
 
 #include "defs.h"
 
+#define PIM_QUERY           0
+#define PIM_REGISTER        1
+#define PIM_REGISTER_STOP   2
+#define PIM_JOIN_PRUNE      3
+#define PIM_RP_REACHABLE    4
+#define PIM_ASSERT          5
+#define PIM_GRAFT           6
+#define PIM_GRAFT_ACK       7
+
 /*
  * Exported variables.
  */
@@ -23,7 +32,6 @@ uint32_t	dvmrp_genid;		     /* IGMP generation id          */
 /*
  * Local function definitions.
  */
-/* uint8_t promoted to uint32_t */
 static int	igmp_log_level(uint32_t type, uint32_t code);
 
 /*
@@ -37,7 +45,7 @@ void init_igmp(void)
     recv_buf = malloc(RECV_BUF_SIZE);
     send_buf = malloc(RECV_BUF_SIZE);
 
-    if ((igmp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_IGMP)) < 0) 
+    if ((igmp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_IGMP)) < 0)
 	logit(LOG_ERR, errno, "IGMP socket");
 
     k_hdr_include(TRUE);	/* include IP header when sending */
@@ -63,15 +71,6 @@ void init_igmp(void)
     dvmrp_group    = htonl(INADDR_DVMRP_GROUP);
     allrtrs_group  = htonl(INADDR_ALLRTRS_GROUP);
 }
-
-#define PIM_QUERY        0
-#define PIM_REGISTER     1
-#define PIM_REGISTER_STOP 	2
-#define PIM_JOIN_PRUNE   3
-#define PIM_RP_REACHABLE 4
-#define PIM_ASSERT       5
-#define PIM_GRAFT        6
-#define PIM_GRAFT_ACK    7
 
 char *igmp_packet_kind(uint32_t type, uint32_t code)
 {
@@ -159,6 +158,8 @@ int igmp_debug_kind(uint32_t type, uint32_t code)
 	case IGMP_MTRACE_RESP:			return DEBUG_TRACE;
 	default:				return DEBUG_IGMP;
     }
+
+    return 0;
 }
 
 /*
@@ -167,9 +168,9 @@ int igmp_debug_kind(uint32_t type, uint32_t code)
  */
 void accept_igmp(size_t recvlen)
 {
-    uint32_t src, dst, group;
-    struct ip *ip;
     struct igmp *igmp;
+    struct ip *ip;
+    uint32_t src, dst, group;
     int ipdatalen, iphdrlen, igmpdatalen;
 
     if (recvlen < sizeof(struct ip)) {
@@ -198,10 +199,11 @@ void accept_igmp(size_t recvlen)
 #else
     ipdatalen = ntohs(ip->ip_len) - iphdrlen;
 #endif
+
     if ((size_t)(iphdrlen + ipdatalen) != recvlen) {
 	logit(LOG_INFO, 0,
-	    "received packet from %s shorter (%u bytes) than hdr+data length (%u+%u)",
-	    inet_fmt(src, s1, sizeof(s1)), recvlen, iphdrlen, ipdatalen);
+	      "received packet from %s shorter (%u bytes) than hdr+data length (%u+%u)",
+	      inet_fmt(src, s1, sizeof(s1)), recvlen, iphdrlen, ipdatalen);
 	return;
     }
 
@@ -210,8 +212,8 @@ void accept_igmp(size_t recvlen)
     igmpdatalen = ipdatalen - IGMP_MINLEN;
     if (igmpdatalen < 0) {
 	logit(LOG_INFO, 0,
-	    "received IP data field too short (%u bytes) for IGMP, from %s",
-	    ipdatalen, inet_fmt(src, s1, sizeof(s1)));
+	      "received IP data field too short (%u bytes) for IGMP, from %s",
+	      ipdatalen, inet_fmt(src, s1, sizeof(s1)));
 	return;
     }
 
@@ -222,7 +224,6 @@ void accept_igmp(size_t recvlen)
     }
 
     switch (igmp->igmp_type) {
-
 	case IGMP_MEMBERSHIP_QUERY:
 	    accept_membership_query(src, dst, group, igmp->igmp_code);
 	    return;
@@ -241,11 +242,11 @@ void accept_igmp(size_t recvlen)
 
 	    switch (igmp->igmp_code) {
 		case DVMRP_PROBE:
-		    accept_probe(src, dst, (char *)(igmp+1), igmpdatalen, group);
+		    accept_probe(src, dst, (char *)(igmp + 1), igmpdatalen, group);
 		    return;
 
 		case DVMRP_REPORT:
-		    accept_report(src, dst, (char *)(igmp+1), igmpdatalen, group);
+		    accept_report(src, dst, (char *)(igmp + 1), igmpdatalen, group);
 		    return;
 
 		case DVMRP_ASK_NEIGHBORS:
@@ -257,58 +258,58 @@ void accept_igmp(size_t recvlen)
 		    return;
 
 		case DVMRP_NEIGHBORS:
-		    accept_neighbors(src, dst, (uint8_t *)(igmp+1), igmpdatalen, group);
+		    accept_neighbors(src, dst, (uint8_t *)(igmp + 1), igmpdatalen, group);
 		    return;
 
 		case DVMRP_NEIGHBORS2:
-		    accept_neighbors2(src, dst, (uint8_t *)(igmp+1), igmpdatalen, group);
+		    accept_neighbors2(src, dst, (uint8_t *)(igmp + 1), igmpdatalen, group);
 		    return;
 
 		case DVMRP_PRUNE:
-		    accept_prune(src, dst, (char *)(igmp+1), igmpdatalen);
+		    accept_prune(src, dst, (char *)(igmp + 1), igmpdatalen);
 		    return;
 
 		case DVMRP_GRAFT:
-		    accept_graft(src, dst, (char *)(igmp+1), igmpdatalen);
+		    accept_graft(src, dst, (char *)(igmp + 1), igmpdatalen);
 		    return;
 
 		case DVMRP_GRAFT_ACK:
-		    accept_g_ack(src, dst, (char *)(igmp+1), igmpdatalen);
+		    accept_g_ack(src, dst, (char *)(igmp + 1), igmpdatalen);
 		    return;
 
 		case DVMRP_INFO_REQUEST:
-		    accept_info_request(src, dst, (uint8_t *)(igmp+1), igmpdatalen);
+		    accept_info_request(src, dst, (uint8_t *)(igmp + 1), igmpdatalen);
 		    return;
 
 		case DVMRP_INFO_REPLY:
-		    accept_info_reply(src, dst, (uint8_t *)(igmp+1), igmpdatalen);
+		    accept_info_reply(src, dst, (uint8_t *)(igmp + 1), igmpdatalen);
 		    return;
 
 		default:
 		    logit(LOG_INFO, 0,
-		     "ignoring unknown DVMRP message code %u from %s to %s",
-		     igmp->igmp_code, inet_fmt(src, s1, sizeof(s1)),
-		     inet_fmt(dst, s2, sizeof(s2)));
+			  "ignoring unknown DVMRP message code %u from %s to %s",
+			  igmp->igmp_code, inet_fmt(src, s1, sizeof(s1)),
+			  inet_fmt(dst, s2, sizeof(s2)));
 		    return;
 	    }
+	    break;
 
  	case IGMP_PIM:
- 	    return;
+	    break;
 
 	case IGMP_MTRACE_RESP:
-	    return;
+	    break;
 
 	case IGMP_MTRACE:
-	    accept_mtrace(src, dst, group, (char *)(igmp+1),
-		   igmp->igmp_code, igmpdatalen);
-	    return;
+	    accept_mtrace(src, dst, group, (char *)(igmp + 1),
+			  igmp->igmp_code, igmpdatalen);
+	    break;
 
 	default:
-	    logit(LOG_INFO, 0,
-		"ignoring unknown IGMP message type %x from %s to %s",
-		igmp->igmp_type, inet_fmt(src, s1, sizeof(s1)),
-		inet_fmt(dst, s2, sizeof(s2)));
-	    return;
+	    logit(LOG_INFO, 0, "ignoring unknown IGMP message type %x from %s to %s",
+		  igmp->igmp_type, inet_fmt(src, s1, sizeof(s1)),
+		  inet_fmt(dst, s2, sizeof(s2)));
+	    break;
     }
 }
 
@@ -330,7 +331,12 @@ static int igmp_log_level(uint32_t type, uint32_t code)
 	    case DVMRP_NEIGHBORS2:
 		return LOG_INFO;
 	  }
+	  break;
+
+	default:
+	    break;
     }
+
     return LOG_WARNING;
 }
 
@@ -343,6 +349,7 @@ size_t build_igmp(uint32_t src, uint32_t dst, int type, int code, uint32_t group
     struct ip *ip;
     struct igmp *igmp;
     extern int curttl;
+    size_t igmp_len = IGMP_MINLEN + datalen;
     size_t len = MIN_IP_HEADER_LEN + IGMP_MINLEN + datalen;
 
     ip                      = (struct ip *)send_buf;
@@ -353,19 +360,17 @@ size_t build_igmp(uint32_t src, uint32_t dst, int type, int code, uint32_t group
 #else
     ip->ip_len              = htons(len);
 #endif
-    if (IN_MULTICAST(ntohl(dst))) {
+    if (IN_MULTICAST(ntohl(dst)))
 	ip->ip_ttl = curttl;
-    } else {
+    else
 	ip->ip_ttl = MAXTTL;
-    }
 
     igmp                    = (struct igmp *)(send_buf + MIN_IP_HEADER_LEN);
     igmp->igmp_type         = type;
     igmp->igmp_code         = code;
     igmp->igmp_group.s_addr = group;
     igmp->igmp_cksum        = 0;
-    igmp->igmp_cksum        = inet_cksum((uint16_t *)igmp,
-					 IGMP_MINLEN + datalen);
+    igmp->igmp_cksum        = inet_cksum((uint16_t *)igmp, igmp_len);
 
     return len;
 }
@@ -377,9 +382,9 @@ size_t build_igmp(uint32_t src, uint32_t dst, int type, int code, uint32_t group
  */
 void send_igmp(uint32_t src, uint32_t dst, int type, int code, uint32_t group, int datalen)
 {
-    struct sockaddr_in sdst;
-    int setloop = 0;
+    struct sockaddr_in sin;
     size_t len;
+    int rc, setloop = 0;
 
     len = build_igmp(src, dst, type, code, group, datalen);
 
@@ -391,28 +396,30 @@ void send_igmp(uint32_t src, uint32_t dst, int type, int code, uint32_t group, i
 	}
     }
 
-    memset(&sdst, 0, sizeof(sdst));
-    sdst.sin_family = AF_INET;
+    memset(&sin, 0, sizeof(sin));
+    sin.sin_family = AF_INET;
 #ifdef HAVE_SA_LEN
-    sdst.sin_len = sizeof(sdst);
+    sin.sin_len = sizeof(sin);
 #endif
-    sdst.sin_addr.s_addr = dst;
-    if (sendto(igmp_socket, send_buf, len, 0, (struct sockaddr *)&sdst, sizeof(sdst)) < 0) {
+    sin.sin_addr.s_addr = dst;
+
+    rc = sendto(igmp_socket, send_buf, len, 0, (struct sockaddr *)&sin, sizeof(sin));
+    if (rc < 0) {
 	if (errno == ENETDOWN)
 	    check_vif_state();
 	else
-	    logit(igmp_log_level(type, code), errno,
-		"sendto to %s on %s",
-		inet_fmt(dst, s1, sizeof(s1)), inet_fmt(src, s2, sizeof(s2)));
+	    logit(igmp_log_level(type, code), errno, "sendto to %s on %s",
+		  inet_fmt(dst, s1, sizeof(s1)), inet_fmt(src, s2, sizeof(s2)));
     }
 
     if (setloop)
 	    k_set_loop(FALSE);
 
-    IF_DEBUG(DEBUG_PKT|igmp_debug_kind(type, code))
-    logit(LOG_DEBUG, 0, "SENT %s from %-15s to %s",
-	igmp_packet_kind(type, code), src == INADDR_ANY ? "INADDR_ANY" :
-				 inet_fmt(src, s1, sizeof(s1)), inet_fmt(dst, s2, sizeof(s2)));
+    IF_DEBUG(DEBUG_PKT | igmp_debug_kind(type, code)) {
+	logit(LOG_DEBUG, 0, "SENT %s from %-15s to %s", igmp_packet_kind(type, code),
+	      src == INADDR_ANY ? "INADDR_ANY" : inet_fmt(src, s1, sizeof(s1)),
+	      inet_fmt(dst, s2, sizeof(s2)));
+    }
 }
 
 /**
