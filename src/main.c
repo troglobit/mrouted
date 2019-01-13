@@ -189,15 +189,15 @@ static int usage(int code)
     size_t i, j, k;
     struct debugname *d;
 
-    printf("Usage: mrouted [-fhpv] [-c file] [-d [level[,level...]]]\n"
+    printf("Usage: mrouted [-hnprv] [-c file] [-d [level[,level...]]]\n"
 	   "\n"
 	   "  -c, --config=FILE          Configuration file to use, default /etc/mrouted.conf\n"
 	   "  -d, --debug[=LEVEL]        Debug level, see below for valid levels\n"
-	   "  -f, --foreground           Run in foreground, do not detach from calling terminal\n"
+	   "  -n, --foreground           Run in foreground, do not detach from calling terminal\n"
 	   "  -h, --help                 Show this help text\n"
-	   "  -N, --no-interfaces        Disable all interfaces by default\n"
-	   "  -M, --missing-ok           Missing interfaces are OK\n"
-	   "  -D, --startup-delay=DELAY  Set startup delay before forwarding, default %d seconds\n"
+	   "      --no-interfaces        Disable all interfaces by default\n"
+	   "      --missing-ok           Missing interfaces are OK\n"
+	   "      --startup-delay=DELAY  Set startup delay before forwarding, default %d seconds\n"
 	   "  -p                         Disable pruning.  Deprecated, compatibility option\n"
 	   "  -r, --show-routes          Show state of VIFs and multicast routing tables\n"
 	   "  -v, --version              Show mrouted version\n", DEFAULT_STARTUP_DELAY);
@@ -236,7 +236,7 @@ int main(int argc, char *argv[])
     struct option long_options[] = {
 	{"config", 1, 0, 'c'},
 	{"debug", 2, 0, 'd'},
-	{"foreground", 0, 0, 'f'},
+	{"foreground", 0, 0, 'n'},
 	{"help", 0, 0, 'h'},
 	{"version", 0, 0, 'v'},
 	{"show-routes", 0, 0, 'r'},
@@ -248,7 +248,7 @@ int main(int argc, char *argv[])
 
     snprintf(versionstring, sizeof(versionstring), "mrouted version %s", todaysversion);
 
-    while ((ch = getopt_long(argc, argv, "D:MNc:d::fhprv", long_options, NULL)) != EOF) {
+    while ((ch = getopt_long(argc, argv, "D:MNnc:d::fhprv", long_options, NULL)) != EOF) {
 	switch (ch) {
 	    case 'D':
 		startupdelay = atoi(optarg);
@@ -294,7 +294,9 @@ int main(int argc, char *argv[])
 		}
 		break;
 
-	    case 'f':
+	    case 'f': /* compat */
+		/* fallthrough */
+	    case 'n':
 		foreground = 1;
 		break;
 

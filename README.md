@@ -94,7 +94,7 @@ mrouted reads its configuration file from `/etc/mrouted.conf`.  You can
 override the default by specifying an alternate file when invoking
 mrouted:
 
-    mrouted -f /path/file.conf
+    mrouted -c /path/file.conf
 
 mrouted can be reconfigured at runtime like any regular UNIX daemon,
 simply send it a `SIGHUP` to activate changes to the configuration file.
