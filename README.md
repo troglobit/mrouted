@@ -83,6 +83,9 @@ to have the "ipip" kernel module loaded or as built-in:
 
     modprobe ipip
 
+Alternatively, you may of course also set up GRE tunnels between your
+multicast capable routers.
+
 
 Configuration
 -------------

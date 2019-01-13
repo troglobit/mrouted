@@ -38,7 +38,7 @@ used to limit the range of multicast datagrams.
 In order to support multicasting among subnets that are separated by (unicast)
 routers that do not support IP multicasting,
 .Nm
-includes support for
+includes (built-in) support for
 "tunnels", which are virtual point-to-point links between pairs of
 .Nm
 daemons located anywhere in an internet.
@@ -66,6 +66,11 @@ by the regular (unicast) routers.
 .Nm
 suffers from the well-known scaling problems of any distance-vector
 routing protocol, and does not support hierarchical multicast routing.
+.Pp
+A more common practise today is to set up GRE tunnels between multicast
+capable routers and limit
+.Nm
+to run on a select number of interfaces listed in the configuration.
 .Pp
 .Nm
 handles multicast routing only; there may or may not be unicast routing
