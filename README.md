@@ -20,7 +20,8 @@ Introduction
 mrouted is a [3-clause BSD][BSD License] licensed implementation of the
 DVMRP multicast routing protocol.  It can run on any UNIX based system,
 from embedded Linux systems to workstations, turning them into multicast
-routers with [IP-in-IP] tunneling support.
+routers with (built-in) [IP-in-IP] tunneling support.  GRE can of course
+also be used.
 
 DVMRP is a distance vector based protocol, derived from RIP, suitable
 for closely located multicast users in smaller networks.  It uses the
@@ -148,6 +149,7 @@ including OpenBSD, have been merged.
 [RFC 1075]:        http://tools.ietf.org/html/rfc1075
 [IP-in-IP]:        https://en.wikipedia.org/wiki/IP_in_IP
 [RSRR]:            docs/RSRR.md
+[buildsystem]:     https://airs.com/ian/configure/
 [GitHub]:          http://github.com/troglobit/mrouted/
 [Travis]:          https://travis-ci.org/troglobit/mrouted
 [Travis Status]:   https://travis-ci.org/troglobit/mrouted.png?branch=master
