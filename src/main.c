@@ -101,7 +101,7 @@ static void dump_version(FILE *);
 static void fdump(void);
 static void cdump(void);
 static void restart(void);
-static void handler(int);
+static void handle_signals(int);
 static void cleanup(void);
 static void resetlogging(void *);
 
@@ -422,7 +422,7 @@ int main(int argc, char *argv[])
     rsrr_init();
 #endif
 
-    sa.sa_handler = handler;
+    sa.sa_handler = handle_signals;
     sa.sa_flags = 0;	/* Interrupt system calls */
     sigemptyset(&sa.sa_mask);
     sigaction(SIGHUP, &sa, NULL);
@@ -756,7 +756,7 @@ static void cleanup(void)
  * Signal handler.  Take note of the fact that the signal arrived
  * so that the main loop can take care of it.
  */
-static void handler(int sig)
+static void handle_signals(int sig)
 {
     switch (sig) {
 	case SIGINT:
