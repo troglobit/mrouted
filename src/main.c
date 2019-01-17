@@ -102,6 +102,7 @@ static void fdump(void);
 static void cdump(void);
 static void restart(void);
 static void handle_signals(int);
+static int  check_signals(void);
 static void cleanup(void);
 static void resetlogging(void *);
 
@@ -497,6 +498,9 @@ int main(int argc, char *argv[])
     gettimeofday(&curtime, NULL);
     lasttime = curtime;
     for (;;) {
+	if (check_signals())
+	    break;
+
 	secs = timer_nextTimer();
 	if (secs == -1) {
 	    timeout = NULL;
@@ -504,25 +508,6 @@ int main(int argc, char *argv[])
 	    timeout = &tv;
 	    timeout->tv_sec = secs;
 	    timeout->tv_usec = 0;
-	}
-
-	if (sighandled) {
-	    if (sighandled & GOT_SIGINT) {
-		sighandled &= ~GOT_SIGINT;
-		break;
-	    }
-	    if (sighandled & GOT_SIGHUP) {
-		sighandled &= ~GOT_SIGHUP;
-		restart();
-	    }
-	    if (sighandled & GOT_SIGUSR1) {
-		sighandled &= ~GOT_SIGUSR1;
-		fdump();
-	    }
-	    if (sighandled & GOT_SIGUSR2) {
-		sighandled &= ~GOT_SIGUSR2;
-		cdump();
-	    }
 	}
 
 	if ((n = poll (pfd, nhandlers + 1, secs * 1000)) < 0) {
@@ -776,6 +761,34 @@ static void handle_signals(int sig)
 	    sighandled |= GOT_SIGUSR2;
 	    break;
     }
+}
+
+static int check_signals(void)
+{
+    if (!sighandled)
+	return 0;
+
+    if (sighandled & GOT_SIGINT) {
+	sighandled &= ~GOT_SIGINT;
+	return 1;
+    }
+
+    if (sighandled & GOT_SIGHUP) {
+	sighandled &= ~GOT_SIGHUP;
+	restart();
+    }
+
+    if (sighandled & GOT_SIGUSR1) {
+	sighandled &= ~GOT_SIGUSR1;
+	fdump();
+    }
+
+    if (sighandled & GOT_SIGUSR2) {
+	sighandled &= ~GOT_SIGUSR2;
+	cdump();
+    }
+
+    return 0;
 }
 
 #if UNUSED_CODE
