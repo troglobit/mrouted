@@ -457,6 +457,7 @@ int main(int argc, char *argv[])
 	haveterminal = 0;
 	if (fork())
 	    exit(0);
+
 	(void)close(0);
 	(void)close(1);
 	(void)close(2);
@@ -510,7 +511,7 @@ int main(int argc, char *argv[])
 	    timeout->tv_usec = 0;
 	}
 
-	if ((n = poll (pfd, nhandlers + 1, secs * 1000)) < 0) {
+	if ((n = poll(pfd, nhandlers + 1, secs * 1000)) < 0) {
 	    if (errno != EINTR)
 		logit(LOG_WARNING, errno, "poll failed");
 	    continue;
