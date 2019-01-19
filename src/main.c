@@ -178,9 +178,8 @@ static void killshow(int signo, char *file)
 	if (file) {
 	    usleep(200);
 	    snprintf(buf, sizeof(buf), "cat %s", file);
-	    if (-1 == system(buf)) {
+	    if (-1 == system(buf))
 		warnx("Failed listing file %s\n", file);
-	    }
 	}
     }
 }
@@ -376,17 +375,19 @@ int main(int argc, char *argv[])
     dvmrp_genid = (uint32_t)tv.tv_sec;	/* for a while after 2038 */
 
     fp = fopen(genidfilename, "r");
-    if (fp != NULL) {
-	int ret = fscanf(fp, "%u", &prev_genid);
+    if (fp) {
+	int ret;
+
+	ret = fscanf(fp, "%u", &prev_genid);
 	if (ret == 1 && prev_genid == dvmrp_genid)
 	    dvmrp_genid++;
-	(void) fclose(fp);
+	(void)fclose(fp);
     }
 
     fp = fopen(genidfilename, "w");
-    if (fp != NULL) {
+    if (fp) {
 	fprintf(fp, "%d", dvmrp_genid);
-	(void) fclose(fp);
+	(void)fclose(fp);
     }
 
     /* Start up the log rate-limiter */
@@ -434,7 +435,7 @@ int main(int argc, char *argv[])
 
     pfd = calloc(sizeof(struct pollfd), 1 + nhandlers);
     if (!pfd)
-	err(1, NULL);
+	err(1, "Failed allocating internal memory");
 
     pfd[0].fd = igmp_socket;
     pfd[0].events = POLLIN;
