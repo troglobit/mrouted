@@ -15,7 +15,7 @@
 .Nm mrouted
 .Op Fl hnprv
 .Op Fl c Ar FILE
-.Op Fl d Op Ar [LEVEL[,LEVEL,...]
+.Op Fl d Ar LEVEL[,LEVEL,...
 .Sh DESCRIPTION
 .Nm
 is an implementation of the Distance-Vector Multicast Routing
@@ -115,7 +115,7 @@ Run in foreground, do not detach from the calling terminal.
 .It Fl c, -config=FILE
 Specify an alternative configuration file, default
 .Pa /etc/mrouted.conf
-.It Fl d, -debug[=LEVEL[,LEVEL...]
+.It Fl d, -debug=LEVEL[,LEVEL,..]
 By default,
 .Nm
 detaches from the invoking terminal.

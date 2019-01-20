@@ -163,7 +163,6 @@ extern int		missingok;
 #define	DEBUG_RSRR	0x1000
 #define	DEBUG_ICMP	0x2000
 
-#define	DEFAULT_DEBUG	0x02de	/* default if "-d" given without value */
 #define DEFAULT_STARTUP_DELAY 10  /* default startup delay before forwarding in seconds */
 
 extern int		debug;

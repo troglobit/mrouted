@@ -250,7 +250,7 @@ int main(int argc, char *argv[])
 
     snprintf(versionstring, sizeof(versionstring), "mrouted version %s", todaysversion);
 
-    while ((ch = getopt_long(argc, argv, "D:MNnc:d::fhprv", long_options, NULL)) != EOF) {
+    while ((ch = getopt_long(argc, argv, "D:MNnc:d:fhprv", long_options, NULL)) != EOF) {
 	switch (ch) {
 	    case 'D':
 		startupdelay = atoi(optarg);
@@ -269,9 +269,7 @@ int main(int argc, char *argv[])
 		break;
 
 	    case 'd':
-		if (!optarg) {
-		    debug = DEFAULT_DEBUG;
-		} else {
+		{
 		    char *p,*q;
 		    size_t i, len;
 		    struct debugname *d;
@@ -283,9 +281,10 @@ int main(int argc, char *argv[])
 			if (q)
 			    *q++ = '\0';
 			len = strlen(p);
-			for (i = 0, d = debugnames; i < ARRAY_LEN(debugnames); i++, d++)
+			for (i = 0, d = debugnames; i < ARRAY_LEN(debugnames); i++, d++) {
 			    if (len >= d->nchars && strncmp(d->name, p, len) == 0)
 				break;
+			}
 
 			if (i == ARRAY_LEN(debugnames))
 			    return usage(0);
