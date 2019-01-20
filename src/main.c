@@ -401,7 +401,7 @@ int main(int argc, char *argv[])
 
     fp = fopen(genidfilename, "w");
     if (fp) {
-	fprintf(fp, "%d", dvmrp_genid);
+	fprintf(fp, "%u", dvmrp_genid);
 	(void)fclose(fp);
     }
 
@@ -880,6 +880,7 @@ static void cdump(void)
  */
 static void restart(void)
 {
+    FILE *fp;
     char *s;
 
     s = strdup (" restart");
@@ -902,6 +903,12 @@ static void restart(void)
      * start processing again
      */
     dvmrp_genid++;
+
+    fp = fopen(genidfilename, "w");
+    if (fp) {
+	fprintf(fp, "%u", dvmrp_genid);
+	(void)fclose(fp);
+    }
 
     init_igmp();
     init_routes();
