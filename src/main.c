@@ -227,8 +227,6 @@ static int usage(int code)
 
 int main(int argc, char *argv[])
 {
-    int recvlen;
-    socklen_t dummy;
     FILE *fp;
     struct timeval tv, difftime, curtime, lasttime, *timeout;
     uint32_t prev_genid;
@@ -499,7 +497,6 @@ int main(int argc, char *argv[])
     /*
      * Main receive loop.
      */
-    dummy = 0;
     difftime.tv_usec = 0;
     gettimeofday(&curtime, NULL);
     lasttime = curtime;
@@ -524,13 +521,15 @@ int main(int argc, char *argv[])
 
 	if (n > 0) {
 	    if (pfd[0].revents & POLLIN) {
-		recvlen = recvfrom(igmp_socket, recv_buf, RECV_BUF_SIZE, 0, NULL, &dummy);
-		if (recvlen < 0) {
+		ssize_t len;
+
+		len = recv(igmp_socket, recv_buf, RECV_BUF_SIZE, 0);
+		if (len < 0) {
 		    if (errno != EINTR)
 			logit(LOG_ERR, errno, "recvfrom");
 		    continue;
 		}
-		accept_igmp(recvlen);
+		accept_igmp(len);
 	    }
 
 	    for (i = 0; i < nhandlers; i++) {
