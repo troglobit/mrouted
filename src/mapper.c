@@ -811,7 +811,7 @@ int usage(int code)
 	   "  -g        Generate output in GraphEd format\n"
 	   "  -h        Show this help text\n"
 	   "  -n        Numeric, don't look up DNS names for routers\n"
-	   "  -d LEVEL  Set debug level\n"
+	   "  -d LEVEL  Set debug level (0-3)\n"
 	   "  -r COUNT  Set retry count\n"
 	   "  -t SEC    Set timeout in seconds\n");
 
@@ -828,17 +828,13 @@ int main(int argc, char *argv[])
     int flood = FALSE, graph = FALSE;
     int ch, rc, sd;
 
-    while ((ch = getopt(argc, argv, "d::fghnr:t:")) != -1) {
+    while ((ch = getopt(argc, argv, "d:fghnr:t:")) != -1) {
 	 switch (ch) {
 	 case 'd':
-	      if (!optarg)
-		   debug = DEFAULT_DEBUG;
-	      else {
-		   debug = strtonum(optarg, 0, 3, &errstr);
-		   if (errstr) {
-			warnx("debug level %s", errstr);
-			debug = DEFAULT_DEBUG;
-		   }
+	     debug = strtonum(optarg, 0, 3, &errstr);
+	     if (errstr) {
+		 warnx("debug level %s", errstr);
+		 debug = 3;
 	      }
 	      break;
 
