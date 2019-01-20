@@ -45,8 +45,9 @@ void init_igmp(void)
     recv_buf = malloc(RECV_BUF_SIZE);
     send_buf = malloc(RECV_BUF_SIZE);
 
-    if ((igmp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_IGMP)) < 0)
-	logit(LOG_ERR, errno, "IGMP socket");
+    igmp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_IGMP);
+    if (igmp_socket < 0)
+	logit(LOG_ERR, errno, "Failed creating IGMP socket");
 
     k_hdr_include(TRUE);	/* include IP header when sending */
     k_set_rcvbuf(256*1024,48*1024);	/* lots of input buffering        */

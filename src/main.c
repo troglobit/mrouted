@@ -500,7 +500,7 @@ int main(int argc, char *argv[])
     difftime.tv_usec = 0;
     gettimeofday(&curtime, NULL);
     lasttime = curtime;
-    for (;;) {
+    while (1) {
 	if (check_signals())
 	    break;
 
@@ -513,7 +513,8 @@ int main(int argc, char *argv[])
 	    timeout->tv_usec = 0;
 	}
 
-	if ((n = poll(pfd, nhandlers + 1, secs * 1000)) < 0) {
+	n = poll(pfd, nhandlers + 1, secs * 1000);
+	if (n < 0) {
 	    if (errno != EINTR)
 		logit(LOG_WARNING, errno, "poll failed");
 	    continue;
