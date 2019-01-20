@@ -45,6 +45,11 @@ void init_igmp(void)
     recv_buf = malloc(RECV_BUF_SIZE);
     send_buf = malloc(RECV_BUF_SIZE);
 
+    if (!recv_buf || !send_buf) {
+	logit(LOG_ERR, errno, "Failed allocating Rx/Tx buffers");
+	exit(1);
+    }
+
     igmp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_IGMP);
     if (igmp_socket < 0)
 	logit(LOG_ERR, errno, "Failed creating IGMP socket");
