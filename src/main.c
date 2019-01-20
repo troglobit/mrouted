@@ -455,6 +455,10 @@ int main(int argc, char *argv[])
     timer_setTimer(TIMER_INTERVAL, timer, NULL);
 
     if (!debug && !foreground) {
+#ifdef TIOCNOTTY
+	int fd;
+#endif
+
 	/* Detach from the terminal */
 	haveterminal = 0;
 	if (fork())
@@ -467,10 +471,10 @@ int main(int argc, char *argv[])
 	(void)dup2(0, 1);
 	(void)dup2(0, 2);
 #ifdef TIOCNOTTY
-	n = open("/dev/tty", O_RDWR);
-	if (n >= 0) {
-	    (void)ioctl(n, TIOCNOTTY, (char *)0);
-	    (void)close(n);
+	fd = open("/dev/tty", O_RDWR);
+	if (fd >= 0) {
+	    (void)ioctl(fd, TIOCNOTTY, (char *)0);
+	    (void)close(fd);
 	}
 #else
 	if (setsid() < 0)
