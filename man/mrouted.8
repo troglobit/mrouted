@@ -133,25 +133,25 @@ always writes warning and error messages to the system log daemon.
 Debug levels have the following effects:
 .Pp
 .Bl -tag -width TERM -compact -offset indent
-.It Cm packet
+.It Cm packet | pkt
 Debug inbound/outbout packets
-.It Cm prunes
+.It Cm prunes | pruning
 Pruning operations, or pruned routes
-.It Cm routes
+.It Cm routes | routing
 Routing messages
-.It Cm rtdetail
+.It Cm rtdetail | route_detail
 Detailed routing information
-.It Cm peers
+.It Cm peers | neighbors
 Neighbor gossip
 .It Cm cache
 Debug routing cache
-.It Cm timeout
+.It Cm timeout | callout
 Debug timeouts
-.It Cm interface
+.It Cm vif | interface
 Show interface (VIF) debug messages
-.It Cm groups
+.It Cm groups | memebership
 Debug group memberships
-.It Cm mtrace
+.It Cm mtrace | traceroute
 Multicast traceroute information
 .It Cm igmp
 Debug IGMP messages
@@ -159,6 +159,8 @@ Debug IGMP messages
 Debug ICMP messages
 .It Cm rsrr
 Debug RSRR messages
+.It Cm all | 3
+Enable all debug messages
 .El
 .It Fl p
 Start

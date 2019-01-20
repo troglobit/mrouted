@@ -71,20 +71,21 @@ static struct debugname {
     {	"routes",	DEBUG_ROUTE,	1	},
     {   "route_detail",	DEBUG_RTDETAIL, 6	},
     {   "rtdetail",	DEBUG_RTDETAIL, 2	},
-    {	"peers",	DEBUG_PEER,	2	},
     {	"neighbors",	DEBUG_PEER,	1	},
+    {	"peers",	DEBUG_PEER,	2	},
     {	"cache",	DEBUG_CACHE,	1	},
     {	"timeout",	DEBUG_TIMEOUT,	1	},
     {	"callout",	DEBUG_TIMEOUT,	2	},
-    {	"interface",	DEBUG_IF,	2	},
     {	"vif",		DEBUG_IF,	1	},
-    {	"membership",	DEBUG_MEMBER,	1	},
+    {	"interface",	DEBUG_IF,	2	},
     {	"groups",	DEBUG_MEMBER,	1	},
-    {	"traceroute",	DEBUG_TRACE,	2	},
+    {	"membership",	DEBUG_MEMBER,	1	},
     {	"mtrace",	DEBUG_TRACE,	2	},
+    {	"traceroute",	DEBUG_TRACE,	2	},
     {	"igmp",		DEBUG_IGMP,	1	},
     {	"icmp",		DEBUG_ICMP,	2	},
     {	"rsrr",		DEBUG_RSRR,	2	},
+    {	"all",		0xffffffff,	1	},
     {	"3",		0xffffffff,	1	}	/* compat. */
 };
 
@@ -204,12 +205,15 @@ static int usage(int code)
 
     j = 0xffffffff;
     k = 0;
-    fputs("Valid debug levels:\n  ", stderr);
+    fputs("\nValid debug levels:\n  ", stderr);
     for (i = 0, d = debugnames; i < ARRAY_LEN(debugnames); i++, d++) {
+	if (i == 0)
+	    fputs("all, ", stderr);
+
 	if ((j & d->level) == d->level) {
 	    if (k++)
 		fputs(", ", stderr);
-	    if (!(k % 6))
+	    if (!(k % 7))
 		fputs("\n  ", stderr);
 
 	    fputs(d->name, stderr);
