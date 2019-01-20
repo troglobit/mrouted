@@ -73,6 +73,7 @@ static struct debugname {
     {   "rtdetail",	DEBUG_RTDETAIL, 2	},
     {	"neighbors",	DEBUG_PEER,	1	},
     {	"peers",	DEBUG_PEER,	2	},
+    {   "kernel",       DEBUG_KERN,     2       },
     {	"cache",	DEBUG_CACHE,	1	},
     {	"timeout",	DEBUG_TIMEOUT,	1	},
     {	"callout",	DEBUG_TIMEOUT,	2	},
@@ -85,8 +86,8 @@ static struct debugname {
     {	"igmp",		DEBUG_IGMP,	1	},
     {	"icmp",		DEBUG_ICMP,	2	},
     {	"rsrr",		DEBUG_RSRR,	2	},
-    {	"all",		0xffffffff,	1	},
-    {	"3",		0xffffffff,	1	}	/* compat. */
+    {	"all",		DEBUG_ALL,	1	},
+    {	"3",		DEBUG_ALL,	1	}	/* compat. */
 };
 
 /*
@@ -186,15 +187,48 @@ static void killshow(int signo, char *file)
     }
 }
 
+int debug_parse(char *arg)
+{
+    struct debugname *d;
+    size_t i, len;
+    char *next = NULL;
+    int sys = 0;
+
+    if (!arg || !strlen(arg) || strstr(arg, "none"))
+	return sys;
+
+    while (arg) {
+	next = strchr(arg, ',');
+	if (next)
+	    *next++ = '\0';
+
+	len = strlen(arg);
+	for (i = 0, d = debugnames; i < ARRAY_LEN(debugnames); i++, d++) {
+	    if (len >= d->nchars && strncmp(d->name, arg, len) == 0)
+		break;
+	}
+
+	if (i == ARRAY_LEN(debugnames)) {
+	    fprintf(stderr, "Unknown debug level: %s\n", arg);
+	    return DEBUG_PARSE_ERR;
+	}
+
+	sys |= d->level;
+	arg = next;
+    }
+
+    return sys;
+}
+
 static int usage(int code)
 {
     size_t i, j, k;
     struct debugname *d;
 
-    printf("Usage: mrouted [-hnprv] [-c file] [-d [level[,level...]]]\n"
+    printf("Usage: mrouted [-hnprv] [-c file] [-d level[,level...]]\n"
 	   "\n"
 	   "  -c, --config=FILE          Configuration file to use, default /etc/mrouted.conf\n"
-	   "  -d, --debug[=LEVEL]        Debug level, see below for valid levels\n"
+	   "  -d, --debug=LEVEL          Debug level, see below for valid levels\n"
 	   "  -n, --foreground           Run in foreground, do not detach from calling terminal\n"
 	   "  -h, --help                 Show this help text\n"
 	   "      --no-interfaces        Disable all interfaces by default\n"
@@ -270,30 +304,9 @@ int main(int argc, char *argv[])
 		break;
 
 	    case 'd':
-		{
-		    char *p,*q;
-		    size_t i, len;
-		    struct debugname *d;
-
-		    debug = 0;
-		    p = optarg; q = NULL;
-		    while (p) {
-			q = strchr(p, ',');
-			if (q)
-			    *q++ = '\0';
-			len = strlen(p);
-			for (i = 0, d = debugnames; i < ARRAY_LEN(debugnames); i++, d++) {
-			    if (len >= d->nchars && strncmp(d->name, p, len) == 0)
-				break;
-			}
-
-			if (i == ARRAY_LEN(debugnames))
-			    return usage(0);
-
-			debug |= d->level;
-			p = q;
-		    }
-		}
+		debug = debug_parse(optarg);
+		if ((int)DEBUG_PARSE_ERR == debug)
+		    return usage(1);
 		break;
 
 	    case 'f': /* compat */
