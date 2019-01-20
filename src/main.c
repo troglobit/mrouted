@@ -104,6 +104,7 @@ static void cdump(void);
 static void restart(void);
 static void handle_signals(int);
 static int  check_signals(void);
+static int  timeout(int);
 static void cleanup(void);
 static void resetlogging(void *);
 
@@ -228,10 +229,10 @@ static int usage(int code)
 int main(int argc, char *argv[])
 {
     FILE *fp;
-    struct timeval tv, difftime, curtime, lasttime, *timeout;
+    struct timeval tv;
     uint32_t prev_genid;
     int foreground = 0;
-    int vers, n, i, secs, ch;
+    int vers, n = -1, i, ch;
     struct pollfd *pfd;
     extern char todaysversion[];
     struct sigaction sa;
@@ -500,23 +501,11 @@ int main(int argc, char *argv[])
     /*
      * Main receive loop.
      */
-    difftime.tv_usec = 0;
-    gettimeofday(&curtime, NULL);
-    lasttime = curtime;
     while (1) {
 	if (check_signals())
 	    break;
 
-	secs = timer_nextTimer();
-	if (secs == -1) {
-	    timeout = NULL;
-	} else {
-	    timeout = &tv;
-	    timeout->tv_sec = secs;
-	    timeout->tv_usec = 0;
-	}
-
-	n = poll(pfd, nhandlers + 1, secs * 1000);
+	n = poll(pfd, nhandlers + 1, timeout(n) * 1000);
 	if (n < 0) {
 	    if (errno != EINTR)
 		logit(LOG_WARNING, errno, "poll failed");
@@ -541,52 +530,6 @@ int main(int argc, char *argv[])
 		    (*ihandlers[i].func)(ihandlers[i].fd);
 	    }
 	}
-
-	/*
-	 * Handle timeout queue.
-	 *
-	 * If select + packet processing took more than 1 second,
-	 * or if there is a timeout pending, age the timeout queue.
-	 *
-	 * If not, collect usec in difftime to make sure that the
-	 * time doesn't drift too badly.
-	 *
-	 * If the timeout handlers took more than 1 second,
-	 * age the timeout queue again.  XXX This introduces the
-	 * potential for infinite loops!
-	 */
-	do {
-	    /*
-	     * If the select timed out, then there's no other
-	     * activity to account for and we don't need to
-	     * call gettimeofday.
-	     */
-	    if (n == 0) {
-		curtime.tv_sec = lasttime.tv_sec + secs;
-		curtime.tv_usec = lasttime.tv_usec;
-		n = -1;	/* don't do this next time through the loop */
-	    } else {
-		gettimeofday(&curtime, NULL);
-	    }
-
-	    difftime.tv_sec = curtime.tv_sec - lasttime.tv_sec;
-	    difftime.tv_usec += curtime.tv_usec - lasttime.tv_usec;
-	    while (difftime.tv_usec > 1000000) {
-		difftime.tv_sec++;
-		difftime.tv_usec -= 1000000;
-	    }
-
-	    if (difftime.tv_usec < 0) {
-		difftime.tv_sec--;
-		difftime.tv_usec += 1000000;
-	    }
-
-	    lasttime = curtime;
-	    if (secs == 0 || difftime.tv_sec > 0)
-		age_callout_queue(difftime.tv_sec);
-
-	    secs = -1;
-	} while (difftime.tv_sec > 0);
     }
 
     logit(LOG_NOTICE, 0, "%s exiting", versionstring);
@@ -729,6 +672,67 @@ static void timer(void *arg)
     timer_setTimer(TIMER_INTERVAL, timer, NULL);
 }
 
+/*
+ * Handle timeout queue.
+ *
+ * If select + packet processing took more than 1 second,
+ * or if there is a timeout pending, age the timeout queue.
+ *
+ * If not, collect usec in difftime to make sure that the
+ * time doesn't drift too badly.
+ *
+ * If the timeout handlers took more than 1 second,
+ * age the timeout queue again.  XXX This introduces the
+ * potential for infinite loops!
+ */
+static int timeout(int n)
+{
+    static struct timeval difftime, curtime, lasttime;
+    static int init = 1;
+    int secs;
+
+    /* Next timeout to poll() */
+    secs = timer_nextTimer();
+
+    do {
+	/*
+	 * If poll() timed out, then there's no other activity to
+	 * account for and we don't need to call gettimeofday.
+	 */
+	if (n == 0) {
+	    curtime.tv_sec = lasttime.tv_sec + secs;
+	    curtime.tv_usec = lasttime.tv_usec;
+	    n = -1; /* don't do this next time through the loop */
+	} else {
+	    gettimeofday(&curtime, NULL);
+	    if (init) {
+		init = 0;	/* First time only */
+		lasttime = curtime;
+		difftime.tv_usec = 0;
+	    }
+	}
+
+	difftime.tv_sec = curtime.tv_sec - lasttime.tv_sec;
+	difftime.tv_usec += curtime.tv_usec - lasttime.tv_usec;
+	while (difftime.tv_usec > 1000000) {
+	    difftime.tv_sec++;
+	    difftime.tv_usec -= 1000000;
+	}
+
+	if (difftime.tv_usec < 0) {
+	    difftime.tv_sec--;
+	    difftime.tv_usec += 1000000;
+	}
+	lasttime = curtime;
+
+	if (secs == 0 || difftime.tv_sec > 0)
+	    age_callout_queue(difftime.tv_sec);
+
+	secs = -1;
+    } while (difftime.tv_sec > 0);
+
+    return secs;
+}
 
 static void cleanup(void)
 {
