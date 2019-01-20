@@ -1075,9 +1075,9 @@ int print_stats(struct resp_buf *base, struct resp_buf *prev, struct resp_buf *n
 
 int usage(int code)
 {
-    printf("Usage: mtrace [-lMnpsv] [-g gateway] [-i if_addr] [-m max_hops] [-q nqueries]\n"
-	   "              [-r host] [-S stat_int] [-t ttl] [-w waittime] source [receiver]\n"
-	   "              [group]\n");
+    printf("Usage: mtrace [-lMnpsv] [-d level] [-g gateway] [-i if_addr] [-m max_hops]\n"
+	   "              [-q nqueries] [-r host] [-S stat_int] [-t ttl] [-w waittime]\n"
+	   "              source [receiver] [group]\n");
     return code;
 }
 
@@ -1106,7 +1106,7 @@ int main(int argc, char *argv[])
                 debug = strtonum(optarg, 0, 3, &errstr);
                 if (errstr) {
                     warnx("debug level %s", errstr);
-                    debug = 0;
+                    debug = 3;
                 }
                 break;
 
