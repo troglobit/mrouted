@@ -249,7 +249,7 @@ void accept_neighbors2(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen, u
 
 int usage(int code)
 {
-	printf("Usage: mrinfo [-hn] [-d [level]] [-r count] [-t seconds] [router]\n");
+	printf("Usage: mrinfo [-hn] [-d level] [-r count] [-t seconds] [router]\n");
 
 	return code;
 }
@@ -264,17 +264,13 @@ int main(int argc, char *argv[])
 	char *host;
 	int tries, trynew, ch, rc;
 
-	while ((ch = getopt(argc, argv, "d::hnr:t:")) != -1) {
+	while ((ch = getopt(argc, argv, "d:hnr:t:")) != -1) {
 		switch (ch) {
 		case 'd':
-			if (!optarg) {
-				debug = DEFAULT_DEBUG;
-			} else {
-				debug = strtonum(optarg, 0, 3, &errstr);
-				if (errstr) {
-					warnx("debug level %s", errstr);
-					debug = DEFAULT_DEBUG;
-				}
+			debug = strtonum(optarg, 0, 3, &errstr);
+			if (errstr) {
+				warnx("debug level %s", errstr);
+				debug = 3;
 			}
 			break;
 
