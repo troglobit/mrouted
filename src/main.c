@@ -434,7 +434,7 @@ int main(int argc, char *argv[])
 	      (vers >> 8) & 0xff, vers & 0xff, PROTOCOL_VERSION, MROUTED_VERSION);
 
     init_vifs();
-
+    ipc_init();
 #ifdef RSRR
     rsrr_init();
 #endif

@@ -9,10 +9,13 @@
 #ifndef MROUTED_PATHNAMES_H_
 #define MROUTED_PATHNAMES_H_
 
+#include <paths.h>
+
 #define _PATH_MROUTED_CONF	"/etc/mrouted.conf"
 #define _PATH_MROUTED_RUNDIR    _PATH_VARRUN "mrouted"
 #define _PATH_MROUTED_GENID	_PATH_MROUTED_RUNDIR "/mrouted.genid"
 #define _PATH_MROUTED_DUMP	_PATH_MROUTED_RUNDIR "/mrouted.dump"
 #define _PATH_MROUTED_CACHE	_PATH_MROUTED_RUNDIR "/mrouted.cache"
+#define _PATH_MROUTED_SOCK	_PATH_MROUTED_RUNDIR "/mrouted.sock"
 
 #endif /* MROUTED_PATHNAMES_H_ */

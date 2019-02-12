@@ -29,6 +29,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/uio.h>
+#include <sys/un.h>
 #include <net/if.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
@@ -61,9 +62,6 @@
 #else
 #include <libutil.h>
 #endif
-#endif
-#ifdef RSRR
-#include <sys/un.h>
 #endif
 
 typedef void (*cfunc_t) (void*);
@@ -383,5 +381,36 @@ long long strtonum(const char *numstr, long long minval, long long maxval, const
 #ifndef HAVE_PIDFILE
 int pidfile(const char *basename);
 #endif
+
+/*
+ * mrouted <--> mroutectl IPC
+ */
+#define IPC_OK_CMD                0
+#define IPC_RESTART_CMD           1
+#define IPC_SHOW_STATUS_CMD       IPC_SHOW_DUMP_CMD
+#define IPC_DEBUG_CMD             3
+#define IPC_LOGLEVEL_CMD          4
+#define IPC_KILL_CMD              9
+#define IPC_SHOW_IGMP_GROUPS_CMD  10
+#define IPC_SHOW_IGMP_IFACE_CMD   11
+#define IPC_SHOW_PIM_IFACE_CMD    20
+#define IPC_SHOW_PIM_NEIGH_CMD    21
+#define IPC_SHOW_PIM_ROUTE_CMD    22
+#define IPC_SHOW_PIM_RP_CMD       23
+#define IPC_SHOW_PIM_CRP_CMD      24
+#define IPC_SHOW_DUMP_CMD         250
+#define IPC_EOF_CMD               254
+#define IPC_ERR_CMD               255
+
+struct ipc {
+	uint8_t cmd;
+	uint8_t detail;
+
+	char    buf[766];
+	size_t  len;
+};
+
+void ipc_init(void);
+void ipc_exit(void);
 
 #endif /* MROUTED_DEFS_H_ */

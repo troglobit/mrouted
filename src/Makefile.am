@@ -12,14 +12,17 @@ AM_CPPFLAGS     += -DIOCTL_OK_ON_RAW_SOCKET
 endif
 AM_CFLAGS        = -W -Wall -Wextra -Wno-unused
 
-sbin_PROGRAMS    = mrouted map-mbone mrinfo mtrace
+sbin_PROGRAMS    = mrouted mroutectl map-mbone mrinfo mtrace
 mrouted_SOURCES  = main.c callout.c cfparse.y config.c defs.h dvmrp.h icmp.c \
-		   igmp.c igmpv2.h ipip.c inet.c kern.c pathnames.h prune.c  \
-	 	   route.c route.h vers.c vif.c vif.h
+		   igmp.c igmpv2.h ipc.c ipip.c inet.c kern.c pathnames.h    \
+	 	   prune.c route.c route.h vers.c vif.c vif.h
 mrouted_LDADD    = $(LIBS) $(LIBOBJS)
 if RSRR
 mrouted_SOURCES += rsrr.c rsrr_var.h rsrr.h
 endif
+
+mroutectl_SOURCES = mroutectl.c defs.h
+mroutectl_LDADD   = $(LIBS) $(LIBOBJS)
 
 map_mbone_SOURCES = mapper.c igmp.c igmpv2.h inet.c kern.c
 map_mbone_LDADD   = $(LIBS) $(LIBOBJS)

@@ -32,11 +32,7 @@ debian/*.log
 depcomp
 install-sh
 missing
-map-mbone
-mrinfo
-mrouted
 mrouted.service
-mtrace
 stamp-h1
 cfparse.c
 vers.c
