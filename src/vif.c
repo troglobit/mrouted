@@ -847,13 +847,14 @@ of queries remaining.
  */
 void probe_for_neighbors(void)
 {
-    vifi_t vifi;
     struct uvif *v;
+    vifi_t vifi;
 
     for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
-	if (!(v->uv_flags & (VIFF_DOWN|VIFF_DISABLED))) {
-	    send_probe_on_vif(v);
-	}
+	if (v->uv_flags & (VIFF_DOWN | VIFF_DISABLED))
+	    continue;
+
+	send_probe_on_vif(v);
     }
 }
 
