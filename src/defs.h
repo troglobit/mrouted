@@ -372,6 +372,11 @@ extern void		rsrr_cache_clean(struct gtable *);
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *dst, const char *src, size_t siz);
 #endif
+
+#ifndef HAVE_STRLCAT
+size_t  strlcat(char *dst, const char *src, size_t siz);
+#endif
+
 #ifndef HAVE_STRTONUM
 long long strtonum(const char *numstr, long long minval, long long maxval, const char **errstrp);
 #endif
