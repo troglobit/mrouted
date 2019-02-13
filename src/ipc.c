@@ -81,7 +81,7 @@ static int ipc_send(int sd, struct ipc *msg, FILE *fp)
 	return ipc_close(sd, msg);
 }
 
-static void ipc_dump(int sd, struct ipc *msg)
+static void show_dump(int sd, struct ipc *msg)
 {
 	FILE *fp;
 
@@ -119,7 +119,7 @@ static void ipc_handle(int sd)
 
 	switch (msg.cmd) {
 	case IPC_SHOW_DUMP_CMD:
-		ipc_dump(client, &msg);
+		show_dump(client, &msg);
 		break;
 
 	default:
