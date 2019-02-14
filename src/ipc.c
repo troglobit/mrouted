@@ -94,6 +94,7 @@ static void show_dump(int sd, struct ipc *msg)
 	dump_vifs(fp);
 	dump_routes(fp);
 	dump_cache(fp);
+
 	rewind(fp);
 	ipc_send(sd, msg, fp);
 	fclose(fp);
