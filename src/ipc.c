@@ -100,6 +100,64 @@ static void show_dump(int sd, struct ipc *msg)
 	fclose(fp);
 }
 
+static const char *ifstate(struct uvif *uv)
+{
+	if (uv->uv_flags & VIFF_DOWN)
+		return "Down";
+
+	if (uv->uv_flags & VIFF_DISABLED)
+		return "Disabled";
+
+	return "Up";
+}
+
+static void show_igmp_iface(int sd, struct ipc *msg)
+{
+	struct listaddr *group;
+	struct uvif *uv;
+	vifi_t vifi;
+	FILE *fp;
+
+	fp = tmpfile();
+	if (!fp) {
+		logit(LOG_WARNING, errno, "Failed opening temporary file");
+		return;
+	}
+
+	fprintf(fp, "Interface         State     Querier          Timeout Version  Groups=\n");
+
+	for (vifi = 0, uv = uvifs; vifi < numvifs; vifi++, uv++) {
+		size_t num = 0;
+		char timeout[10];
+		int version;
+
+		if (!uv->uv_querier) {
+			strlcpy(s1, "Local", sizeof(s1));
+			snprintf(timeout, sizeof(timeout), "None");
+		} else {
+			inet_fmt(uv->uv_querier->al_addr, s1, sizeof(s1));
+			snprintf(timeout, sizeof(timeout), "%u", IGMP_QUERY_INTERVAL - uv->uv_querier->al_timer);
+		}
+
+		for (group = uv->uv_groups; group; group = group->al_next)
+			num++;
+
+		if (uv->uv_flags & VIFF_IGMPV1)
+			version = 1;
+//		else if (uv->uv_flags & VIFF_IGMPV2)
+//			version = 2;
+		else
+			version = 2;
+
+		fprintf(fp, "%-16s  %-8s  %-15s  %7s %7d  %6zd\n", uv->uv_name,
+			ifstate(uv), s1, timeout, version, num);
+	}
+
+	rewind(fp);
+	ipc_send(sd, msg, fp);
+	fclose(fp);
+}
+
 static void ipc_handle(int sd)
 {
 	socklen_t socklen = 0;
@@ -121,6 +179,10 @@ static void ipc_handle(int sd)
 	switch (msg.cmd) {
 	case IPC_SHOW_DUMP_CMD:
 		show_dump(client, &msg);
+		break;
+
+	case IPC_SHOW_IFACE_CMD:
+		show_igmp_iface(client, &msg);
 		break;
 
 	default:

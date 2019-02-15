@@ -192,6 +192,8 @@ int main(int argc, char *argv[])
 	struct cmd command[] = {
 		{ "help",      NULL, help,         0                   },
 		{ "kill",      NULL, NULL,         IPC_KILL_CMD        },
+		{ "interface", NULL, NULL,         IPC_SHOW_IFACE_CMD  },
+		{ "iface",     NULL, NULL,         IPC_SHOW_IFACE_CMD  },
 		{ "status",    NULL, NULL,         IPC_SHOW_STATUS_CMD },
 		{ "restart",   NULL, NULL,         IPC_RESTART_CMD     },
 		{ "version",   NULL, version,      0                   },
