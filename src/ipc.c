@@ -100,6 +100,47 @@ static void show_dump(int sd, struct ipc *msg)
 	fclose(fp);
 }
 
+static void show_igmp_groups(int sd, struct ipc *msg)
+{
+	struct listaddr *group, *source;
+	struct uvif *uv;
+	vifi_t vifi;
+	FILE *fp;
+
+	fp = tmpfile();
+	if (!fp) {
+		logit(LOG_WARNING, errno, "Failed opening temporary file");
+		return;
+	}
+
+	fprintf(fp, "Interface         Group            Source           Last Reported    Timeout=\n");
+	for (vifi = 0, uv = uvifs; vifi < numvifs; vifi++, uv++) {
+		for (group = uv->uv_groups; group; group = group->al_next) {
+			char pre[40], post[40];
+
+			snprintf(pre, sizeof(pre), "%-16s  %-15s  ",
+				 uv->uv_name, inet_fmt(group->al_addr, s1, sizeof(s1)));
+
+			snprintf(post, sizeof(post), "%-15s  %7u",
+				 inet_fmt(group->al_reporter, s1, sizeof(s1)),
+				 group->al_timer);
+
+//			if (!group->al_sources) {
+				fprintf(fp, "%s%-15s  %s\n", pre, "ANY", post);
+//				continue;
+//			}
+
+//			for (source = group->al_sources; source; source = source->al_next)
+//				fprintf(fp, "%s%-15s  %s\n",
+//					pre, inet_fmt(source->al_addr, s1, sizeof(s1)), post);
+		}
+	}
+
+	rewind(fp);
+	ipc_send(sd, msg, fp);
+	fclose(fp);
+}
+
 static const char *ifstate(struct uvif *uv)
 {
 	if (uv->uv_flags & VIFF_DOWN)
@@ -179,6 +220,10 @@ static void ipc_handle(int sd)
 	switch (msg.cmd) {
 	case IPC_SHOW_DUMP_CMD:
 		show_dump(client, &msg);
+		break;
+
+	case IPC_SHOW_IGMP_CMD:
+		show_igmp_groups(client, &msg);
 		break;
 
 	case IPC_SHOW_IFACE_CMD:
