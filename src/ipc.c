@@ -35,6 +35,7 @@
 #include <sys/un.h>
 
 #include "defs.h"
+extern struct rtentry *routing_table;
 
 static struct sockaddr_un sun;
 static int ipc_socket = -1;
@@ -87,9 +88,75 @@ static void show_dump(FILE *fp, int detail)
 	dump_cache(fp);
 }
 
+static char *vif2name(int vif)
+{
+	struct uvif *uv;
+	vifi_t vifi;
+
+	for (vifi = 0, uv = uvifs; vifi < numvifs; vifi++, uv++) {
+		if (vif == vifi)
+			return uv->uv_name;
+	}
+
+	return NULL;
+}
+
 static void show_routes(FILE *fp, int detail)
 {
-	dump_routes(fp);
+	struct rtentry *r;
+	vifi_t i;
+
+	fprintf(fp, "Source Network     Neighbor        Metric Expire %s=\n",
+		detail ? "Inbound          Outbound" : "Interface");
+
+	for (r = routing_table; r; r = r->rt_next) {
+		fprintf(fp, "%-18s %-15s ",
+			inet_fmts(r->rt_origin, r->rt_originmask, s1, sizeof(s1)),
+			(r->rt_gateway == 0) ? "" : inet_fmt(r->rt_gateway, s2, sizeof(s2)));
+
+		if (r->rt_metric == UNREACHABLE)
+			fprintf(fp, "   NR ");
+		else
+			fprintf(fp, "  %4u ", r->rt_metric);
+
+		if (r->rt_timer == 0)
+			fprintf(fp, "Never  ");
+		else
+			fprintf(fp, "%3us   ", r->rt_timer);
+
+		if (!detail) {
+			fprintf(fp, "%s\n", vif2name(r->rt_parent));
+			continue;
+		}
+
+		fprintf(fp, "%-16s", vif2name(r->rt_parent));
+		for (i = 0; i < numvifs; ++i) {
+			struct listaddr *n;
+			char l = '[';
+
+			if (VIFM_ISSET(i, r->rt_children)) {
+				if ((uvifs[i].uv_flags & VIFF_TUNNEL) &&
+				    !NBRM_ISSETMASK(uvifs[i].uv_nbrmap, r->rt_subordinates))
+					/* Don't print out parenthood of a leaf tunnel. */
+					continue;
+
+				fprintf(fp, " %s", vif2name(i));
+				if (!NBRM_ISSETMASK(uvifs[i].uv_nbrmap, r->rt_subordinates))
+					fprintf(fp, "*");
+
+				for (n = uvifs[i].uv_neighbors; n; n = n->al_next) {
+					if (NBRM_ISSET(n->al_index, r->rt_subordinates)) {
+						fprintf(fp, "%c%d", l, n->al_index);
+						l = ',';
+					}
+				}
+
+				if (l == ',')
+					fprintf(fp, "]");
+			}
+		}
+		fprintf(fp, "\n");
+	}
 }
 
 static void show_igmp_groups(FILE *fp, int detail)
