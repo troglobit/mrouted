@@ -395,7 +395,7 @@ int pidfile(const char *basename);
 #define IPC_SHOW_IFACE_CMD        11
 #define IPC_SHOW_PIM_IFACE_CMD    20
 #define IPC_SHOW_PIM_NEIGH_CMD    21
-#define IPC_SHOW_PIM_ROUTE_CMD    22
+#define IPC_SHOW_ROUTES_CMD       22
 #define IPC_SHOW_PIM_RP_CMD       23
 #define IPC_SHOW_PIM_CRP_CMD      24
 #define IPC_SHOW_DUMP_CMD         250

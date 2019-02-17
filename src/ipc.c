@@ -88,6 +88,11 @@ static void show_dump(FILE *fp)
 	dump_cache(fp);
 }
 
+static void show_routes(FILE *fp)
+{
+	dump_routes(fp);
+}
+
 static void show_igmp_groups(FILE *fp)
 {
 	struct listaddr *group, *source;
@@ -211,6 +216,10 @@ static void ipc_handle(int sd)
 
 	case IPC_SHOW_IFACE_CMD:
 		ipc_show(client, &msg, show_igmp_iface);
+		break;
+
+	case IPC_SHOW_ROUTES_CMD:
+		ipc_show(client, &msg, show_routes);
 		break;
 
 	default:
