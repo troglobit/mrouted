@@ -30,6 +30,9 @@
 #include "defs.h"
 #include <getopt.h>
 #include <poll.h>
+#ifdef HAVE_TERMIOS_H
+# include <termios.h>
+#endif
 
 struct cmd {
 	char        *cmd;
@@ -38,6 +41,7 @@ struct cmd {
 	int         op;
 };
 
+static int plain = 0;
 static int detail = 0;
 static int heading = 1;
 
@@ -71,6 +75,83 @@ error:
 	return -1;
 }
 
+#define ESC "\033"
+static int get_width(void)
+{
+	int ret = 74;
+#ifdef HAVE_TERMIOS_H
+	char buf[42];
+	struct termios tc, saved;
+	struct pollfd fd = { STDIN_FILENO, POLLIN, 0 };
+
+	memset(buf, 0, sizeof(buf));
+	tcgetattr(STDERR_FILENO, &tc);
+	saved = tc;
+	tc.c_cflag |= (CLOCAL | CREAD);
+	tc.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+	tcsetattr(STDERR_FILENO, TCSANOW, &tc);
+	fprintf(stderr, ESC "7" ESC "[r" ESC "[999;999H" ESC "[6n");
+
+	if (poll(&fd, 1, 300) > 0) {
+		int row, col;
+
+		if (scanf(ESC "[%d;%dR", &row, &col) == 2)
+			ret = col;
+	}
+
+	fprintf(stderr, ESC "8");
+	tcsetattr(STDERR_FILENO, TCSANOW, &saved);
+#endif
+	return ret;
+}
+
+static char *chomp(char *str)
+{
+	char *p;
+
+	if (!str || strlen(str) < 1) {
+		errno = EINVAL;
+		return NULL;
+	}
+
+	p = str + strlen(str) - 1;
+        while (*p == '\n')
+		*p-- = 0;
+
+	return str;
+}
+
+static void print(char *line)
+{
+	int len, head = 0;
+
+	chomp(line);
+
+	/* Table headings, or repeat headers, end with a '=' */
+	len = (int)strlen(line) - 1;
+	if (len > 0 && line[len] == '=') {
+		if (!heading)
+			return;
+		line[len] = 0;
+		head = 1;
+		if (!plain)
+			len = get_width() - len;
+	}
+
+	if (!head) {
+		puts(line);
+		return;
+	}
+
+	if (!plain) {
+		fprintf(stdout, "\e[7m%s%*s\e[0m\n", line, len < 0 ? 0 : len, "");
+	} else {
+		while (len--)
+			fputc('=', stdout);
+		fputs("\n", stdout);
+	}
+}
+
 static int show_generic(int cmd, int detail)
 {
 	struct pollfd pfd;
@@ -97,7 +178,7 @@ static int show_generic(int cmd, int detail)
 		if (len != sizeof(msg) || msg.cmd)
 			break;
 
-		fputs(msg.buf, stdout);
+		print(msg.buf);
 	}
 
 	return close(sd);
