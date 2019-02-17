@@ -81,37 +81,18 @@ static int ipc_send(int sd, struct ipc *msg, FILE *fp)
 	return ipc_close(sd, msg);
 }
 
-static void show_dump(int sd, struct ipc *msg)
+static void show_dump(FILE *fp)
 {
-	FILE *fp;
-
-	fp = tmpfile();
-	if (!fp) {
-		logit(LOG_WARNING, errno, "Failed opening temporary file");
-		return;
-	}
-
 	dump_vifs(fp);
 	dump_routes(fp);
 	dump_cache(fp);
-
-	rewind(fp);
-	ipc_send(sd, msg, fp);
-	fclose(fp);
 }
 
-static void show_igmp_groups(int sd, struct ipc *msg)
+static void show_igmp_groups(FILE *fp)
 {
 	struct listaddr *group, *source;
 	struct uvif *uv;
 	vifi_t vifi;
-	FILE *fp;
-
-	fp = tmpfile();
-	if (!fp) {
-		logit(LOG_WARNING, errno, "Failed opening temporary file");
-		return;
-	}
 
 	fprintf(fp, "Interface         Group            Source           Last Reported    Timeout=\n");
 	for (vifi = 0, uv = uvifs; vifi < numvifs; vifi++, uv++) {
@@ -135,10 +116,6 @@ static void show_igmp_groups(int sd, struct ipc *msg)
 //					pre, inet_fmt(source->al_addr, s1, sizeof(s1)), post);
 		}
 	}
-
-	rewind(fp);
-	ipc_send(sd, msg, fp);
-	fclose(fp);
 }
 
 static const char *ifstate(struct uvif *uv)
@@ -152,18 +129,11 @@ static const char *ifstate(struct uvif *uv)
 	return "Up";
 }
 
-static void show_igmp_iface(int sd, struct ipc *msg)
+static void show_igmp_iface(FILE *fp)
 {
 	struct listaddr *group;
 	struct uvif *uv;
 	vifi_t vifi;
-	FILE *fp;
-
-	fp = tmpfile();
-	if (!fp) {
-		logit(LOG_WARNING, errno, "Failed opening temporary file");
-		return;
-	}
 
 	fprintf(fp, "Interface         State     Querier          Timeout Version  Groups=\n");
 
@@ -193,6 +163,19 @@ static void show_igmp_iface(int sd, struct ipc *msg)
 		fprintf(fp, "%-16s  %-8s  %-15s  %7s %7d  %6zd\n", uv->uv_name,
 			ifstate(uv), s1, timeout, version, num);
 	}
+}
+
+static void ipc_show(int sd, struct ipc *msg, void (*cb)(FILE *))
+{
+	FILE *fp;
+
+	fp = tmpfile();
+	if (!fp) {
+		logit(LOG_WARNING, errno, "Failed opening temporary file");
+		return;
+	}
+
+	cb(fp);
 
 	rewind(fp);
 	ipc_send(sd, msg, fp);
@@ -219,15 +202,15 @@ static void ipc_handle(int sd)
 
 	switch (msg.cmd) {
 	case IPC_SHOW_DUMP_CMD:
-		show_dump(client, &msg);
+		ipc_show(client, &msg, show_dump);
 		break;
 
 	case IPC_SHOW_IGMP_CMD:
-		show_igmp_groups(client, &msg);
+		ipc_show(client, &msg, show_igmp_groups);
 		break;
 
 	case IPC_SHOW_IFACE_CMD:
-		show_igmp_iface(client, &msg);
+		ipc_show(client, &msg, show_igmp_iface);
 		break;
 
 	default:
