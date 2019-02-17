@@ -74,7 +74,7 @@ error:
 static int show_generic(int cmd, int detail)
 {
 	struct pollfd pfd;
-	struct ipc msg;
+	struct ipc msg = { 0 };
 	int sd;
 	
 	sd = do_connect();
