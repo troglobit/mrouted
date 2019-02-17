@@ -38,7 +38,6 @@
 
 static struct sockaddr_un sun;
 static int ipc_socket = -1;
-static int detail = 0;
 
 static int ipc_write(int sd, struct ipc *msg)
 {
@@ -81,19 +80,19 @@ static int ipc_send(int sd, struct ipc *msg, FILE *fp)
 	return ipc_close(sd, msg);
 }
 
-static void show_dump(FILE *fp)
+static void show_dump(FILE *fp, int detail)
 {
 	dump_vifs(fp);
 	dump_routes(fp);
 	dump_cache(fp);
 }
 
-static void show_routes(FILE *fp)
+static void show_routes(FILE *fp, int detail)
 {
 	dump_routes(fp);
 }
 
-static void show_igmp_groups(FILE *fp)
+static void show_igmp_groups(FILE *fp, int detail)
 {
 	struct listaddr *group, *source;
 	struct uvif *uv;
@@ -134,7 +133,7 @@ static const char *ifstate(struct uvif *uv)
 	return "Up";
 }
 
-static void show_igmp_iface(FILE *fp)
+static void show_igmp_iface(FILE *fp, int detail)
 {
 	struct listaddr *group;
 	struct uvif *uv;
@@ -170,7 +169,7 @@ static void show_igmp_iface(FILE *fp)
 	}
 }
 
-static void ipc_show(int sd, struct ipc *msg, void (*cb)(FILE *))
+static void ipc_show(int sd, struct ipc *msg, void (*cb)(FILE *, int))
 {
 	FILE *fp;
 
@@ -180,7 +179,7 @@ static void ipc_show(int sd, struct ipc *msg, void (*cb)(FILE *))
 		return;
 	}
 
-	cb(fp);
+	cb(fp, msg->detail);
 
 	rewind(fp);
 	ipc_send(sd, msg, fp);
