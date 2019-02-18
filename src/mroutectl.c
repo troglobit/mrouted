@@ -178,6 +178,7 @@ static int show_generic(int cmd, int detail)
 		if (len != sizeof(msg) || msg.cmd)
 			break;
 
+		msg.sentry = 0;
 		print(msg.buf);
 	}
 

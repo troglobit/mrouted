@@ -406,8 +406,8 @@ struct ipc {
 	uint8_t cmd;
 	uint8_t detail;
 
-	char    buf[766];
-	size_t  len;
+	char    buf[765];
+	char    sentry;
 };
 
 void ipc_init(void);
