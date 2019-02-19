@@ -166,6 +166,7 @@ extern int		missingok;
 #define DEFAULT_STARTUP_DELAY 10  /* default startup delay before forwarding in seconds */
 
 extern int		debug;
+extern int		running;
 extern int		did_final_init;
 extern time_t           mrouted_init_time;
 

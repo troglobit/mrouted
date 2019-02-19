@@ -294,6 +294,10 @@ static void ipc_handle(int sd)
 		ipc_show(client, &msg, show_version);
 		break;
 
+	case IPC_KILL_CMD:
+		running = 0;
+		break;
+
 	case IPC_SHOW_DUMP_CMD:
 		ipc_show(client, &msg, show_dump);
 		break;

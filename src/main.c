@@ -47,6 +47,7 @@ int vifstatedefault = 0;
 int missingok = 0;
 
 int debug = 0;
+int running = 1;
 time_t mrouted_init_time;
 
 #define NHANDLERS	2
@@ -469,7 +470,7 @@ int main(int argc, char *argv[])
     /*
      * Main receive loop.
      */
-    while (1) {
+    while (running) {
 	if (check_signals())
 	    break;
 
