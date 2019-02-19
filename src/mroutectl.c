@@ -191,23 +191,18 @@ static int usage(int rc)
 		"Usage: mroutectl [OPTIONS] [COMMAND]\n"
 		"\n"
 		"Options:\n"
-		"  -d, --detail              Detailed output, where applicable\n"
-		"  -h, --help                This help text\n"
+		"  -d, --detail        Detailed output, where applicable\n"
+		"  -h, --help          This help text\n"
 		"\n"
 		"Commands:\n"
-		"  help                      This help text\n"
-		"  kill                      Kill running daemon, like SIGTERM\n"
-		"  restart                   Restart deamon and reload .conf file, like SIGHUP\n"
-		"  version                   Show pimd version\n"
-		"  show status               Show pimd status, default\n"
-		"  show igmp groups          Show IGMP group memberships\n"
-		"  show igmp interface       Show IGMP interface status\n"
-		"  show pim interface        Show PIM interface table\n"
-		"  show pim neighbor         Show PIM neighbor table\n"
-		"  show pim routes           Show PIM routing table\n"
-		"  show pim rp               Show PIM Rendezvous-Point (RP) set\n"
-		"  show pim crp              Show PIM Candidate Rendezvous-Point (CRP) from BSR\n"
-		"  show pim compat           Show PIM status, compat mode, previously `pimd -r`\n"
+		"  help                This help text\n"
+		"  kill                Kill running mrouted, like SIGTERM\n"
+		"  restart             Restart mrouted and reload .conf file, like SIGHUP\n"
+		"  version             Show mrouted version\n"
+		"  show igmp           Show IGMP group memberships\n"
+		"  show interfaces     Show interface table\n"
+		"  show routes         Show DVMRP routing table\n"
+		"  show status         Show status summary, default\n"
 		);
 
 	return rc;
@@ -271,16 +266,20 @@ int main(int argc, char *argv[])
 		{ "help",       0, NULL, 'h' },
 		{ NULL, 0, NULL, 0 }
 	};
-	struct cmd command[] = {
-		{ "help",      NULL, help,         0                   },
-		{ "kill",      NULL, NULL,         IPC_KILL_CMD        },
-		{ "interface", NULL, NULL,         IPC_SHOW_IFACE_CMD  },
-		{ "iface",     NULL, NULL,         IPC_SHOW_IFACE_CMD  },
+	struct cmd show[] = {
 		{ "igmp",      NULL, NULL,         IPC_SHOW_IGMP_CMD   },
+		{ "interface", NULL, NULL,         IPC_SHOW_IFACE_CMD  },
+		{ "iface",     NULL, NULL,         IPC_SHOW_IFACE_CMD  }, /* alias */
 		{ "routes",    NULL, NULL,         IPC_SHOW_ROUTES_CMD },
-		{ "status",    NULL, NULL,         IPC_SHOW_STATUS_CMD },
-		{ "restart",   NULL, NULL,         IPC_RESTART_CMD     },
+		{ "status",    NULL,  NULL,        IPC_SHOW_STATUS_CMD },
+		{ NULL }
+	};
+	struct cmd command[] = {
+		{ "show",      show, NULL,         0                   },
+		{ "help",      NULL, help,         0                   },
 		{ "version",   NULL, version,      0                   },
+		{ "kill",      NULL, NULL,         IPC_KILL_CMD        },
+		{ "restart",   NULL, NULL,         IPC_RESTART_CMD     },
 		{ NULL }
 	};
 	int c;
