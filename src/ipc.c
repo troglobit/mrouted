@@ -298,6 +298,10 @@ static void ipc_handle(int sd)
 		running = 0;
 		break;
 
+	case IPC_RESTART_CMD:
+		restart();
+		break;
+
 	case IPC_SHOW_DUMP_CMD:
 		ipc_show(client, &msg, show_dump);
 		break;

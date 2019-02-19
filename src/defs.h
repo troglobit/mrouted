@@ -228,6 +228,7 @@ extern char             versionstring[MAX_VERSION_LEN];
 #endif
 
 /* main.c */
+extern void             restart(void);
 extern char *		scaletime(time_t);
 extern void		logit(int, int, const char *, ...);
 extern int		register_input_handler(int, ihfunc_t);

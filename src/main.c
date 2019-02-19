@@ -95,7 +95,6 @@ static struct debugname {
 static void final_init(void *);
 static void fasttimer(void*);
 static void timer(void*);
-static void restart(void);
 static void handle_signals(int);
 static int  check_signals(void);
 static int  timeout(int);
@@ -776,7 +775,7 @@ static int check_signals(void)
 /*
  * Restart mrouted
  */
-static void restart(void)
+void restart(void)
 {
     FILE *fp;
     char *s;
