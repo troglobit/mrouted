@@ -28,8 +28,6 @@
 extern char *configfilename;
 char versionstring[MAX_VERSION_LEN];
 
-static const char genidfilename[] = _PATH_MROUTED_GENID;
-
 static int haveterminal = 1;
 int did_final_init = 0;
 
@@ -132,31 +130,40 @@ static void do_randomize(void)
    srandom(seed);
 }
 
-/* Figure out the PID of a running daemon. */
-static pid_t daemon_pid(void)
+static FILE *fopen_genid(char *mode)
 {
-    int result;
-    char *path = NULL;
+    char fn[80];
+
+    snprintf(fn, sizeof(fn), _PATH_MROUTED_GENID);
+
+    return fopen(fn, mode);
+}
+
+static void init_gendid(void)
+{
     FILE *fp;
-    pid_t pid = -1;
 
-    result = asprintf(&path, "%s%s.pid", _PATH_VARRUN, PACKAGE_NAME);
-    if (result == -1 || path == NULL)
-	return -1;
-
-    fp = fopen(path, "r");
+    fp = fopen_genid("r");
     if (!fp) {
-	free(path);
-	return -1;
+	struct timeval tv;
+
+	gettimeofday(&tv, NULL);
+	dvmrp_genid = (uint32_t)tv.tv_sec;	/* for a while after 2038 */
+    } else {
+	uint32_t prev_genid;
+	int ret;
+
+	ret = fscanf(fp, "%u", &prev_genid);
+	if (ret == 1 && prev_genid == dvmrp_genid)
+	    dvmrp_genid++;
+	(void)fclose(fp);
     }
 
-    if (!fscanf(fp, "%d", &pid))
-	pid = -1;		/* Failed reading PID */
-
-    fclose(fp);
-    free(path);
-
-    return pid;
+    fp = fopen_genid("w");
+    if (fp) {
+	fprintf(fp, "%u\n", dvmrp_genid);
+	(void)fclose(fp);
+    }
 }
 
 int debug_parse(char *arg)
@@ -235,8 +242,6 @@ static int usage(int code)
 int main(int argc, char *argv[])
 {
     FILE *fp;
-    struct timeval tv;
-    uint32_t prev_genid;
     int foreground = 0;
     int vers, n = -1, i, ch;
     struct pollfd *pfd;
@@ -346,24 +351,7 @@ int main(int argc, char *argv[])
     /*
      * Get generation id
      */
-    gettimeofday(&tv, NULL);
-    dvmrp_genid = (uint32_t)tv.tv_sec;	/* for a while after 2038 */
-
-    fp = fopen(genidfilename, "r");
-    if (fp) {
-	int ret;
-
-	ret = fscanf(fp, "%u", &prev_genid);
-	if (ret == 1 && prev_genid == dvmrp_genid)
-	    dvmrp_genid++;
-	(void)fclose(fp);
-    }
-
-    fp = fopen(genidfilename, "w");
-    if (fp) {
-	fprintf(fp, "%u", dvmrp_genid);
-	(void)fclose(fp);
-    }
+    init_gendid();
 
     /* Start up the log rate-limiter */
     resetlogging(NULL);
@@ -799,13 +787,7 @@ void restart(void)
     /*
      * start processing again
      */
-    dvmrp_genid++;
-
-    fp = fopen(genidfilename, "w");
-    if (fp) {
-	fprintf(fp, "%u", dvmrp_genid);
-	(void)fclose(fp);
-    }
+    init_gendid();
 
     init_igmp();
     init_routes();
