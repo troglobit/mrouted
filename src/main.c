@@ -28,8 +28,6 @@
 extern char *configfilename;
 char versionstring[MAX_VERSION_LEN];
 
-static const char dumpfilename[] = _PATH_MROUTED_DUMP;
-static const char cachefilename[] = _PATH_MROUTED_CACHE;
 static const char genidfilename[] = _PATH_MROUTED_GENID;
 
 static int haveterminal = 1;
@@ -96,12 +94,7 @@ static struct debugname {
 static void final_init(void *);
 static void fasttimer(void*);
 static void timer(void*);
-#if UNUSED_CODE
-static void dump(void);
-#endif
 static void dump_version(FILE *);
-static void fdump(void);
-static void cdump(void);
 static void restart(void);
 static void handle_signals(int);
 static int  check_signals(void);
@@ -165,26 +158,6 @@ static pid_t daemon_pid(void)
     free(path);
 
     return pid;
-}
-
-/* Send signal to running daemon and the show resulting file. */
-static void killshow(int signo, char *file)
-{
-    pid_t pid = daemon_pid();
-    char buf[100];
-
-    if (pid > 0) {
-	if (file && -1 == remove(file) && errno != ENOENT)
-	    warn("Failed removing %s, may be showing stale information", file);
-
-	kill(pid, signo);
-	if (file) {
-	    usleep(200);
-	    snprintf(buf, sizeof(buf), "cat %s", file);
-	    if (-1 == system(buf))
-		warnx("Failed listing file %s\n", file);
-	}
-    }
 }
 
 int debug_parse(char *arg)
@@ -276,7 +249,6 @@ int main(int argc, char *argv[])
 	{"foreground", 0, 0, 'n'},
 	{"help", 0, 0, 'h'},
 	{"version", 0, 0, 'v'},
-	{"show-routes", 0, 0, 'r'},
 	{"no-intefaces", 0, 0, 'N'},
 	{"missing-ok", 0, 0, 'M'},
 	{"startup-delay", 1, 0, 'D'},
@@ -285,7 +257,7 @@ int main(int argc, char *argv[])
 
     snprintf(versionstring, sizeof(versionstring), "mrouted version %s", todaysversion);
 
-    while ((ch = getopt_long(argc, argv, "D:MNnc:d:fhprv", long_options, NULL)) != EOF) {
+    while ((ch = getopt_long(argc, argv, "D:MNnc:d:fhpv", long_options, NULL)) != EOF) {
 	switch (ch) {
 	    case 'D':
 		startupdelay = atoi(optarg);
@@ -321,10 +293,6 @@ int main(int argc, char *argv[])
 	    case 'p':
 		warnx("Disabling pruning is no longer supported.");
 		break;
-
-	    case 'r':
-		killshow(SIGUSR1, _PATH_MROUTED_DUMP);
-		return 0;
 
 	    case 'v':
 		printf("%s\n", versionstring);
@@ -362,12 +330,6 @@ int main(int argc, char *argv[])
 	}
 	fprintf(stderr, ")\n");
     }
-
-    /*
-     * Create directory for runtime files
-     */
-    if (-1 == mkdir(_PATH_MROUTED_RUNDIR, 0755) && errno != EEXIST)
-	err(1, "Failed creating %s directory for runtime files", _PATH_MROUTED_RUNDIR);
 
     /*
      * Setup logging
@@ -806,27 +768,16 @@ static int check_signals(void)
 
     if (sighandled & GOT_SIGUSR1) {
 	sighandled &= ~GOT_SIGUSR1;
-	fdump();
+	logit(LOG_INFO, 0, "SIGUSR1 is no longer supported, use mroutectl instead.");
     }
 
     if (sighandled & GOT_SIGUSR2) {
 	sighandled &= ~GOT_SIGUSR2;
-	cdump();
+	logit(LOG_INFO, 0, "SIGUSR2 is no longer supported, use mroutectl instead.");
     }
 
     return 0;
 }
-
-#if UNUSED_CODE
-/*
- * Dump internal data structures to stderr.
- */
-static void dump(void)
-{
-    dump_vifs(stderr);
-    dump_routes(stderr);
-}
-#endif
 
 static void dump_version(FILE *fp)
 {
@@ -841,39 +792,6 @@ static void dump_version(FILE *fp)
 	    fprintf(fp, "(not yet initialized)");
     fprintf(fp, " %s\n", ctime(&t));
 }
-
-/*
- * Dump internal data structures to a file.
- */
-static void fdump(void)
-{
-    FILE *fp;
-
-    fp = fopen(dumpfilename, "w");
-    if (fp != NULL) {
-	dump_version(fp);
-	dump_vifs(fp);
-	dump_routes(fp);
-	(void) fclose(fp);
-    }
-}
-
-
-/*
- * Dump local cache contents to a file.
- */
-static void cdump(void)
-{
-    FILE *fp;
-
-    fp = fopen(cachefilename, "w");
-    if (fp != NULL) {
-	dump_version(fp);
-	dump_cache(fp);
-	(void) fclose(fp);
-    }
-}
-
 
 /*
  * Restart mrouted
