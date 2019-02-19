@@ -2,8 +2,6 @@
 .dirstamp
 *~
 *.bak
-*.o
-*.map
 *-stamp
 ID
 GPATH
@@ -24,16 +22,9 @@ config.h.in
 config.log
 config.status
 configure
-debian/files
-debian/mrouted*.debhelper
-debian/mrouted/
-debian/*.substvars
-debian/*.log
 depcomp
 install-sh
 missing
 mrouted.service
 stamp-h1
-cfparse.c
-vers.c
 ylwrap

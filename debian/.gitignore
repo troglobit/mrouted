@@ -1,0 +1,5 @@
+*.substvars
+*.log
+mrouted/*
+files
+mrouted*.debhelper

@@ -1,5 +1,8 @@
+*.o
+*.map
 map-mbone
 mroutectl
 mrouted
 mrinfo
 mtrace
+cfparse.c
