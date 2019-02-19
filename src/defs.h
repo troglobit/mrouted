@@ -167,6 +167,7 @@ extern int		missingok;
 
 extern int		debug;
 extern int		did_final_init;
+extern time_t           mrouted_init_time;
 
 extern int		routes_changed;
 extern int		delay_change_reports;
@@ -390,10 +391,10 @@ int pidfile(const char *basename);
 #define IPC_SHOW_STATUS_CMD       IPC_SHOW_DUMP_CMD
 #define IPC_DEBUG_CMD             3
 #define IPC_LOGLEVEL_CMD          4
+#define IPC_VERSION_CMD           5
 #define IPC_KILL_CMD              9
 #define IPC_SHOW_IGMP_CMD         10
 #define IPC_SHOW_IFACE_CMD        11
-#define IPC_SHOW_PIM_IFACE_CMD    20
 #define IPC_SHOW_PIM_NEIGH_CMD    21
 #define IPC_SHOW_ROUTES_CMD       22
 #define IPC_SHOW_PIM_RP_CMD       23

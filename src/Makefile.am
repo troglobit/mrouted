@@ -15,7 +15,7 @@ AM_CFLAGS        = -W -Wall -Wextra -Wno-unused
 sbin_PROGRAMS    = mrouted mroutectl map-mbone mrinfo mtrace
 mrouted_SOURCES  = main.c callout.c cfparse.y config.c defs.h dvmrp.h icmp.c \
 		   igmp.c igmpv2.h ipc.c ipip.c inet.c kern.c pathnames.h    \
-	 	   prune.c route.c route.h vers.c vif.c vif.h
+		   prune.c route.c route.h vif.c vif.h
 mrouted_LDADD    = $(LIBS) $(LIBOBJS)
 if RSRR
 mrouted_SOURCES += rsrr.c rsrr_var.h rsrr.h
@@ -32,7 +32,4 @@ mrinfo_LDADD      = $(LIBS) $(LIBOBJS)
 
 mtrace_SOURCES    = mtrace.c igmp.c igmpv2.h inet.c kern.c
 mtrace_LDADD      = $(LIBS) $(LIBOBJS)
-
-vers.c: Makefile
-	@echo $(VERSION) | sed -e 's/.*/char todaysversion[]="&";/' > vers.c
 

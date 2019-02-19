@@ -214,14 +214,6 @@ static int help(char *arg)
 	return usage(0);
 }
 
-static int version(char *arg)
-{
-	(void)arg;
-	printf("v%s\n", PACKAGE_VERSION);
-
-	return 0;
-}
-
 static int string_match(const char *a, const char *b)
 {
    size_t min = MIN(strlen(a), strlen(b));
@@ -277,7 +269,7 @@ int main(int argc, char *argv[])
 	struct cmd command[] = {
 		{ "show",      show, NULL,         0                   },
 		{ "help",      NULL, help,         0                   },
-		{ "version",   NULL, version,      0                   },
+		{ "version",   NULL, NULL,         IPC_VERSION_CMD     },
 		{ "kill",      NULL, NULL,         IPC_KILL_CMD        },
 		{ "restart",   NULL, NULL,         IPC_RESTART_CMD     },
 		{ NULL }

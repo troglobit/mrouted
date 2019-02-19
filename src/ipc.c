@@ -236,6 +236,24 @@ static void show_igmp_iface(FILE *fp, int detail)
 	}
 }
 
+static void show_version(FILE *fp, int detail)
+{
+    time_t t;
+
+    fprintf(fp, "%s ", versionstring);
+    if (!detail) {
+	    fputs("\n", fp);
+	    return;
+    }
+
+    time(&t);
+    if (did_final_init)
+	    fprintf(fp, "up %s", scaletime(t - mrouted_init_time));
+    else
+	    fprintf(fp, "(not yet initialized)");
+    fprintf(fp, " %s", ctime(&t));
+}
+
 static void ipc_show(int sd, struct ipc *msg, void (*cb)(FILE *, int))
 {
 	FILE *fp;
@@ -272,6 +290,10 @@ static void ipc_handle(int sd)
 	}
 
 	switch (msg.cmd) {
+	case IPC_VERSION_CMD:
+		ipc_show(client, &msg, show_version);
+		break;
+
 	case IPC_SHOW_DUMP_CMD:
 		ipc_show(client, &msg, show_dump);
 		break;

@@ -94,7 +94,6 @@ static struct debugname {
 static void final_init(void *);
 static void fasttimer(void*);
 static void timer(void*);
-static void dump_version(FILE *);
 static void restart(void);
 static void handle_signals(int);
 static int  check_signals(void);
@@ -241,7 +240,6 @@ int main(int argc, char *argv[])
     int foreground = 0;
     int vers, n = -1, i, ch;
     struct pollfd *pfd;
-    extern char todaysversion[];
     struct sigaction sa;
     struct option long_options[] = {
 	{"config", 1, 0, 'c'},
@@ -255,7 +253,7 @@ int main(int argc, char *argv[])
 	{0, 0, 0, 0}
     };
 
-    snprintf(versionstring, sizeof(versionstring), "mrouted version %s", todaysversion);
+    snprintf(versionstring, sizeof(versionstring), "mrouted version %s", PACKAGE_VERSION);
 
     while ((ch = getopt_long(argc, argv, "D:MNnc:d:fhpv", long_options, NULL)) != EOF) {
 	switch (ch) {
@@ -777,20 +775,6 @@ static int check_signals(void)
     }
 
     return 0;
-}
-
-static void dump_version(FILE *fp)
-{
-    time_t t;
-
-    time(&t);
-    fprintf(fp, "%s ", versionstring);
-    if (did_final_init)
-	    fprintf(fp, "up %s",
-		    scaletime(t - mrouted_init_time));
-    else
-	    fprintf(fp, "(not yet initialized)");
-    fprintf(fp, " %s\n", ctime(&t));
 }
 
 /*
