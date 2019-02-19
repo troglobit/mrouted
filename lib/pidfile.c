@@ -60,7 +60,10 @@ pidfile(const char *basename)
 	}
 
 	/* _PATH_VARRUN includes trailing / */
-	result = asprintf(&pidfile_path, "%s%s.pid", _PATH_VARRUN, basename);
+	if (access(RUNSTATEDIR, W_OK))
+		result = asprintf(&pidfile_path, "%s%s.pid", _PATH_VARRUN, basename);
+	else
+		result = asprintf(&pidfile_path, "%s/%s.pid", RUNSTATEDIR, basename);
 	if (result == -1 || pidfile_path == NULL)
 		return (-1);
 
