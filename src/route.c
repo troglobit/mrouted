@@ -1340,13 +1340,14 @@ int report_next_chunk(void)
 /*
  * Print the contents of the routing table on file 'fp'.
  */
-void dump_routes(FILE *fp)
+void dump_routes(FILE *fp, int detail)
 {
     struct rtentry *r;
     vifi_t i;
 
-    fprintf(fp, "Multicast Routing Table (%u entr%s)\n", nroutes, nroutes == 1 ? "y" : "ies");
-    fputs(" Origin-Subnet      From-Gateway    Metric Tmr Fl In-Vif  Out-Vifs\n", fp);
+    if (detail)
+	fprintf(fp, "Multicast Routing Table (%u entr%s)\n", nroutes, nroutes == 1 ? "y" : "ies");
+    fputs(" Origin-Subnet      From-Gateway    Metric Tmr Fl In-Vif  Out-Vifs=\n", fp);
 
     for (r = routing_table; r; r = r->rt_next) {
 	fprintf(fp, " %-18s %-15s ",

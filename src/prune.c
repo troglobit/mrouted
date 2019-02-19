@@ -1949,9 +1949,9 @@ static void expire_prune(vifi_t vifi, struct gtable *gt)
 }
 
 /*
- * Print the contents of the cache table on file 'fp2'.
+ * Print the contents of the cache table on file 'fp'.
  */
-void dump_cache(FILE *fp2)
+void dump_cache(FILE *fp, int detail)
 {
     struct rtentry *r;
     struct gtable *gt;
@@ -1961,32 +1961,33 @@ void dump_cache(FILE *fp2)
     char c;
     time_t thyme = time(NULL);
 
-    fprintf(fp2,
-	    "Multicast Routing Cache Table (%d entries)\n%s", kroutes,
-	    " Origin             Mcast-group         CTmr     Age      Ptmr Rx IVif Forwvifs\n");
-    fprintf(fp2,
+    if (detail)
+	fprintf(fp, "Multicast Routing Cache Table (%d entries)\n", kroutes);
+    fprintf(fp,
+	    " Origin             Mcast-group         CTmr     Age      Ptmr Rx IVif Forwvifs=\n");
+    fprintf(fp,
 	    "<(prunesrc:vif[idx]/tmr) prunebitmap\n%s",
 	    ">Source             Lifetime SavPkt         Pkts    Bytes RPFf\n");
 
     for (gt = kernel_no_route; gt; gt = gt->gt_next) {
 	if (gt->gt_srctbl) {
-	    fprintf(fp2, " %-18s %-15s %-8s %-8s        - -1 (no route)\n",
+	    fprintf(fp, " %-18s %-15s %-8s %-8s        - -1 (no route)\n",
 		inet_fmts(gt->gt_srctbl->st_origin, 0xffffffff, s1, sizeof(s1)),
 		inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)), scaletime(gt->gt_timer),
 		scaletime(thyme - gt->gt_ctime));
-	    fprintf(fp2, ">%s\n", inet_fmt(gt->gt_srctbl->st_origin, s1, sizeof(s1)));
+	    fprintf(fp, ">%s\n", inet_fmt(gt->gt_srctbl->st_origin, s1, sizeof(s1)));
 	}
     }
 
     for (gt = kernel_table; gt; gt = gt->gt_gnext) {
 	r = gt->gt_route;
-	fprintf(fp2, " %-18s %-15s",
+	fprintf(fp, " %-18s %-15s",
 	    RT_FMT(r, s1),
 	    inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)));
 
-	fprintf(fp2, " %-8s", scaletime(gt->gt_timer));
+	fprintf(fp, " %-8s", scaletime(gt->gt_timer));
 
-	fprintf(fp2, " %-8s %-8s ", scaletime(thyme - gt->gt_ctime),
+	fprintf(fp, " %-8s %-8s ", scaletime(thyme - gt->gt_ctime),
 		gt->gt_prsent_timer
 		? scaletime(gt->gt_prsent_timer)
 		: "       -");
@@ -2000,42 +2001,42 @@ void dump_cache(FILE *fp2)
 		i /= 2;
 	    }
 	    if (n == 0 && gt->gt_prsent_timer == 0)
-		fprintf(fp2, " -");
+		fprintf(fp, " -");
 	    else
-		fprintf(fp2, "%2d", n);
+		fprintf(fp, "%2d", n);
 	} else {
-	    fprintf(fp2, " -");
+	    fprintf(fp, " -");
 	}
 
-	fprintf(fp2, " %2u%c%c", r->rt_parent,
+	fprintf(fp, " %2u%c%c", r->rt_parent,
 	    gt->gt_prsent_timer ? 'P' :
 	   			  gt->gt_grftsnt ? 'G' : ' ',
 	    VIFM_ISSET(r->rt_parent, gt->gt_scope) ? 'B' : ' ');
 
 	for (i = 0; i < numvifs; ++i) {
 	    if (VIFM_ISSET(i, gt->gt_grpmems))
-		fprintf(fp2, " %u ", i);
+		fprintf(fp, " %u ", i);
 	    else if (VIFM_ISSET(i, r->rt_children) &&
 		     NBRM_ISSETMASK(uvifs[i].uv_nbrmap, r->rt_subordinates))
-		fprintf(fp2, " %u%c", i,
+		fprintf(fp, " %u%c", i,
 			VIFM_ISSET(i, gt->gt_scope) ? 'b' : 
 			SUBS_ARE_PRUNED(r->rt_subordinates,
 			    uvifs[i].uv_nbrmap, gt->gt_prunes) ? 'p' : '!');
 	}
-	fprintf(fp2, "\n");
+	fprintf(fp, "\n");
 	if (gt->gt_pruntbl) {
-	    fprintf(fp2, "<");
+	    fprintf(fp, "<");
 	    c = '(';
 	    for (pt = gt->gt_pruntbl; pt; pt = pt->pt_next) {
-		fprintf(fp2, "%c%s:%d[%d]/%d", c, inet_fmt(pt->pt_router, s1, sizeof(s1)),
+		fprintf(fp, "%c%s:%d[%d]/%d", c, inet_fmt(pt->pt_router, s1, sizeof(s1)),
 		    pt->pt_vifi, pt->pt_index, pt->pt_timer);
 		c = ',';
 	    }
-	    fprintf(fp2, ")");
-	    fprintf(fp2, " 0x%08x%08x\n", gt->gt_prunes.hi, gt->gt_prunes.lo);
+	    fprintf(fp, ")");
+	    fprintf(fp, " 0x%08x%08x\n", gt->gt_prunes.hi, gt->gt_prunes.lo);
 	}
 	for (st = gt->gt_srctbl; st; st = st->st_next) {
-	    fprintf(fp2, ">%-18s %-8s %6u", inet_fmt(st->st_origin, s1, sizeof(s1)),
+	    fprintf(fp, ">%-18s %-8s %6u", inet_fmt(st->st_origin, s1, sizeof(s1)),
 		st->st_ctime ? scaletime(thyme - st->st_ctime) : "-",
 		st->st_savpkt);
 	    if (st->st_ctime) {
@@ -2048,11 +2049,11 @@ void dump_cache(FILE *fp2)
 			  inet_fmt(st->st_origin, s1, sizeof(s1)),
 			  inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)));
 		} else {
-		    fprintf(fp2, "     %8ld %8ld %4ld", sg_req.pktcnt,
+		    fprintf(fp, "     %8ld %8ld %4ld", sg_req.pktcnt,
 			    sg_req.bytecnt, sg_req.wrong_if);
 		}
 	    }
-	    fprintf(fp2, "\n");
+	    fprintf(fp, "\n");
 	}
     }
 }

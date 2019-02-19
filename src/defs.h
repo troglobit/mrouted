@@ -274,7 +274,7 @@ extern void		add_vif_to_routes(vifi_t);
 extern void		delete_vif_from_routes(vifi_t);
 extern void		add_neighbor_to_routes(vifi_t, uint32_t);
 extern void		delete_neighbor_from_routes(uint32_t, vifi_t, uint32_t);
-extern void		dump_routes(FILE *fp);
+extern void		dump_routes(FILE *, int);
 
 /* vif.c */
 extern void		init_vifs(void);
@@ -284,7 +284,7 @@ extern void		check_vif_state(void);
 extern void		send_on_vif(struct uvif *, uint32_t, int, size_t);
 extern vifi_t		find_vif(uint32_t, uint32_t);
 extern void		age_vifs(void);
-extern void		dump_vifs(FILE *);
+extern void		dump_vifs(FILE *, int);
 extern void		stop_all_vifs(void);
 extern struct listaddr *neighbor_info(vifi_t, uint32_t);
 extern void		accept_group_report(uint32_t, uint32_t, uint32_t, int);
@@ -330,7 +330,7 @@ extern void		reset_neighbor_state(vifi_t, uint32_t);
 extern int		grplst_mem(vifi_t, uint32_t);
 extern void		free_all_prunes(void);
 extern void 		age_table_entry(void);
-extern void		dump_cache(FILE *);
+extern void		dump_cache(FILE *, int);
 extern void 		update_lclgrp(vifi_t, uint32_t);
 extern void		delete_lclgrp(vifi_t, uint32_t);
 extern void		chkgrp_graft(vifi_t, uint32_t);

@@ -1565,7 +1565,7 @@ static struct vnflags nbrflags[] = {
 /*
  * Print the contents of the uvifs array on file 'fp'.
  */
-void dump_vifs(FILE *fp)
+void dump_vifs(FILE *fp, int detail)
 {
     vifi_t vifi;
     struct uvif *v;
@@ -1578,19 +1578,17 @@ void dump_vifs(FILE *fp)
     char *label;
 
     time(&now);
-    fprintf(fp, "vifs_with_neighbors = %d\n", vifs_with_neighbors);
+    if (detail) {
+	fprintf(fp, "Virtual Interface Table ");
+	if (vifs_with_neighbors == 1)
+	    fprintf(fp, "(This host is a leaf)\n");
+	else
+	    fprintf(fp, "(%d neighbors)\n", vifs_with_neighbors);
+    }
 
-    if (vifs_with_neighbors == 1)
-	fprintf(fp,"[This host is a leaf]\n\n");
-
-    fprintf(fp,
-    "\nVirtual Interface Table\n%s",
-    "Vif  Name  Local-Address                               ");
-    fprintf(fp,
-    "M  Thr  Rate   Flags\n");
+    fprintf(fp, "Vif  Name  Local-Address                               M  Thr  Rate   Flags=\n");
 
     for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
-
 	fprintf(fp, "%2u %6s  %-15s %6s: %-18s %2u %3u  %5u  ",
 		vifi,
 		v->uv_name,
@@ -1705,7 +1703,6 @@ void dump_vifs(FILE *fp)
 	}
 	fprintf(fp, "\n");
     }
-    fprintf(fp, "\n");
 }
 
 /*

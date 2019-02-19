@@ -83,9 +83,9 @@ static int ipc_send(int sd, struct ipc *msg, FILE *fp)
 
 static void show_dump(FILE *fp, int detail)
 {
-	dump_vifs(fp);
-	dump_routes(fp);
-	dump_cache(fp);
+	dump_vifs(fp, detail);
+	dump_routes(fp, detail);
+	dump_cache(fp, detail);
 }
 
 static char *vif2name(int vif)

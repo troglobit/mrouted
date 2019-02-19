@@ -419,11 +419,6 @@ int main(int argc, char *argv[])
 	pfd[i + 1].events = POLLIN;
     }
 
-    IF_DEBUG(DEBUG_IF)
-	dump_vifs(stderr);
-    IF_DEBUG(DEBUG_ROUTE)
-	dump_routes(stderr);
-
     /* schedule first timer interrupt */
     timer_setTimer(1, fasttimer, NULL);
     timer_setTimer(TIMER_INTERVAL, timer, NULL);
