@@ -192,6 +192,7 @@ static int usage(int rc)
 		"\n"
 		"Options:\n"
 		"  -d, --detail        Detailed output, where applicable\n"
+		"  -p, --plain         Use plain table headings, no ctrl chars\n"
 		"  -h, --help          This help text\n"
 		"\n"
 		"Commands:\n"
@@ -255,6 +256,7 @@ int main(int argc, char *argv[])
 {
 	struct option long_options[] = {
 		{ "detail",     0, NULL, 'd' },
+		{ "plain",      0, NULL, 'p' },
 		{ "help",       0, NULL, 'h' },
 		{ NULL, 0, NULL, 0 }
 	};
@@ -276,10 +278,14 @@ int main(int argc, char *argv[])
 	};
 	int c;
 
-	while ((c = getopt_long(argc, argv, "dh?v", long_options, NULL)) != EOF) {
+	while ((c = getopt_long(argc, argv, "dh?pv", long_options, NULL)) != EOF) {
 		switch(c) {
 		case 'd':
 			detail = 1;
+			break;
+
+		case 'p':
+			plain = 1;
 			break;
 
 		case 'h':
