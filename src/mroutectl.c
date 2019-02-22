@@ -257,6 +257,7 @@ int main(int argc, char *argv[])
 	struct option long_options[] = {
 		{ "detail",     0, NULL, 'd' },
 		{ "plain",      0, NULL, 'p' },
+		{ "no-heading", 0, NULL, 't' },
 		{ "help",       0, NULL, 'h' },
 		{ NULL, 0, NULL, 0 }
 	};
@@ -278,7 +279,7 @@ int main(int argc, char *argv[])
 	};
 	int c;
 
-	while ((c = getopt_long(argc, argv, "dh?pv", long_options, NULL)) != EOF) {
+	while ((c = getopt_long(argc, argv, "dh?ptv", long_options, NULL)) != EOF) {
 		switch(c) {
 		case 'd':
 			detail = 1;
@@ -286,6 +287,10 @@ int main(int argc, char *argv[])
 
 		case 'p':
 			plain = 1;
+			break;
+
+		case 't':
+			heading = 0;
 			break;
 
 		case 'h':
