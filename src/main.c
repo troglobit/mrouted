@@ -166,6 +166,28 @@ static void init_gendid(void)
     }
 }
 
+int debug_list(int mask, char *buf, size_t len)
+{
+    struct debugname *d;
+    size_t i;
+
+    memset(buf, 0, len);
+    for (i = 0, d = debugnames; i < ARRAY_LEN(debugnames); i++, d++) {
+	if (!(mask & d->level))
+	    continue;
+
+	if (mask != (int)DEBUG_ALL)
+	    mask &= ~d->level;
+
+	strlcat(buf, d->name, len);
+
+	if (mask && i + 1 < ARRAY_LEN(debugnames))
+	    strlcat(buf, ", ", len);
+    }
+
+    return 0;
+}
+
 int debug_parse(char *arg)
 {
     struct debugname *d;
@@ -201,8 +223,7 @@ int debug_parse(char *arg)
 
 static int usage(int code)
 {
-    size_t i, j, k;
-    struct debugname *d;
+    char buf[768];
 
     printf("Usage: mrouted [-hnprv] [-c file] [-d level[,level...]]\n"
 	   "\n"
@@ -217,24 +238,34 @@ static int usage(int code)
 	   "  -r, --show-routes          Show state of VIFs and multicast routing tables\n"
 	   "  -v, --version              Show mrouted version\n", DEFAULT_STARTUP_DELAY);
 
-    j = 0xffffffff;
-    k = 0;
-    fputs("\nValid debug levels:\n  ", stderr);
-    for (i = 0, d = debugnames; i < ARRAY_LEN(debugnames); i++, d++) {
-	if (i == 0)
-	    fputs("all, ", stderr);
+    fputs("\nValid debug levels:\n", stderr);
+    if (!debug_list(DEBUG_ALL, buf, sizeof(buf))) {
+	char line[82] = "  ";
+	char *ptr;
 
-	if ((j & d->level) == d->level) {
-	    if (k++)
-		fputs(", ", stderr);
-	    if (!(k % 7))
-		fputs("\n  ", stderr);
+	ptr = strtok(buf, " ");
+	while (ptr) {
+	    char *sys = ptr;
+	    char buf[20];
 
-	    fputs(d->name, stderr);
-	    j &= ~d->level;
+	    ptr = strtok(NULL, " ");
+
+	    /* Flush line */
+	    if (strlen(line) + strlen(sys) + 3 >= sizeof(line)) {
+		puts(line);
+		strlcpy(line, "  ", sizeof(line));
+	    }
+
+	    if (ptr)
+		snprintf(buf, sizeof(buf), "%s ", sys);
+	    else
+		snprintf(buf, sizeof(buf), "%s", sys);
+
+	    strlcat(line, buf, sizeof(line));
 	}
+
+	puts(line);
     }
-    fputc('\n', stderr);
 
     return code;
 }
