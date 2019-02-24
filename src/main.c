@@ -267,6 +267,11 @@ static int usage(int code)
 	puts(line);
     }
 
+    printf("\nBug report address: %-40s\n", PACKAGE_BUGREPORT);
+#ifdef PACKAGE_URL
+    printf("Project homepage: %s\n", PACKAGE_URL);
+#endif
+
     return code;
 }
 
