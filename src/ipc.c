@@ -67,6 +67,18 @@ static int ipc_close(int sd, struct ipc *msg)
 	return 0;
 }
 
+static int ipc_generic(int sd, struct ipc *msg, int (*cb)(void *), void *arg)
+{
+        if (cb(arg))
+                msg->cmd = IPC_ERR_CMD;
+        else
+                msg->cmd = IPC_EOF_CMD;
+
+	if (ipc_write(sd, msg))
+                logit(LOG_WARNING, errno, "Failed sending reply to client");
+}
+
+
 static int ipc_send(int sd, struct ipc *msg, FILE *fp)
 {
 	msg->cmd = IPC_OK_CMD;
