@@ -152,21 +152,28 @@ static void print(char *line)
 	}
 }
 
-static int show_generic(int cmd, int detail)
+static struct ipc *do_cmd(int cmd, int detail, char *buf, size_t len)
 {
+	static struct ipc msg = { 0 };
 	struct pollfd pfd;
-	struct ipc msg = { 0 };
 	int sd;
-	
+
 	sd = do_connect();
 	if (-1 == sd)
-		return -1;
+		return NULL;
 
 	msg.cmd = cmd;
 	msg.detail = detail;
+	if (buf) {
+		if (len >= sizeof(msg.buf)) {
+			errno = EINVAL;
+			return NULL;
+		}
+		memcpy(msg.buf, buf, len);
+	}
 	if (write(sd, &msg, sizeof(msg)) == -1) {
 		close(sd);
-		return -1;
+		return NULL;
 	}
 
 	pfd.fd = sd;
@@ -182,7 +189,17 @@ static int show_generic(int cmd, int detail)
 		print(msg.buf);
 	}
 
-	return close(sd);
+	close(sd);
+
+	return &msg;
+}
+
+static int show_generic(int cmd, int detail)
+{
+	if (!do_cmd(cmd, detail, NULL, 0))
+		return -1;
+
+	return 0;
 }
 
 static int usage(int rc)
