@@ -283,6 +283,32 @@ static void ipc_show(int sd, struct ipc *msg, void (*cb)(FILE *, int))
 	fclose(fp);
 }
 
+static int do_debug(void *arg)
+{
+        struct ipc *msg = (struct ipc *)arg;
+
+	if (!strcmp(msg->buf, "?"))
+		return debug_list(DEBUG_ALL, msg->buf, sizeof(msg->buf));
+
+	if (strlen(msg->buf)) {
+		int rc = debug_parse(msg->buf);
+
+		if ((int)DEBUG_PARSE_ERR == rc)
+			return 1;
+
+		/* Activate debugging of new subsystems */
+		debug = rc;
+	}
+
+	/* Return list of activated subsystems */
+	if (debug)
+		debug_list(debug, msg->buf, sizeof(msg->buf));
+	else
+		snprintf(msg->buf, sizeof(msg->buf), "none");
+
+	return 0;
+}
+
 static void ipc_handle(int sd)
 {
 	socklen_t socklen = 0;
@@ -312,6 +338,10 @@ static void ipc_handle(int sd)
 
 	case IPC_RESTART_CMD:
 		restart();
+		break;
+
+	case IPC_DEBUG_CMD:
+		ipc_generic(client, &msg, do_debug, &msg);
 		break;
 
 	case IPC_SHOW_DUMP_CMD:
