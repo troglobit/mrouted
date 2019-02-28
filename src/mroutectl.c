@@ -194,6 +194,28 @@ static struct ipc *do_cmd(int cmd, int detail, char *buf, size_t len)
 	return &msg;
 }
 
+static int do_set(int cmd, char *arg)
+{
+	struct ipc *msg;
+
+	if (!arg)
+		arg = "";
+
+	msg = do_cmd(cmd, 0, arg, strlen(arg));
+	if (!msg)
+		return 1;
+
+	if (strlen(msg->buf) > 1)
+		puts(msg->buf);
+
+	return 0;
+}
+
+static int set_debug(char *arg)
+{
+	return do_set(IPC_DEBUG_CMD, arg);
+}
+
 static int show_generic(int cmd, int detail)
 {
 	if (!do_cmd(cmd, detail, NULL, 0))
@@ -208,19 +230,20 @@ static int usage(int rc)
 		"Usage: mroutectl [OPTIONS] [COMMAND]\n"
 		"\n"
 		"Options:\n"
-		"  -d, --detail        Detailed output, where applicable\n"
-		"  -p, --plain         Use plain table headings, no ctrl chars\n"
-		"  -h, --help          This help text\n"
+		"  -d, --detail            Detailed output, where applicable\n"
+		"  -p, --plain             Use plain table headings, no ctrl chars\n"
+		"  -h, --help              This help text\n"
 		"\n"
 		"Commands:\n"
-		"  help                This help text\n"
-		"  kill                Kill running mrouted, like SIGTERM\n"
-		"  restart             Restart mrouted and reload .conf file, like SIGHUP\n"
-		"  version             Show mrouted version\n"
-		"  show igmp           Show IGMP group memberships\n"
-		"  show interfaces     Show interface table\n"
-		"  show routes         Show DVMRP routing table\n"
-		"  show status         Show status summary, default\n"
+		"  debug [? | none | SYS]  Debug subystem(s), separate multiple with comma\n"
+		"  help                    This help text\n"
+		"  kill                    Kill running mrouted, like SIGTERM\n"
+		"  restart                 Restart mrouted and reload .conf file, like SIGHUP\n"
+		"  version                 Show mrouted version\n"
+		"  show igmp               Show IGMP group memberships\n"
+		"  show interfaces         Show interface table\n"
+		"  show routes             Show DVMRP routing table\n"
+		"  show status             Show status summary, default\n"
 		);
 
 	return rc;
@@ -287,11 +310,12 @@ int main(int argc, char *argv[])
 		{ NULL }
 	};
 	struct cmd command[] = {
-		{ "show",      show, NULL,         0                   },
+		{ "debug",     NULL, set_debug,    0                   },
 		{ "help",      NULL, help,         0                   },
 		{ "version",   NULL, NULL,         IPC_VERSION_CMD     },
 		{ "kill",      NULL, NULL,         IPC_KILL_CMD        },
 		{ "restart",   NULL, NULL,         IPC_RESTART_CMD     },
+		{ "show",      show, NULL,         0                   },
 		{ NULL }
 	};
 	int c;
