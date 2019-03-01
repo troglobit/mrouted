@@ -67,7 +67,7 @@ static int ipc_close(int sd, struct ipc *msg)
 	return 0;
 }
 
-static int ipc_generic(int sd, struct ipc *msg, int (*cb)(void *), void *arg)
+static void ipc_generic(int sd, struct ipc *msg, int (*cb)(void *), void *arg)
 {
         if (cb(arg))
                 msg->cmd = IPC_ERR_CMD;
