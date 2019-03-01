@@ -283,15 +283,17 @@ int main(int argc, char *argv[])
     struct pollfd *pfd;
     struct sigaction sa;
     struct option long_options[] = {
-	{"config", 1, 0, 'c'},
-	{"debug", 2, 0, 'd'},
-	{"foreground", 0, 0, 'n'},
-	{"help", 0, 0, 'h'},
-	{"version", 0, 0, 'v'},
-	{"no-intefaces", 0, 0, 'N'},
-	{"missing-ok", 0, 0, 'M'},
-	{"startup-delay", 1, 0, 'D'},
-	{0, 0, 0, 0}
+	{ "config",        1, 0, 'c' },
+	{ "debug",         2, 0, 'd' },
+	{ "foreground",    0, 0, 'n' },
+	{ "help",          0, 0, 'h' },
+	{ "version",       0, 0, 'v' },
+	{ "disable-vifs",  0, 0, 'N' },
+	{ "no-interfaces", 0, 0, 'N' },
+	{ "no-intefaces",  0, 0, 'N' },
+	{ "missing-ok",    0, 0, 'M' },
+	{ "startup-delay", 1, 0, 'D' },
+	{ NULL, 0, 0, 0 }
     };
 
     snprintf(versionstring, sizeof(versionstring), "mrouted version %s", PACKAGE_VERSION);
