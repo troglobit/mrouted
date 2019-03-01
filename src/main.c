@@ -373,13 +373,7 @@ int main(int argc, char *argv[])
     /*
      * Setup logging
      */
-#ifdef LOG_DAEMON
-    (void)openlog("mrouted", LOG_PID, LOG_DAEMON);
-    (void)setlogmask(LOG_UPTO(LOG_NOTICE));
-#else
-    (void)openlog("mrouted", LOG_PID);
-#endif
-
+    log_init();
     logit(LOG_DEBUG, 0, "%s starting", versionstring);
 
     do_randomize();
@@ -910,6 +904,20 @@ void printringbuf(void)
 #endif
 
 /*
+ * Open connection to syslog daemon and set initial log level
+ */
+void log_init(void)
+{
+#ifdef LOG_DAEMON
+    (void)openlog("mrouted", LOG_PID, LOG_DAEMON);
+    (void)setlogmask(LOG_UPTO(LOG_NOTICE));
+#else
+    (void)openlog("mrouted", LOG_PID);
+#endif
+}
+
+
+/*
  * Log errors and other messages to the system log daemon and to stderr,
  * according to the severity of the message and the current debug level.
  * For errors of severity LOG_ERR or worse, terminate the program.
@@ -990,7 +998,8 @@ void logit(int severity, int syserr, const char *format, ...)
 	    syslog(severity, "%s", msg);
     }
 
-    if (severity <= LOG_ERR) exit(1);
+    if (severity <= LOG_ERR)
+	exit(1);
 }
 
 #ifdef DEBUG_MFC

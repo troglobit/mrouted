@@ -232,6 +232,7 @@ extern int              debug_list(int, char *, size_t);
 extern int              debug_parse(char *);
 extern void             restart(void);
 extern char *		scaletime(time_t);
+extern void             log_init(void);
 extern void		logit(int, int, const char *, ...);
 extern int		register_input_handler(int, ihfunc_t);
 
