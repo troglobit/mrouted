@@ -16,6 +16,7 @@
  *  original routed code has been adopted.)
  */
 
+#define SYSLOG_NAMES
 #include "defs.h"
 #include <err.h>
 #include <getopt.h>
@@ -46,6 +47,7 @@ int missingok = 0;
 
 int debug = 0;
 int running = 1;
+int loglevel = LOG_NOTICE;
 time_t mrouted_init_time;
 
 #define NHANDLERS	2
@@ -221,6 +223,20 @@ int debug_parse(char *arg)
     return sys;
 }
 
+int log_str2lvl(char *level)
+{
+    int i;
+
+    for (i = 0; prioritynames[i].c_name; i++) {
+	size_t len = MIN(strlen(prioritynames[i].c_name), strlen(level));
+
+	if (!strncasecmp(prioritynames[i].c_name, level, len))
+	    return prioritynames[i].c_val;
+    }
+
+    return atoi(level);
+}
+
 static int usage(int code)
 {
     char buf[768];
@@ -229,6 +245,7 @@ static int usage(int code)
 	   "\n"
 	   "  -c, --config=FILE          Configuration file to use, default /etc/mrouted.conf\n"
 	   "  -d, --debug=LEVEL          Debug level, see below for valid levels\n"
+	   "  -l, --loglevel=LEVEL       Set log level: none, err, notice (default), info, debug\n"
 	   "  -n, --foreground           Run in foreground, do not detach from calling terminal\n"
 	   "  -h, --help                 Show this help text\n"
 	   "      --no-interfaces        Disable all interfaces by default\n"
@@ -287,6 +304,7 @@ int main(int argc, char *argv[])
 	{ "debug",         2, 0, 'd' },
 	{ "foreground",    0, 0, 'n' },
 	{ "help",          0, 0, 'h' },
+	{ "loglevel",      1, 0, 'l' },
 	{ "version",       0, 0, 'v' },
 	{ "disable-vifs",  0, 0, 'N' },
 	{ "no-interfaces", 0, 0, 'N' },
@@ -298,10 +316,16 @@ int main(int argc, char *argv[])
 
     snprintf(versionstring, sizeof(versionstring), "mrouted version %s", PACKAGE_VERSION);
 
-    while ((ch = getopt_long(argc, argv, "D:MNnc:d:fhpv", long_options, NULL)) != EOF) {
+    while ((ch = getopt_long(argc, argv, "D:l:MNnc:d:fhpv", long_options, NULL)) != EOF) {
 	switch (ch) {
 	    case 'D':
 		startupdelay = atoi(optarg);
+		break;
+
+	    case 'l':
+		loglevel = log_str2lvl(optarg);
+		if (-1 == loglevel)
+		    return usage(1);
 		break;
 
 	    case 'M':
@@ -911,10 +935,10 @@ void printringbuf(void)
 void log_init(void)
 {
 #ifdef LOG_DAEMON
-    (void)openlog("mrouted", LOG_PID, LOG_DAEMON);
-    (void)setlogmask(LOG_UPTO(LOG_NOTICE));
+    openlog("mrouted", LOG_PID, LOG_DAEMON);
+    setlogmask(LOG_UPTO(loglevel));
 #else
-    (void)openlog("mrouted", LOG_PID);
+    openlog("mrouted", LOG_PID);
 #endif
 }
 
