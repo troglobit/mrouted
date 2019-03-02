@@ -22,7 +22,6 @@
 #include <paths.h>
 #include <fcntl.h>
 #include <poll.h>
-#include <sys/stat.h>
 
 extern char *configfilename;
 char versionstring[MAX_VERSION_LEN];

@@ -79,38 +79,12 @@ void logit(int severity, int syserr, const char *format, ...)
     struct timeval now;
     time_t now_sec;
     struct tm *thyme;
-#ifdef RINGBUFFER
-    static int ringbufinit = 0;
-#endif
 
     va_start(ap, format);
     vsnprintf(&fmt[10], sizeof(fmt) - 10, format, ap);
     va_end(ap);
     msg = (severity == LOG_WARNING) ? fmt : &fmt[10];
 
-#ifdef RINGBUFFER
-    if (!ringbufinit) {
-	int i;
-
-	for (i = 0; i < NLOGMSGS; i++) {
-	    logmsg[i] = malloc(LOGMSGSIZE);
-	    if (logmsg[i] == 0) {
-		syslog(LOG_ERR, "Out of memory");
-		exit(1);
-	    }
-	    *logmsg[i] = 0;
-	}
-	ringbufinit = 1;
-    }
-    gettimeofday(&now, NULL);
-    now_sec = now.tv_sec;
-    thyme = localtime(&now_sec);
-    snprintf(logmsg[logmsgno++], LOGMSGSIZE, "%02d:%02d:%02d.%03ld %s err %d",
-	     thyme->tm_hour, thyme->tm_min, thyme->tm_sec,
-	     now.tv_usec / 1000, msg, syserr);
-    logmsgno %= NLOGMSGS;
-    if (severity <= LOG_NOTICE)
-#endif
     /*
      * Log to stderr if we haven't forked yet and it's a warning or worse,
      * or if we're debugging.
@@ -150,38 +124,6 @@ void logit(int severity, int syserr, const char *format, ...)
     if (severity <= LOG_ERR)
 	exit(1);
 }
-
-#ifdef RINGBUFFER
-#define NLOGMSGS 10000
-#define LOGMSGSIZE 200
-char *logmsg[NLOGMSGS];
-static int logmsgno = 0;
-
-void printringbuf(void)
-{
-    FILE *f;
-    int i;
-
-    f = fopen("/var/tmp/mrouted.log", "a");
-    if (f == NULL) {
-	logit(LOG_ERR, errno, "Cannot open /var/tmp/mrouted.log");
-	/*NOTREACHED*/
-    }
-    fprintf(f, "--------------------------------------------\n");
-
-    i = (logmsgno + 1) % NLOGMSGS;
-
-    while (i != logmsgno) {
-	if (*logmsg[i]) {
-	    fprintf(f, "%s\n", logmsg[i]);
-	    *logmsg[i] = '\0';
-	}
-	i = (i + 1) % NLOGMSGS;
-    }
-
-    fclose(f);
-}
-#endif
 
 #ifdef DEBUG_MFC
 void md_log(int what, uint32_t origin, uint32_t mcastgrp)

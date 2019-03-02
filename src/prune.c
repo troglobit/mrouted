@@ -1143,9 +1143,6 @@ void accept_prune(uint32_t src, uint32_t dst, char *p, size_t datalen)
 		      inet_fmt(src, s1, sizeof(s1)), inet_fmt(prun_src, s2, sizeof(s2)),
 		      inet_fmt(prun_grp, s3, sizeof(s3)), vifi, inet_fmt(r->rt_dominants[vifi], s4, sizeof(s4)));
 	    }
-#ifdef RINGBUFFER
-	    printringbuf();
-#endif
 	    return;
 	}
 	if (VIFM_ISSET(vifi, g->gt_scope)) {
@@ -1446,9 +1443,6 @@ void accept_g_ack(uint32_t src, uint32_t dst, char *p, size_t datalen)
 	logit(LOG_WARNING, 0, "Received graft ACK with no kernel entry for (%s, %s) from %s",
 	      inet_fmt(grft_src, s1, sizeof(s1)), inet_fmt(grft_grp, s2, sizeof(s2)),
 	      inet_fmt(src, s3, sizeof(s3)));
-#ifdef RINGBUFFER
-	printringbuf();
-#endif
 	return;
     }
 }
@@ -1643,9 +1637,6 @@ void age_table_entry(void)
 	    send_prune_or_graft(gt);
 	    logit(LOG_WARNING, 0, "Fixed  membership for (%s %s) gm:%x",
 		  RT_FMT(r, s1), inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)), gt->gt_grpmems);
-#ifdef RINGBUFFER
-	    printringbuf();
-#endif
 	}
 	/*DEBUG2*/
 	/* If there are group members,
@@ -1665,11 +1656,9 @@ void age_table_entry(void)
 	    }
 
 	    if (st != NULL) {
-		logit(LOG_WARNING, 0, "Group members for (%s %s) is empty but no prune state!", RT_FMT(r, s1), inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)));
+		logit(LOG_WARNING, 0, "Group members for (%s %s) is empty but no prune state!",
+		      RT_FMT(r, s1), inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)));
 		send_prune_or_graft(gt);
-#ifdef RINGBUFFER
-		printringbuf();
-#endif
 	    }
 	}
 	/* XXX ...Debugging */
