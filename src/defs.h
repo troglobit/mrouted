@@ -166,7 +166,9 @@ extern int		missingok;
 #define DEFAULT_STARTUP_DELAY 10  /* default startup delay before forwarding in seconds */
 
 extern int		debug;
+extern int		loglevel;
 extern int		running;
+extern int		haveterminal;
 extern int		did_final_init;
 extern time_t           mrouted_init_time;
 
@@ -232,9 +234,13 @@ extern int              debug_list(int, char *, size_t);
 extern int              debug_parse(char *);
 extern void             restart(void);
 extern char *		scaletime(time_t);
-extern void             log_init(void);
-extern void		logit(int, int, const char *, ...);
 extern int		register_input_handler(int, ihfunc_t);
+
+/* log.c */
+extern void             log_init(void);
+extern int		log_str2lvl(char *);
+extern void		logit(int, int, const char *, ...);
+extern void             resetlogging(void *);
 
 /* igmp.c */
 extern void		init_igmp(void);
@@ -416,6 +422,7 @@ struct ipc {
 	char    sentry;
 };
 
+/* ipc.c */
 void ipc_init(void);
 void ipc_exit(void);
 
