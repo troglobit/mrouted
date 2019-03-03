@@ -10,7 +10,7 @@ Requires=network-online.target
 [Service]
 Type=simple
 ExecStartPre=-/sbin/modprobe ipip
-ExecStart=@SBINDIR@/mrouted -f
+ExecStart=@SBINDIR@/mrouted -n
 
 [Install]
 WantedBy=multi-user.target

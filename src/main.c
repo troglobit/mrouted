@@ -224,7 +224,7 @@ static int usage(int code)
 
     printf("Usage: mrouted [-hnprv] [-c FILE] [-d SYS[,SYS...]] [-l LEVEL]\n"
 	   "\n"
-	   "  -c, --config=FILE          Configuration file to use, default /etc/mrouted.conf\n"
+	   "  -f, --config=FILE          Configuration file to use, default /etc/mrouted.conf\n"
 	   "  -d, --debug=SYS[,SYS]      Debug subsystem(s), see below for valid system names\n"
 	   "  -l, --loglevel=LEVEL       Set log level: none, err, notice (default), info, debug\n"
 	   "  -n, --foreground           Run in foreground, do not detach from calling terminal\n"
@@ -281,7 +281,7 @@ int main(int argc, char *argv[])
     struct pollfd *pfd;
     struct sigaction sa;
     struct option long_options[] = {
-	{ "config",        1, 0, 'c' },
+	{ "config",        1, 0, 'f' },
 	{ "debug",         2, 0, 'd' },
 	{ "foreground",    0, 0, 'n' },
 	{ "help",          0, 0, 'h' },
@@ -297,7 +297,7 @@ int main(int argc, char *argv[])
 
     snprintf(versionstring, sizeof(versionstring), "mrouted version %s", PACKAGE_VERSION);
 
-    while ((ch = getopt_long(argc, argv, "D:l:MNnc:d:fhpv", long_options, NULL)) != EOF) {
+    while ((ch = getopt_long(argc, argv, "D:l:MNnd:f:hpv", long_options, NULL)) != EOF) {
 	switch (ch) {
 	    case 'D':
 		startupdelay = atoi(optarg);
@@ -324,7 +324,7 @@ int main(int argc, char *argv[])
 		vifstatedefault = VIFF_DISABLED;
 		break;
 
-	    case 'c':
+	    case 'f':
 		configfilename = optarg;
 		break;
 
@@ -341,8 +341,6 @@ int main(int argc, char *argv[])
 		    return usage(1);
 		break;
 
-	    case 'f': /* compat */
-		/* fallthrough */
 	    case 'n':
 		foreground = 1;
 		break;
