@@ -390,9 +390,6 @@ int main(int argc, char *argv[])
      */
     init_gendid();
 
-    /* Start up the log rate-limiter */
-    resetlogging(NULL);
-
     callout_init();
     init_igmp();
     init_icmp();

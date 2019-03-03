@@ -59,6 +59,9 @@ void log_init(void)
 {
     openlog("mrouted", LOG_PID, LOG_DAEMON);
     setlogmask(LOG_UPTO(loglevel));
+
+    /* Start up the log rate-limiter */
+    resetlogging(NULL);
 }
 
 
