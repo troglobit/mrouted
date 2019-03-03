@@ -158,10 +158,6 @@ static struct ipc *do_cmd(int cmd, int detail, char *buf, size_t len)
 	struct pollfd pfd;
 	int sd;
 
-	sd = do_connect();
-	if (-1 == sd)
-		return NULL;
-
 	msg.cmd = cmd;
 	msg.detail = detail;
 	if (buf) {
@@ -171,6 +167,11 @@ static struct ipc *do_cmd(int cmd, int detail, char *buf, size_t len)
 		}
 		memcpy(msg.buf, buf, len);
 	}
+
+	sd = do_connect();
+	if (-1 == sd)
+		return NULL;
+
 	if (write(sd, &msg, sizeof(msg)) == -1) {
 		close(sd);
 		return NULL;
