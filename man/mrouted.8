@@ -15,7 +15,8 @@
 .Nm mrouted
 .Op Fl hnpv
 .Op Fl c Ar FILE
-.Op Fl d Ar LEVEL[,LEVEL,...
+.Op Fl d Ar SYS[,SYS,...
+.Op Fl l Ar LEVEL
 .Sh DESCRIPTION
 .Nm
 is an implementation of the Distance-Vector Multicast Routing
@@ -110,27 +111,24 @@ Wait for DELAY seconds before applying the routes. This delay enables
 to exchange routes before starting to forward multicast packets and
 therefore eliminate transient problems at startup, at the cost of a
 momentary black hole. Defaults to 10 seconds.
+.It Fl l, -loglevel=LEVEL
+Set log level for syslog messages: none, err, notice (default), info,
+debug. Use '?' for a complete list of supported log levels.
 .It Fl n, -foreground
 Run in foreground, do not detach from the calling terminal.
 .It Fl c, -config=FILE
 Specify an alternative configuration file, default
 .Pa /etc/mrouted.conf
-.It Fl d, -debug=LEVEL[,LEVEL,..]
-By default,
+.It Fl d, -debug=SYS[,SYS,..]
+This option enables subsystem debug messages and causes
 .Nm
-detaches from the invoking terminal.
-If this option is specified,
-.Nm
-it runs in foreground of the starting terminal and responds to signals.
-If
-.Fl d
-is given with no argument, the debug level defaults to
-.Nm igmp, cache, interface, groups, prunes, routes and peers .
-
-Regardless of the debug level,
-.Nm
-always writes warning and error messages to the system log daemon.
-Debug levels have the following effects:
+to run in the foreground of the starting terminal, regardless of the
+.Fl n
+option.  The
+.Fl l Ar LEVEL
+flag controls the (syslog) log level of each subsystem.
+.Pp
+Available subystems:
 .Pp
 .Bl -tag -width TERM -compact -offset indent
 .It Cm packet | pkt

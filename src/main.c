@@ -222,10 +222,10 @@ static int usage(int code)
 {
     char buf[768];
 
-    printf("Usage: mrouted [-hnprv] [-c file] [-d level[,level...]]\n"
+    printf("Usage: mrouted [-hnprv] [-c FILE] [-d SYS[,SYS...]] [-l LEVEL]\n"
 	   "\n"
 	   "  -c, --config=FILE          Configuration file to use, default /etc/mrouted.conf\n"
-	   "  -d, --debug=LEVEL          Debug level, see below for valid levels\n"
+	   "  -d, --debug=SYS[,SYS]      Debug subsystem(s), see below for valid system names\n"
 	   "  -l, --loglevel=LEVEL       Set log level: none, err, notice (default), info, debug\n"
 	   "  -n, --foreground           Run in foreground, do not detach from calling terminal\n"
 	   "  -h, --help                 Show this help text\n"
@@ -236,7 +236,7 @@ static int usage(int code)
 	   "  -r, --show-routes          Show state of VIFs and multicast routing tables\n"
 	   "  -v, --version              Show mrouted version\n", DEFAULT_STARTUP_DELAY);
 
-    fputs("\nValid debug levels:\n", stderr);
+    fputs("\nValid debug subsystems:\n", stderr);
     if (!debug_list(DEBUG_ALL, buf, sizeof(buf))) {
 	char line[82] = "  ";
 	char *ptr;
@@ -322,6 +322,13 @@ int main(int argc, char *argv[])
 		break;
 
 	    case 'd':
+		if (!strcmp(optarg, "?")) {
+		    char buf[256];
+
+		    debug_list(DEBUG_ALL, buf, sizeof(buf));
+		    return !puts(buf);
+		}
+
 		debug = debug_parse(optarg);
 		if ((int)DEBUG_PARSE_ERR == debug)
 		    return usage(1);
