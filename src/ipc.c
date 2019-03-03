@@ -392,7 +392,8 @@ void ipc_init(void)
 
 	len = offsetof(struct sockaddr_un, sun_path) + strlen(sun.sun_path);
 	if (bind(sd, (struct sockaddr *)&sun, len) < 0 || listen(sd, 1)) {
-		logit(LOG_WARNING, errno, "Failed binding IPC socket, client disabled");
+		logit(LOG_WARNING, errno, "Failed binding IPC socket, %s", sun.sun_path);
+		logit(LOG_NOTICE, 0, "mroutectl client support disabled");
 		close(sd);
 		return;
 	}
