@@ -57,12 +57,8 @@ void resetlogging(void *arg)
  */
 void log_init(void)
 {
-#ifdef LOG_DAEMON
     openlog("mrouted", LOG_PID, LOG_DAEMON);
     setlogmask(LOG_UPTO(loglevel));
-#else
-    openlog("mrouted", LOG_PID);
-#endif
 }
 
 
