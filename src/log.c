@@ -14,6 +14,24 @@
 #define LOG_MAX_MSGS	20	/* if > 20/minute then shut up for a while */
 #define LOG_SHUT_UP	600	/* shut up for 10 minutes */
 
+#ifndef INTERNAL_NOPRI
+#define INTERNAL_NOPRI  0x10
+#endif
+
+CODE prionm[] =
+{
+	{ "none",    INTERNAL_NOPRI },		/* INTERNAL */
+	{ "crit",    LOG_CRIT       },
+	{ "alert",   LOG_ALERT      },
+	{ "panic",   LOG_EMERG      },
+	{ "error",   LOG_ERR        },
+	{ "warning", LOG_WARNING    },
+	{ "notice",  LOG_NOTICE     },
+	{ "info",    LOG_INFO       },
+	{ "debug",   LOG_DEBUG      },
+	{ NULL, -1 }
+};
+
 int loglevel = LOG_NOTICE;
 
 static int log_nmsgs = 0;
@@ -23,14 +41,40 @@ int log_str2lvl(char *level)
 {
     int i;
 
-    for (i = 0; prioritynames[i].c_name; i++) {
-	size_t len = MIN(strlen(prioritynames[i].c_name), strlen(level));
+    for (i = 0; prionm[i].c_name; i++) {
+	size_t len = MIN(strlen(prionm[i].c_name), strlen(level));
 
-	if (!strncasecmp(prioritynames[i].c_name, level, len))
-	    return prioritynames[i].c_val;
+	if (!strncasecmp(prionm[i].c_name, level, len))
+	    return prionm[i].c_val;
     }
 
     return atoi(level);
+}
+
+char *log_lvl2str(int val)
+{
+    int i;
+
+    for (i = 0; prionm[i].c_name; i++) {
+	if (prionm[i].c_val == val)
+	    return prionm[i].c_name;
+    }
+
+    return "unknown";
+}
+
+int log_list(char *buf, size_t len)
+{
+    int i;
+
+    memset(buf, 0, len);
+    for (i = 0; prionm[i].c_name; i++) {
+	if (i > 0)
+	    strlcat(buf, ", ", len);
+	strlcat(buf, prionm[i].c_name, len);
+    }
+
+    return 0;
 }
 
 void resetlogging(void *arg)

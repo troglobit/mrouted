@@ -216,6 +216,11 @@ static int set_debug(char *arg)
 	return do_set(IPC_DEBUG_CMD, arg);
 }
 
+static int set_loglevel(char *arg)
+{
+	return do_set(IPC_LOGLEVEL_CMD, arg);
+}
+
 static int show_generic(int cmd, int detail)
 {
 	if (!do_cmd(cmd, detail, NULL, 0))
@@ -238,6 +243,7 @@ static int usage(int rc)
 		"  debug [? | none | SYS]  Debug subystem(s), separate multiple with comma\n"
 		"  help                    This help text\n"
 		"  kill                    Kill running mrouted, like SIGTERM\n"
+		"  log [? | none | LEVEL]  Set log level: none, err, notice*, info, debug\n"
 		"  restart                 Restart mrouted and reload .conf file, like SIGHUP\n"
 		"  version                 Show mrouted version\n"
 		"  show igmp               Show IGMP group memberships\n"
@@ -312,10 +318,11 @@ int main(int argc, char *argv[])
 	struct cmd command[] = {
 		{ "debug",     NULL, set_debug,    0                   },
 		{ "help",      NULL, help,         0                   },
-		{ "version",   NULL, NULL,         IPC_VERSION_CMD     },
 		{ "kill",      NULL, NULL,         IPC_KILL_CMD        },
+		{ "log",       NULL, set_loglevel, 0                   },
 		{ "restart",   NULL, NULL,         IPC_RESTART_CMD     },
 		{ "show",      show, NULL,         0                   },
+		{ "version",   NULL, NULL,         IPC_VERSION_CMD     },
 		{ NULL }
 	};
 	int c;

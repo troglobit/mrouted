@@ -304,6 +304,13 @@ int main(int argc, char *argv[])
 		break;
 
 	    case 'l':
+		if (!strcmp(optarg, "?")) {
+		    char buf[128];
+
+		    log_list(buf, sizeof(buf));
+		    return !puts(buf);
+		}
+
 		loglevel = log_str2lvl(optarg);
 		if (-1 == loglevel)
 		    return usage(1);

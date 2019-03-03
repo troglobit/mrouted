@@ -309,6 +309,29 @@ static int do_debug(void *arg)
 	return 0;
 }
 
+static int do_loglevel(void *arg)
+{
+	struct ipc *msg = (struct ipc *)arg;
+	int rc;
+
+	if (!strcmp(msg->buf, "?"))
+		return log_list(msg->buf, sizeof(msg->buf));
+
+	if (!strlen(msg->buf)) {
+		strlcpy(msg->buf, log_lvl2str(loglevel), sizeof(msg->buf));
+		return 0;
+	}
+
+	rc = log_str2lvl(msg->buf);
+	if (-1 == rc)
+		return 1;
+
+	logit(LOG_NOTICE, 0, "Setting new log level %s", log_lvl2str(rc));
+	loglevel = rc;
+
+	return 0;
+}
+
 static void ipc_handle(int sd)
 {
 	socklen_t socklen = 0;
@@ -342,6 +365,10 @@ static void ipc_handle(int sd)
 
 	case IPC_DEBUG_CMD:
 		ipc_generic(client, &msg, do_debug, &msg);
+		break;
+
+	case IPC_LOGLEVEL_CMD:
+		ipc_generic(client, &msg, do_loglevel, &msg);
 		break;
 
 	case IPC_SHOW_DUMP_CMD:
