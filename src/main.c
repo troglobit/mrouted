@@ -230,8 +230,8 @@ static int usage(int code)
 	   "  -n, --foreground           Run in foreground, do not detach from calling terminal\n"
 	   "  -h, --help                 Show this help text\n"
 	   "      --no-interfaces        Disable all interfaces by default\n"
-	   "      --missing-ok           Missing interfaces are OK\n"
-	   "      --startup-delay=DELAY  Set startup delay before forwarding, default %d seconds\n"
+	   "      --missing-ok           Missing interfaces from mrouted.conf are OK\n"
+	   "      --startup-delay=DELAY  Startup delay before forwarding, default %d seconds\n"
 	   "  -p                         Disable pruning.  Deprecated, compatibility option\n"
 	   "  -r, --show-routes          Show state of VIFs and multicast routing tables\n"
 	   "  -v, --version              Show mrouted version\n", DEFAULT_STARTUP_DELAY);
