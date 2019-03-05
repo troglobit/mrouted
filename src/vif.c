@@ -820,8 +820,7 @@ void accept_leave_message(uint32_t src, uint32_t dst, uint32_t group)
 		g->al_timerid = DeleteTimer(g->al_timerid);
 
 #if IGMP_LAST_MEMBER_QUERY_COUNT != 2
-This code needs to be updated to keep a counter of the number
-of queries remaining.
+#error This code needs to be updated to keep a counter of the number of queries remaining.
 #endif
 	    /** send a group specific querry **/
 	    g->al_timer = IGMP_LAST_MEMBER_QUERY_INTERVAL *
