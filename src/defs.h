@@ -354,6 +354,8 @@ extern void 		accept_g_ack(uint32_t, uint32_t, char *, size_t);
 extern void		accept_mtrace(uint32_t, uint32_t, uint32_t, char *, uint8_t, size_t);
 
 /* kern.c */
+extern int              curttl;
+
 extern void		k_set_rcvbuf(int, int);
 extern void		k_hdr_include(int);
 extern void		k_set_ttl(int);

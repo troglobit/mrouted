@@ -354,7 +354,6 @@ size_t build_igmp(uint32_t src, uint32_t dst, int type, int code, uint32_t group
 {
     struct ip *ip;
     struct igmp *igmp;
-    extern int curttl;
     size_t igmp_len = IGMP_MINLEN + datalen;
     size_t len = MIN_IP_HEADER_LEN + IGMP_MINLEN + datalen;
 
