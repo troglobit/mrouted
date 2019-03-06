@@ -238,10 +238,10 @@ static void show_igmp_iface(FILE *fp, int detail)
 
 		if (uv->uv_flags & VIFF_IGMPV1)
 			version = 1;
-//		else if (uv->uv_flags & VIFF_IGMPV2)
-//			version = 2;
-		else
+		else if (uv->uv_flags & VIFF_IGMPV2)
 			version = 2;
+		else
+			version = 3;
 
 		fprintf(fp, "%-16s  %-8s  %-15s  %7s %7d  %6zd\n", uv->uv_name,
 			ifstate(uv), s1, timeout, version, num);
