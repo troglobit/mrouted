@@ -42,7 +42,7 @@ static void start_vif2(vifi_t vifi);
 static void stop_vif(vifi_t vifi);
 static void age_old_hosts(void);
 static void send_probe_on_vif(struct uvif *v);
-static void send_query(struct uvif *v);
+static void send_query(struct uvif *v, uint32_t dst, int code, uint32_t group);
 static int info_version(uint8_t *p, size_t plen);
 static void DelVif(void *arg);
 static int SetTimer(vifi_t vifi, struct listaddr *g);
@@ -313,18 +313,34 @@ static void send_probe_on_vif(struct uvif *v)
     send_on_vif(v, 0, DVMRP_PROBE, datalen);
 }
 
-static void send_query(struct uvif *v)
+static void send_query(struct uvif *v, uint32_t dst, int code, uint32_t group)
 {
-    IF_DEBUG(DEBUG_IGMP) {
-	logit(LOG_DEBUG, 0, "Sending %squery on vif %d",
-	      (v->uv_flags & VIFF_IGMPV1) ? "v1 " : "",
-	      v - uvifs);
+    int datalen = 4;
+
+    /*
+     * IGMP version to send depends on the compatibility mode of the
+     * interface:
+     *  - IGMPv2: routers MUST send Periodic Queries truncated at the
+     *    Group Address field (i.e., 8 bytes long).
+     *  - IGMPv1: routers MUST send Periodic Queries with a Max Response
+     *    Time of 0
+     */
+    if (v->uv_flags & VIFF_IGMPV2) {
+	datalen = 0;
+    } else if (v->uv_flags & VIFF_IGMPV1) {
+	datalen = 0;
+	code = 0;
     }
 
-    send_igmp(v->uv_lcl_addr, allhosts_group,
-		IGMP_MEMBERSHIP_QUERY, 
-		(v->uv_flags & VIFF_IGMPV1) ? 0 :
-		IGMP_MAX_HOST_REPORT_DELAY * IGMP_TIMER_SCALE, 0, 0);
+    IF_DEBUG(DEBUG_IGMP) {
+	logit(LOG_DEBUG, 0, "Sending %squery on %s",
+	      (v->uv_flags & VIFF_IGMPV1) ? "v1 " :
+	      (v->uv_flags & VIFF_IGMPV2) ? "v2 " : "v3 ",
+	      v->uv_name);
+    }
+
+    send_igmp(v->uv_lcl_addr, dst, IGMP_MEMBERSHIP_QUERY,
+	      code, 0, datalen);
 }
 
 /*
@@ -395,7 +411,7 @@ static void start_vif2(vifi_t vifi)
 	IF_DEBUG(DEBUG_IGMP) {
 	    logit(LOG_DEBUG, 0, "Assuming querier duties on vif %d", vifi);
 	}
-	send_query(v);
+	send_query(v, allhosts_group, IGMP_MAX_HOST_REPORT_DELAY * IGMP_TIMER_SCALE, 0);
     }
 
     v->uv_leaf_timer = LEAF_CONFIRMATION_TIME;
@@ -580,9 +596,9 @@ void query_groups(void)
     struct uvif *v;
 
     for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
-	if (v->uv_flags & VIFF_QUERIER) {
-	    send_query(v);
-	}
+	if (v->uv_flags & VIFF_QUERIER)
+	    send_query(v, allhosts_group, IGMP_MAX_HOST_REPORT_DELAY *
+		       IGMP_TIMER_SCALE, 0);
     }
 
     age_old_hosts();
@@ -825,10 +841,8 @@ void accept_leave_message(uint32_t src, uint32_t dst, uint32_t group)
 	    /** send a group specific querry **/
 	    g->al_timer = IGMP_LAST_MEMBER_QUERY_INTERVAL *
 			(IGMP_LAST_MEMBER_QUERY_COUNT + 1);
-	    send_igmp(v->uv_lcl_addr, g->al_addr,
-		        IGMP_MEMBERSHIP_QUERY, 
-		        IGMP_LAST_MEMBER_QUERY_INTERVAL * IGMP_TIMER_SCALE,
-		        g->al_addr, 0);
+	    send_query(v, g->al_addr, IGMP_LAST_MEMBER_QUERY_INTERVAL *
+		       IGMP_TIMER_SCALE, g->al_addr);
 	    g->al_query = SetQueryTimer(g, vifi,
 			IGMP_LAST_MEMBER_QUERY_INTERVAL,
 			IGMP_LAST_MEMBER_QUERY_INTERVAL * IGMP_TIMER_SCALE);
@@ -1511,7 +1525,8 @@ void age_vifs(void)
 		free(v->uv_querier);
 		v->uv_querier = NULL;
 		v->uv_flags |= VIFF_QUERIER;
-		send_query(v);
+		send_query(v, allhosts_group, IGMP_MAX_HOST_REPORT_DELAY *
+			   IGMP_TIMER_SCALE, 0);
 	    }
 	}
     }
@@ -1541,6 +1556,7 @@ static struct vnflags {
 	{ VIFF_ONEWAY,		"one-way" },
 	{ VIFF_LEAF,		"leaf" },
 	{ VIFF_IGMPV1,		"IGMPv1" },
+	{ VIFF_IGMPV2,		"IGMPv2" },
 	{ VIFF_REXMIT_PRUNES,	"rexmit_prunes" },
 	{ VIFF_PASSIVE,		"passive" },
 	{ VIFF_ALLOW_NONPRUNERS,"allow_nonpruners" },
@@ -1773,8 +1789,7 @@ static void SendQuery(void *arg)
     cbk_t *cbk = (cbk_t *)arg;
     struct uvif *v = &uvifs[cbk->vifi];
 
-    send_igmp(v->uv_lcl_addr, cbk->g->al_addr, IGMP_MEMBERSHIP_QUERY,
-	      cbk->q_time, cbk->g->al_addr, 0);
+    send_query(v, cbk->g->al_addr, cbk->q_time, cbk->g->al_addr);
     cbk->g->al_query = 0;
     free(cbk);
 }

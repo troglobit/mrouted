@@ -347,6 +347,119 @@ static int igmp_log_level(uint32_t type, uint32_t code)
 }
 
 /*
+ * RFC-3376 states that Max Resp Code (MRC) and Querier's Query Interval Code
+ * (QQIC) should be presented in floating point value if their value exceeds
+ * 128. The following formula is used by IGMPv3 clients to calculate the
+ * actual value of the floating point:
+ *
+ *       0 1 2 3 4 5 6 7
+ *      +-+-+-+-+-+-+-+-+
+ *      |1| exp | mant  |
+ *      +-+-+-+-+-+-+-+-+
+ *
+ *   QQI / MRT = (mant | 0x10) << (exp + 3)
+ *
+ * This requires us to find the largest set (fls) bit in the 15-bit number
+ * and set the exponent based on its index in the bits 15-8. ie.
+ *
+ *   exponent 0: igmp_fls(0000 0000 1000 0010)
+ *   exponent 5: igmp_fls(0001 0000 0000 0000)
+ *   exponent 7: igmp_fls(0111 0101 0000 0000)
+ *
+ * and set that as the exponent. The mantissa is set to the last 4 bits
+ * remaining after the (3 + exponent) shifts to the right.
+ *
+ * Note!
+ * The numbers 31744-32767 are the maximum we can present with floating
+ * point that has an exponent of 3 and a mantissa of 4. After this the
+ * implementation just wraps around back to zero.
+ */
+static inline uint8_t igmp_floating_point(unsigned int mantissa)
+{
+    unsigned int exponent;
+
+    /* Wrap around numbers larger than 2^15, since those can not be
+     * presented with 7-bit floating point. */
+    mantissa &= 0x00007FFF;
+
+    /* If top 8 bits are zero. */
+    if (!(mantissa & 0x00007F80))
+        return mantissa;
+
+    /* Shift the mantissa and mark this code floating point. */
+    mantissa >>= 3;
+    /* At this point the actual exponent (bits 7-5) are still 0, but the
+     * exponent might be incremented below. */
+    exponent   = 0x00000080;
+
+    /* If bits 7-4 are not zero. */
+    if (mantissa & 0x00000F00) {
+        mantissa >>= 4;
+        /* The index of largest set bit is at least 4. */
+        exponent  |= 0x00000040;
+    }
+
+    /* If bits 7-6 OR bits 3-2 are not zero. */
+    if (mantissa & 0x000000C0) {
+        mantissa >>= 2;
+        /* The index of largest set bit is atleast 6 if we shifted the
+         * mantissa earlier or atleast 2 if we did not shift it. */
+        exponent  |= 0x00000020;
+    }
+
+    /* If bit 7 OR bit 3 OR bit 1 is not zero. */
+    if (mantissa & 0x00000020) {
+        mantissa >>= 1;
+        /* The index of largest set bit is atleast 7 if we shifted the
+         * mantissa two times earlier or atleast 3 if we shifted the
+         * mantissa last time or atleast 1 if we did not shift it. */
+        exponent  |= 0x00000010;
+    }
+
+    return exponent | (mantissa & 0x0000000F);
+}
+
+size_t build_query(uint32_t src, uint32_t dst, int type, int code, uint32_t group, int datalen)
+{
+    struct igmpv3_query *igmp;
+    struct ip *ip;
+    size_t igmp_len = IGMP_MINLEN + datalen;
+    size_t len = MIN_IP_HEADER_LEN + igmp_len;
+
+    ip                = (struct ip *)send_buf;
+    ip->ip_src.s_addr = src;
+    ip->ip_dst.s_addr = dst;
+#ifdef HAVE_IP_HDRINCL_BSD_ORDER
+    ip->ip_len        = len;
+#else
+    ip->ip_len        = htons(len);
+#endif
+    if (IN_MULTICAST(ntohl(dst)))
+	ip->ip_ttl    = curttl;
+    else
+	ip->ip_ttl    = MAXTTL;
+
+    igmp              = (struct igmpv3_query *)(send_buf + MIN_IP_HEADER_LEN);
+    igmp->type        = type;
+    if (datalen >= 4)
+        igmp->code    = igmp_floating_point(code);
+    else
+        igmp->code    = code;
+    igmp->group       = group;
+    igmp->csum        = 0;
+
+    if (datalen >= 4) {
+        igmp->qrv     = 2;
+        igmp->qqic    = igmp_floating_point(IGMP_QUERY_INTERVAL);
+    }
+
+    /* Note: calculate IGMP checksum last. */
+    igmp->csum = inet_cksum((uint16_t *)igmp, igmp_len);
+
+    return len;
+}
+
+/*
  * Construct an IGMP message in the output packet buffer.  The caller may
  * have already placed data in that buffer, of length 'datalen'.
  */
@@ -391,7 +504,10 @@ void send_igmp(uint32_t src, uint32_t dst, int type, int code, uint32_t group, i
     size_t len;
     int rc, setloop = 0;
 
-    len = build_igmp(src, dst, type, code, group, datalen);
+    if (IGMP_MEMBERSHIP_QUERY == type)
+       len = build_query(src, dst, type, code, group, datalen);
+    else
+       len = build_igmp(src, dst, type, code, group, datalen);
 
     if (IN_MULTICAST(ntohl(dst))) {
 	k_set_if(src);

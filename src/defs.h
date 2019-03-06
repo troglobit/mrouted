@@ -69,6 +69,7 @@ typedef void (*ihfunc_t) (int);
 
 #include "dvmrp.h"
 #include "igmpv2.h"
+#include "igmpv3.h"
 #include "vif.h"
 #include "route.h"
 #include "prune.h"
