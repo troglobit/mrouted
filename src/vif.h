@@ -151,6 +151,7 @@ struct uvif {
 #define	VIFF_BLASTER		0x080000	/* nbr on vif blasts routes  */
 #define	VIFF_FORCE_LEAF		0x100000	/* ignore nbrs on this vif   */
 #define	VIFF_OTUNNEL		0x200000	/* DVMRP msgs "beside" tunnel*/
+#define	VIFF_IGMPV2		0x400000	/* Act as an IGMPv2 Router   */
 
 #define	AVOID_TRANSIT(v, r)	\
 		(((r)->rt_parent != NO_VIF) && \

@@ -69,7 +69,7 @@ int numbounds = 0;			/* Number of named boundaries */
 
 %token CACHE_LIFETIME PRUNE_LIFETIME PRUNING BLACK_HOLE NOFLOOD
 %token PHYINT TUNNEL NAME
-%token DISABLE ENABLE IGMPV1 SRCRT BESIDE
+%token DISABLE ENABLE IGMPV1 IGMPV2 IGMPV3 SRCRT BESIDE
 %token METRIC THRESHOLD RATE_LIMIT BOUNDARY NETMASK ALTNET ADVERT_METRIC
 %token FILTER ACCEPT DENY EXACT BIDIR REXMIT_PRUNES REXMIT_PRUNES2
 %token PASSIVE ALLOW_NONPRUNERS
@@ -305,7 +305,9 @@ ifmods	: /* empty */
 ifmod	: mod
 	| DISABLE		{ v->uv_flags |= VIFF_DISABLED; }
 	| ENABLE		{ v->uv_flags &= ~VIFF_DISABLED; }
-	| IGMPV1		{ v->uv_flags |= VIFF_IGMPV1; }
+	| IGMPV1		{ v->uv_flags &= ~VIFF_IGMPV2; v->uv_flags |= VIFF_IGMPV1; }
+	| IGMPV2		{ v->uv_flags &= ~VIFF_IGMPV1; v->uv_flags |= VIFF_IGMPV2; }
+	| IGMPV3		{ v->uv_flags &= ~VIFF_IGMPV1; v->uv_flags &= ~VIFF_IGMPV2; }
 	| NETMASK addrname
 	{
 	    uint32_t subnet, mask;
@@ -740,6 +742,8 @@ static struct keyword {
 	{ "boundary",		BOUNDARY, 0 },
 	{ "netmask",		NETMASK, 0 },
 	{ "igmpv1",		IGMPV1, 0 },
+	{ "igmpv2",		IGMPV2, 0 },
+	{ "igmpv2",		IGMPV3, 0 },
 	{ "altnet",		ALTNET, 0 },
 	{ "name",		NAME, 0 },
 	{ "accept",		ACCEPT, 0 },
