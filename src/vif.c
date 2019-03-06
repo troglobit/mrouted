@@ -609,10 +609,10 @@ void query_groups(void)
  * IGMP version mismatches, perform querier election, and
  * handle group-specific queries when we're not the querier.
  */
-void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo)
+void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo, int ver)
 {
-    vifi_t vifi;
     struct uvif *v;
+    vifi_t vifi;
 
     vifi = find_vif(src, dst);
     if (vifi == NO_VIF || (uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
@@ -622,8 +622,8 @@ void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo
     }
 
     v = &uvifs[vifi];
-    if ((tmo == 0 && !(v->uv_flags & VIFF_IGMPV1)) ||
-	(tmo != 0 &&  (v->uv_flags & VIFF_IGMPV1))) {
+    if ((ver == 3 && (v->uv_flags & VIFF_IGMPV2)) ||
+	(ver == 2 && (v->uv_flags & VIFF_IGMPV1))) {
 	int i;
 
 	/*
@@ -634,9 +634,10 @@ void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo
 	    i >>= 1;
 
 	if (i == 1) {
-	    logit(LOG_WARNING, 0, "Received IGMP%s report from %s on vif %d, %s",
-		  tmo == 0 ? "v1" : "v2", inet_fmt(src, s1, sizeof(s1)), vifi,
-		  tmo == 0 ? "please configure vif for IGMPv1" : "but I am configured for IGMPv1");
+	    logit(LOG_WARNING, 0, "Received IGMPv%d report from %s on %s, "
+		  "which is configured for IGMPv%d",
+		  ver, inet_fmt(src, s1, sizeof(s1)), vifi,
+		  v->uv_flags & VIFF_IGMPV1 ? 1 : 2);
 	}
     }
 

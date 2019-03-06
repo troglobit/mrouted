@@ -312,7 +312,7 @@ extern void		accept_info_reply(uint32_t, uint32_t, uint8_t *, size_t);
 extern void		accept_neighbors(uint32_t, uint32_t, uint8_t *, size_t, uint32_t);
 extern void		accept_neighbors2(uint32_t, uint32_t, uint8_t *, size_t, uint32_t);
 extern void		accept_leave_message(uint32_t, uint32_t, uint32_t);
-extern void		accept_membership_query(uint32_t, uint32_t, uint32_t, int);
+extern void		accept_membership_query(uint32_t, uint32_t, uint32_t, int, int);
 
 /* config.c */
 extern void		config_vifs_from_kernel(void);

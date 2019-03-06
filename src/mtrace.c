@@ -1710,7 +1710,7 @@ void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8
 {
 }
 
-void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo)
+void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo, int ver)
 {
 }
 

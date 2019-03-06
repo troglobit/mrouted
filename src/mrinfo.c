@@ -550,7 +550,7 @@ void accept_leave_message(uint32_t src, uint32_t dst, uint32_t group)
 void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8_t no, size_t datalen)
 {
 }
-void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo)
+void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo, int ver)
 {
 }
 void accept_info_request(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
