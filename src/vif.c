@@ -391,6 +391,9 @@ static void start_vif2(vifi_t vifi)
 	 */
 	k_join(allrtrs_group, src);
 
+	/* Join INADDR_ALLRPTS_GROUP to support IGMPv3 membership reports */
+	k_join(allreports_group, src);
+
 	/*
 	 * Install an entry in the routing table for the subnet to which
 	 * the interface is connected.
@@ -443,6 +446,11 @@ static void stop_vif(vifi_t vifi)
 	 * Depart from the ALL-ROUTERS multicast group on the interface.
 	 */
 	k_leave(allrtrs_group, v->uv_lcl_addr);
+
+	/*
+	 * Depart from the ALL-REPORTS multicast group on the interface.
+	 */
+	k_leave(allreports_group, v->uv_lcl_addr);
 
 	/*
 	 * Update the entry in the routing table for the subnet to which

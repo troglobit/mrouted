@@ -139,6 +139,10 @@
 #define INADDR_ALLRTRS_GROUP	(uint32_t)0xe0000002	/* 224.0.0.2 */
 #endif
 
+#ifndef INADDR_ALLRPTS_GROUP
+#define INADDR_ALLRPTS_GROUP    ((in_addr_t)0xe0000016) /* 224.0.0.22, IGMPv3 */
+#endif
+
 #define ROUTE_MAX_REPORT_DELAY	5	/* max delay for reporting changes  */
 					/*  (This is the timer interrupt    */
 					/*  interval; all times must be     */

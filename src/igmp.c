@@ -26,6 +26,7 @@ char		*send_buf; 		     /* output packet buffer        */
 int		igmp_socket;		     /* socket for all network I/O  */
 uint32_t	allhosts_group;		     /* All hosts addr in net order */
 uint32_t	allrtrs_group;		     /* All-Routers "  in net order */
+uint32_t	allreports_group;	     /* All IGMP routers in net order     */
 uint32_t	dvmrp_group;		     /* DVMRP grp addr in net order */
 uint32_t	dvmrp_genid;		     /* IGMP generation id          */
 
@@ -73,9 +74,10 @@ void init_igmp(void)
     ip->ip_ttl = MAXTTL;	/* applies to unicasts only */
     ip->ip_p   = IPPROTO_IGMP;
 
-    allhosts_group = htonl(INADDR_ALLHOSTS_GROUP);
-    dvmrp_group    = htonl(INADDR_DVMRP_GROUP);
-    allrtrs_group  = htonl(INADDR_ALLRTRS_GROUP);
+    allhosts_group   = htonl(INADDR_ALLHOSTS_GROUP);
+    dvmrp_group      = htonl(INADDR_DVMRP_GROUP);
+    allrtrs_group    = htonl(INADDR_ALLRTRS_GROUP);
+    allreports_group = htonl(INADDR_ALLRPTS_GROUP);
 }
 
 char *igmp_packet_kind(uint32_t type, uint32_t code)
