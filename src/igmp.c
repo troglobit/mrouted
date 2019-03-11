@@ -27,7 +27,7 @@ int		igmp_socket;		     /* socket for all network I/O  */
 uint32_t	igmp_query_interval;	     /* Default: 125 sec            */
 uint32_t	allhosts_group;		     /* All hosts addr in net order */
 uint32_t	allrtrs_group;		     /* All-Routers "  in net order */
-uint32_t	allreports_group;	     /* All IGMP routers in net order     */
+uint32_t	allreports_group;	     /* IGMPv3 member reports       */
 uint32_t	dvmrp_group;		     /* DVMRP grp addr in net order */
 uint32_t	dvmrp_genid;		     /* IGMP generation id          */
 
