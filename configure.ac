@@ -95,6 +95,7 @@ cat <<EOF
   prefix................: $prefix
   sysconfdir............: `eval echo $sysconfdir`
   runstatedir...........: `eval echo $runstatedir`
+  localstatedir.........: `eval echo $localstatedir`
   C Compiler............: $CC $CFLAGS $CPPFLAGS $LDFLAGS $LIBS
 
 Optional features:

@@ -6,7 +6,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 #               In GLIBC >= v2.20 this is replaced with -D_DEFAULT_SOURCE,
 #               but to build on older GLIBC systems we now need both ...
 AM_CPPFLAGS      = -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_GNU_SOURCE -I$(top_srcdir)/include
-AM_CPPFLAGS     += -DSYSCONFDIR=\"@sysconfdir@\" -DRUNSTATEDIR=\"@runstatedir@\"
+AM_CPPFLAGS     += -DSYSCONFDIR=\"@sysconfdir@\" -DRUNSTATEDIR=\"@runstatedir@\" -DPRESERVEDIR=\"@localstatedir@/lib\"
 if LINUX
 AM_CPPFLAGS     += -DIOCTL_OK_ON_RAW_SOCKET
 endif
