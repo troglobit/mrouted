@@ -27,6 +27,20 @@ static void print_Q(void);
 #define	print_Q()
 #endif
 
+/* Get next free (non-zero) ID
+ *
+ * ID is a counter that wraps to zero, which is reserved.
+ * The range of counters IDs is big so we should be OK.
+ */
+static int next_id(void)
+{
+    id++;
+    if (id <= 0)
+	id = 1;
+
+    return id;
+}
+
 void timer_init(void)
 {
     Q = NULL;
@@ -115,7 +129,7 @@ int timer_set(time_t delay, cfunc_t action, void *data)
     node->data = data;
     node->time = delay;
     node->next = 0;
-    node->id   = ++id;
+    node->id   = next_id();
 
     prev = ptr = Q;
 
