@@ -1714,6 +1714,10 @@ void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo
 {
 }
 
+void accept_membership_report(uint32_t src, uint32_t dst, struct igmpv3_report *report, ssize_t len)
+{
+}
+
 void accept_neighbors(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen, uint32_t level)
 {
 }

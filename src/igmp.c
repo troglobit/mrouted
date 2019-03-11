@@ -88,6 +88,7 @@ char *igmp_packet_kind(uint32_t type, uint32_t code)
 	case IGMP_MEMBERSHIP_QUERY:		return "membership query  ";
 	case IGMP_V1_MEMBERSHIP_REPORT:		return "V1 member report  ";
 	case IGMP_V2_MEMBERSHIP_REPORT:		return "V2 member report  ";
+	case IGMP_V3_MEMBERSHIP_REPORT:		return "V3 member report  ";
 	case IGMP_V2_LEAVE_GROUP:		return "leave message     ";
 	case IGMP_DVMRP:
 	  switch (code) {
@@ -256,6 +257,15 @@ void accept_igmp(size_t recvlen)
 
 	case IGMP_V2_LEAVE_GROUP:
 	    accept_leave_message(src, dst, group);
+	    return;
+
+	case IGMP_V3_MEMBERSHIP_REPORT:
+	    if (igmpdatalen < IGMP_V3_GROUP_RECORD_MIN_SIZE) {
+		logit(LOG_INFO, 0, "Too short IGMP v3 Membership report: igmpdatalen(%d) < MIN(%d)",
+		      igmpdatalen, IGMP_V3_GROUP_RECORD_MIN_SIZE);
+		return;
+	    }
+	    accept_membership_report(src, dst, (struct igmpv3_report *)(recv_buf + iphdrlen), recvlen - iphdrlen);
 	    return;
 
 	case IGMP_DVMRP:

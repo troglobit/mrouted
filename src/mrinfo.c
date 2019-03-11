@@ -553,6 +553,9 @@ void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8
 void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo, int ver)
 {
 }
+void accept_membership_report(uint32_t src, uint32_t dst, struct igmpv3_report *report, ssize_t len)
+{
+}
 void accept_info_request(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
 {
 }

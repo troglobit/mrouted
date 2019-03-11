@@ -863,6 +863,82 @@ void accept_leave_message(uint32_t src, uint32_t dst, uint32_t group)
 
 
 /*
+ * Handle IGMP v3 membership reports (join/leave)
+ */
+void accept_membership_report(uint32_t src, uint32_t dst, struct igmpv3_report *report, ssize_t reportlen)
+{
+    struct igmpv3_grec *record;
+    int num_groups, i;
+    uint8_t *report_pastend = (uint8_t *)report + reportlen;
+
+    num_groups = ntohs(report->ngrec);
+    if (num_groups < 0) {
+	logit(LOG_INFO, 0, "Invalid Membership Report from %s: num_groups = %d",
+	      inet_fmt(src, s1, sizeof(s1)), num_groups);
+	return;
+    }
+
+    IF_DEBUG(DEBUG_IGMP) {
+	logit(LOG_DEBUG, 0, "IGMP v3 report, %d bytes, from %s to %s with %d group records.",
+	      reportlen, inet_fmt(src, s1, sizeof(s1)), inet_fmt(dst, s2, sizeof(s2)), num_groups);
+    }
+
+    record = &report->grec[0];
+
+    for (i = 0; i < num_groups; i++) {
+	struct in_addr  rec_group;
+	uint8_t        *sources;
+	int             rec_type;
+	int             rec_auxdatalen;
+	int             rec_num_sources;
+	int             j;
+	char src_str[200];
+	int record_size = 0;
+
+	rec_num_sources = ntohs(record->grec_nsrcs);
+	rec_auxdatalen = record->grec_auxwords;
+	record_size = sizeof(struct igmpv3_grec) + sizeof(uint32_t) * rec_num_sources + rec_auxdatalen;
+	if ((uint8_t *)record + record_size > report_pastend) {
+	    logit(LOG_INFO, 0, "Invalid group report %p > %p",
+		  (uint8_t *)record + record_size, report_pastend);
+	    return;
+	}
+
+	rec_type = record->grec_type;
+	rec_group.s_addr = (in_addr_t)record->grec_mca;
+	sources = (uint8_t *)record->grec_src;
+
+	/*
+	 * EXCLUDE : Exclude from filter, i.e. join
+	 * INCLUDE : Include in filter, i.e. leave
+	 * SOURCES : Ignored due to DVMRP limitations
+	 */
+	switch (rec_type) {
+	    case IGMP_MODE_IS_EXCLUDE:
+	    case IGMP_CHANGE_TO_EXCLUDE_MODE:
+		accept_group_report(src, 0 /*dst*/, rec_group.s_addr, report->type);
+		if (rec_num_sources > 0)
+		    logit(LOG_DEBUG, 0, "Record type MODE_IS/TO_EXCLUDE with source list is treated as (*,G).");
+		break;
+
+	    case IGMP_MODE_IS_INCLUDE:
+	    case IGMP_CHANGE_TO_INCLUDE_MODE:
+		accept_leave_message(src, 0 /*dst*/, rec_group.s_addr);
+		break;
+
+	    case IGMP_ALLOW_NEW_SOURCES:
+	    case IGMP_BLOCK_OLD_SOURCES:
+	    default:
+		/* RFC3376: Unrecognized Record Type values MUST be silently ignored. */
+		break;
+	}
+
+	record = (struct igmpv3_grec *)((uint8_t *)record + record_size);
+    }
+}
+
+
+/*
  * Send a periodic probe on all vifs.
  * Useful to determine one-way interfaces.
  * Detect neighbor loss faster.
