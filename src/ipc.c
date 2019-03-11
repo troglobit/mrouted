@@ -177,26 +177,14 @@ static void show_igmp_groups(FILE *fp, int detail)
 	struct uvif *uv;
 	vifi_t vifi;
 
-	fprintf(fp, "Interface         Group            Source           Last Reported    Timeout=\n");
+	fprintf(fp, "Interface         Group            Last Reported    Timeout=\n");
 	for (vifi = 0, uv = uvifs; vifi < numvifs; vifi++, uv++) {
 		for (group = uv->uv_groups; group; group = group->al_next) {
-			char pre[40], post[40];
-
-			snprintf(pre, sizeof(pre), "%-16s  %-15s  ",
-				 uv->uv_name, inet_fmt(group->al_addr, s1, sizeof(s1)));
-
-			snprintf(post, sizeof(post), "%-15s  %7u",
-				 inet_fmt(group->al_reporter, s1, sizeof(s1)),
-				 group->al_timer);
-
-//			if (!group->al_sources) {
-				fprintf(fp, "%s%-15s  %s\n", pre, "ANY", post);
-//				continue;
-//			}
-
-//			for (source = group->al_sources; source; source = source->al_next)
-//				fprintf(fp, "%s%-15s  %s\n",
-//					pre, inet_fmt(source->al_addr, s1, sizeof(s1)), post);
+			fprintf(fp, "%-16s  %-15s  %-15s  %7u\n",
+				uv->uv_name,
+				inet_fmt(group->al_addr, s1, sizeof(s1)),
+				inet_fmt(group->al_reporter, s2, sizeof(s2)),
+				group->al_timer);
 		}
 	}
 }
