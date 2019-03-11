@@ -221,8 +221,7 @@ void accept_igmp(size_t recvlen)
     group       = igmp->igmp_group.s_addr;
     igmpdatalen = ipdatalen - IGMP_MINLEN;
     if (igmpdatalen < 0) {
-	logit(LOG_INFO, 0,
-	      "received IP data field too short (%u bytes) for IGMP, from %s",
+	logit(LOG_INFO, 0,  "received IP data field too short (%u bytes) for IGMP, from %s",
 	      ipdatalen, inet_fmt(src, s1, sizeof(s1)));
 	return;
     }
