@@ -34,6 +34,8 @@ typedef struct {
 	int    q_time;
 } cbk_t;
 
+static int query_timerid = -1;
+
 /*
  * Forward declarations.
  */
@@ -128,6 +130,14 @@ void init_vifs(void)
 	    }
 	}
     }
+
+    /*
+     * Periodically query for local group memberships on all subnets for
+     * which this router is the elected querier.
+     */
+    if (query_timerid != -1)
+	timer_clear(query_timerid);
+    query_timerid = timer_set(igmp_query_interval, query_groups, NULL);
 }
 
 /*
@@ -598,12 +608,17 @@ static void age_old_hosts(void)
  * so can not cause loss of membership (but can send more packets than
  * necessary)
  */
-void query_groups(void)
+void query_groups(void *arg)
 {
-    vifi_t vifi;
     struct uvif *v;
+    vifi_t vifi;
+
+    timer_set(igmp_query_interval, query_groups, arg);
 
     for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
+	if (v->uv_flags & (VIFF_DOWN | VIFF_DISABLED))
+	    continue;
+
 	if (v->uv_flags & VIFF_QUERIER)
 	    send_query(v, allhosts_group, IGMP_QUERY_RESPONSE_INTERVAL *
 		       IGMP_TIMER_SCALE, 0);
