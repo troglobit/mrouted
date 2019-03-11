@@ -1,4 +1,5 @@
-/*
+/* callout queue implementation
+ *
  * The mrouted program is covered by the license in the accompanying file
  * named "LICENSE".  Use of the mrouted program represents acceptance of
  * the terms and conditions listed in that file.
@@ -9,9 +10,8 @@
 
 #include "defs.h"
 
-/* the code below implements a callout queue */
 static int id = 0;
-static struct timeout_q  *Q = 0; /* pointer to the beginning of timeout queue */
+static struct timeout_q  *Q = NULL;
 
 struct timeout_q {
 	struct timeout_q *next;		/* next event */
@@ -29,7 +29,7 @@ static void print_Q(void);
 
 void callout_init(void)
 {
-    Q = (struct timeout_q *) 0;
+    Q = NULL;
 }
 
 void free_all_callouts(void)
@@ -57,17 +57,16 @@ void age_callout_queue(time_t elapsed_time)
 	if (ptr->time > elapsed_time) {
 	    ptr->time -= elapsed_time;
 	    return;
-	} else {
-	    elapsed_time -= ptr->time;
-	    Q = Q->next;
-	    IF_DEBUG(DEBUG_TIMEOUT) {
-		logit(LOG_DEBUG, 0, "about to call timeout %d (#%d)", ptr->id, i);
-	    }
-
-	    if (ptr->func)
-		ptr->func(ptr->data);
-	    free(ptr);
 	}
+
+	elapsed_time -= ptr->time;
+	Q = Q->next;
+	IF_DEBUG(DEBUG_TIMEOUT)
+	    logit(LOG_DEBUG, 0, "about to call timeout %d (#%d)", ptr->id, i);
+
+	if (ptr->func)
+	    ptr->func(ptr->data);
+	free(ptr);
     }
 }
 
@@ -77,16 +76,21 @@ void age_callout_queue(time_t elapsed_time)
  */
 int timer_nextTimer(void)
 {
-    if (Q) {
-	if (Q->time < 0) {
-	    logit(LOG_WARNING, 0, "timer_nextTimer top of queue says %d", Q->time);
-	    return 0;
-	}
+    IF_DEBUG(DEBUG_TIMEOUT)
+	logit(LOG_DEBUG, 0, "%s(): Q: %p", __func__, Q);
 
-	return Q->time;
+    if (!Q)
+	return -1;
+
+    IF_DEBUG(DEBUG_TIMEOUT)
+	logit(LOG_DEBUG, 0, "%s(): Q->time: %d", __func__, Q->time);
+
+    if (Q->time < 0) {
+	logit(LOG_WARNING, 0, "%s(): top of queue says %d", __func__, Q->time);
+	return 0;
     }
 
-    return -1;
+    return Q->time;
 }
 
 /*
@@ -97,8 +101,8 @@ int timer_nextTimer(void)
  */
 int timer_setTimer(time_t delay, cfunc_t action, void *data)
 {
-    int i = 0;
     struct timeout_q *ptr, *node, *prev;
+    int i = 0;
 
     /* create a node */
     node = malloc(sizeof(struct timeout_q));
@@ -118,9 +122,9 @@ int timer_setTimer(time_t delay, cfunc_t action, void *data)
     /* insert node in the queue */
 
     /* if the queue is empty, insert the node and return */
-    if (!Q)
+    if (!Q) {
 	Q = node;
-    else {
+    } else {
 	/* chase the pointer looking for the right place */
 	while (ptr) {
 
