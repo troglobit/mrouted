@@ -135,6 +135,7 @@ int igmp_debug_kind(uint32_t type, uint32_t code)
 	case IGMP_MEMBERSHIP_QUERY:		return DEBUG_IGMP;
 	case IGMP_V1_MEMBERSHIP_REPORT:		return DEBUG_IGMP;
 	case IGMP_V2_MEMBERSHIP_REPORT:		return DEBUG_IGMP;
+	case IGMP_V3_MEMBERSHIP_REPORT:		return DEBUG_IGMP;
 	case IGMP_V2_LEAVE_GROUP:		return DEBUG_IGMP;
 	case IGMP_DVMRP:
 	  switch (code) {
@@ -226,7 +227,7 @@ void accept_igmp(size_t recvlen)
 	return;
     }
 
-    IF_DEBUG(DEBUG_PKT|igmp_debug_kind(igmp->igmp_type, igmp->igmp_code)) {
+    IF_DEBUG(DEBUG_PKT | igmp_debug_kind(igmp->igmp_type, igmp->igmp_code)) {
 	logit(LOG_DEBUG, 0, "RECV %s from %-15s to %s",
 	      igmp_packet_kind(igmp->igmp_type, igmp->igmp_code),
 	      inet_fmt(src, s1, sizeof(s1)), inet_fmt(dst, s2, sizeof(s2)));

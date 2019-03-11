@@ -831,11 +831,6 @@ void accept_leave_message(uint32_t src, uint32_t dst, uint32_t group)
      */
     for (g = v->uv_groups; g != NULL; g = g->al_next) {
 	if (group == g->al_addr) {
-	    IF_DEBUG(DEBUG_IGMP) {
-		logit(LOG_DEBUG, 0, "[vif.c, _accept_leave_message] %d %d \n",
-		      g->al_old, g->al_query);
-	    }
-
 	    /* Ignore the leave message if there are old hosts present */
 	    if (g->al_old)
 		return;
@@ -920,6 +915,8 @@ void accept_membership_report(uint32_t src, uint32_t dst, struct igmpv3_report *
 	switch (rec_type) {
 	    case IGMP_MODE_IS_EXCLUDE:
 	    case IGMP_CHANGE_TO_EXCLUDE_MODE:
+		IF_DEBUG(DEBUG_IGMP)
+		    logit(LOG_DEBUG, 0, "        join  (*, %s)", inet_fmt(rec_group.s_addr, s1, sizeof(s1)));
 		accept_group_report(src, 0 /*dst*/, rec_group.s_addr, report->type);
 		if (rec_num_sources > 0)
 		    logit(LOG_DEBUG, 0, "Record type MODE_IS/TO_EXCLUDE with source list is treated as (*,G).");
@@ -927,6 +924,8 @@ void accept_membership_report(uint32_t src, uint32_t dst, struct igmpv3_report *
 
 	    case IGMP_MODE_IS_INCLUDE:
 	    case IGMP_CHANGE_TO_INCLUDE_MODE:
+		IF_DEBUG(DEBUG_IGMP)
+		    logit(LOG_DEBUG, 0, "        leave (*, %s)", inet_fmt(rec_group.s_addr, s1, sizeof(s1)));
 		accept_leave_message(src, 0 /*dst*/, rec_group.s_addr);
 		break;
 
