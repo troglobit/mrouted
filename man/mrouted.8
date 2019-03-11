@@ -137,7 +137,7 @@ Debug inbound/outbout packets
 Pruning operations, or pruned routes
 .It Cm routes | routing
 Routing messages
-.It Cm rtdetail | route_detail
+.It Cm rtdetail | route-detail
 Detailed routing information
 .It Cm peers | neighbors
 Neighbor gossip
@@ -175,8 +175,9 @@ In many cases you do not need to configure
 .Nm .
 It configures itself automatically to forward multicast on all
 multicast-capable interfaces, i.e., interfaces that have the
-IFF_MULTICAST flag set, excluding the loopback interface.  It locates
-other DVMRP capable routers directly reachable via those interfaces.
+.Cm IFF_MULTICAST
+flag set, excluding the loopback interface.  It locates other DVMRP
+capable routers directly reachable via those interfaces.
 .Pp
 .Bl -tag -width TERM -compact -offset indent
 .It Nm

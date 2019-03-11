@@ -64,7 +64,7 @@ static struct debugname {
     {	"prunes",	DEBUG_PRUNE,	1	},
     {	"routing",	DEBUG_ROUTE,	1	},
     {	"routes",	DEBUG_ROUTE,	1	},
-    {   "route_detail",	DEBUG_RTDETAIL, 6	},
+    {   "route-detail",	DEBUG_RTDETAIL, 6	},
     {   "rtdetail",	DEBUG_RTDETAIL, 2	},
     {	"neighbors",	DEBUG_PEER,	1	},
     {	"peers",	DEBUG_PEER,	2	},
