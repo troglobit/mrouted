@@ -557,6 +557,14 @@ void add_table_entry(uint32_t origin, uint32_t mcastgrp)
     if (!did_final_init)
 	return;
 
+    /* Don't create routing entries for the LAN scoped addresses */
+    if (ntohl(mcastgrp) <= INADDR_MAX_LOCAL_GROUP) { /* group <= 224.0.0.255? */
+	IF_DEBUG(DEBUG_CACHE)
+	    logit(LOG_INFO, 0, "Not creating routing entry for LAN scoped group %s",
+		  inet_fmt(mcastgrp, s1, sizeof(s1)));
+	return;
+    }
+
 #ifdef DEBUG_MFC
     md_log(MD_MISS, origin, mcastgrp);
 #endif
