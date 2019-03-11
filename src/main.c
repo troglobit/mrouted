@@ -402,7 +402,7 @@ int main(int argc, char *argv[])
      */
     init_gendid();
 
-    callout_init();
+    timer_init();
     init_igmp();
     init_icmp();
     init_ipip();
@@ -454,8 +454,8 @@ int main(int argc, char *argv[])
     }
 
     /* schedule first timer interrupt */
-    timer_setTimer(1, fasttimer, NULL);
-    timer_setTimer(TIMER_INTERVAL, timer, NULL);
+    timer_set(1, fasttimer, NULL);
+    timer_set(TIMER_INTERVAL, timer, NULL);
 
     if (!debug && !foreground) {
 #ifdef TIOCNOTTY
@@ -498,7 +498,7 @@ int main(int argc, char *argv[])
      * do a report_to_all_neighbors(ALL_ROUTES) immediately before
      * turning on DVMRP.
      */
-    timer_setTimer(startupdelay, final_init, NULL);
+    timer_set(startupdelay, final_init, NULL);
 
     /*
      * Main receive loop.
@@ -602,7 +602,7 @@ static void fasttimer(void *arg)
 	tlast = t;
     }
 
-    timer_setTimer(1, fasttimer, NULL);
+    timer_set(1, fasttimer, NULL);
 }
 
 /*
@@ -671,7 +671,7 @@ static void timer(void *arg)
      * Advance virtual time
      */
     virtual_time += TIMER_INTERVAL;
-    timer_setTimer(TIMER_INTERVAL, timer, NULL);
+    timer_set(TIMER_INTERVAL, timer, NULL);
 }
 
 /*
@@ -693,7 +693,7 @@ static int timeout(int n)
     int secs;
 
     /* Next timeout to poll() */
-    secs = timer_nextTimer();
+    secs = timer_next_delay();
 
     do {
 	/*
@@ -727,12 +727,12 @@ static int timeout(int n)
 	lasttime = curtime;
 
 	if (secs == 0 || difftime.tv_sec > 0)
-	    age_callout_queue(difftime.tv_sec);
+	    timer_age_queue(difftime.tv_sec);
 
 	secs = -1;
     } while (difftime.tv_sec > 0);
 
-    return timer_nextTimer();
+    return timer_next_delay();
 }
 
 static void cleanup(void)
@@ -822,7 +822,7 @@ void restart(void)
      */
     free_all_prunes();
     free_all_routes();
-    free_all_callouts();
+    timer_free_all();
     stop_all_vifs();
     k_stop_dvmrp();
     close(igmp_socket);
@@ -842,8 +842,8 @@ void restart(void)
     final_init(s);
 
     /* schedule timer interrupts */
-    timer_setTimer(1, fasttimer, NULL);
-    timer_setTimer(TIMER_INTERVAL, timer, NULL);
+    timer_set(1, fasttimer, NULL);
+    timer_set(TIMER_INTERVAL, timer, NULL);
 }
 
 #define SCALETIMEBUFLEN 27

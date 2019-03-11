@@ -27,12 +27,12 @@ static void print_Q(void);
 #define	print_Q()
 #endif
 
-void callout_init(void)
+void timer_init(void)
 {
     Q = NULL;
 }
 
-void free_all_callouts(void)
+void timer_free_all(void)
 {
     struct timeout_q *p;
 
@@ -48,7 +48,7 @@ void free_all_callouts(void)
  * elapsed_time seconds have passed; perform all the events that should
  * happen.
  */
-void age_callout_queue(time_t elapsed_time)
+void timer_age_queue(time_t elapsed_time)
 {
     struct timeout_q *ptr;
     int i = 0;
@@ -71,10 +71,10 @@ void age_callout_queue(time_t elapsed_time)
 }
 
 /*
- * Return in how many seconds age_callout_queue() would like to be called.
+ * Return in how many seconds timer_age_queue() would like to be called.
  * Return -1 if there are no events pending.
  */
-int timer_nextTimer(void)
+int timer_next_delay(void)
 {
     IF_DEBUG(DEBUG_TIMEOUT)
 	logit(LOG_DEBUG, 0, "%s(): Q: %p", __func__, Q);
@@ -99,7 +99,7 @@ int timer_nextTimer(void)
  * @action: function to be called on timeout
  * @data:   what to call the timeout function with
  */
-int timer_setTimer(time_t delay, cfunc_t action, void *data)
+int timer_set(time_t delay, cfunc_t action, void *data)
 {
     struct timeout_q *ptr, *node, *prev;
     int i = 0;
@@ -165,7 +165,7 @@ int timer_setTimer(time_t delay, cfunc_t action, void *data)
 }
 
 /* returns the time until the timer is scheduled */
-int timer_leftTimer(int timer_id)
+int timer_get(int timer_id)
 {
     struct timeout_q *ptr;
     time_t left = 0;
@@ -183,7 +183,7 @@ int timer_leftTimer(int timer_id)
 }
 
 /* clears the associated timer.  Returns 1 if succeeded. */
-int timer_clearTimer(int timer_id)
+int timer_clear(int timer_id)
 {
     struct timeout_q  *ptr, *prev;
     int i = 0;

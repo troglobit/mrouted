@@ -91,7 +91,7 @@ void resetlogging(void *arg)
 	log_nmsgs = 0;
     }
 
-    timer_setTimer(nxttime, resetlogging, narg);
+    timer_set(nxttime, resetlogging, narg);
 }
 
 

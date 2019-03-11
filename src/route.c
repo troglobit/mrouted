@@ -863,7 +863,7 @@ void blaster_alloc(vifi_t vifi)
     v->uv_blasterbuf = malloc(v->uv_blasterlen);
     v->uv_blastercur = v->uv_blasterend = v->uv_blasterbuf;
     if (v->uv_blastertimer)
-	timer_clearTimer(v->uv_blastertimer);
+	timer_clear(v->uv_blastertimer);
     v->uv_blastertimer = 0;
 }
 
@@ -916,7 +916,7 @@ static void queue_blaster_report(vifi_t vifi, uint32_t src, uint32_t dst, char *
 	}
 
 	*i = vifi;
-	v->uv_blastertimer = timer_setTimer(5, process_blaster_report, i);
+	v->uv_blastertimer = timer_set(5, process_blaster_report, i);
     }
 }
 
@@ -960,7 +960,7 @@ static void process_blaster_report(void *vifip)
 	IF_DEBUG(DEBUG_ROUTE) {
 	    logit(LOG_DEBUG, 0, "More blasted routes to come on vif %d", vifi);
 	}
-	v->uv_blastertimer = timer_setTimer(1, process_blaster_report, vifip);
+	v->uv_blastertimer = timer_set(1, process_blaster_report, vifip);
     }
 }
 

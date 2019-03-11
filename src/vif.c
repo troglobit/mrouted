@@ -1741,7 +1741,7 @@ void dump_vifs(FILE *fp, int detail)
 		    label,
 		    inet_fmt(a->al_addr, s1, sizeof(s1)),
 		    inet_fmt(a->al_reporter, s2, sizeof(s2)),
-		    scaletime(timer_leftTimer(a->al_timerid)));
+		    scaletime(timer_get(a->al_timerid)));
 	    label = "";
 	}
 	label = "boundaries:";
@@ -1853,7 +1853,7 @@ static int SetTimer(vifi_t vifi, struct listaddr *g)
     cbk->g = g;
     cbk->vifi = vifi;
 
-    return timer_setTimer(g->al_timer, DelVif, cbk);
+    return timer_set(g->al_timer, DelVif, cbk);
 }
 
 /*
@@ -1861,7 +1861,7 @@ static int SetTimer(vifi_t vifi, struct listaddr *g)
  */
 static int DeleteTimer(int id)
 {
-    timer_clearTimer(id);
+    timer_clear(id);
 
     return 0;
 }
@@ -1896,7 +1896,7 @@ static int SetQueryTimer(struct listaddr *g, vifi_t vifi, int to_expire, int q_t
     cbk->q_time = q_time;
     cbk->vifi = vifi;
 
-    return timer_setTimer(to_expire, SendQuery, cbk);
+    return timer_set(to_expire, SendQuery, cbk);
 }
 
 /**

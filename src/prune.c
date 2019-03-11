@@ -420,7 +420,7 @@ static void send_prune(struct gtable *gt)
 	}
 
 	*arg = gt;
-	gt->gt_rexmit_timer = timer_setTimer(JITTERED_VALUE(gt->gt_prune_rexmit), rexmit_prune, arg);
+	gt->gt_rexmit_timer = timer_set(JITTERED_VALUE(gt->gt_prune_rexmit), rexmit_prune, arg);
 	gt->gt_prune_rexmit *= 2;
     }
 }
@@ -447,7 +447,7 @@ static void send_graft(struct gtable *gt)
     gt->gt_prsent_timer = 0;
     gt->gt_prune_rexmit = PRUNE_REXMIT_VAL;
     if (gt->gt_rexmit_timer)
-	timer_clearTimer(gt->gt_rexmit_timer);
+	timer_clear(gt->gt_rexmit_timer);
 
     if (gt->gt_grftsnt == 0)
 	gt->gt_grftsnt = 1;
@@ -834,7 +834,7 @@ void del_table_entry(struct rtentry *r, uint32_t mcastgrp, uint32_t del_flag)
 	    rsrr_cache_clean(g);
 #endif
 	    if (g->gt_rexmit_timer)
-		timer_clearTimer(g->gt_rexmit_timer);
+		timer_clear(g->gt_rexmit_timer);
 
 	    prev_g = g;
 	    g = g->gt_next;
@@ -893,7 +893,7 @@ void del_table_entry(struct rtentry *r, uint32_t mcastgrp, uint32_t del_flag)
 		prev_g->gt_next = g->gt_next;
 
 		if (g->gt_rexmit_timer)
-		    timer_clearTimer(g->gt_rexmit_timer);
+		    timer_clear(g->gt_rexmit_timer);
 #ifdef RSRR
 		/* Send route change notification to reservation protocol. */
 		rsrr_cache_send(g,0);
@@ -1481,7 +1481,7 @@ void free_all_prunes(void)
 	    prev_g = g;
 	    g = g->gt_next;
 	    if (prev_g->gt_rexmit_timer)
-		timer_clearTimer(prev_g->gt_rexmit_timer);
+		timer_clear(prev_g->gt_rexmit_timer);
 	    free(prev_g);
 	}
 	r->rt_groups = NULL;
@@ -1496,7 +1496,7 @@ void free_all_prunes(void)
 	prev_g = g;
 	g = g->gt_next;
 	if (prev_g->gt_rexmit_timer)
-	    timer_clearTimer(prev_g->gt_rexmit_timer);
+	    timer_clear(prev_g->gt_rexmit_timer);
 	free(prev_g);
     }
     kernel_no_route = NULL;
@@ -1577,7 +1577,7 @@ void steal_sources(struct rtentry *rt)
 	    if (gt->gt_next)
 		gt->gt_next->gt_prev = gt->gt_prev;
 	    if (gt->gt_rexmit_timer)
-		timer_clearTimer(gt->gt_rexmit_timer);
+		timer_clear(gt->gt_rexmit_timer);
 	    free(gt);
 	} else {
 	    gtnp = &gt->gt_next;
@@ -1842,7 +1842,7 @@ void age_table_entry(void)
 	    rsrr_cache_clean(gt);
 #endif
 	    if (gt->gt_rexmit_timer)
-		timer_clearTimer(gt->gt_rexmit_timer);
+		timer_clear(gt->gt_rexmit_timer);
 
 	    free(gt);
 	} else {
@@ -1888,7 +1888,7 @@ void age_table_entry(void)
 		gt->gt_next->gt_prev = gt->gt_prev;
 
 	    if (gt->gt_rexmit_timer)
-		timer_clearTimer(gt->gt_rexmit_timer);
+		timer_clear(gt->gt_rexmit_timer);
 
 	    free(gt);
 	} else {
