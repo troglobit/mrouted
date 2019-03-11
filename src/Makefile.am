@@ -13,8 +13,8 @@ endif
 AM_CFLAGS        = -W -Wall -Wextra -Wno-unused
 
 sbin_PROGRAMS    = mrouted mroutectl map-mbone mrinfo mtrace
-mrouted_SOURCES  = main.c callout.c cfparse.y config.c defs.h dvmrp.h icmp.c \
-		   igmp.c igmpv2.h ipc.c ipip.c inet.c kern.c pathnames.h    \
+mrouted_SOURCES  = main.c timer.c cfparse.y config.c defs.h dvmrp.h icmp.c	\
+		   igmp.c igmpv2.h ipc.c ipip.c inet.c kern.c pathnames.h	\
 		   log.c prune.c route.c route.h vif.c vif.h
 mrouted_LDADD    = $(LIBS) $(LIBOBJS)
 if RSRR

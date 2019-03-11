@@ -267,7 +267,7 @@ extern void		init_ipip(void);
 extern void		init_ipip_on_vif(struct uvif *);
 extern void		send_ipip(uint32_t, uint32_t, int, int, uint32_t, int, struct uvif *);
 
-/* callout.c */
+/* timer.c */
 extern void		timer_init(void);
 extern void		timer_free_all(void);
 extern void		timer_age_queue(time_t);
