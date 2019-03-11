@@ -92,10 +92,10 @@ cat <<EOF
 
 ------------------ Summary ------------------
  $PACKAGE_NAME version $PACKAGE_VERSION
-  prefix................: $prefix
-  sysconfdir............: `eval echo $sysconfdir`
-  runstatedir...........: `eval echo $runstatedir`
-  localstatedir.........: `eval echo $localstatedir`
+  Install prefix........: $prefix
+  Configuration file....: `eval echo $sysconfdir`/mrouted.conf
+  PID and .sock files...: `eval echo $runstatedir`/
+  Generation ID.........: `eval echo $localstatedir`/mrouted.genid
   C Compiler............: $CC $CFLAGS $CPPFLAGS $LDFLAGS $LIBS
 
 Optional features:
