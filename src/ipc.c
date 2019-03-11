@@ -118,6 +118,9 @@ static void show_routes(FILE *fp, int detail)
 	struct rtentry *r;
 	vifi_t i;
 
+	if (!routing_table)
+		return;
+
 	fprintf(fp, "Source Network     Neighbor        Metric Expire %s=\n",
 		detail ? "Inbound          Outbound" : "Interface");
 
@@ -176,10 +179,15 @@ static void show_igmp_groups(FILE *fp, int detail)
 	struct listaddr *group, *source;
 	struct uvif *uv;
 	vifi_t vifi;
+	int once = 1;
 
-	fprintf(fp, "Interface         Group            Last Reported    Timeout=\n");
 	for (vifi = 0, uv = uvifs; vifi < numvifs; vifi++, uv++) {
 		for (group = uv->uv_groups; group; group = group->al_next) {
+			if (once) {
+				fprintf(fp, "Interface         Group            Last Reported    Timeout=\n");
+				once = 0;
+			}
+
 			fprintf(fp, "%-16s  %-15s  %-15s  %7u\n",
 				uv->uv_name,
 				inet_fmt(group->al_addr, s1, sizeof(s1)),
@@ -205,6 +213,9 @@ static void show_igmp_iface(FILE *fp, int detail)
 	struct listaddr *group;
 	struct uvif *uv;
 	vifi_t vifi;
+
+	if (numvifs == 0)
+		return;
 
 	fprintf(fp, "Interface         State     Querier          Timeout Version  Groups=\n");
 
