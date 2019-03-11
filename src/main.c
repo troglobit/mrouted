@@ -677,15 +677,14 @@ static void timer(void *arg)
 /*
  * Handle timeout queue.
  *
- * If select + packet processing took more than 1 second,
- * or if there is a timeout pending, age the timeout queue.
+ * If poll() + packet processing took more than 1 second, or if there is
+ * a timeout pending, age the timeout queue.  If not, collect usec in
+ * difftime to make sure that the time doesn't drift too badly.
  *
- * If not, collect usec in difftime to make sure that the
- * time doesn't drift too badly.
+ * If the timeout handlers took more than 1 second, age the timeout
+ * queue again.
  *
- * If the timeout handlers took more than 1 second,
- * age the timeout queue again.  XXX This introduces the
- * potential for infinite loops!
+ * XXX: This introduces the potential for infinite loops!
  */
 static int timeout(int n)
 {
@@ -699,7 +698,7 @@ static int timeout(int n)
     do {
 	/*
 	 * If poll() timed out, then there's no other activity to
-	 * account for and we don't need to call gettimeofday.
+	 * account for and we don't need to call gettimeofday().
 	 */
 	if (n == 0) {
 	    curtime.tv_sec = lasttime.tv_sec + secs;
@@ -733,7 +732,7 @@ static int timeout(int n)
 	secs = -1;
     } while (difftime.tv_sec > 0);
 
-    return secs;
+    return timer_nextTimer();
 }
 
 static void cleanup(void)
