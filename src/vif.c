@@ -733,6 +733,10 @@ void accept_group_report(uint32_t src, uint32_t dst, uint32_t group, int r_type)
     struct uvif *v;
     struct listaddr *g;
 
+    /* Do not filter LAN scoped groups */
+    if (ntohl(group) <= INADDR_MAX_LOCAL_GROUP) /* group <= 224.0.0.255? */
+	return;
+
     vifi = find_vif(src, dst);
     if (vifi == NO_VIF || (uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
 	logit(LOG_INFO, 0, "Ignoring group membership report from non-adjacent host %s",
