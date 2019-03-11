@@ -545,8 +545,8 @@ void init_ktable(void)
 void add_table_entry(uint32_t origin, uint32_t mcastgrp)
 {
     struct rtentry *r;
-    struct gtable *gt,**gtnp,*prev_gt;
-    struct stable *st,**stnp;
+    struct gtable *gt, **gtnp, *prev_gt;
+    struct stable *st, **stnp;
 
     /*
      * Since we have to enable mrouting to get the version number,
@@ -576,10 +576,11 @@ void add_table_entry(uint32_t origin, uint32_t mcastgrp)
 	 * Look for it on the no_route table; if it is found then
 	 * it will be detected as a duplicate below.
 	 */
-	for (gt = kernel_no_route; gt; gt = gt->gt_next)
+	for (gt = kernel_no_route; gt; gt = gt->gt_next) {
 	    if (mcastgrp == gt->gt_mcastgrp &&
 		gt->gt_srctbl && gt->gt_srctbl->st_origin == origin)
 			break;
+	}
 	gtnp = &kernel_no_route;
     } else {
 	gtnp = &r->rt_groups;
