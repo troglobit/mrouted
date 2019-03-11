@@ -210,6 +210,8 @@ There are five types of commands:
 .Ar boundary-name | scoped-addr Ns / Ns Ar mask-len
 .Oc
 .br
+.Op Cm igmpv1 | igmpv2 | igmpv3
+.br
 .Op Cm disable | enable
 .br
 .Op Cm metric Ar <1-31>
@@ -276,6 +278,15 @@ attached to multiple IP subnets, describe each additional subnet with
 the
 .Cm altnet
 keyword.
+.Nm
+supports all IGMP versions and defaults to use IGMP v3.  Use
+.Cm igmpv2
+or
+.Cm igmpv1
+to force compatibility modes on the
+.Nm phyint .
+.Pp
+.Nm NOTE:
 All
 .Cm phyint
 commands must precede tunnel commands.
