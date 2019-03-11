@@ -68,6 +68,7 @@ int numbounds = 0;			/* Number of named boundaries */
 };
 
 %token CACHE_LIFETIME PRUNE_LIFETIME PRUNING BLACK_HOLE NOFLOOD
+%token QUERY_INTERVAL
 %token PHYINT TUNNEL NAME
 %token DISABLE ENABLE IGMPV1 IGMPV2 IGMPV3 SRCRT BESIDE
 %token METRIC THRESHOLD RATE_LIMIT BOUNDARY NETMASK ALTNET ADVERT_METRIC
@@ -273,6 +274,12 @@ stmt	: error
 	| SYSLOCATION STRING
 	{
 	    /* Removed SNMP support */
+	}
+	| QUERY_INTERVAL NUMBER
+	{
+	    if ($2 < 1 || $2 > 1024)
+		fatal("Invalid IGMP query interval [1,1024]: %d", $2);
+	    igmp_query_interval = $2;
 	}
 	;
 
@@ -729,6 +736,7 @@ static struct keyword {
 	{ "cache-lifetime",	CACHE_LIFETIME, 0 },
 	{ "prune_lifetime",	PRUNE_LIFETIME,	PRUNE_LIFETIME2 },
 	{ "prune-lifetime",	PRUNE_LIFETIME,	PRUNE_LIFETIME2 },
+	{ "igmp-query-interval", QUERY_INTERVAL, 0 },
 	{ "pruning",		PRUNING, 0 },
 	{ "phyint",		PHYINT, 0 },
 	{ "tunnel",		TUNNEL, 0 },

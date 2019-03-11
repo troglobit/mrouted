@@ -635,7 +635,7 @@ static void timer(void *arg)
     age_vifs();		/* Advance the timers for neighbors */
     age_table_entry();	/* Advance the timers for the cache entries */
 
-    if (virtual_time % IGMP_QUERY_INTERVAL == 0) {
+    if (virtual_time % igmp_query_interval == 0) {
 	/*
 	 * Time to query the local group memberships on all subnets
 	 * for which this router is the elected querier.

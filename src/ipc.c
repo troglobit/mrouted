@@ -229,7 +229,7 @@ static void show_igmp_iface(FILE *fp, int detail)
 			snprintf(timeout, sizeof(timeout), "None");
 		} else {
 			inet_fmt(uv->uv_querier->al_addr, s1, sizeof(s1));
-			snprintf(timeout, sizeof(timeout), "%u", IGMP_QUERY_INTERVAL - uv->uv_querier->al_timer);
+			snprintf(timeout, sizeof(timeout), "%u", igmp_query_interval - uv->uv_querier->al_timer);
 		}
 
 		for (group = uv->uv_groups; group; group = group->al_next)
