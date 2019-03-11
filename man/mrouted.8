@@ -195,7 +195,7 @@ other DVMRP routers, configuration commands may be placed in
 There are five types of commands:
 .Bl -item -offset indent
 .It
-.Cm cache_lifetime
+.Cm cache-lifetime
 .Ar <SEC>
 .It
 .Cm name
@@ -219,7 +219,7 @@ There are five types of commands:
 .br
 .Op Cm metric Ar <1-31>
 .br
-.Op Cm rate_limit Ar kbps
+.Op Cm rate-limit Ar kbps
 .br
 .Op Cm threshold Ar ttl
 .El
@@ -238,7 +238,7 @@ There are five types of commands:
 .br
 .Op Cm metric Ar <1-31>
 .br
-.Op Cm rate_limit Ar kbps
+.Op Cm rate-limit Ar kbps
 .br
 .Op Cm threshold Ar ttl
 .El
@@ -255,7 +255,7 @@ and
 options may be specified as many times as necessary.
 .Pp
 The
-.Nm cache_lifetime
+.Nm cache-lifetime
 is a value that determines the amount of time that a
 cached multicast route stays in kernel before timing out.
 The value of this entry should lie between 300 (5 min) and 86400 (1 day).
@@ -334,7 +334,7 @@ or tunnel; it may be used to influence the choice of routes.  The metric
 defaults to 1.  Metrics should be kept as small as possible, because
 .Nm
 cannot route along paths with a sum of metrics greater than 31.
-.It Cm rate_limit
+.It Cm rate-limit
 allows the network administrator to specify a certain bandwidth in kbps
 which would be allocated to multicast traffic.  It defaults to 500 kbps
 on tunnels, and 0 (unlimited) on physical interfaces.
@@ -381,7 +381,7 @@ phyint atm0 disable
 # Remove the default tunnel rate limit, since this
 # tunnel is over Ethernets.
 tunnel 192.168.5.4 192.168.55.101
-       metric 1 threshold 1 rate_limit 0
+       metric 1 threshold 1 rate-limit 0
 
 # This is our tunnel to the outside world.
 # Careful with those boundaries, Eugene.

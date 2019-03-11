@@ -726,7 +726,9 @@ static struct keyword {
 	int	val2;
 } words[] = {
 	{ "cache_lifetime",	CACHE_LIFETIME, 0 },
+	{ "cache-lifetime",	CACHE_LIFETIME, 0 },
 	{ "prune_lifetime",	PRUNE_LIFETIME,	PRUNE_LIFETIME2 },
+	{ "prune-lifetime",	PRUNE_LIFETIME,	PRUNE_LIFETIME2 },
 	{ "pruning",		PRUNING, 0 },
 	{ "phyint",		PHYINT, 0 },
 	{ "tunnel",		TUNNEL, 0 },
@@ -734,9 +736,12 @@ static struct keyword {
 	{ "enable",		ENABLE, 0 },
 	{ "metric",		METRIC, 0 },
 	{ "advert_metric",	ADVERT_METRIC, 0 },
+	{ "advert-metric",	ADVERT_METRIC, 0 },
 	{ "threshold",		THRESHOLD, 0 },
 	{ "rate_limit",		RATE_LIMIT, 0 },
+	{ "rate-limit",		RATE_LIMIT, 0 },
 	{ "force_leaf",		FORCE_LEAF, 0 },
+	{ "force-leaf",		FORCE_LEAF, 0 },
 	{ "srcrt",		SRCRT, 0 },
 	{ "sourceroute",	SRCRT, 0 },
 	{ "boundary",		BOUNDARY, 0 },
@@ -751,13 +756,16 @@ static struct keyword {
 	{ "exact",		EXACT, 0 },
 	{ "bidir",		BIDIR, 0 },
 	{ "allow_nonpruners",	ALLOW_NONPRUNERS, 0 },
+	{ "allow-nonpruners",	ALLOW_NONPRUNERS, 0 },
 #ifdef ALLOW_BLACK_HOLES
 	{ "allow_black_holes",	BLACK_HOLE, 0 },
+	{ "allow-black-holes",	BLACK_HOLE, 0 },
 #endif
 	{ "noflood",		NOFLOOD, NOFLOOD2 },
 	{ "notransit",		NOTRANSIT, 0 },
 	{ "blaster",		BLASTER, 0 },
 	{ "rexmit_prunes",	REXMIT_PRUNES, REXMIT_PRUNES2 },
+	{ "rexmit-prunes",	REXMIT_PRUNES, REXMIT_PRUNES2 },
 	{ "passive",		PASSIVE, 0 },
 	{ "beside",		BESIDE, 0 },
 #if 0 /* Removed SNMP support */
