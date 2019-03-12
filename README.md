@@ -17,19 +17,15 @@ Table of Contents
 Introduction
 ------------
 
-mrouted is a [3-clause BSD][BSD License] licensed implementation of the
-DVMRP multicast routing protocol.  It can run on any UNIX based system,
-from embedded Linux systems to workstations, turning them into multicast
-routers with (built-in) [IP-in-IP] tunneling support.  GRE can of course
+mrouted is the original implementation of the DVMRP multicast routing
+protocol, see [RFC 1075][] for details.  It supports everyting from
+small embedded Linux/BSD IoT systems to big UNIX workstations.
+
+mrouted is *simple* to use.  DVMRP is derived from RIP, which means it
+works stand-alone without any extra network setup required.  You can get
+up and running in a matter of minutes.  For sparsely located routers
+mrouted as built-in [IP-in-IP][] tunneling support, GRE can of course
 also be used.
-
-DVMRP is a distance vector based protocol, derived from RIP, suitable
-for closely located multicast users in smaller networks.  It uses the
-"flood and prune" method, where multicast is flooded until neighboring
-routers opt out from unwanted multicast groups.  For a more thorough
-explanation of the protocol see [RFC 1075][].
-
-This version of mrouted has [RSRR][] support for running RSVP.
 
 mrouted is primarily developed on Linux and should work as-is out of the
 box on all major distributions.  Other UNIX variants should also work,
@@ -44,9 +40,12 @@ and environment variables such as `--prefix=PATH` and `DESTDIR=` for the
 install process.  E.g., to install pimd to `/usr` instead of the default
 `/usr/local`, but redirect install to a package directory in `/tmp`:
 
-    ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --enable-rsrr
+    ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var
     make
     make DESTDIR=/tmp/mrouted-4.0-1 install-strip
+
+This version of mrouted has [RSRR][] support for running RSVP, disabled
+by default.  Enable with `configure --enable-rsrr`.
 
 
 Building from GIT
@@ -96,16 +95,16 @@ mrouted:
 
     mrouted -f /path/file.conf
 
-mrouted can be reconfigured at runtime like any regular UNIX daemon,
-simply send it a `SIGHUP` to activate changes to the configuration file.
-The PID is saved automatically to the file `/var/run/mrouted.pid` for
+mrouted can be reconfigured at runtime like any regular UNIX daemon with
+`SIGHUP`, or `mroutectl restart`, to activate changes made to its
+configuration file.  The PID is saved in the file `/run/mrouted.pid` for
 your scripting needs.
 
 By default, mrouted configures itself to act as a multicast router on
-all multicast capable interfaces, excluding loopback.  Therefore, you do
-not need to explicitly configure mrouted, unless you need to setup
-tunnel links, change the default operating parameters, disable multicast
-routing over a specific physical interfaces, or have dynamic interfaces.
+all multicast capable interfaces.  Hence, you do not need to explicitly
+configure it, unless you need to setup tunnel links, change the default
+operating parameters, disable multicast routing over a specific physical
+interfaces, or have dynamic interfaces.
 
 For more help, see the man page.
 
@@ -141,9 +140,7 @@ in February 2005 [Debian dropped mrouted][1] as an "obsolete protocol".
 
 For a long time the OpenBSD team remained the sole guardian of this
 project.  In 2010 [Joachim Nilsson](http://troglobit.com) revived
-mrouted on [GitHub][].  The 3.9.x stable series represent the first
-releases in over a decade.  Patches from all over the Internet,
-including OpenBSD, have been merged.
+mrouted on [GitHub][].
 
 [1]:               http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=288112
 [License]:         http://www.openbsd.org/cgi-bin/cvsweb/src/usr.sbin/mrouted/LICENSE
