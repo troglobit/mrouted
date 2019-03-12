@@ -4,8 +4,9 @@ Change Log
 All notable changes to the project are documented in this file.
 
 
-[3.9.8][] - 2017-01-01
-----------------------
+
+[v3.9.8][] - 2017-01-01
+-----------------------
 
 #### Changes
 - New option `-D` or `--startup-delay` to tune the initial delay
@@ -25,8 +26,8 @@ All notable changes to the project are documented in this file.
   for more details.
 
 
-[3.9.7][] - 2014-12-28
-----------------------
+[v3.9.7][] - 2014-12-28
+-----------------------
 
 ### Changes
 - SNMP Support removed.  It never compiled and would have likely
@@ -53,8 +54,8 @@ All notable changes to the project are documented in this file.
   https://scan.coverity.com/projects/3320
 
 
-[3.9.6][] - 2011-10-23
-----------------------
+[v3.9.6][] - 2011-10-23
+-----------------------
 
 ### Changes
 - The Makefile now accepts `CFLAGS` from the environment instead of
@@ -68,8 +69,8 @@ All notable changes to the project are documented in this file.
 - Fix GCC 4.6 warnings for unused variables.
 
 
-[3.9.5][] - 2011-03-05
-----------------------
+[v3.9.5][] - 2011-03-05
+-----------------------
 
 ### Changes
 - The location of dump files have been moved from `/var/tmp` to
@@ -90,8 +91,8 @@ All notable changes to the project are documented in this file.
     content of the multicast routing table."*
 
 
-[3.9.4][] - 2010-11-19
-----------------------
+[v3.9.4][] - 2010-11-19
+-----------------------
 
 ### Fixes
 - `kern.c:k_del_vif()` does not work properly in Linux.
@@ -111,8 +112,8 @@ All notable changes to the project are documented in this file.
   Fix contributed by Dan Kruchinin <mailto:dkruchinin@acm.org>
 
 
-[3.9.3][] - 2010-10-11
-----------------------
+[v3.9.3][] - 2010-10-11
+-----------------------
 
 ### Changes
 - Update man page with `--long-options`, missing sections and improve
@@ -139,8 +140,8 @@ All notable changes to the project are documented in this file.
   array when parsing route report messages.
 
 
-[3.9.2][] - 2010-08-16
-----------------------
+[v3.9.2][] - 2010-08-16
+-----------------------
 
 ### Changes
 - Reduce code duplication on platforms carrying `strlcpy()` and `strtonum()`.
@@ -153,8 +154,8 @@ All notable changes to the project are documented in this file.
   `LLONG_MIN/MAX`
 
 
-[3.9.1][] - 2010-04-10
-----------------------
+[v3.9.1][] - 2010-04-10
+-----------------------
 
 Biggest news in this release is that all OpenBSD patches as of this date
 are merged.
@@ -171,8 +172,8 @@ are merged.
   neat code cleanup and modernization.
 
 
-[3.9.0][] - 2010-01-23
-----------------------
+[v3.9.0][] - 2010-01-23
+-----------------------
 
 ### Changes
 - Debian, build fixes for GNU/Linux.
@@ -182,8 +183,8 @@ are merged.
   and fixed the problems uncovered by that.
 
 
-[3.9-beta3][] - 1999-04-26
---------------------------
+v3.9-beta3 - 1999-04-26
+-----------------------
 
 ### Changes
 - A `blaster` keyword for mrouted.conf, to turn on handling of routers
@@ -214,8 +215,8 @@ are merged.
   (previously it would blackhole, now it can find a less-specific)
 
 
-[3.9-beta2][] - 1997-06-11
---------------------------
+v3.9-beta2 - 1997-06-11
+-----------------------
 
 There is no need to upgrade to 3.9-beta2 if you are not experiencing one
 of the following bugs.
@@ -227,8 +228,8 @@ of the following bugs.
   further notification of changes to this route entry was not possible.
 
 
-[3.9-beta1][] - 1997-06-06
---------------------------
+v3.9-beta1 - 1997-06-06
+-----------------------
 
 ### Changes
 - Longer prune lifetimes (2 hours) by default.  Prune lifetimes may be
@@ -303,8 +304,8 @@ of the following bugs.
   prunes whenever any route change ocurred.
 
 
-[3.8][] - 1995-11-29
---------------------
+v3.8 - 1995-11-29
+-----------------
 
 ### Fixes
 - mrouted would fail to forget prunes when a neighbor went away, thus
@@ -314,9 +315,19 @@ of the following bugs.
 - mrouted could send prunes with negative lifetimes.  This causes
   slightly higher prune traffic but shouldn't be any major problem.
 
+### Manifest
 
-[3.7][] - 1995-11-28
---------------------
+| README-3.8.mrouted | this file                                             |
+|--------------------|-------------------------------------------------------|
+| mrouted/*          | version 3.8 of mrouted, mrinfo, map-mbone and mtrace. |
+| ifconfig/*         | Changes to ifconfig to show multicast interfaces      |
+| netstat/*          | Diffs to netstat                                      |
+| ping/*             | sources for ping which support multicasting           |
+| mtest/*            | utility for testing multicast group membership        |
+
+
+v3.7 - 1995-11-28
+-----------------
 
 ### Changes
 - The configuration file can accept a hostname as the other end of a
@@ -355,8 +366,8 @@ of the following bugs.
 - mrinfo now waits for the responses to its retransmitted queries.
 
 
-[3.6][] - 1995-06-26
---------------------
+v3.6 - 1995-06-26
+-----------------
 
 ### Fixes
 - mrouted would dump core when attempting to report no routes (i.e. upon
@@ -385,8 +396,8 @@ of the following bugs.
 - mrinfo now times out even on a multicast router.
 
 
-[3.5][] - 1995-05-08
---------------------
+v3.5 - 1995-05-08
+-----------------
 
 ### Changes
 - The kernel and mrouted make sure that each is the correct version, to
@@ -456,11 +467,13 @@ of the following bugs.
 - some endian-ness bugs squashed in mrouted, probably more to go.
 - Multicast traceroute could send a reply on a disabled interface.
 
-### Included Files
 
-| README-3.8.mrouted | this file                                             |
-| mrouted/*          | version 3.8 of mrouted, mrinfo, map-mbone and mtrace. |
-| ifconfig/*         | Changes to ifconfig to show multicast interfaces      |
-| netstat/*          | Diffs to netstat                                      |
-| ping/*             | sources for ping which support multicasting           |
-| mtest/*            | utility for testing multicast group membership        |
+[v3.9.8]:     https://github.com/troglobit/mrouted/compare/3.9.7...3.9.8
+[v3.9.7]:     https://github.com/troglobit/mrouted/compare/3.9.6...3.9.7
+[v3.9.6]:     https://github.com/troglobit/mrouted/compare/3.9.5...3.9.6
+[v3.9.5]:     https://github.com/troglobit/mrouted/compare/3.9.4...3.9.5
+[v3.9.4]:     https://github.com/troglobit/mrouted/compare/3.9.3...3.9.4
+[v3.9.3]:     https://github.com/troglobit/mrouted/compare/3.9.2...3.9.3
+[v3.9.2]:     https://github.com/troglobit/mrouted/compare/3.9.1...3.9.2
+[v3.9.1]:     https://github.com/troglobit/mrouted/compare/3.9.0...3.9.1
+[v3.9.0]:     https://github.com/troglobit/mrouted/compare/mrouted-3.9beta3+IOS12...3.9.0
