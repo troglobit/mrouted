@@ -93,6 +93,7 @@ static int init_children_and_leaves(struct rtentry *r, vifi_t parent, int first)
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
 	if (first || vifi == parent)
 	    r->rt_dominants[vifi] = 0;
+
 	if (vifi == parent || uvifs[vifi].uv_flags & VIFF_NOFLOOD ||
 		AVOID_TRANSIT(vifi, r) || (!first && r->rt_dominants[vifi]))
 	    NBRM_CLRMASK(r->rt_subordinates, uvifs[vifi].uv_nbrmap);
@@ -100,7 +101,7 @@ static int init_children_and_leaves(struct rtentry *r, vifi_t parent, int first)
 	    NBRM_SETMASK(r->rt_subordinates, uvifs[vifi].uv_nbrmap);
 
 	if (vifi != parent && !(v->uv_flags & (VIFF_DOWN|VIFF_DISABLED)) &&
-	     	!(!first && r->rt_dominants[vifi])) {
+	    !(!first && r->rt_dominants[vifi])) {
 	    VIFM_SET(vifi, r->rt_children);
 	}
     }
@@ -120,7 +121,7 @@ void add_vif_to_routes(vifi_t vifi)
     struct uvif *v;
 
     v = &uvifs[vifi];
-    for (r = routing_table; r != NULL; r = r->rt_next) {
+    for (r = routing_table; r; r = r->rt_next) {
 	if (r->rt_metric != UNREACHABLE &&
 	    !VIFM_ISSET(vifi, r->rt_children)) {
 	    VIFM_SET(vifi, r->rt_children);
@@ -142,7 +143,7 @@ void delete_vif_from_routes(vifi_t vifi)
 {
     struct rtentry *r;
 
-    for (r = routing_table; r != NULL; r = r->rt_next) {
+    for (r = routing_table; r; r = r->rt_next) {
 	if (r->rt_metric != UNREACHABLE) {
 	    if (vifi == r->rt_parent) {
 		del_table_entry(r, 0, DEL_ALL_ROUTES);
@@ -150,13 +151,11 @@ void delete_vif_from_routes(vifi_t vifi)
 		r->rt_metric   = UNREACHABLE;
 		r->rt_flags   |= RTF_CHANGED;
 		routes_changed = TRUE;
-	    }
-	    else if (VIFM_ISSET(vifi, r->rt_children)) {
+	    } else if (VIFM_ISSET(vifi, r->rt_children)) {
 		VIFM_CLR(vifi, r->rt_children);
 		NBRM_CLRMASK(r->rt_subordinates, uvifs[vifi].uv_nbrmap);
 		update_table_entry(r, r->rt_gateway);
-	    }
-	    else {
+	    } else {
 		r->rt_dominants[vifi] = 0;
 	    }
 	}
@@ -177,7 +176,8 @@ void add_neighbor_to_routes(vifi_t vifi, uint32_t index)
     v = &uvifs[vifi];
     if (v->uv_flags & VIFF_NOFLOOD)
 	return;
-    for (r = routing_table; r != NULL; r = r->rt_next) {
+
+    for (r = routing_table; r; r = r->rt_next) {
 	if (r->rt_metric != UNREACHABLE && r->rt_parent != vifi &&
 		!AVOID_TRANSIT(vifi, r)) {
 	    NBRM_SET(index, r->rt_subordinates);
@@ -198,7 +198,7 @@ void delete_neighbor_from_routes(uint32_t addr, vifi_t vifi, uint32_t index)
     struct rtentry *r;
     struct uvif *v = &uvifs[vifi];
 
-    for (r = routing_table; r != NULL; r = r->rt_next) {
+    for (r = routing_table; r; r = r->rt_next) {
 	if (r->rt_metric != UNREACHABLE) {
 	    if (r->rt_parent == vifi && r->rt_gateway == addr) {
 		del_table_entry(r, 0, DEL_ALL_ROUTES);
@@ -682,7 +682,7 @@ void age_routes(void)
     extern uint32_t virtual_time;		/* from main.c */
 
     r = routing_table;
-    while (r != NULL) {
+    while (r) {
 	next = r->rt_next;
 
 	if ((r->rt_timer += TIMER_INTERVAL) >= ROUTE_DISCARD_TIME) {
@@ -691,8 +691,7 @@ void age_routes(void)
 	     */
 	    del_table_entry(r, 0, DEL_ALL_ROUTES);
 	    discard_route(r);
-	}
-	else if (r->rt_timer >= ROUTE_EXPIRE_TIME &&
+	} else if (r->rt_timer >= ROUTE_EXPIRE_TIME &&
 		 r->rt_metric != UNREACHABLE) {
 	    /*
 	     * Time to expire the route entry.  If the gateway is zero,
@@ -702,15 +701,13 @@ void age_routes(void)
 	     */
 	    if (r->rt_gateway == 0) {
 		r->rt_timer = 0;
-	    }
-	    else {
+	    } else {
 		del_table_entry(r, 0, DEL_ALL_ROUTES);
 		r->rt_metric   = UNREACHABLE;
 		r->rt_flags   |= RTF_CHANGED;
 		routes_changed = TRUE;
 	    }
-	}
-	else if (virtual_time % (ROUTE_REPORT_INTERVAL * 2) == 0) {
+	} else if (virtual_time % (ROUTE_REPORT_INTERVAL * 2) == 0) {
 	    /*
 	     * Time out subordinateness that hasn't been reported in
 	     * the last 2 intervals.
@@ -744,7 +741,7 @@ void expire_all_routes(void)
 {
     struct rtentry *r;
 
-    for (r = routing_table; r != NULL; r = r->rt_next) {
+    for (r = routing_table; r; r = r->rt_next) {
 	r->rt_metric   = UNREACHABLE;
 	r->rt_flags   |= RTF_CHANGED;
 	routes_changed = TRUE;
@@ -760,7 +757,7 @@ void free_all_routes(void)
     struct rtentry *r, *next;
 
     r = routing_table;
-    while (r != NULL) {
+    while (r) {
 	next = r->rt_next;
 	discard_route(r);
 	r = next;
@@ -773,8 +770,8 @@ void free_all_routes(void)
  */
 void accept_probe(uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t level)
 {
-    vifi_t vifi;
     static struct listaddr *unknowns = NULL;
+    vifi_t vifi;
 
     vifi = find_vif(src, dst);
     if (vifi == NO_VIF) {
@@ -1147,11 +1144,9 @@ void report_to_all_neighbors(int which_routes)
     routes_changed_before = routes_changed;
     routes_changed = FALSE;
 
-
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
-	if (!NBRM_ISEMPTY(v->uv_nbrmap)) {
+	if (!NBRM_ISEMPTY(v->uv_nbrmap))
 	    report(which_routes, vifi, v->uv_dst_addr);
-	}
     }
 
     /*
@@ -1162,9 +1157,8 @@ void report_to_all_neighbors(int which_routes)
      * generated at the next timer interrupt.
      */
     if (routes_changed_before && !routes_changed) {
-	for (r = routing_table; r != NULL; r = r->rt_next) {
+	for (r = routing_table; r; r = r->rt_next)
 	    r->rt_flags &= ~RTF_CHANGED;
-	}
     }
 
     /*
@@ -1193,7 +1187,7 @@ static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi,
 
     p = send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN;
 
-    for (r = start_rt; r != NULL; r = r->rt_prev) {
+    for (r = start_rt; r; r = r->rt_prev) {
 	if (which_routes == CHANGED_ROUTES && !(r->rt_flags & RTF_CHANGED)) {
 	    nrt++;
 	    continue;
@@ -1220,20 +1214,27 @@ static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi,
 			    match = 1;
 			    break;
 		    }
-		} else {
-		    if ((r->rt_origin & vfe->vfe_mask) == vfe->vfe_addr) {
-			    match = 1;
-			    break;
-		    }
+
+		    continue;
+		}
+
+		if ((r->rt_origin & vfe->vfe_mask) == vfe->vfe_addr) {
+		    match = 1;
+		    break;
 		}
 	    }
+
 	    if ((v->uv_filter->vf_type == VFT_ACCEPT && match == 0) ||
-		(v->uv_filter->vf_type == VFT_DENY && match == 1)) {
+		(v->uv_filter->vf_type == VFT_DENY   && match == 1)) {
 		IF_DEBUG(DEBUG_ROUTE) {
 		    logit(LOG_DEBUG, 0, "%s not reported on vif %d because it %s %s",
-			  RT_FMT(r, s1), vifi, match ? "matches" : "doesn't match",
-			  match ? inet_fmts(vfe->vfe_addr, vfe->vfe_mask, s2, sizeof(s2))
-			  : "the filter");
+			  RT_FMT(r, s1), vifi,
+			  (match
+			   ? "matches"
+			   : "doesn't match"),
+			  (match
+			   ? inet_fmts(vfe->vfe_addr, vfe->vfe_mask, s2, sizeof(s2))
+			   : "the filter"));
 		}
 		nrt++;
 		continue;
@@ -1256,12 +1257,15 @@ static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi,
 	if (r->rt_originmask != mask || datalen == 0) {
 	    mask  = r->rt_originmask;
 	    width = r->rt_originwidth;
-	    if (datalen != 0) *(p-1) |= 0x80;
+
+	    if (datalen != 0)
+		*(p - 1) |= 0x80;
 	    *p++ = ((char *)&mask)[1];
 	    *p++ = ((char *)&mask)[2];
 	    *p++ = ((char *)&mask)[3];
 	    datalen += 3;
 	}
+
 	for (i = 0; i < width; ++i)
 	    *p++ = ((char *)&(r->rt_origin))[i];
 
@@ -1278,6 +1282,7 @@ static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi,
 	++nrt;
 	datalen += width + 1;
     }
+
     if (datalen != 0) {
 	*(p-1) |= 0x80;
 	send_on_vif(v, 0, DVMRP_REPORT, datalen);
@@ -1292,11 +1297,11 @@ static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi,
  */
 int report_next_chunk(void)
 {
-    vifi_t vifi;
-    struct uvif *v;
-    struct rtentry *sr;
-    int i, n = 0, min = 20000;
     static int start_rt;
+    struct rtentry *sr;
+    struct uvif *v;
+    vifi_t vifi;
+    int i, n = 0, min = 20000;
 
     if (nroutes <= 0)
 	return 0;
@@ -1398,7 +1403,7 @@ struct rtentry *determine_route(uint32_t src)
 {
     struct rtentry *rt;
 
-    for (rt = routing_table; rt != NULL; rt = rt->rt_next) {
+    for (rt = routing_table; rt; rt = rt->rt_next) {
 	if (rt->rt_origin == (src & rt->rt_originmask) &&
 	    rt->rt_metric != UNREACHABLE) 
 	    break;
