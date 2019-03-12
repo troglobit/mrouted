@@ -8,9 +8,6 @@ GPATH
 GRTAGS
 GSYMS
 GTAGS
-ChangeLog.pdf
-ChangeLog.tex
-config.mk
 Makefile
 Makefile.in
 aclocal.m4
