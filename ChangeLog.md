@@ -3,6 +3,28 @@ Change Log
 
 All notable changes to the project are documented in this file.
 
+[v4.0][UNRELEASED]
+------------------
+
+Major release with full IGMPv3 support and a new `mroutectl` tool.
+
+### Changes
+- Support for IGMPv3, both sending queries and accepting membership
+  reports, issue #16
+- Support for configurable IGMP query interval, issue #26
+- Support for configurable IGMP robustness variable, issue #27
+- Add systemd unit file
+- Add `mroutectl`, replaces `mrouted.dump` and `SIGUSR1`
+- GNU Configure & Build system, use `./autogen.sh` only when building
+  directly from GIT sources, otherwise use `./configure` from tarball
+
+### Fixes
+- Fix #20: Replace obsolete `gethostbyname()` w/ `getaddrinfo()`
+- Fix #25: Save `mrouted.genid` to persistent store in `/var/lib`
+  instead of `/var/run`
+- Fixed libc portability issues, e.g. GNU:isms like `%m` etc.
+- Import OpenBSD fix to `daemon()` equivalent, use `/dev/null` for
+  stdin, stdout and stderr
 
 
 [v3.9.8][] - 2017-01-01
@@ -468,6 +490,7 @@ v3.5 - 1995-05-08
 - Multicast traceroute could send a reply on a disabled interface.
 
 
+[UNRELEASED]: https://github.com/troglobit/mrouted/compare/3.9.8...HEAD
 [v3.9.8]:     https://github.com/troglobit/mrouted/compare/3.9.7...3.9.8
 [v3.9.7]:     https://github.com/troglobit/mrouted/compare/3.9.6...3.9.7
 [v3.9.6]:     https://github.com/troglobit/mrouted/compare/3.9.5...3.9.6
