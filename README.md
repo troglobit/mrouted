@@ -73,7 +73,7 @@ configure it, unless you need to setup tunnel links, change the default
 operating parameters, disable multicast routing over a specific physical
 interfaces, or have dynamic interfaces.
 
-For more help, see the man page.
+For more help, see the [mrouted(8)][] man page.
 
 
 Build & Install
@@ -159,8 +159,9 @@ mrouted on [GitHub][].
 [RSRR]:            docs/RSRR.md
 [buildsystem]:     https://airs.com/ian/configure/
 [mgen(1)]:         https://www.nrl.navy.mil/itd/ncs/products/mgen
-[mcjoin(1)]:       http://github.com/troglobit/mcjoin/
-[GitHub]:          http://github.com/troglobit/mrouted/
+[mcjoin(1)]:       https://github.com/troglobit/mcjoin/
+[mrouted(8)]:      http://ftp.troglobit.com/man/mrouted.html
+[GitHub]:          https://github.com/troglobit/mrouted/
 [Travis]:          https://travis-ci.org/troglobit/mrouted
 [Travis Status]:   https://travis-ci.org/troglobit/mrouted.png?branch=master
 [Coverity Scan]:   https://scan.coverity.com/projects/3320
