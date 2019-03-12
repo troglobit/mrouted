@@ -201,6 +201,10 @@ There are five types of commands:
 .Cm name
 .Ar boundary-name | scoped-addr Ns / Ns Ar mask-len
 .It
+.Cm igmp-query-interval Ar SEC
+.It
+.Cm igmp-robustness Ar COUNT
+.It
 .Cm phyint
 .Ar local-addr
 .Oo
@@ -264,6 +268,40 @@ It defaults to 300.
 The
 .Nm name
 option assigns names to boundaries to make configuration easier.
+.Pp
+The
+.Cm igmp-query-interval
+setting controls the IGMP query interval used when this router is
+elected querier on a LAN.  It can be set to any value in the range
+1-1024, inclusive.  However, it is not recommended to go below 10 sec.
+Default: 125.
+.Pp
+The
+.Cm igmp-robustness
+setting controls many aspects of IGMP timers.  It can be any value in
+the range 2-10, inclusive.  The query-response-interval used below is
+hard-coded to 10 sec in
+.Nm :
+.Pp
+.Bl -tag -indent
+.It Group Membership Timeout
+Number of seconds before
+.Nm
+determines that there are no more members of a group on a LAN.  Formula:
+(igmp-robustness x igmp-query-interval) + (1 x query-response-interval)
+.It Other Querier Timeout
+Number of seconds before
+.Nm
+determines there is no longer an elected querier on the LAN.  Formula:
+(igmp-robustness x igmp-query-interval) + (0.5 x query-response-interval)
+.It Last-member Query Count
+Number of group-specific queries sent before
+.Nm
+assumes there are no local members of a group.  The number of queries is
+equal to the value of the robustness variable.  However,
+.Nm
+currently hard-codes this to 2
+.El
 .Pp
 The
 .Nm phyint
