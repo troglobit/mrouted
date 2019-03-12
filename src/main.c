@@ -631,6 +631,8 @@ uint32_t virtual_time = 0;
  */
 static void timer(void *arg)
 {
+    timer_set(TIMER_INTERVAL, timer, NULL);
+
     age_routes();	/* Advance the timers in the route entries     */
     age_vifs();		/* Advance the timers for neighbors */
     age_table_entry();	/* Advance the timers for the cache entries */
@@ -649,7 +651,6 @@ static void timer(void *arg)
      * Advance virtual time
      */
     virtual_time += TIMER_INTERVAL;
-    timer_set(TIMER_INTERVAL, timer, NULL);
 }
 
 /*
