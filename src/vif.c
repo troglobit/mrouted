@@ -35,6 +35,7 @@ typedef struct {
 } cbk_t;
 
 static int query_timerid = -1;
+static int dvmrp_timerid = -1;
 
 /*
  * Forward declarations.
@@ -138,6 +139,13 @@ void init_vifs(void)
     if (query_timerid != -1)
 	timer_clear(query_timerid);
     query_timerid = timer_set(igmp_query_interval, query_groups, NULL);
+
+    /*
+     * Periodically probe all VIFs for DVMRP neighbors
+     */
+    if (dvmrp_timerid != -1)
+	timer_clear(dvmrp_timerid);
+    dvmrp_timerid = timer_set(NEIGHBOR_PROBE_INTERVAL, query_dvmrp, NULL);
 }
 
 /*
@@ -625,6 +633,22 @@ void query_groups(void *arg)
     }
 
     age_old_hosts();
+}
+
+/*
+ * Time to send a probe on all vifs from which no neighbors have
+ * been heard.  Also, check if any inoperative interfaces have now
+ * come up.  (If they have, they will also be probed as part of
+ * their initialization.)
+ */
+void query_dvmrp(void *arg)
+{
+    timer_set(NEIGHBOR_PROBE_INTERVAL, query_dvmrp, arg);
+
+    probe_for_neighbors();
+
+    if (vifs_down)
+	check_vif_state();
 }
 
 /*

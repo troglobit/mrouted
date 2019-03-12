@@ -635,19 +635,6 @@ static void timer(void *arg)
     age_vifs();		/* Advance the timers for neighbors */
     age_table_entry();	/* Advance the timers for the cache entries */
 
-    if (virtual_time % NEIGHBOR_PROBE_INTERVAL == 0) {
-	/*
-	 * Time to send a probe on all vifs from which no neighbors have
-	 * been heard.  Also, check if any inoperative interfaces have now
-	 * come up.  (If they have, they will also be probed as part of
-	 * their initialization.)
-	 */
-	probe_for_neighbors();
-
-	if (vifs_down)
-	    check_vif_state();
-    }
-
     delay_change_reports = FALSE;
     if (routes_changed) {
 	/*

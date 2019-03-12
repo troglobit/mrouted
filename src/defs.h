@@ -311,6 +311,7 @@ extern void		stop_all_vifs(void);
 extern struct listaddr *neighbor_info(vifi_t, uint32_t);
 extern void		accept_group_report(uint32_t, uint32_t, uint32_t, int);
 extern void		query_groups(void *);
+extern void		query_dvmrp(void *);
 extern void		probe_for_neighbors(void);
 extern struct listaddr *update_neighbor(vifi_t, uint32_t, int, char *, size_t, uint32_t);
 extern void		accept_neighbor_request(uint32_t, uint32_t);
