@@ -6,15 +6,23 @@ All notable changes to the project are documented in this file.
 [v4.0][UNRELEASED]
 ------------------
 
-Major release with full IGMPv3 support and a new `mroutectl` tool.
+Major release with full IGMPv3 (ASM) support and a new `mroutectl` tool.
+
+**Note:** command line options have been changed!
 
 ### Changes
 - Support for IGMPv3, both sending queries and accepting membership
   reports, issue #16
 - Support for configurable IGMP query interval, issue #26
 - Support for configurable IGMP robustness variable, issue #27
+- *Incompatible* command line option refactor
 - Add systemd unit file
-- Add `mroutectl`, replaces `mrouted.dump` and `SIGUSR1`
+- Add `mroutectl`, replaces `mrouted.cache` and `mrouted.dump`,
+  including `SIGUSR1` and `SIGUSR2` signals
+- The `mrouted.pid` file, and the new `mrouted.sock` file, are now
+  located in `/var/run`
+- Major cleanup of logging directives take from command line, and now
+  also from `mroutectl`.  Use `-d ?`, and `-l ?` to list alternatives
 - GNU Configure & Build system, use `./autogen.sh` only when building
   directly from GIT sources, otherwise use `./configure` from tarball
 
