@@ -659,20 +659,15 @@ static void timer(void *arg)
  * a timeout pending, age the timeout queue.  If not, collect usec in
  * difftime to make sure that the time doesn't drift too badly.
  *
- * If the timeout handlers took more than 1 second, age the timeout
- * queue again.
- *
- * XXX: This introduces the potential for infinite loops!
+ * XXX: If the timeout handlers took more than 1 second, age the timeout
+ * queue again.  Note, this introduces the potential for infinite loops!
  */
 static int timeout(int n)
 {
     static struct timeval difftime, curtime, lasttime;
-    static int init = 1;
-    int secs;
+    static int init = 1, secs = 0;
 
-    /* Next timeout to poll() */
-    secs = timer_next_delay();
-
+    /* Age queue */
     do {
 	/*
 	 * If poll() timed out, then there's no other activity to
@@ -710,7 +705,10 @@ static int timeout(int n)
 	secs = -1;
     } while (difftime.tv_sec > 0);
 
-    return timer_next_delay();
+    /* Next timer to wait for */
+    secs = timer_next_delay();
+
+    return secs;
 }
 
 static void cleanup(void)
