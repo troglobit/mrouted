@@ -38,7 +38,7 @@ mrouted does not require a `.conf` file.  When it starts up it probes
 all available interfaces and, after an initial 10s delay, starts peering
 with any DVMRP capable neighbors.
 
-Use `mgen(1)` or `mcjoin(1)` to send IGMP join packets on the LAN to
+Use [mgen(1)][] or [mcjoin(1)][] to send IGMP join packets on the LAN to
 start testing multicast routing.  Use the `mroutectl` toll go query
 `mrouted` for status.
 
@@ -158,6 +158,8 @@ mrouted on [GitHub][].
 [IP-in-IP]:        https://en.wikipedia.org/wiki/IP_in_IP
 [RSRR]:            docs/RSRR.md
 [buildsystem]:     https://airs.com/ian/configure/
+[mgen(1)]:         https://www.nrl.navy.mil/itd/ncs/products/mgen
+[mcjoin(1)]:       http://github.com/troglobit/mcjoin/
 [GitHub]:          http://github.com/troglobit/mrouted/
 [Travis]:          https://travis-ci.org/troglobit/mrouted
 [Travis Status]:   https://travis-ci.org/troglobit/mrouted.png?branch=master
