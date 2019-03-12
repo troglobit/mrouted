@@ -1,0 +1,287 @@
+.\" Hey Emacs, this is -*- nroff -*- mode
+.\" The mrouted program is covered by the license in the accompanying file
+.\" named "LICENSE".  Use of the mrouted program represents acceptance of
+.\" the terms and conditions listed in that file.
+.\"
+.\" The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
+.\" Leland Stanford Junior University.
+.Dd Mar 12, 2019
+.Dt MROUTED 5
+.Os
+.Sh NAME
+.Nm mrouted.conf
+.Nd mrouted configuration file
+.Sh SYNOPSIS
+.Nm /etc/mrouted.conf
+.Sh DESCRIPTION
+In many cases you do not need to configure
+.Nm mrouted .
+It configures itself automatically to forward multicast on all
+multicast-capable interfaces, i.e., interfaces that have the
+.Cm IFF_MULTICAST
+flag set, excluding the loopback interface.  It locates other DVMRP
+capable routers directly reachable via those interfaces.
+.Pp
+.Bl -tag -width TERM -compact -offset indent
+.It Nm
+will not start with less than two enabled virtual interfaces (VIFs).  A
+VIF is either a physical multicast-capable interface or a tunnel.
+.It Nm
+will log a warning if all of its VIFs are tunnels; such a configuration
+is likely better replaced by more direct (GRE) tunnels (i.e. eliminate
+the middle man).
+.El
+.Pp
+To override the default settings, for example to to add tunnel links to
+other DVMRP routers, configuration commands may be placed in
+.Pa /etc/mrouted.conf .
+There are five types of commands:
+.Bl -item -offset indent
+.It
+.Cm cache-lifetime
+.Ar <SEC>
+.It
+.Cm name
+.Ar boundary-name | scoped-addr Ns / Ns Ar mask-len
+.It
+.Cm igmp-query-interval Ar SEC
+.It
+.Cm igmp-robustness Ar COUNT
+.It
+.Cm phyint
+.Ar local-addr
+.Oo
+.Cm altnet
+.Ar network Ns / Ns Ar mask-len
+.Oc
+.Bl -item -offset indent
+.Oo
+.Cm boundary
+.Ar boundary-name | scoped-addr Ns / Ns Ar mask-len
+.Oc
+.br
+.Op Cm igmpv1 | igmpv2 | igmpv3
+.br
+.Op Cm disable | enable
+.br
+.Op Cm metric Ar <1-31>
+.br
+.Op Cm rate-limit Ar kbps
+.br
+.Op Cm threshold Ar ttl
+.El
+.It
+.Cm pruning
+.Op Cm off | on
+.It
+.Cm tunnel
+.Ar local-addr
+.Ar remote-addr
+.Bl -item -offset indent
+.Oo
+.Cm boundary
+.Ar boundary-name | scoped-addr Ns / Ns Ar mask-len
+.Oc
+.br
+.Op Cm metric Ar <1-31>
+.br
+.Op Cm rate-limit Ar kbps
+.br
+.Op Cm threshold Ar ttl
+.El
+.El
+.Pp
+The file format is free-form: whitespace (including newlines) is not
+significant.  The
+.Dq #\&
+character marks start of a comment to end of line.
+.Pp
+The
+.Cm boundary
+option to all commands can accept either a name or a network boundary;
+the
+.Cm boundary
+and
+.Cm altnet
+options may be specified as many times as necessary.
+.Pp
+The
+.Cm cache-lifetime
+is a value that determines the amount of time that a
+cached multicast route stays in kernel before timing out.
+The value of this entry should lie between 300 (5 min) and 86400 (1 day).
+It defaults to 300.
+.Pp
+The
+.Cm name
+option assigns names to boundaries to make configuration easier.
+.Pp
+The
+.Cm igmp-query-interval
+setting controls the IGMP query interval used when this router is
+elected querier on a LAN.  It can be set to any value in the range
+1-1024, inclusive.  However, it is not recommended to go below 10 sec.
+Default: 125.
+.Pp
+The
+.Cm igmp-robustness
+setting controls many aspects of IGMP timers.  It can be any value in
+the range 2-10, inclusive.  The query-response-interval used below is
+hard-coded to 10 sec in
+.Nm mrouted:
+.Pp
+.Bl -tag -indent
+.It Group Membership Timeout
+Number of seconds before
+.Nm mrouted
+determines that there are no more members of a group on a LAN.  Formula:
+(igmp-robustness x igmp-query-interval) + (1 x query-response-interval)
+.It Other Querier Timeout
+Number of seconds before
+.Nm mrouted
+determines there is no longer an elected querier on the LAN.  Formula:
+(igmp-robustness x igmp-query-interval) + (0.5 x query-response-interval)
+.It Last-member Query Count
+Number of group-specific queries sent before
+.Nm mrouted
+assumes there are no local members of a group.  The number of queries is
+equal to the value of the robustness variable.  However,
+.Nm mrouted
+currently hard-codes this to 2
+.El
+.Pp
+The
+.Cm phyint
+command can be used to disable multicast routing (or enable if
+.Nm mrouted
+is started with all interfaces disabled) on the physical interface
+identified by local IP address
+.Ar local-addr ,
+or to associate a non-default metric or threshold with the specified
+physical interface.
+The local IP address
+.Ar local-addr
+may be replaced by the interface name (e.g. le0).  If an interface is
+attached to multiple IP subnets, describe each additional subnet with
+the
+.Cm altnet
+keyword.
+.Nm mrouted
+supports all IGMP versions and defaults to use IGMP v3.  Use
+.Cm igmpv2
+or
+.Cm igmpv1
+to force compatibility modes on the
+.Cm phyint .
+.Pp
+.Sy NOTE:
+All
+.Cm phyint
+commands must precede tunnel commands.
+.Pp
+The
+.Cm pruning
+command is provided for
+.Nm mrouted
+to act as a non-pruning router.  This is no longer supported and the
+configuration option is only kept for compatibility reasons.
+.Pp
+The
+.Cm tunnel
+command can be used to establish a tunnel link between local IP address
+.Ar local-addr
+and remote IP address
+.Ar remote-addr ,
+and to associate a non-default metric or threshold with that tunnel.
+The local IP address
+.Ar local-addr
+may be replaced by the interface name (e.g. le0).
+The remote IP address
+.Ar remote-addr
+may be replaced by a host name, if and only if the host name has a single
+IP address associated with it.
+The tunnel must be set up in the mrouted.conf files of both routers before
+it can be used.
+.\"For backwards compatibility with older versions of
+.\".Nm mrouted ,
+.\"the srcrt keyword specifies
+.\"encapsulation using IP source routing.
+.Pp
+.Bl -tag -width TERM -compact -offset indent
+.It Cm boundary
+allows an interface to be configured as an administrative boundary
+for the specified scoped address.
+Packets belonging to this address will not be forwarded on a scoped interface.
+The boundary option accepts either a name or a boundary spec.
+.It Cm metric
+is the "cost" associated with sending a datagram on the given interface
+or tunnel; it may be used to influence the choice of routes.  The metric
+defaults to 1.  Metrics should be kept as small as possible, because
+.Nm mrouted
+cannot route along paths with a sum of metrics greater than 31.
+.It Cm rate-limit
+allows the network administrator to specify a certain bandwidth in kbps
+which would be allocated to multicast traffic.  It defaults to 500 kbps
+on tunnels, and 0 (unlimited) on physical interfaces.
+.It Cm threshold
+is the minimum IP time-to-live required for a multicast datagram to be
+forwarded to the given interface or tunnel.  It is used to control the
+scope of multicast datagrams.  (The TTL of forwarded packets is only
+compared to the threshold, it is not decremented by the threshold.
+Every multicast router decrements the TTL by 1.)  The default threshold
+is 1.
+.El
+.Pp
+In general, all DVMRP routers connected to a particular subnet or tunnel
+should use the same metric and threshold for that subnet or tunnel.
+.Sh EXAMPLE CONFIGURATION
+This is an example configuration for a mythical multicast router at a big
+school.
+.Bd -unfilled -offset left
+#
+# mrouted.conf example
+#
+
+# Name our boundaries to make it easier.
+name LOCAL 239.255.0.0/16
+name EE 239.254.0.0/16
+
+# le1 is our gateway to compsci, don't forward our
+# local groups to them.
+phyint le1 boundary EE
+
+# le2 is our interface on the classroom net, it has four
+# different length subnets on it.
+# Note that you can use either an IP address or an interface name
+phyint 172.16.12.38 boundary EE
+       altnet 172.16.15.0/26
+       altnet 172.16.15.128/26
+       altnet 172.16.48.0/24
+
+# atm0 is our ATM interface, which doesn't properly
+# support multicasting.
+phyint atm0 disable
+
+# This is an internal tunnel to another EE subnet.
+# Remove the default tunnel rate limit, since this
+# tunnel is over Ethernets.
+tunnel 192.168.5.4 192.168.55.101
+       metric 1 threshold 1 rate-limit 0
+
+# This is our tunnel to the outside world.
+# Careful with those boundaries, Eugene.
+tunnel 192.168.5.4 10.11.12.13
+       metric 1 threshold 32
+       boundary LOCAL boundary EE
+.Ed
+.Sh SEE ALSO
+.Xr mrouted 8
+.Pp
+The
+.Nm mrouted
+home page is
+.Aq http://github.com/troglobit/mrouted
+.Sh AUTHORS
+This manual page was written by
+.An Joachim Nilsson Aq mailto:troglobit@gmail.com .
+
