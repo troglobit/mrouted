@@ -69,19 +69,19 @@ traffic will be reduced in the network, which is the advantage of DVMRP.
 Footnotes
 ---------
 
-<b id="f1">2)</b> *Reverse Path Forwarding:* the algorithm used to
+<b id="f1">1)</b> *Reverse Path Forwarding:* the algorithm used to
 determine the best route back to a source.  The router examines all
 packets received as inputs to make sure that both source interface and
 address are in the table.  It looks those up in the routing table and
 compares them. If there is a match then accept the packets, else discard
 them. [↩](#a1)
 
-<b id="f2">1)</b> *Forwarding table:* the table maintained in a router
+<b id="f2">2)</b> *Forwarding table:* the table maintained in a router
 that lets it make decisions on how to forward packets.  The process of
 building up the forwarding table is called routing.  Thus the forwarding
 table is sometimes called a routing table. [↩](#a2)
 
-<b id="f3">1)</b> *Internet Group Membership Protocol*, allows hosts on
+<b id="f3">3)</b> *Internet Group Membership Protocol*, allows hosts on
 a LAN to signal routers that they would like to subscribe to a multicast
 group to receive a data stream.  Routers in turn use IGMP to determine
 which interfaces to flood multicast packets to and which multicast
