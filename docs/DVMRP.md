@@ -10,15 +10,10 @@ DVMRP uses Reverse Path Forwarding (RPF) to determine the best
 (shortest) path back to the source. The router examines all the packets
 received as input to make sure that both source address and interface
 are in the routing table. It looks up the source address in the
-forwarding table[^1] and compares that entry with the receivng entry (RFP
-check). If the interface and entry do not match or are not in the table,
-then the packets are discarded. If there is a match, then the router
-forwards the packets.
-
-[^1]: The table maintained in a router that lets it make decisions on
-      how to forward packets. The process of building up the forwarding
-      table is called routing. Thus the forwarding table is sometimes
-      called a routing table.
+forwarding table<sup id="a1">[1](#f1)</sup> and compares that entry with
+the receivng entry (RFP check). If the interface and entry do not match
+or are not in the table, then the packets are discarded. If there is a
+match, then the router forwards the packets.
 
  
 Flood & Prune
@@ -69,3 +64,12 @@ DOWNSTREAM NEIGHBOR, multicast packets will be sent on that interface.
 The above procedures of Pruning and Grafting could initiate a similar
 action in the receiving routers. This means that unnecesary data traffic
 will be reduced in the network, which is the advantage of DVMRP.
+
+
+Footnotes
+---------
+<b id="f1">1</b> The table maintained in a router that lets it make
+decisions on how to forward packets. The process of building up the
+forwarding table is called routing. Thus the forwarding table is
+sometimes called a routing table. [↩](#a1)
+
