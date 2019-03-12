@@ -81,8 +81,9 @@ Build & Install
 
 The configure script and Makefile supports de facto standard settings
 and environment variables such as `--prefix=PATH` and `DESTDIR=` for the
-install process.  E.g., to install pimd to `/usr` instead of the default
-`/usr/local`, but redirect install to a package directory in `/tmp`:
+install process.  For example, to install mrouted to `/usr`, instead of
+the default `/usr/local`, and redirect install to a package directory in
+`/tmp`:
 
     ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var
     make
