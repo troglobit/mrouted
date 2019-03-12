@@ -20,18 +20,60 @@ Introduction
 ------------
 
 mrouted is the original implementation of the DVMRP multicast routing
-protocol, see [RFC 1075][] for details.  It supports everyting from
-small embedded Linux/BSD IoT systems to big UNIX workstations.
+protocol, [RFC 1075][].
 
 mrouted is *simple* to use.  DVMRP is derived from RIP, which means it
 works stand-alone without any extra network setup required.  You can get
-up and running in a matter of minutes.  For sparsely located routers
-mrouted as built-in [IP-in-IP][] tunneling support, GRE can of course
-also be used.
+up and running in a matter of minutes.  Use the built-in [IP-in-IP][]
+tunneling support, or GRE, to traverse Internet or intranets.
 
-mrouted is primarily developed on Linux and should work as-is out of the
-box on all major distributions.  Other UNIX variants should also work,
-but are not as thoroughly tested.
+mrouted is developed on Linux and works as-is out of the box.  Other
+UNIX variants should also work, but are not as thoroughly tested.
+
+
+Running
+-------
+
+mrouted does not require a `.conf` file.  When it starts up it probes
+all available interfaces and, after an initial 10s delay, starts peering
+with any DVMRP capable neighbors.
+
+Use `mgen(1)` or `mcjoin(1)` to send IGMP join packets on the LAN to
+start testing multicast routing.  Use the `mroutectl` toll go query
+`mrouted` for status.
+
+For the native mrouted tunnel to work in Linux based systems, you need
+to have the "ipip" kernel module loaded or as built-in:
+
+    modprobe ipip
+
+Alternatively, you may of course also set up GRE tunnels between your
+multicast capable routers.
+
+**Note:** mrouted must run with suffient capabilities, or as root.
+
+
+Configuration
+-------------
+
+mrouted reads its configuration file from `/etc/mrouted.conf`, if it
+exists.  You can override the default by specifying an alternate file
+when invoking mrouted:
+
+    mrouted -f /path/file.conf
+
+mrouted can be reconfigured at runtime like any regular UNIX daemon with
+`SIGHUP`, or `mroutectl restart`, to activate changes made to its
+configuration file.  The PID is saved in the file `/run/mrouted.pid` for
+your scripting needs.
+
+By default, mrouted configures itself to act as a multicast router on
+all multicast capable interfaces.  Hence, you do not need to explicitly
+configure it, unless you need to setup tunnel links, change the default
+operating parameters, disable multicast routing over a specific physical
+interfaces, or have dynamic interfaces.
+
+For more help, see the man page.
 
 
 Build & Install
@@ -72,43 +114,6 @@ installed on your system.
 
 GIT sources are a moving target and are not recommended for production
 systems, unless you know what you are doing!
-
-
-Running
--------
-
-mrouted must run as root.
-
-For the native mrouted tunnel to work in Linux based systems, you need
-to have the "ipip" kernel module loaded or as built-in:
-
-    modprobe ipip
-
-Alternatively, you may of course also set up GRE tunnels between your
-multicast capable routers.
-
-
-Configuration
--------------
-
-mrouted reads its configuration file from `/etc/mrouted.conf`.  You can
-override the default by specifying an alternate file when invoking
-mrouted:
-
-    mrouted -f /path/file.conf
-
-mrouted can be reconfigured at runtime like any regular UNIX daemon with
-`SIGHUP`, or `mroutectl restart`, to activate changes made to its
-configuration file.  The PID is saved in the file `/run/mrouted.pid` for
-your scripting needs.
-
-By default, mrouted configures itself to act as a multicast router on
-all multicast capable interfaces.  Hence, you do not need to explicitly
-configure it, unless you need to setup tunnel links, change the default
-operating parameters, disable multicast routing over a specific physical
-interfaces, or have dynamic interfaces.
-
-For more help, see the man page.
 
 
 Contributing
