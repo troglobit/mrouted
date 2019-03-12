@@ -868,34 +868,33 @@ void accept_leave_message(uint32_t src, uint32_t dst, uint32_t group)
      * Look for the group in our group list in order to set up a short-timeout
      * query.
      */
-    for (g = v->uv_groups; g != NULL; g = g->al_next) {
-	if (group == g->al_addr) {
-	    /* Ignore the leave message if there are old hosts present */
-	    if (g->al_old)
-		return;
+    for (g = v->uv_groups; g; g = g->al_next) {
+	if (group != g->al_addr)
+	    continue;
 
-	    /* still waiting for a reply to a query, ignore the leave */
-	    if (g->al_query)
-		return;
+	/* Ignore the leave message if there are old hosts present */
+	if (g->al_old)
+	    return;
 
-	    /** delete old timer set a timer for expiration **/
-	    if (g->al_timerid)
-		g->al_timerid = DeleteTimer(g->al_timerid);
+	/* still waiting for a reply to a query, ignore the leave */
+	if (g->al_query)
+	    return;
+
+	/** delete old timer set a timer for expiration **/
+	if (g->al_timerid)
+	    g->al_timerid = DeleteTimer(g->al_timerid);
 
 #if IGMP_LAST_MEMBER_QUERY_COUNT != 2
 #error This code needs to be updated to keep a counter of the number of queries remaining.
 #endif
-	    /** send a group specific querry **/
-	    g->al_timer = IGMP_LAST_MEMBER_QUERY_INTERVAL *
-			(IGMP_LAST_MEMBER_QUERY_COUNT + 1);
-	    send_query(v, g->al_addr, IGMP_LAST_MEMBER_QUERY_INTERVAL *
-		       IGMP_TIMER_SCALE, g->al_addr);
-	    g->al_query = SetQueryTimer(g, vifi,
-			IGMP_LAST_MEMBER_QUERY_INTERVAL,
-			IGMP_LAST_MEMBER_QUERY_INTERVAL * IGMP_TIMER_SCALE);
-	    g->al_timerid = SetTimer(vifi, g);	
-	    break;
-	}
+	/** send a group specific querry **/
+	send_query(v, g->al_addr, IGMP_LAST_MEMBER_QUERY_INTERVAL * IGMP_TIMER_SCALE, g->al_addr);
+
+	g->al_query = SetQueryTimer(g, vifi, IGMP_LAST_MEMBER_QUERY_INTERVAL,
+				    IGMP_LAST_MEMBER_QUERY_INTERVAL * IGMP_TIMER_SCALE);
+	g->al_timer = IGMP_LAST_MEMBER_QUERY_INTERVAL * (IGMP_LAST_MEMBER_QUERY_COUNT + 1);
+	g->al_timerid = SetTimer(vifi, g);
+	break;
     }
 }
 
