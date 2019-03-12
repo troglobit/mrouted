@@ -246,7 +246,7 @@ static int usage(int rc)
 		"  kill                    Kill running mrouted, like SIGTERM\n"
 		"  log [? | none | LEVEL]  Set log level: none, err, notice*, info, debug\n"
 		"  restart                 Restart mrouted and reload .conf file, like SIGHUP\n"
-		"  version                 Show mrouted version\n"
+		"  version                 Show version, and uptime (-d), of running mrouted\n"
 		"  show igmp               Show IGMP group memberships\n"
 		"  show interfaces         Show interface table\n"
 		"  show routes             Show DVMRP routing table\n"
