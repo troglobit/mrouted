@@ -14,9 +14,10 @@
 .Sh SYNOPSIS
 .Nm mrouted
 .Op Fl hnpv
-.Op Fl c Ar FILE
-.Op Fl d Ar SYS[,SYS,...
-.Op Fl l Ar LEVEL
+.Op Fl f, -config Ar FILE
+.Op Fl d, -debug Ar SYS[,SYS,...
+.Op Fl l, -loglevel Ar LEVEL
+.Op Fl -startup-delay Ar SEC
 .Sh DESCRIPTION
 .Nm
 is an implementation of the Distance-Vector Multicast Routing
@@ -86,46 +87,11 @@ in order to perform multicast forwarding.
 This program follows the usual UNIX command line syntax, with long options starting
 with two dashes (`--').  The options are as follows:
 .Bl -tag -width Ds
-.It Fl h, -help
-Print a help message and exit.
-.It Fl -missing-ok
-If an interface in 
-.Pa /etc/mrouted.conf
-does not exist yet, print a warning and continue.  Useful with VPN, PPP
-and other dynamic interfaces.  However,
-.Nm mrouted
-must still be restarted to start listening on such interfaces, if they
-did not exist when
-.Nm
-was started.
-.It Fl -no-interfaces
-Change 
-.Nm
-default behavior and assume all interfaces are disabled unless
-explicitly enabled with
-.Cm phyint enable
-in
-.Pa /etc/mrouted.conf
-.It Fl -startup-delay=DELAY
-Wait for DELAY seconds before applying the routes. This delay enables
-to exchange routes before starting to forward multicast packets and
-therefore eliminate transient problems at startup, at the cost of a
-momentary black hole. Defaults to 10 seconds.
-.It Fl l, -loglevel=LEVEL
-Set log level for syslog messages: none, err, notice (default), info,
-debug. Use '?' for a complete list of supported log levels.
-.It Fl n, -foreground
-Run in foreground, do not detach from the calling terminal.
-.It Fl f, -config=FILE
-Specify an alternative configuration file, default
-.Pa /etc/mrouted.conf
 .It Fl d, -debug=SYS[,SYS,..]
 This option enables subsystem debug messages and causes
 .Nm
 to run in the foreground of the starting terminal, regardless of the
-.Fl n
-option.  The
-.Fl l Ar LEVEL
+.Fl l
 flag controls the (syslog) log level of each subsystem.
 .Pp
 Available subystems:
@@ -162,6 +128,41 @@ Debug RSRR messages
 .It Cm all | 3
 Enable all debug messages
 .El
+.It Fl f, -config=FILE
+Specify an alternative configuration file, default
+.Pa /etc/mrouted.conf
+.It Fl h, -help
+Print a help message and exit.
+.It Fl l, -loglevel=LEVEL
+Set log level for syslog messages: none, err, notice (default), info,
+debug. Use '?' for a complete list of supported log levels.
+.It Fl n, -foreground
+Run in foreground, do not detach from the calling terminal.
+.Fl n
+option.  The
+.It Fl -missing-ok
+If an interface in
+.Pa /etc/mrouted.conf
+does not exist yet, print a warning and continue.  Useful with VPN, PPP
+and other dynamic interfaces.  However,
+.Nm mrouted
+must still be restarted to start listening on such interfaces, if they
+did not exist when
+.Nm
+was started.
+.It Fl -no-interfaces
+Change
+.Nm
+default behavior and assume all interfaces are disabled unless
+explicitly enabled with
+.Cm phyint enable
+in
+.Pa /etc/mrouted.conf
+.It Fl -startup-delay=DELAY
+Wait for DELAY seconds before applying the routes. This delay enables
+to exchange routes before starting to forward multicast packets and
+therefore eliminate transient problems at startup, at the cost of a
+momentary black hole. Defaults to 10 seconds.
 .It Fl p
 Start
 .Nm
@@ -337,12 +338,16 @@ Note that there can be many sources in one subnet.
 .%T Multicast Routing in Internetworks and Extended LANs
 .Re
 .Sh AUTHORS
-.An -nosplit
+The following are the principal authors of
+.Nm ,
+listed in no particular order:
+.Pp
 .An David Waitzman ,
 .An Craig Partridge ,
 .An Steve Deering ,
 .An Ajit Thyagarajan ,
 .An Bill Fenner ,
 .An David Thaler , and
-.An Daniel Zappala . 
+.An Daniel Zappala .
+.Pp
 With contributions by many others.
