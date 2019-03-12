@@ -39,8 +39,8 @@ all available interfaces and, after an initial 10s delay, starts peering
 with any DVMRP capable neighbors.
 
 Use [mgen(1)][] or [mcjoin(1)][] to send IGMP join packets on the LAN to
-start testing multicast routing.  Use the `mroutectl` toll go query
-`mrouted` for status.
+start testing multicast routing.  Use the `mroutectl` tool to query a
+running `mrouted` for status.
 
 For the native mrouted tunnel to work in Linux based systems, you need
 to have the "ipip" kernel module loaded or as built-in:
