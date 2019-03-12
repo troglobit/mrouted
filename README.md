@@ -1,8 +1,8 @@
-<img align="right" src="docs/dvmrp-simple.png" alt="Simple overview of what DVMRP is">
-
 Simple Multicast Routing for UNIX
 =================================
 [![License Badge][]][License] [![Travis Status][]][Travis] [![Coverity Status][]][Coverity Scan]
+
+<img align="right" src="docs/dvmrp-simple.png" alt="Simple overview of what DVMRP is">
 
 Table of Contents
 -----------------
