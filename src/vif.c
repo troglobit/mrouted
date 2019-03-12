@@ -1895,6 +1895,9 @@ static int SetTimer(vifi_t vifi, struct listaddr *g)
     cbk->g = g;
     cbk->vifi = vifi;
 
+    /* Record mtime for IPC "show igmp" */
+    g->al_mtime = virtual_time;
+
     return timer_set(g->al_timer, DelVif, cbk);
 }
 

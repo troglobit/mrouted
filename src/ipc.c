@@ -174,6 +174,14 @@ static void show_routes(FILE *fp, int detail)
 	}
 }
 
+static uint32_t diff_vtime(uint32_t mtime)
+{
+	if (mtime > virtual_time)
+		return mtime - virtual_time;
+
+	return virtual_time - mtime;
+}
+
 static void show_igmp_groups(FILE *fp, int detail)
 {
 	struct listaddr *group, *source;
@@ -192,7 +200,7 @@ static void show_igmp_groups(FILE *fp, int detail)
 				uv->uv_name,
 				inet_fmt(group->al_addr, s1, sizeof(s1)),
 				inet_fmt(group->al_reporter, s2, sizeof(s2)),
-				group->al_timer);
+				group->al_timer - diff_vtime(group->al_mtime));
 		}
 	}
 }

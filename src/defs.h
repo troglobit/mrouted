@@ -144,6 +144,7 @@ extern uint32_t		allreports_group;
 extern uint32_t		dvmrp_group;
 extern uint32_t		dvmrp_genid;
 extern uint32_t		igmp_query_interval;
+extern uint32_t		virtual_time;
 
 extern int		vifstatedefault;
 extern int		missingok;

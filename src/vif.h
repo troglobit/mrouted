@@ -194,6 +194,7 @@ struct listaddr {
     struct listaddr *al_next;		/* link to next addr, MUST BE FIRST */
     uint32_t	     al_addr;		/* local group or neighbor address  */
     uint32_t	     al_timer;		/* for timing out group or neighbor */
+    uint32_t	     al_mtime;		/* mtime from virtual_time, for IPC */
     time_t	     al_ctime;		/* entry creation time		    */
     union {
 	struct {

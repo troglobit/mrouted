@@ -620,7 +620,6 @@ static void fasttimer(void *arg)
  * and because the timer intervals are sometimes shrunk by a random amount to
  * avoid unwanted synchronization with other routers.
  */
-
 uint32_t virtual_time = 0;
 
 
