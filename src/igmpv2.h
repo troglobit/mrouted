@@ -14,21 +14,21 @@
  * Constants for IGMP Version 2.  Several of these, especially the
  * robustness variable, should be variables and not constants.
  */
-#define	IGMP_ROBUSTNESS_VARIABLE		2
-#define	IGMP_QUERY_INTERVAL			125
+#define	IGMP_ROBUSTNESS_DEFAULT			2
+#define	IGMP_QUERY_INTERVAL_DEFAULT		125
 #define	IGMP_QUERY_RESPONSE_INTERVAL		10
-#define	IGMP_GROUP_MEMBERSHIP_INTERVAL		(IGMP_ROBUSTNESS_VARIABLE * \
+#define	IGMP_GROUP_MEMBERSHIP_INTERVAL		(igmp_robustness * \
 					igmp_query_interval + \
 					IGMP_QUERY_RESPONSE_INTERVAL)
-#define	IGMP_OTHER_QUERIER_PRESENT_INTERVAL	(IGMP_ROBUSTNESS_VARIABLE * \
+#define	IGMP_OTHER_QUERIER_PRESENT_INTERVAL	(igmp_robustness * \
 					igmp_query_interval + \
 					IGMP_QUERY_RESPONSE_INTERVAL / 2)
 						/* Round to the nearest TIMER_INTERVAL */
 #define	IGMP_STARTUP_QUERY_INTERVAL		(((igmp_query_interval / 4) \
 							/ TIMER_INTERVAL) * TIMER_INTERVAL)
-#define	IGMP_STARTUP_QUERY_COUNT		IGMP_ROBUSTNESS_VARIABLE
+#define	IGMP_STARTUP_QUERY_COUNT		igmp_robustness
 #define	IGMP_LAST_MEMBER_QUERY_INTERVAL		1
-#define	IGMP_LAST_MEMBER_QUERY_COUNT		IGMP_ROBUSTNESS_VARIABLE
+#define	IGMP_LAST_MEMBER_QUERY_COUNT		IGMP_ROBUSTNESS_DEFAULT /* XXX: Should be igmp_robustness */
 
 /*
  * OLD_AGE_THRESHOLD is the number of IGMP_QUERY_INTERVAL's to remember the
@@ -39,4 +39,4 @@
  * [Query Response Interval].  When the timer mechanism gets an efficient
  * method of refreshing timers, this should get fixed.
  */
-#define OLD_AGE_THRESHOLD		IGMP_ROBUSTNESS_VARIABLE
+#define OLD_AGE_THRESHOLD		igmp_robustness

@@ -25,6 +25,7 @@ char		*recv_buf; 		     /* input packet buffer         */
 char		*send_buf; 		     /* output packet buffer        */
 int		igmp_socket;		     /* socket for all network I/O  */
 uint32_t	igmp_query_interval;	     /* Default: 125 sec            */
+uint32_t	igmp_robustness;	     /* Default: 2                  */
 uint32_t	allhosts_group;		     /* All hosts addr in net order */
 uint32_t	allrtrs_group;		     /* All-Routers "  in net order */
 uint32_t	allreports_group;	     /* IGMPv3 member reports       */
@@ -80,7 +81,8 @@ void init_igmp(void)
     allrtrs_group    = htonl(INADDR_ALLRTRS_GROUP);
     allreports_group = htonl(INADDR_ALLRPTS_GROUP);
 
-    igmp_query_interval = IGMP_QUERY_INTERVAL;
+    igmp_query_interval = IGMP_QUERY_INTERVAL_DEFAULT;
+    igmp_robustness     = IGMP_ROBUSTNESS_DEFAULT;
 }
 
 char *igmp_packet_kind(uint32_t type, uint32_t code)
@@ -477,7 +479,7 @@ size_t build_query(uint32_t src, uint32_t dst, int type, int code, uint32_t grou
     igmp->csum        = 0;
 
     if (datalen >= 4) {
-        igmp->qrv     = IGMP_ROBUSTNESS_VARIABLE;
+        igmp->qrv     = igmp_robustness;
         igmp->qqic    = igmp_floating_point(igmp_query_interval);
     }
 
