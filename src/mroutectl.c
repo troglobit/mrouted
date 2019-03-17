@@ -154,10 +154,11 @@ static void print(char *line)
 
 static struct ipc *do_cmd(int cmd, int detail, char *buf, size_t len)
 {
-	static struct ipc msg = { 0 };
+	static struct ipc msg;
 	struct pollfd pfd;
 	int sd;
 
+	memset(&msg, 0, sizeof(msg));
 	msg.cmd = cmd;
 	msg.detail = detail;
 	if (buf) {
