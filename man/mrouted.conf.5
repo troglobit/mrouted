@@ -23,10 +23,10 @@ flag set, excluding the loopback interface.  It locates other DVMRP
 capable routers directly reachable via those interfaces.
 .Pp
 .Bl -tag -width TERM -compact -offset indent
-.It Nm
+.It Nm mrouted
 will not start with less than two enabled virtual interfaces (VIFs).  A
 VIF is either a physical multicast-capable interface or a tunnel.
-.It Nm
+.It Nm mrouted
 will log a warning if all of its VIFs are tunnels; such a configuration
 is likely better replaced by more direct (GRE) tunnels (i.e. eliminate
 the middle man).
@@ -198,10 +198,10 @@ The local IP address
 may be replaced by the interface name (e.g. le0).
 The remote IP address
 .Ar remote-addr
-may be replaced by a host name, if and only if the host name has a single
-IP address associated with it.
-The tunnel must be set up in the mrouted.conf files of both routers before
-it can be used.
+may be replaced by a host name, if and only if the host name has a
+single IP address associated with it.  The tunnel must be set up in the
+.Nm
+files of both routers before it can be used.
 .\"For backwards compatibility with older versions of
 .\".Nm mrouted ,
 .\"the srcrt keyword specifies
