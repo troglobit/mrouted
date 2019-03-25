@@ -49,18 +49,18 @@ static int ipc_write(int sd, struct ipc *msg)
 			continue;
 		break;
 	}
-		
+
 	if (len != sizeof(*msg))
 		return -1;
 
 	return 0;
 }
 
-static int ipc_close(int sd, struct ipc *msg)
+static int ipc_close(int sd, struct ipc *msg, int status)
 {
-	msg->cmd = IPC_EOF_CMD;
+	msg->cmd = status;
 	if (ipc_write(sd, msg)) {
-		logit(LOG_WARNING, errno, "Failed sending EOF/ACK to client");
+		logit(LOG_WARNING, errno, "Failed sending reply (%d) to client", status);
 		return -1;
 	}
 
@@ -69,13 +69,12 @@ static int ipc_close(int sd, struct ipc *msg)
 
 static void ipc_generic(int sd, struct ipc *msg, int (*cb)(void *), void *arg)
 {
-        if (cb(arg))
-                msg->cmd = IPC_ERR_CMD;
-        else
-                msg->cmd = IPC_EOF_CMD;
+	int rc = IPC_EOF_CMD;
 
-	if (ipc_write(sd, msg))
-                logit(LOG_WARNING, errno, "Failed sending reply to client");
+        if (cb(arg))
+                rc = IPC_ERR_CMD;
+
+	ipc_close(sd, msg, rc);
 }
 
 
@@ -90,7 +89,24 @@ static int ipc_send(int sd, struct ipc *msg, FILE *fp)
 		return -1;
 	}
 
-	return ipc_close(sd, msg);
+	return ipc_close(sd, msg, IPC_EOF_CMD);
+}
+
+static void ipc_show(int sd, struct ipc *msg, void (*cb)(FILE *, int))
+{
+	FILE *fp;
+
+	fp = tmpfile();
+	if (!fp) {
+		logit(LOG_WARNING, errno, "Failed opening temporary file");
+		return;
+	}
+
+	cb(fp, msg->detail);
+
+	rewind(fp);
+	ipc_send(sd, msg, fp);
+	fclose(fp);
 }
 
 static void show_dump(FILE *fp, int detail)
@@ -272,23 +288,6 @@ static void show_version(FILE *fp, int detail)
     else
 	    fprintf(fp, "(not yet initialized)");
     fprintf(fp, " %s", ctime(&t));
-}
-
-static void ipc_show(int sd, struct ipc *msg, void (*cb)(FILE *, int))
-{
-	FILE *fp;
-
-	fp = tmpfile();
-	if (!fp) {
-		logit(LOG_WARNING, errno, "Failed opening temporary file");
-		return;
-	}
-
-	cb(fp, msg->detail);
-
-	rewind(fp);
-	ipc_send(sd, msg, fp);
-	fclose(fp);
 }
 
 static int do_debug(void *arg)
