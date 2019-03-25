@@ -6,7 +6,7 @@
 .\" The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
 .\" Leland Stanford Junior University.
 .Dd Mar 12, 2019
-.Dt MROUTED 5
+.Dt MROUTED.CONF 5
 .Os
 .Sh NAME
 .Nm mrouted.conf
@@ -23,10 +23,10 @@ flag set, excluding the loopback interface.  It locates other DVMRP
 capable routers directly reachable via those interfaces.
 .Pp
 .Bl -tag -width TERM -compact -offset indent
-.It Nm
+.It Nm mrouted
 will not start with less than two enabled virtual interfaces (VIFs).  A
 VIF is either a physical multicast-capable interface or a tunnel.
-.It Nm
+.It Nm  mrouted
 will log a warning if all of its VIFs are tunnels; such a configuration
 is likely better replaced by more direct (GRE) tunnels (i.e. eliminate
 the middle man).
@@ -128,7 +128,7 @@ The
 setting controls many aspects of IGMP timers.  It can be any value in
 the range 2-10, inclusive.  The query-response-interval used below is
 hard-coded to 10 sec in
-.Nm mrouted:
+.Nm mrouted :
 .Pp
 .Bl -tag -indent
 .It Group Membership Timeout
