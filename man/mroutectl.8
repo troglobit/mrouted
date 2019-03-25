@@ -1,0 +1,173 @@
+.Dd Jan 2, 2019
+.Dt MROUTECTL 8 SMM
+.Os
+.Sh NAME
+.Nm mroutectl
+.Nd Control tool for
+.Xr mrouted 8
+.Sh SYNOPSIS
+.Nm mroutectl
+.Op Fl dpth
+.Op Fl i Ar NAME
+.Op COMMAND
+.Nm
+.Ar help | kill | restart | version
+.Pp
+.Nm
+.Ar debug Op ? | none | SYSTEM Op ,SYSTEM
+.Nm
+.Ar log Op ? | none | LEVEL
+.Pp
+.Nm
+.Ar show igmp
+.Nm
+.Ar show interfaces
+.Nm
+.Ar show routes
+.Nm
+.Op Ar show status
+.Sh DESCRIPTION
+.Nm
+is the friendly control tool for
+.Xr mrouted 8 .
+It can be used to query status, debug, restart, and kill a running mrouted.
+Commands can be abbreviated to the minimum unambiguous prefix; for
+example,
+.Cm s s
+for
+.Cm show status .
+.Sh OPTIONS
+This program follows the usual UNIX command line syntax, with long
+options starting with two dashes (`-').  The options are as follows:
+.Bl -tag -width Ds
+.It Fl d, -detail
+Detailed output, where applicable, see each command below.
+.It Fl h, -help
+Show usage instructions and exit.
+.It Fl p, -plain
+Use plain table headings, no ANSI ctrl characters.
+.It Fl t, -no-heading
+Skip table headings altogether.
+.El
+.Sh COMMANDS
+The following commands are available:
+.Bl -tag -width Ds
+.It Nm Ar help
+Show usage instructions and exit.
+.It Nm Ar kill
+Kill running daemon, like sending SIGTERM to
+.Xr mrouted 8
+.It Nm Ar debug Op ? | none | SYSTEM Op ,SYSTEM
+Control subystem debugging at runtime.  Multiple subsystems can be
+enabled, separate with comma.  E.g.
+.Bd -unfilled -offset indent
+mroutectl debug igmp,routes
+.Ed
+.Pp
+The command returns a list of enabled subsystems.  Without any debug
+argument, the command lists the currently enabled subsystems.  To list
+all available subsystems, use
+.Bd -unfilled -offset indent
+mroutectl debug ?
+.Ed
+.Pp
+To disable all subsystems, use
+.Bd -unfilled -offset indent
+mroutectl debug none
+.Ed
+.Pp
+Subsystems:
+.Pp
+.Bl -tag -width mroute_routes -compact -offset indent
+.It Cm packet
+Debug inbound/outbout packets
+.It Cm prunes
+Pruning operations, or pruned routes
+.It Cm routes
+Routing messages
+.It Cm rtdetail
+Detailed routing information
+.It Cm peers
+Neighbor gossip
+.It Cm cache
+Debug routing cache
+.It Cm timer
+Debug timers
+.It Cm interface
+Show interface (VIF) debug messages
+.It Cm groups
+Debug group memberships
+.It Cm mtrace
+Multicast traceroute information
+.It Cm igmp
+Debug IGMP messages
+.It Cm icmp
+Debug ICMP messages
+.It Cm rsrr
+Debug RSRR messages
+.It Cm all
+Enable all subsystems (may trigger log rate limiter)
+.El
+.It Nm Ar log Op ? | none | LEVEL
+Control, query, or disable
+.Xr mrouted 8
+log level:
+.Pp
+.Bl -tag -width WARNING -compact -offset indent
+.It Cm none
+Disable all logging
+.It Cm error
+Error conditions
+.It Cm warning
+Warning conditions
+.It Cm notice
+Normal but significant condition (Default)
+.It Cm info
+Informational
+.It Cm debug
+Debug-level messages
+.El
+.It Nm Ar restart
+Restart daemon and reload
+.Pa /etc/mrouted.conf ,
+like sending SIGHUP to
+.Xr mrouted 8
+.It Nm Ar show igmp
+Show IGMP group memberships
+.It Nm Ar show interfaces
+Show interface status, including elected IGMP querier
+.It Nm Ar show routes
+Show DVMRP routing table
+.It Nm Op Ar show status
+Show
+.Xr mrouted 8
+status, default
+.El
+.Sh FILES
+.Bl -tag -width /var/run/mrouted.sock -compact
+.It Pa /var/run/mrouted.sock
+.Ux Ns -domain
+socket used for communication with
+.Xr mrouted 8
+.El
+.Sh SEE ALSO
+.Xr mrouted 8 ,
+.Xr /usr/share/doc/mrouted/
+.Sh AUTHORS
+.Nm mrouted
+The following are the principal authors of
+.Nm ,
+listed in no particular order:
+.Pp
+.An David Waitzman ,
+.An Craig Partridge ,
+.An Steve Deering ,
+.An Ajit Thyagarajan ,
+.An Bill Fenner ,
+.An David Thaler , and
+.An Daniel Zappala .
+.Pp
+With contributions by many others.
+.Pp
+.Nm
+was written by Joachim Nilsson.
