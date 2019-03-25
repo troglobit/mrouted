@@ -239,6 +239,7 @@ static int usage(int rc)
 		"  -d, --detail            Detailed output, where applicable\n"
 		"  -p, --plain             Use plain table headings, no ctrl chars\n"
 		"  -h, --help              This help text\n"
+		"  -t, --no-heading        Skip table headings\n"
 		"\n"
 		"Commands:\n"
 		"  debug [? | none | SYS]  Debug subystem(s), separate multiple with comma\n"
