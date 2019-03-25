@@ -7,7 +7,7 @@
 .Xr mrouted 8
 .Sh SYNOPSIS
 .Nm mroutectl
-.Op Fl dph
+.Op Fl dpth
 .Op COMMAND
 .Nm
 .Ar help | kill | restart | version
@@ -18,23 +18,11 @@
 .Ar log Op ? | none | LEVEL
 .Pp
 .Nm
-.Ar show igmp groups
+.Ar show igmp
 .Nm
-.Ar show igmp interface
-.Pp
+.Ar show interfaces
 .Nm
-.Ar show mroute interface
-.Nm
-.Ar show mroute neighbor
-.Nm
-.Ar show mroute routes
-.Nm
-.Ar show mroute rp
-.Nm
-.Ar show mroute crp
-.Nm
-.Ar show mroute compat
-.Pp
+.Ar show routes
 .Nm
 .Op Ar show status
 .Sh DESCRIPTION
@@ -58,19 +46,27 @@ Detailed output, where applicable, see each command below.
 Show usage instructions and exit.
 .It Fl p, -plain
 Use plain table headings, no ANSI ctrl characters.
+.It Fl t, -no-heading
+Skip table headings altogether.
 .El
 .Sh COMMANDS
 The following commands are available:
 .Bl -tag -width Ds
+.It Nm Ar help
+Show usage instructions and exit.
+.It Nm Ar kill
+Kill running daemon, like sending SIGTERM to
+.Xr mrouted 8
 .It Nm Ar debug Op ? | none | SYSTEM Op ,SYSTEM
 Control subystem debugging at runtime.  Multiple subsystems can be
 enabled, separate with comma.  E.g.
 .Bd -unfilled -offset indent
-mroutectl debug igmp,mroute
+mroutectl debug igmp,routes
 .Ed
 .Pp
-Without any debug argument, the command lists the currently enabled
-subsystems.  To list all available subsystems, use
+The command returns a list of enabled subsystems.  Without any debug
+argument, the command lists the currently enabled subsystems.  To list
+all available subsystems, use
 .Bd -unfilled -offset indent
 mroutectl debug ?
 .Ed
@@ -101,7 +97,7 @@ Debug timers
 .It Cm interface | vif
 Show interface (VIF) debug messages
 .It Cm membership | groups
-Debug group memberships
+Debug multicast group memberships
 .It Cm traceroute | mtrace
 Multicast traceroute information
 .It Cm igmp
@@ -161,7 +157,7 @@ like sending SIGHUP to
 .It Nm Ar show igmp
 Show IGMP group memberships
 .It Nm Ar show interfaces
-Show interface table
+Show interface status, including elected IGMP querier
 .It Nm Ar show routes
 Show DVMRP routing table
 .It Nm Op Ar show status
