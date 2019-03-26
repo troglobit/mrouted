@@ -72,9 +72,3 @@ strtonum(const char *numstr, long long minval, long long maxval,
 
 	return (ll);
 }
-
-/**
- * Local Variables:
- *  c-file-style: "bsd"
- * End:
- */
