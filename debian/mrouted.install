@@ -1,0 +1,4 @@
+usr/sbin/mrouted
+usr/sbin/mroutectl
+usr/share/man/man8/mrouted.8
+usr/share/man/man8/mroutectl.8

@@ -2,18 +2,50 @@ Source: mrouted
 Section: net
 Priority: optional
 Maintainer: Joachim Nilsson <troglobit@gmail.com>
-Build-Depends: debhelper (>= 7), bison | byacc | btyacc
-Standards-Version: 3.9.1
+Build-Depends: debhelper (>= 10), bison | byacc | btyacc | pkg-config | systemd
+Standards-Version: 4.3.0
+Homepage: http://troglobit.com/mrouted.shtml
+Vcs-Browser: https://github.com/troglobit/mrouted
+Vcs-Git: https://github.com/troglobit/mrouted.git
 
 Package: mrouted
 Architecture: any
-Homepage: http://github.com/troglobit/mrouted
-Depends: ${shlibs:Depends}
-Conflicts: pimd, smcroute
-Description: Multicast routing daemon for closely located users in LAN networks.
- Mrouted is an implementation of the Distance-Vector Multicast Routing
- Protocol (DVMRP), an earlier version of which is specified in RFC-1075.
+Conflicts: smcroute, pimd, quagga-pimd
+Depends: ${shlibs:Depends}, ${misc:Depends}, lsb-base (>= 3.0-6)
+Description: Simple multicast routing for UNIX.
+ mrouted is the original implementation of the DVMRP multicast routing
+ protocol, RFC 1075.
  .
- Mrouted turns a UNIX workstation into a DVMRP multicast router with tunnel
- support, in order to cross non-multicast-aware routers.  The tunnels are
- virtual point-to-point, IP-IP tunnel, links between a pair of mrouted routers.
+ mrouted is *simple* to use.  DVMRP is derived from RIP, which means it
+ works stand-alone without any extra network setup required.  You can get
+ up and running in a matter of minutes.  Use the built-in IP-in-IP
+ tunneling support, or GRE, to traverse Internet or intranets.
+
+Package: mrinfo
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: displays configuration info from a multicast router.
+ mrinfo displays configuration information about DVMRP routers.  It does
+ this by sending ASK_NEIGHBORS IGMP messages to the specified router.
+
+Package: mtrace
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: print multicast path from a source to a receiver.
+ Assessing problems in the distribution of IP multicast traffic
+ can be difficult.  mtrace utilizes a tracing feature implemented
+ in DVMRP multicast routers, mrouted version 3.3 and later, that is
+ accessed via an extension to the IGMP protocol.  A trace query is
+ passed hop-by-hop along the reverse path from the receiver to the
+ source, ollecting hop addresses, packet counts, and routing error
+ conditions along the path, and then the response is returned to
+ the requestor.
+
+Package: map-mbone
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: multicast connection mapper.
+ map-mbone attempts to display all multicast routers reachable from
+ the current multicast router.  Like mrinfo it sends ASK_NEIGHBORS
+ IGMP messages to discover available DVMRP, mrouted, routers.
+

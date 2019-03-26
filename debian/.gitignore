@@ -1,5 +1,11 @@
 *.substvars
 *.log
+.debhelper/*
 mrouted/*
+mrinfo/*
+map-mbone/*
+mtrace/*
+tmp/*
 files
+autoreconf.*
 mrouted*.debhelper

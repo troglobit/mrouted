@@ -1,71 +1,10 @@
 #!/usr/bin/make -f
-# Sample debian/rules that uses debhelper.
-# GNU copyright 1997 to 1999 by Joey Hess.
-
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-CFLAGS = -Wall -g
+# See dpkg-buildflags(1) manpage
+export DEB_CFLAGS_MAINT_APPEND = -Werror -ggdb
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
-ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
-	CFLAGS += -O0
-else
-	CFLAGS += -O2
-endif
-ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
-	INSTALL_PROGRAM += -s
-endif
-
-configure: configure-stamp
-configure-stamp:
-	@dh_testdir
-	./configure --enable-rsrr
-	@touch $@
-
-build: build-stamp
-
-build-stamp: configure-stamp
-	@dh_testdir
-	dh_auto_build --parallel
-	@touch $@
-
-clean:
-	@dh_testdir
-	dh_auto_clean --parallel
-	dh_clean
-
-install: build
-	@dh_testdir
-	dh_testroot
-	dh_prep
-	dh_installdirs
-	dh_auto_install -- prefix=/usr
-	rm debian/mrouted/usr/share/doc/mrouted/LICENSE
-	@rm debian/mrouted/usr/share/man/man8/map-mbone.8
-	@rm debian/mrouted/usr/sbin/map-mbone
-
-# Build architecture-independent files here.
-binary-indep: build install
-
-# Build architecture-dependent files here.
-binary-arch: build install
-	@dh_testdir
-	dh_testroot
-	dh_installchangelogs
-	dh_installdocs
-	dh_installexamples
-#	dh_install --sourcedir=debian/mrouted
-	dh_installinit
-	dh_installman
-	dh_link
-	dh_strip
-	dh_compress
-	dh_fixperms
-	dh_installdeb
-	dh_shlibdeps
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
-
-binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install configure
+%:
+	dh $@ --with autoreconf,systemd
