@@ -315,7 +315,7 @@ int main(int argc, char *argv[])
 		{ "interface", NULL, NULL,         IPC_SHOW_IFACE_CMD  },
 		{ "iface",     NULL, NULL,         IPC_SHOW_IFACE_CMD  }, /* alias */
 		{ "routes",    NULL, NULL,         IPC_SHOW_ROUTES_CMD },
-		{ "status",    NULL,  NULL,        IPC_SHOW_STATUS_CMD },
+		{ "status",    NULL, NULL,         IPC_SHOW_STATUS_CMD },
 		{ NULL }
 	};
 	struct cmd command[] = {
