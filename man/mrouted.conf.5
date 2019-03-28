@@ -5,7 +5,7 @@
 .\"
 .\" The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
 .\" Leland Stanford Junior University.
-.Dd Mar 12, 2019
+.Dd Mar 28, 2019
 .Dt MROUTED.CONF 5
 .Os
 .Sh NAME
@@ -274,13 +274,14 @@ tunnel 192.168.5.4 10.11.12.13
        metric 1 threshold 32
        boundary LOCAL boundary EE
 .Ed
+.Sh FILES
+.Bl -tag -width /var/lib/mrouted.genid -compact
+.It Pa /etc/mrouted.conf
+Main configuration file.
+.El
 .Sh SEE ALSO
-.Xr mrouted 8
-.Pp
-The
-.Nm mrouted
-home page is
-.Aq http://github.com/troglobit/mrouted
+.Xr mrouted 8 ,
+.Xr mroutectl 8
 .Sh AUTHORS
 This manual page was written by
 .An Joachim Nilsson Aq mailto:troglobit@gmail.com .
