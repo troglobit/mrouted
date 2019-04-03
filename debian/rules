@@ -3,7 +3,6 @@
 #export DH_VERBOSE=1
 
 # See dpkg-buildflags(1) manpage
-export DEB_CFLAGS_MAINT_APPEND = -Werror -ggdb
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 %:
