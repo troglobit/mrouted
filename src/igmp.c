@@ -456,6 +456,8 @@ size_t build_query(uint32_t src, uint32_t dst, int type, int code, uint32_t grou
     size_t igmp_len = IGMP_MINLEN + datalen;
     size_t len = MIN_IP_HEADER_LEN + igmp_len;
 
+    memset(send_buf, 0, RECV_BUF_SIZE);
+
     ip                = (struct ip *)send_buf;
     ip->ip_src.s_addr = src;
     ip->ip_dst.s_addr = dst;
@@ -499,6 +501,8 @@ size_t build_igmp(uint32_t src, uint32_t dst, int type, int code, uint32_t group
     struct igmp *igmp;
     size_t igmp_len = IGMP_MINLEN + datalen;
     size_t len = MIN_IP_HEADER_LEN + IGMP_MINLEN + datalen;
+
+    memset(send_buf, 0, RECV_BUF_SIZE);
 
     ip                      = (struct ip *)send_buf;
     ip->ip_src.s_addr       = src;
