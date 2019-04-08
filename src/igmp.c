@@ -554,6 +554,10 @@ void send_igmp(uint32_t src, uint32_t dst, int type, int code, uint32_t group, i
 #endif
     sin.sin_addr.s_addr = dst;
 
+    /* Pad up to minimum packet size (sans FCS) */
+    if ((len + 14) < 60)
+	len += 60 - 14 - len;
+
     rc = sendto(igmp_socket, send_buf, len, 0, (struct sockaddr *)&sin, sizeof(sin));
     if (rc < 0) {
 	if (errno == ENETDOWN)
