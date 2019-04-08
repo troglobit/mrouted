@@ -46,7 +46,10 @@ void init_ipip_on_vif(struct uvif *v)
 {
     struct ip *ip;
 
-    ip = v->uv_encap_hdr = (struct ip *)malloc(sizeof(struct ip));
+    if (v->uv_encap_hdr)
+	return;
+
+    ip = v->uv_encap_hdr = calloc(1, sizeof(struct ip));
     if (!ip) {
 	logit(LOG_ERR, errno, "Out of memory when setting up IPIP tunnel");
 	return;			/* Never reached */

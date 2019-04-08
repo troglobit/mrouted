@@ -341,7 +341,7 @@ ifmod	: mod
 	{
 	    struct phaddr *ph;
 
-	    ph = malloc(sizeof(struct phaddr));
+	    ph = calloc(1, sizeof(struct phaddr));
 	    if (!ph) {
 		fatal("Failed allocating memory for 'struct phaddr'");
 		return 0;
@@ -424,7 +424,7 @@ mod	: THRESHOLD NUMBER
 	{
 	    struct vif_acl *v_acl;
 
-	    v_acl = malloc(sizeof(struct vif_acl));
+	    v_acl = calloc(1, sizeof(struct vif_acl));
 	    if (!v_acl) {
 		fatal("Failed allocating memory for 'struct vif_acl'");
 		return 0;
@@ -486,7 +486,7 @@ mod	: THRESHOLD NUMBER
 	    if (v->uv_filter == NULL) {
 		struct vif_filter *v_filter;
 
-		v_filter = malloc(sizeof(struct vif_filter));
+		v_filter = calloc(1, sizeof(struct vif_filter));
 		if (!v_filter) {
 		    fatal("Failed allocating memory for 'struct vif_filter'");
 		    return 0;
@@ -517,7 +517,7 @@ mod	: THRESHOLD NUMBER
 	    if (!v->uv_filter) {
 		struct vif_filter *v_filter;
 
-		v_filter = malloc(sizeof(struct vif_filter));
+		v_filter = calloc(1, sizeof(struct vif_filter));
 		if (!v_filter) {
 		    fatal("Failed allocating memory for 'struct vif_filter'");
 		    return 0;
@@ -648,7 +648,7 @@ filtelem : ADDRMASK
 	{
 	    struct vf_element *vfe;
 
-	    vfe = malloc(sizeof(struct vf_element));
+	    vfe = calloc(1, sizeof(struct vf_element));
 	    if (!vfe) {
 		fatal("Failed allocating memory for 'struct vf_element'");
 		return 0;

@@ -287,24 +287,20 @@ static int find_route(uint32_t origin, uint32_t mask)
  */
 static void create_route(uint32_t origin, uint32_t mask)
 {
-    size_t len;
     struct rtentry *rt;
 
-    rt = malloc(sizeof(struct rtentry));
+    rt = calloc(1, sizeof(struct rtentry));
     if (!rt) {
 	logit(LOG_ERR, errno, "Failed allocating 'struct rtentry' in %s:%s()", __FILE__, __func__);
 	return;
     }
-    memset(rt, 0, sizeof(struct rtentry));
 
-    len = numvifs * sizeof(uint32_t);
-    rt->rt_dominants = malloc(len);
+    rt->rt_dominants = calloc(1, numvifs * sizeof(uint32_t));
     if (!rt->rt_dominants) {
 	free(rt);
 	logit(LOG_ERR, errno, "Failed allocating 'rt_dominants' in %s:%s()", __FILE__, __func__);
 	return;
     }
-    memset(rt->rt_dominants, 0, len);
 
     rt->rt_origin     = origin;
     rt->rt_originmask = mask;
@@ -795,7 +791,7 @@ void accept_probe(uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t 
 	}
 
 	if (!match) {
-	    match = *prev = malloc(sizeof(struct listaddr));
+	    match = *prev = calloc(1, sizeof(struct listaddr));
 	    if (!match) {
 		logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
 		return;
@@ -857,7 +853,7 @@ void blaster_alloc(vifi_t vifi)
 	free(v->uv_blasterbuf);
 
     v->uv_blasterlen = 64 * 1024;
-    v->uv_blasterbuf = malloc(v->uv_blasterlen);
+    v->uv_blasterbuf = calloc(1, v->uv_blasterlen);
     v->uv_blastercur = v->uv_blasterend = v->uv_blasterbuf;
     if (v->uv_blastertimer)
 	timer_clear(v->uv_blastertimer);

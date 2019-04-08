@@ -703,7 +703,7 @@ void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo
 	    }
 
 	    if (!v->uv_querier) {
-		v->uv_querier = malloc(sizeof(struct listaddr));
+		v->uv_querier = calloc(1, sizeof(struct listaddr));
 		v->uv_flags &= ~VIFF_QUERIER;
 	    }
 
@@ -813,7 +813,7 @@ void accept_group_report(uint32_t src, uint32_t dst, uint32_t group, int r_type)
      * If not found, add it to the list and update kernel cache.
      */
     if (!g) {
-	g = malloc(sizeof(struct listaddr));
+	g = calloc(1, sizeof(struct listaddr));
 	if (!g) {
 	    logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
 	    return;
@@ -1391,7 +1391,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 		  (level >> 16) & 0xff, i);
 	}
 
-	n = malloc(sizeof(struct listaddr));
+	n = calloc(1, sizeof(struct listaddr));
 	if (!n) {
 	    logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
 	    return NULL;
@@ -1885,7 +1885,7 @@ static int SetTimer(vifi_t vifi, struct listaddr *g)
 {
     cbk_t *cbk;
 
-    cbk = malloc(sizeof(cbk_t));
+    cbk = calloc(1, sizeof(cbk_t));
     if (!cbk) {
 	logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
 	return -1;
@@ -1930,7 +1930,7 @@ static int SetQueryTimer(struct listaddr *g, vifi_t vifi, int to_expire, int q_t
 {
     cbk_t *cbk;
 
-    cbk = malloc(sizeof(cbk_t));
+    cbk = calloc(1, sizeof(cbk_t));
     if (!cbk) {
 	logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
 	return -1;

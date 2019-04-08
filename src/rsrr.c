@@ -66,8 +66,8 @@ void rsrr_init(void)
     int servlen;
     struct sockaddr_un serv_addr;
 
-    rsrr_recv_buf = malloc(RSRR_MAX_LEN);
-    rsrr_send_buf = malloc(RSRR_MAX_LEN);
+    rsrr_recv_buf = calloc(1, RSRR_MAX_LEN);
+    rsrr_send_buf = calloc(1, RSRR_MAX_LEN);
     if (!rsrr_recv_buf || !rsrr_send_buf) {
 	logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
 	return;
@@ -388,10 +388,11 @@ static void rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query)
 	rcnp = &rc->next;
     }
 
-    /* Cache entry doesn't already exist.  Create one and insert at
-     * front of list.
+    /*
+     * Cache entry doesn't already exist.
+     * Create one and insert at front of list.
      */
-    rc = malloc(sizeof(struct rsrr_cache));
+    rc = calloc(1, sizeof(struct rsrr_cache));
     if (!rc) {
 	logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
 	return;

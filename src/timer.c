@@ -119,7 +119,7 @@ int timer_set(time_t delay, cfunc_t action, void *data)
     int i = 0;
 
     /* create a node */
-    node = malloc(sizeof(struct timeout_q));
+    node = calloc(1, sizeof(struct timeout_q));
     if (!node) {
 	logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
 	return -1;
@@ -128,7 +128,6 @@ int timer_set(time_t delay, cfunc_t action, void *data)
     node->func = action;
     node->data = data;
     node->time = delay;
-    node->next = 0;
     node->id   = next_id();
 
     prev = ptr = Q;

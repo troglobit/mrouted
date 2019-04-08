@@ -103,7 +103,7 @@ Node *find_node(uint32_t addr, Node **ptr)
     Node *n = *ptr;
 
     if (!n) {
-	*ptr = n = malloc(sizeof(Node));
+	*ptr = n = calloc(1, sizeof(Node));
 	if (!n)
 	    return NULL;
 
@@ -130,11 +130,17 @@ Interface *find_interface(uint32_t addr, Node *node)
 {
     Interface *ifc;
 
-    for (ifc = node->u.interfaces; ifc; ifc = ifc->next)
+    for (ifc = node->u.interfaces; ifc; ifc = ifc->next) {
 	if (ifc->addr == addr)
 	    return ifc;
+    }
 
-    ifc = malloc(sizeof(Interface));
+    ifc = calloc(1, sizeof(Interface));
+    if (!ifc) {
+	logit(LOG_ERR, errno, "Failed allocating memory for interface");
+	return NULL;
+    }
+
     ifc->addr = addr;
     ifc->next = node->u.interfaces;
     node->u.interfaces = ifc;
@@ -151,9 +157,10 @@ Neighbor *find_neighbor(uint32_t addr, Node *node)
     for (ifc = node->u.interfaces; ifc; ifc = ifc->next) {
 	Neighbor *nb;
 
-	for (nb = ifc->neighbors; nb; nb = nb->next)
+	for (nb = ifc->neighbors; nb; nb = nb->next) {
 	    if (nb->addr == addr)
 		return nb;
+	}
     }
 
     return 0;
@@ -416,7 +423,11 @@ void accept_neighbors(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen, ui
 		    goto next_neighbor;
 		}
 
-	    nb = malloc(sizeof(Neighbor));
+	    nb = calloc(1, sizeof(Neighbor));
+	    if (!nb) {
+		logit(LOG_ERR, errno, "Failed allocating memory for neighbor");
+		return;
+	    }
 	    nb->next = ifc->neighbors;
 	    ifc->neighbors = nb;
 	    nb->addr = neighbor;
@@ -573,7 +584,11 @@ void accept_neighbors2(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen, u
 		    goto next_neighbor;
 		}
 
-	    nb = malloc(sizeof(Neighbor));
+	    nb = calloc(1, sizeof(Neighbor));
+	    if (!nb) {
+		logit(LOG_ERR, errno, "Failed allocating memory for neighbor");
+		return;
+	    }
 	    nb->next = ifc->neighbors;
 	    ifc->neighbors = nb;
 	    nb->addr = neighbor;

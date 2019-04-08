@@ -45,8 +45,8 @@ void init_igmp(void)
 {
     struct ip *ip;
 
-    recv_buf = malloc(RECV_BUF_SIZE);
-    send_buf = malloc(RECV_BUF_SIZE);
+    recv_buf = calloc(1, RECV_BUF_SIZE);
+    send_buf = calloc(1, RECV_BUF_SIZE);
 
     if (!recv_buf || !send_buf) {
 	logit(LOG_ERR, errno, "Failed allocating Rx/Tx buffers");
@@ -62,14 +62,13 @@ void init_igmp(void)
     k_set_ttl(1);		/* restrict multicasts to one hop */
     k_set_loop(FALSE);		/* disable multicast loopback     */
 
-    ip         = (struct ip *)send_buf;
-    memset(ip, 0, sizeof(struct ip));
     /*
      * Fields zeroed that aren't filled in later:
      * - IP ID (let the kernel fill it in)
      * - Offset (we don't send fragments)
      * - Checksum (let the kernel fill it in)
      */
+    ip         = (struct ip *)send_buf;
     ip->ip_v   = IPVERSION;
     ip->ip_hl  = sizeof(struct ip) >> 2;
     ip->ip_tos = 0xc0;		/* Internet Control */

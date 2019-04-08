@@ -593,7 +593,7 @@ void add_table_entry(uint32_t origin, uint32_t mcastgrp)
     }
 
     if (!gt || gt->gt_mcastgrp != mcastgrp) {
-	gt = malloc(sizeof(struct gtable));
+	gt = calloc(1, sizeof(struct gtable));
 	if (!gt) {
 	    logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
 	    return;
@@ -659,7 +659,7 @@ void add_table_entry(uint32_t origin, uint32_t mcastgrp)
     }
 
     if (!st || st->st_origin != origin) {
-	st = malloc(sizeof(struct stable));
+	st = calloc(1, sizeof(struct stable));
 	if (!st) {
 	    logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
 	    return;
@@ -1177,7 +1177,7 @@ void accept_prune(uint32_t src, uint32_t dst, char *p, size_t datalen)
 	    }
 
 	    /* allocate space for the prune structure */
-	    pt = malloc(sizeof(struct ptable));
+	    pt = calloc(1, sizeof(struct ptable));
 	    if (!pt) {
 		logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
 		return;
