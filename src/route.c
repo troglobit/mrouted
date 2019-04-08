@@ -51,7 +51,7 @@ static struct rtentry *rt_end;		/* pointer to last route entry      */
 static int  init_children_and_leaves (struct rtentry *r, vifi_t parent, int first);
 static int  find_route               (uint32_t origin, uint32_t mask);
 static void create_route             (uint32_t origin, uint32_t mask);
-static void discard_route            (struct rtentry *this);
+static void discard_route            (struct rtentry *rt);
 static int  compare_rts              (const void *rt1, const void *rt2);
 static int  report_chunk             (int, struct rtentry *start_rt, vifi_t vifi, uint32_t dst);
 static void queue_blaster_report     (vifi_t vifi, uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t level);
@@ -288,100 +288,100 @@ static int find_route(uint32_t origin, uint32_t mask)
 static void create_route(uint32_t origin, uint32_t mask)
 {
     size_t len;
-    struct rtentry *this;
+    struct rtentry *rt;
 
-    this = malloc(sizeof(struct rtentry));
-    if (!this) {
+    rt = malloc(sizeof(struct rtentry));
+    if (!rt) {
 	logit(LOG_ERR, errno, "Failed allocating 'struct rtentry' in %s:%s()", __FILE__, __func__);
 	return;
     }
-    memset(this, 0, sizeof(struct rtentry));
+    memset(rt, 0, sizeof(struct rtentry));
 
     len = numvifs * sizeof(uint32_t);
-    this->rt_dominants = malloc(len);
-    if (!this->rt_dominants) {
-	free(this);
+    rt->rt_dominants = malloc(len);
+    if (!rt->rt_dominants) {
+	free(rt);
 	logit(LOG_ERR, errno, "Failed allocating 'rt_dominants' in %s:%s()", __FILE__, __func__);
 	return;
     }
-    memset(this->rt_dominants, 0, len);
+    memset(rt->rt_dominants, 0, len);
 
-    this->rt_origin     = origin;
-    this->rt_originmask = mask;
-    if      (((char *)&mask)[3] != 0) this->rt_originwidth = 4;
-    else if (((char *)&mask)[2] != 0) this->rt_originwidth = 3;
-    else if (((char *)&mask)[1] != 0) this->rt_originwidth = 2;
-    else                              this->rt_originwidth = 1;
-    this->rt_flags = 0;
-    this->rt_groups = NULL;
+    rt->rt_origin     = origin;
+    rt->rt_originmask = mask;
+    if      (((char *)&mask)[3] != 0) rt->rt_originwidth = 4;
+    else if (((char *)&mask)[2] != 0) rt->rt_originwidth = 3;
+    else if (((char *)&mask)[1] != 0) rt->rt_originwidth = 2;
+    else                              rt->rt_originwidth = 1;
+    rt->rt_flags = 0;
+    rt->rt_groups = NULL;
 
-    VIFM_CLRALL(this->rt_children);
-    NBRM_CLRALL(this->rt_subordinates);
-    NBRM_CLRALL(this->rt_subordadv);
+    VIFM_CLRALL(rt->rt_children);
+    NBRM_CLRALL(rt->rt_subordinates);
+    NBRM_CLRALL(rt->rt_subordadv);
 
-    /* Link in 'this', where rtp points */
+    /* Link in 'rt', where rtp points */
     if (rtp) {
-	this->rt_prev = rtp;
-	this->rt_next = rtp->rt_next;
-	if (this->rt_next)
-	    (this->rt_next)->rt_prev = this;
+	rt->rt_prev = rtp;
+	rt->rt_next = rtp->rt_next;
+	if (rt->rt_next)
+	    (rt->rt_next)->rt_prev = rt;
 	else
-	    rt_end = this;
-	rtp->rt_next = this;
+	    rt_end = rt;
+	rtp->rt_next = rt;
     } else {
 	if (routing_table) {
-	    /* Change existing head to this */
-	    this->rt_next = routing_table;
-	    routing_table->rt_prev = this;
+	    /* Change existing head to rt */
+	    rt->rt_next = routing_table;
+	    routing_table->rt_prev = rt;
 	}
 	else {
-	    /* this is the first route entry that exists */
-	    rt_end = this;
+	    /* rt is the first route entry that exists */
+	    rt_end = rt;
 	}
-	routing_table = this;
+	routing_table = rt;
     }
 
-    rtp = this;
+    rtp = rt;
     ++nroutes;
 }
 
 
 /*
- * Discard the routing table entry following the one to which 'this' points.
- *         [.|prev|.]--->[.|this|.]<---[.|next|.]
+ * Discard the routing table entry following the one to which 'rt' points.
+ *         [.|prev|.]--->[.|rt|.]<---[.|next|.]
  */
-static void discard_route(struct rtentry *this)
+static void discard_route(struct rtentry *rt)
 {
     struct rtentry *prev, *next;
 
-    if (!this)
+    if (!rt)
 	return;
 
     /* Find previous and next link */
-    prev = this->rt_prev;
-    next = this->rt_next;
+    prev = rt->rt_prev;
+    next = rt->rt_next;
 
-    /* Unlink 'this' */
+    /* Unlink 'rt' */
     if (prev)
-	prev->rt_next = next;	/* Handles case when 'this' is last link. */
+	prev->rt_next = next;	/* Handles case when 'rt' is last link. */
     else
-	routing_table = next;	/* 'this' is first link. */
+	routing_table = next;	/* 'rt' is first link. */
     if (next)
 	next->rt_prev = prev;
 
     /* Update the books */
-    uvifs[this->rt_parent].uv_nroutes--;
+    uvifs[rt->rt_parent].uv_nroutes--;
     /*???nbr???.al_nroutes--;*/
     --nroutes;
 
     /* Update meta pointers */
-    if (rtp == this)
+    if (rtp == rt)
 	rtp = next;
-    if (rt_end == this)
+    if (rt_end == rt)
 	rt_end = next;
 
-    free(this->rt_dominants);
-    free(this);
+    free(rt->rt_dominants);
+    free(rt);
 }
 
 
@@ -1114,14 +1114,14 @@ void accept_report(uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t
  */
 void report(int which_routes, vifi_t vifi, uint32_t dst)
 {
-    struct rtentry *this;
+    struct rtentry *rt;
     int i;
 
-    this = rt_end;
-    while (this && this != routing_table) {
-	i = report_chunk(which_routes, this, vifi, dst);
+    rt = rt_end;
+    while (rt && rt != routing_table) {
+	i = report_chunk(which_routes, rt, vifi, dst);
 	while (i-- > 0)
-	    this = this->rt_prev;
+	    rt = rt->rt_prev;
     }
 }
 
