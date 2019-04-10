@@ -468,7 +468,9 @@ size_t build_query(uint32_t src, uint32_t dst, int type, int code, uint32_t grou
     else
 	ip->ip_ttl    = MAXTTL;
 
-    igmp              = (struct igmpv3_query *)(send_buf + MIN_IP_HEADER_LEN);
+    igmp = (struct igmpv3_query *)(send_buf + IP_RA_HEADER_LEN);
+    memset(igmp, 0, sizeof(*igmp));
+
     igmp->type        = type;
     if (datalen >= 4)
         igmp->code    = igmp_floating_point(code);
