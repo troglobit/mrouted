@@ -1189,7 +1189,8 @@ void accept_info_request(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
 		logit(LOG_INFO, 0, "Ignoring unknown info type %d", *p);
 		break;
 	}
-	*(q+1) = len++;
+
+	*(q + 1) = len++;
 	outlen += len * 4;
 	q += len * 4;
 	len = (*(p+1) + 1) * 4;
@@ -1199,7 +1200,7 @@ void accept_info_request(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
 
     if (outlen != 0)
 	send_igmp(INADDR_ANY, src, IGMP_DVMRP, DVMRP_INFO_REPLY,
-			htonl(MROUTED_LEVEL), outlen);
+		  htonl(MROUTED_LEVEL), outlen);
 }
 
 /*
