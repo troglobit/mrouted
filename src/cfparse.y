@@ -185,14 +185,14 @@ stmt	: error
 	| CACHE_LIFETIME NUMBER
 	{
 	    if ($2 < MIN_CACHE_LIFETIME)
-		warn("cache_lifetime %d must be at least %d", $2, MIN_CACHE_LIFETIME);
+		warn("cache-lifetime %d must be at least %d", $2, MIN_CACHE_LIFETIME);
 	    else
 		cache_lifetime = $2;
 	}
 	| PRUNE_LIFETIME NUMBER
 	{
 	    if ($2 < MIN_PRUNE_LIFETIME)
-		warn("prune_lifetime %d must be at least %d", $2, MIN_PRUNE_LIFETIME);
+		warn("prune-lifetime %d must be at least %d", $2, MIN_PRUNE_LIFETIME);
 	    else
 		prune_lifetime = $2;
 	}
@@ -403,7 +403,7 @@ mod	: THRESHOLD NUMBER
 	| ADVERT_METRIC NUMBER
 	{
 	    if ($2 < 0 || $2 > UNREACHABLE - 1)
-		fatal("Invalid advert_metric %d", $2);
+		fatal("Invalid advert-metric %d", $2);
 	    v->uv_admetric = $2;
 	}
 	| ADVERT_METRIC
@@ -413,7 +413,7 @@ mod	: THRESHOLD NUMBER
 	| RATE_LIMIT NUMBER
 	{
 	    if ($2 > MAX_RATE_LIMIT)
-		fatal("Invalid rate_limit %d",$2);
+		fatal("Invalid rate-limit %d",$2);
 	    v->uv_rate_limit = $2;
 	}
 	| RATE_LIMIT
@@ -477,7 +477,7 @@ mod	: THRESHOLD NUMBER
 	| PRUNE_LIFETIME2 NUMBER
 	{
 	    if ($2 < MIN_PRUNE_LIFETIME)
-		warn("prune_lifetime %d must be at least %d", $2, MIN_PRUNE_LIFETIME);
+		warn("prune-lifetime %d must be at least %d", $2, MIN_PRUNE_LIFETIME);
 	    else
 		v->uv_prune_lifetime = $2;
 	}
