@@ -301,9 +301,9 @@ void send_on_vif(struct uvif *v, uint32_t dst, int code, size_t datalen)
  */
 static void send_probe_on_vif(struct uvif *v)
 {
-    char *p;
-    size_t datalen = 0;
     struct listaddr *nbr;
+    uint8_t *p;
+    size_t datalen = 0;
     int i;
 
     if ((v->uv_flags & VIFF_PASSIVE && v->uv_neighbors == NULL) ||

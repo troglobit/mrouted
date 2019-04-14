@@ -306,12 +306,12 @@ static void rexmit_prune(void *arg)
 static void send_prune(struct gtable *gt)
 {
     struct ptable *pt;
-    char *p;
+    struct uvif *v;
+    uint8_t *p;
     int i, datalen;
     uint32_t dst;
     uint32_t tmp;
     int rexmitting = 0;
-    struct uvif *v;
 
     /*
      * Can't process a prune if we don't have an associated route
@@ -434,9 +434,9 @@ static void send_prune(struct gtable *gt)
  */
 static void send_graft(struct gtable *gt)
 {
-    char *p;
-    int i, datalen;
     uint32_t dst;
+    uint8_t *p;
+    int i, datalen;
 
     /* Can't send a graft without an associated route */
     if (gt->gt_route == NULL || gt->gt_route->rt_parent == NO_VIF) {
@@ -480,7 +480,7 @@ static void send_graft(struct gtable *gt)
  */
 static void send_graft_ack(uint32_t src, uint32_t dst, uint32_t origin, uint32_t grp, vifi_t vifi)
 {
-    char *p;
+    uint8_t *p;
     int i, datalen;
 
     p = send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN;
@@ -2068,7 +2068,7 @@ void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8
     struct tr_query *qry;
     struct tr_resp  *resp;
     int vifi;
-    char *p;
+    uint8_t *p;
     size_t rcount;
     int errcode = TR_NO_ERR;
     int resptype;

@@ -135,8 +135,8 @@ typedef void (*ihfunc_t) (int);
  * External declarations for global variables and functions.
  */
 #define RECV_BUF_SIZE 8192
-extern char		*recv_buf;
-extern char		*send_buf;
+extern uint8_t		*recv_buf;
+extern uint8_t		*send_buf;
 extern int		igmp_socket;
 extern uint32_t		allhosts_group;
 extern uint32_t		allrtrs_group;

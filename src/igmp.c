@@ -21,8 +21,8 @@
 /*
  * Exported variables.
  */
-char		*recv_buf; 		     /* input packet buffer         */
-char		*send_buf; 		     /* output packet buffer        */
+uint8_t		*recv_buf; 		     /* input packet buffer         */
+uint8_t		*send_buf; 		     /* output packet buffer        */
 int		igmp_socket;		     /* socket for all network I/O  */
 uint32_t	igmp_query_interval;	     /* Default: 125 sec            */
 uint32_t	igmp_robustness;	     /* Default: 2                  */

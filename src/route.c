@@ -1171,7 +1171,7 @@ void report_to_all_neighbors(int which_routes)
 static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi, uint32_t dst)
 {
     struct rtentry *r;
-    char *p;
+    uint8_t *p;
     int i;
     size_t nrt = 0;
     struct uvif *v = &uvifs[vifi];
