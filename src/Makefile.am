@@ -24,12 +24,12 @@ endif
 mroutectl_SOURCES = mroutectl.c defs.h
 mroutectl_LDADD   = $(LIBS) $(LIBOBJS)
 
-map_mbone_SOURCES = mapper.c igmp.c igmpv2.h inet.c kern.c
+map_mbone_SOURCES = mapper.c defs.h igmp.c igmpv2.h inet.c kern.c
 map_mbone_LDADD   = $(LIBS) $(LIBOBJS)
 
-mrinfo_SOURCES    = mrinfo.c igmp.c igmpv2.h inet.c kern.c
+mrinfo_SOURCES    = mrinfo.c defs.h igmp.c igmpv2.h inet.c kern.c
 mrinfo_LDADD      = $(LIBS) $(LIBOBJS)
 
-mtrace_SOURCES    = mtrace.c igmp.c igmpv2.h inet.c kern.c
+mtrace_SOURCES    = mtrace.c defs.h igmp.c igmpv2.h inet.c kern.c
 mtrace_LDADD      = $(LIBS) $(LIBOBJS)
 
