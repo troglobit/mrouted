@@ -121,6 +121,7 @@
  */
 #define MAX_IP_PACKET_LEN	576
 #define MIN_IP_HEADER_LEN	20
+#define IP_HEADER_RAOPT_LEN	24	/* IP header + router alert */
 #define MAX_IP_HEADER_LEN	60
 #define MAX_DVMRP_DATA_LEN \
 		( MAX_IP_PACKET_LEN - MAX_IP_HEADER_LEN - IGMP_MINLEN )
@@ -128,6 +129,11 @@
 /*
  * Various protocol constants (all times in seconds)
  */
+
+/* NetBSD 6.1, for instance, does not have IPOPT_RA defined. */
+#ifndef IPOPT_RA
+#define IPOPT_RA		148
+#endif
 				        /* address for multicast DVMRP msgs */
 #define INADDR_DVMRP_GROUP	(uint32_t)0xe0000004     /* 224.0.0.4 */
 /*

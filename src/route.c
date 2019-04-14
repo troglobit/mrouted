@@ -1181,7 +1181,7 @@ static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi,
     int admetric = v->uv_admetric;
     int metric;
 
-    p = send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN;
+    p = send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN;
 
     for (r = start_rt; r; r = r->rt_prev) {
 	if (which_routes == CHANGED_ROUTES && !(r->rt_flags & RTF_CHANGED)) {

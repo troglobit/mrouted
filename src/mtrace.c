@@ -411,7 +411,7 @@ int send_recv(uint32_t dst, int type, int code, int tries, struct resp_buf *save
      * specified, set a multicast TTL and if needed increase it for the
      * last quarter of the tries.
      */
-    query = (struct tr_query *)(send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN);
+    query = (struct tr_query *)(send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN);
     query->tr_raddr = raddr ? raddr : multicast ? resp_cast : lcl_addr;
     query->tr_rttl  = rttl ? rttl :
 	IN_MULTICAST(ntohl(query->tr_raddr)) ? get_ttl(save) : UNICAST_TTL;

@@ -44,6 +44,7 @@ static int	igmp_log_level(uint32_t type, uint32_t code);
 void init_igmp(void)
 {
     struct ip *ip;
+    uint8_t *ip_opt;
 
     recv_buf = calloc(1, RECV_BUF_SIZE);
     send_buf = calloc(1, RECV_BUF_SIZE);
@@ -70,10 +71,20 @@ void init_igmp(void)
      */
     ip         = (struct ip *)send_buf;
     ip->ip_v   = IPVERSION;
-    ip->ip_hl  = sizeof(struct ip) >> 2;
+    ip->ip_hl  = IP_HEADER_RAOPT_LEN >> 2;
     ip->ip_tos = 0xc0;		/* Internet Control */
     ip->ip_ttl = MAXTTL;	/* applies to unicasts only */
     ip->ip_p   = IPPROTO_IGMP;
+
+    /*
+     * RFC2113 IP Router Alert.  Per spec this is required to
+     * force certain routers/switches to inspect this frame.
+     */
+    ip_opt    = send_buf + sizeof(struct ip);
+    ip_opt[0] = IPOPT_RA;
+    ip_opt[1] = 4;
+    ip_opt[2] = 0;
+    ip_opt[3] = 0;
 
     allhosts_group   = htonl(INADDR_ALLHOSTS_GROUP);
     dvmrp_group      = htonl(INADDR_DVMRP_GROUP);
@@ -453,7 +464,7 @@ size_t build_query(uint32_t src, uint32_t dst, int type, int code, uint32_t grou
     struct igmpv3_query *igmp;
     struct ip *ip;
     size_t igmp_len = IGMP_MINLEN + datalen;
-    size_t len = MIN_IP_HEADER_LEN + igmp_len;
+    size_t len = IP_HEADER_RAOPT_LEN + igmp_len;
 
     ip                = (struct ip *)send_buf;
     ip->ip_src.s_addr = src;
@@ -468,7 +479,7 @@ size_t build_query(uint32_t src, uint32_t dst, int type, int code, uint32_t grou
     else
 	ip->ip_ttl    = MAXTTL;
 
-    igmp = (struct igmpv3_query *)(send_buf + IP_RA_HEADER_LEN);
+    igmp = (struct igmpv3_query *)(send_buf + IP_HEADER_RAOPT_LEN);
     memset(igmp, 0, sizeof(*igmp));
 
     igmp->type        = type;
@@ -499,7 +510,7 @@ size_t build_igmp(uint32_t src, uint32_t dst, int type, int code, uint32_t group
     struct ip *ip;
     struct igmp *igmp;
     size_t igmp_len = IGMP_MINLEN + datalen;
-    size_t len = MIN_IP_HEADER_LEN + IGMP_MINLEN + datalen;
+    size_t len = IP_HEADER_RAOPT_LEN + IGMP_MINLEN + datalen;
 
     ip                      = (struct ip *)send_buf;
     ip->ip_src.s_addr       = src;
@@ -514,7 +525,7 @@ size_t build_igmp(uint32_t src, uint32_t dst, int type, int code, uint32_t group
     else
 	ip->ip_ttl = MAXTTL;
 
-    igmp                    = (struct igmp *)(send_buf + MIN_IP_HEADER_LEN);
+    igmp                    = (struct igmp *)(send_buf + IP_HEADER_RAOPT_LEN);
     igmp->igmp_type         = type;
     igmp->igmp_code         = code;
     igmp->igmp_group.s_addr = group;

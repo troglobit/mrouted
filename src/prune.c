@@ -334,7 +334,7 @@ static void send_prune(struct gtable *gt)
     dst = gt->gt_route->rt_gateway;
 #endif
 
-    p = send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN;
+    p = send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN;
     datalen = 0;
 
     /*
@@ -458,7 +458,7 @@ static void send_graft(struct gtable *gt)
     dst = gt->gt_route->rt_gateway;
 #endif
 
-    p = send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN;
+    p = send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN;
     datalen = 0;
 
     for (i = 0; i < 4; i++)
@@ -483,7 +483,7 @@ static void send_graft_ack(uint32_t src, uint32_t dst, uint32_t origin, uint32_t
     uint8_t *p;
     int i, datalen;
 
-    p = send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN;
+    p = send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN;
     datalen = 0;
 
     for (i = 0; i < 4; i++)
@@ -2214,7 +2214,7 @@ void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8
 	logit(LOG_DEBUG, 0, "Sending traceroute response");
 
     /* copy the packet to the sending buffer */
-    p = send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN;
+    p = send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN;
     memmove(p, data, datalen);
     p += datalen;
 

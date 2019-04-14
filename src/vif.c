@@ -310,7 +310,7 @@ static void send_probe_on_vif(struct uvif *v)
 	(v->uv_flags & VIFF_FORCE_LEAF))
 	return;
 
-    p = send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN;
+    p = send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN;
 
     for (i = 0; i < 4; i++)
 	*p++ = ((char *)&(dvmrp_genid))[i];
@@ -1016,7 +1016,7 @@ void accept_neighbor_request(uint32_t src, uint32_t dst)
 			*p++ = (temp_addr >> 8) & 0xFF; \
 			*p++ = temp_addr & 0xFF;
 
-    p = (uint8_t *) (send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN);
+    p = (uint8_t *) (send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN);
     datalen = 0;
 
     for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
@@ -1031,7 +1031,7 @@ void accept_neighbor_request(uint32_t src, uint32_t dst)
 	    if (datalen + (ncount == 0 ? 4 + 3 + 4 : 4) > MAX_DVMRP_DATA_LEN) {
 		send_igmp(INADDR_ANY, them, IGMP_DVMRP, DVMRP_NEIGHBORS,
 			  htonl(MROUTED_LEVEL), datalen);
-		p = (uint8_t *) (send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN);
+		p = (uint8_t *) (send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN);
 		datalen = 0;
 		ncount = 0;
 	    }
@@ -1069,7 +1069,7 @@ void accept_neighbor_request2(uint32_t src, uint32_t dst)
     int	datalen;
     uint32_t them = src;
 
-    p = (uint8_t *) (send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN);
+    p = (uint8_t *) (send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN);
     datalen = 0;
 
     for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
@@ -1101,7 +1101,7 @@ void accept_neighbor_request2(uint32_t src, uint32_t dst)
 	    if (datalen > MAX_DVMRP_DATA_LEN - 12) {
 		send_igmp(INADDR_ANY, them, IGMP_DVMRP, DVMRP_NEIGHBORS2,
 			  htonl(MROUTED_LEVEL), datalen);
-		p = (uint8_t *) (send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN);
+		p = (uint8_t *) (send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN);
 		datalen = 0;
 	    }
 	    *(uint32_t*)p = v->uv_lcl_addr;
@@ -1119,7 +1119,7 @@ void accept_neighbor_request2(uint32_t src, uint32_t dst)
 		if (datalen + (ncount == 0 ? 4+4+4 : 4) > MAX_DVMRP_DATA_LEN) {
 		    send_igmp(INADDR_ANY, them, IGMP_DVMRP, DVMRP_NEIGHBORS2,
 			      htonl(MROUTED_LEVEL), datalen);
-		    p = (uint8_t *) (send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN);
+		    p = (uint8_t *) (send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN);
 		    datalen = 0;
 		    ncount = 0;
 		}
@@ -1168,7 +1168,7 @@ void accept_info_request(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
     int len;
     int outlen = 0;
 
-    q = (uint8_t *) (send_buf + MIN_IP_HEADER_LEN + IGMP_MINLEN);
+    q = (uint8_t *)(send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN);
 
     /* To be general, this must deal properly with breaking up over-sized
      * packets.  That implies passing a length to each function, and
