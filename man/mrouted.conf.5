@@ -44,6 +44,9 @@ There are five types of commands:
 .Cm name
 .Ar boundary-name | scoped-addr Ns / Ns Ar mask-len
 .It
+.Cm router-alert
+.Ar <off | on>
+.It
 .Cm igmp-query-interval Ar SEC
 .It
 .Cm igmp-robustness Ar COUNT
@@ -115,6 +118,16 @@ It defaults to 300.
 The
 .Cm name
 option assigns names to boundaries to make configuration easier.
+.Pp
+Some multicast routers, and some IGMP snooping switches, do not support
+IP options like Router Alert, which is enabled in
+.Nm mrouted
+by default.  Use
+.Cm router-alert Ar off
+to disable this IP option.  Regardless of this setting,
+.Nm mrouted
+always calculates the IP payload offset based on the IP header length
+value of ingressing DVMRP and IGMP frames.
 .Pp
 The
 .Cm igmp-query-interval

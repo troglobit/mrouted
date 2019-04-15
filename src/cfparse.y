@@ -74,7 +74,7 @@ int numbounds = 0;			/* Number of named boundaries */
 %token METRIC THRESHOLD RATE_LIMIT BOUNDARY NETMASK ALTNET ADVERT_METRIC
 %token FILTER ACCEPT DENY EXACT BIDIR REXMIT_PRUNES REXMIT_PRUNES2
 %token PASSIVE ALLOW_NONPRUNERS
-%token NOTRANSIT BLASTER FORCE_LEAF
+%token NOTRANSIT BLASTER FORCE_LEAF ROUTER_ALERT
 %token PRUNE_LIFETIME2 NOFLOOD2
 %token SYSNAM SYSCONTACT SYSVERSION SYSLOCATION
 %token <num> BOOLEAN
@@ -200,6 +200,10 @@ stmt	: error
 	{
 	    if ($2 != 1)
 		warn("Disabling pruning is no longer supported");
+	}
+	| ROUTER_ALERT BOOLEAN
+	{
+	    router_alert = $2;
 	}
 	| BLACK_HOLE
 	{
@@ -757,6 +761,7 @@ static struct keyword {
 	{ "rate-limit",		RATE_LIMIT, 0 },
 	{ "force_leaf",		FORCE_LEAF, 0 },
 	{ "force-leaf",		FORCE_LEAF, 0 },
+	{ "router-alert",	ROUTER_ALERT, 0 },
 	{ "srcrt",		SRCRT, 0 },
 	{ "sourceroute",	SRCRT, 0 },
 	{ "boundary",		BOUNDARY, 0 },

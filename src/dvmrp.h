@@ -121,7 +121,7 @@
  */
 #define MAX_IP_PACKET_LEN	576
 #define MIN_IP_HEADER_LEN	20
-#define IP_HEADER_RAOPT_LEN	24	/* IP header + router alert */
+#define IP_HEADER_RAOPT_LEN	(router_alert ? 24 : 20)
 #define MAX_IP_HEADER_LEN	60
 #define MAX_DVMRP_DATA_LEN \
 		( MAX_IP_PACKET_LEN - MAX_IP_HEADER_LEN - IGMP_MINLEN )

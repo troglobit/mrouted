@@ -138,6 +138,7 @@ typedef void (*ihfunc_t) (int);
 extern uint8_t		*recv_buf;
 extern uint8_t		*send_buf;
 extern int		igmp_socket;
+extern int		router_alert;
 extern uint32_t		allhosts_group;
 extern uint32_t		allrtrs_group;
 extern uint32_t		allreports_group;

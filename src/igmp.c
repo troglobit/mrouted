@@ -24,6 +24,7 @@
 uint8_t		*recv_buf; 		     /* input packet buffer         */
 uint8_t		*send_buf; 		     /* output packet buffer        */
 int		igmp_socket;		     /* socket for all network I/O  */
+int             router_alert;		     /* IP option Router Alert      */
 uint32_t	igmp_query_interval;	     /* Default: 125 sec            */
 uint32_t	igmp_robustness;	     /* Default: 2                  */
 uint32_t	allhosts_group;		     /* All hosts addr in net order */
@@ -93,6 +94,7 @@ void init_igmp(void)
 
     igmp_query_interval = IGMP_QUERY_INTERVAL_DEFAULT;
     igmp_robustness     = IGMP_ROBUSTNESS_DEFAULT;
+    router_alert        = 1;
 }
 
 char *igmp_packet_kind(uint32_t type, uint32_t code)
@@ -543,8 +545,13 @@ size_t build_igmp(uint32_t src, uint32_t dst, int type, int code, uint32_t group
 void send_igmp(uint32_t src, uint32_t dst, int type, int code, uint32_t group, int datalen)
 {
     struct sockaddr_in sin;
+    struct ip *ip;
     size_t len;
     int rc, setloop = 0;
+
+    /* Set IP header length,  router-alert is optional */
+    ip        = (struct ip *)send_buf;
+    ip->ip_hl = IP_HEADER_RAOPT_LEN >> 2;
 
     if (IGMP_MEMBERSHIP_QUERY == type)
        len = build_query(src, dst, type, code, group, datalen);
