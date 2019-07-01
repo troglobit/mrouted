@@ -30,6 +30,10 @@ tunneling support, or GRE, to traverse Internet or intranets.
 mrouted is developed on Linux and works as-is out of the box.  Other
 UNIX variants should also work, but are not as thoroughly tested.
 
+Manual pages available here:
+
+   * [mrouted(8)](https://ftp.troglobit.com/man/mrouted.8.html)
+   * [mrouted.conf(5)](https://ftp.troglobit.com/man/mrouted.conf.5.html)
 
 Running
 -------
