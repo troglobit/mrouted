@@ -100,6 +100,7 @@ cat <<EOF
 
 Optional features:
   RSRR (experimental)...: $enable_rsrr
+  systemd...............: $with_systemd
 
 ------------- Compiler version --------------
 $($CC --version || true)
