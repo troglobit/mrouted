@@ -32,8 +32,8 @@ UNIX variants should also work, but are not as thoroughly tested.
 
 Manual pages available here:
 
-   * [mrouted(8)](https://ftp.troglobit.com/man/mrouted.8.html)
-   * [mrouted.conf(5)](https://ftp.troglobit.com/man/mrouted.conf.5.html)
+   * [mrouted(8)][]
+   * [mrouted.conf(5)][]
 
 Running
 -------
@@ -151,7 +151,7 @@ Unfortunately, and despite the license issue being corrected by OpenBSD,
 in February 2005 [Debian dropped mrouted][1] as an "obsolete protocol".
 
 For a long time the OpenBSD team remained the sole guardian of this
-project.  In 2010 [Joachim Nilsson](http://troglobit.com) revived
+project.  In 2010 [Joachim Nilsson](https://troglobit.com) revived
 mrouted on [GitHub][].
 
 [1]:               http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=288112
@@ -164,7 +164,8 @@ mrouted on [GitHub][].
 [buildsystem]:     https://airs.com/ian/configure/
 [mgen(1)]:         https://www.nrl.navy.mil/itd/ncs/products/mgen
 [mcjoin(1)]:       https://github.com/troglobit/mcjoin/
-[mrouted(8)]:      http://ftp.troglobit.com/man/mrouted.html
+[mrouted(8)]:      https://man.troglobit.com/man8/mrouted.8.html
+[mrouted.conf(5)]: https://man.troglobit.com/man5/mrouted.conf.5.html
 [GitHub]:          https://github.com/troglobit/mrouted/
 [Travis]:          https://travis-ci.org/troglobit/mrouted
 [Travis Status]:   https://travis-ci.org/troglobit/mrouted.png?branch=master
