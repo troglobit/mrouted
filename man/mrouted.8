@@ -5,7 +5,7 @@
 .\"
 .\" The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
 .\" Leland Stanford Junior University.
-.Dd Mar 28 2019
+.Dd Feb 06 2020
 .Dt MROUTED 8 SMM
 .Os
 .Sh NAME
@@ -85,7 +85,7 @@ multicast forwarding.
 This program follows the usual UNIX command line syntax, with long
 options starting with two dashes (`--').  The options are as follows:
 .Bl -tag -width Ds
-.It Fl d, -debug=SYS[,SYS,..]
+.It Fl d, -debug Ar SYS[,SYS,..]
 This option enables subsystem debug messages and causes
 .Nm
 to run in the foreground of the starting terminal, regardless of the
@@ -126,12 +126,12 @@ Debug RSRR messages
 .It Cm all | 3
 Enable all debug messages
 .El
-.It Fl f, -config=FILE
+.It Fl f, -config Ar FILE
 Specify an alternative configuration file, default
 .Pa /etc/mrouted.conf
 .It Fl h, -help
 Print a help message and exit.
-.It Fl l, -loglevel=LEVEL
+.It Fl l, -loglevel Ar LEVEL
 Set log level for syslog messages: none, err, notice (default), info,
 debug. Use '?' for a complete list of supported log levels.
 .Pp
@@ -171,11 +171,13 @@ explicitly enabled with
 .Cm phyint enable
 in
 .Pa /etc/mrouted.conf
-.It Fl -startup-delay=DELAY
-Wait for DELAY seconds before applying the routes. This delay enables
-to exchange routes before starting to forward multicast packets and
-therefore eliminate transient problems at startup, at the cost of a
-momentary black hole. Defaults to 10 seconds.
+.It Fl -startup-delay Ar SEC
+Wait for
+.Ar SEC
+seconds before applying the routes. This delay enables to exchange
+routes before starting to forward multicast packets and therefore
+eliminate transient problems at startup, at the cost of a momentary
+black hole. Defaults to 10 seconds.
 .It Fl p
 Start
 .Nm
@@ -243,7 +245,7 @@ daemon (Linux).
 The
 .Nm mrouted
 home page is
-.Aq http://github.com/troglobit/mrouted
+.Aq https://github.com/troglobit/mrouted
 .Sh AUTHORS
 The following are the principal authors of
 .Nm ,
