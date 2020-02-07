@@ -53,37 +53,6 @@ static struct ihandler {
 } ihandlers[NHANDLERS];
 static int nhandlers = 0;
 
-static struct debugname {
-    char	*name;
-    uint32_t	 level;
-    size_t	 nchars;
-} debugnames[] = {
-    {	"packet",	DEBUG_PKT,	2	},
-    {	"pkt",		DEBUG_PKT,	3	},
-    {	"pruning",	DEBUG_PRUNE,	1	},
-    {	"prunes",	DEBUG_PRUNE,	1	},
-    {	"routing",	DEBUG_ROUTE,	1	},
-    {	"routes",	DEBUG_ROUTE,	1	},
-    {   "route-detail",	DEBUG_RTDETAIL, 6	},
-    {   "rtdetail",	DEBUG_RTDETAIL, 2	},
-    {	"neighbors",	DEBUG_PEER,	1	},
-    {	"peers",	DEBUG_PEER,	2	},
-    {   "kernel",       DEBUG_KERN,     2       },
-    {	"cache",	DEBUG_CACHE,	1	},
-    {	"timer",	DEBUG_TIMEOUT,	2	},
-    {	"vif",		DEBUG_IF,	1	},
-    {	"interface",	DEBUG_IF,	2	},
-    {	"groups",	DEBUG_MEMBER,	1	},
-    {	"membership",	DEBUG_MEMBER,	1	},
-    {	"mtrace",	DEBUG_TRACE,	2	},
-    {	"traceroute",	DEBUG_TRACE,	2	},
-    {	"igmp",		DEBUG_IGMP,	1	},
-    {	"icmp",		DEBUG_ICMP,	2	},
-    {	"rsrr",		DEBUG_RSRR,	2	},
-    {	"all",		DEBUG_ALL,	1	},
-    {	"3",		DEBUG_ALL,	1	}	/* compat. */
-};
-
 /*
  * Forward declarations.
  */
@@ -162,65 +131,8 @@ static void init_gendid(void)
     }
 }
 
-int debug_list(int mask, char *buf, size_t len)
-{
-    struct debugname *d;
-    size_t i;
-
-    memset(buf, 0, len);
-    for (i = 0, d = debugnames; i < ARRAY_LEN(debugnames); i++, d++) {
-	if (!(mask & d->level))
-	    continue;
-
-	if (mask != (int)DEBUG_ALL)
-	    mask &= ~d->level;
-
-	strlcat(buf, d->name, len);
-
-	if (mask && i + 1 < ARRAY_LEN(debugnames))
-	    strlcat(buf, ", ", len);
-    }
-
-    return 0;
-}
-
-int debug_parse(char *arg)
-{
-    struct debugname *d;
-    size_t i, len;
-    char *next = NULL;
-    int sys = 0;
-
-    if (!arg || !strlen(arg) || strstr(arg, "none"))
-	return sys;
-
-    while (arg) {
-	next = strchr(arg, ',');
-	if (next)
-	    *next++ = '\0';
-
-	len = strlen(arg);
-	for (i = 0, d = debugnames; i < ARRAY_LEN(debugnames); i++, d++) {
-	    if (len >= d->nchars && strncmp(d->name, arg, len) == 0)
-		break;
-	}
-
-	if (i == ARRAY_LEN(debugnames)) {
-	    fprintf(stderr, "Unknown debug level: %s\n", arg);
-	    return DEBUG_PARSE_ERR;
-	}
-
-	sys |= d->level;
-	arg = next;
-    }
-
-    return sys;
-}
-
 static int usage(int code)
 {
-    char buf[768];
-
     printf("Usage: mrouted [-hnpv] [-f FILE] [-d SYS[,SYS...]] [-l LEVEL]\n"
 	   "\n"
 	   "  -d, --debug=SYS[,SYS]      Debug subsystem(s), see below for valid system names\n"
@@ -235,33 +147,7 @@ static int usage(int code)
 	   "  -v, --version              Show mrouted version\n", DEFAULT_STARTUP_DELAY);
 
     fputs("\nValid debug subsystems:\n", stderr);
-    if (!debug_list(DEBUG_ALL, buf, sizeof(buf))) {
-	char line[82] = "  ";
-	char *ptr;
-
-	ptr = strtok(buf, " ");
-	while (ptr) {
-	    char *sys = ptr;
-	    char buf[20];
-
-	    ptr = strtok(NULL, " ");
-
-	    /* Flush line */
-	    if (strlen(line) + strlen(sys) + 3 >= sizeof(line)) {
-		puts(line);
-		strlcpy(line, "  ", sizeof(line));
-	    }
-
-	    if (ptr)
-		snprintf(buf, sizeof(buf), "%s ", sys);
-	    else
-		snprintf(buf, sizeof(buf), "%s", sys);
-
-	    strlcat(line, buf, sizeof(line));
-	}
-
-	puts(line);
-    }
+    debug_print();
 
     printf("\nBug report address: %-40s\n", PACKAGE_BUGREPORT);
 #ifdef PACKAGE_URL
@@ -328,10 +214,8 @@ int main(int argc, char *argv[])
 
 	    case 'd':
 		if (!strcmp(optarg, "?")) {
-		    char buf[256];
-
-		    debug_list(DEBUG_ALL, buf, sizeof(buf));
-		    return !puts(buf);
+		    debug_print();
+		    return 0;
 		}
 
 		debug = debug_parse(optarg);
@@ -371,20 +255,10 @@ int main(int argc, char *argv[])
     setlinebuf(stderr);
 
     if (debug != 0) {
-	struct debugname *d;
-	char c;
-	int tmpd = debug;
+	char buf[512];
 
-	fprintf(stderr, "debug level 0x%x ", debug);
-	c = '(';
-	for (d = debugnames; d < debugnames + ARRAY_LEN(debugnames); d++) {
-	    if ((tmpd & d->level) == d->level) {
-		tmpd &= ~d->level;
-		fprintf(stderr, "%c%s", c, d->name);
-		c = ',';
-	    }
-	}
-	fprintf(stderr, ")\n");
+	debug_list(debug, buf, sizeof(buf));
+	fprintf(stderr, "debug level 0x%x (%s)\n", debug, buf);
     }
 
     /*

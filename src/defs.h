@@ -172,6 +172,12 @@ extern int		missingok;
 
 #define DEFAULT_STARTUP_DELAY 10  /* default startup delay before forwarding in seconds */
 
+struct debugnm {
+	char		*name;
+	uint32_t	 level;
+	size_t		 nchars;
+};
+
 extern int		debug;
 extern int		loglevel;
 extern int		running;
@@ -240,6 +246,12 @@ extern char             versionstring[MAX_VERSION_LEN];
 #define	IGMP_MTRACE_RESP		IGMP_MTRACE_REPLY
 #define	IGMP_MTRACE			IGMP_MTRACE_QUERY
 #endif
+
+/* common.c */
+extern int              debug_list(int mask, char *buf, size_t len);
+extern void             debug_print(void);
+extern int              debug_parse(char *arg);
+
 
 /* main.c */
 extern int              debug_list(int, char *, size_t);
