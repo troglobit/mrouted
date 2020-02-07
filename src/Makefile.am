@@ -21,7 +21,7 @@ if RSRR
 mrouted_SOURCES += rsrr.c rsrr_var.h rsrr.h
 endif
 
-mroutectl_SOURCES = mroutectl.c defs.h
+mroutectl_SOURCES = mroutectl.c common.c defs.h
 mroutectl_LDADD   = $(LIBS) $(LIBOBJS)
 
 map_mbone_SOURCES = mapper.c defs.h igmp.c igmpv2.h inet.c kern.c

@@ -215,6 +215,17 @@ static int do_set(int cmd, char *arg)
 
 static int set_debug(char *arg)
 {
+	int rc;
+
+	if (!strcmp(arg, "?")) {
+		debug_print();
+		return 0;
+	}
+
+	rc = debug_parse(arg);
+	if ((int)DEBUG_PARSE_ERR == rc)
+		return 1;
+
 	return do_set(IPC_DEBUG_CMD, arg);
 }
 
@@ -254,6 +265,8 @@ static int usage(int rc)
 		"  show routes             Show DVMRP routing table\n"
 		"  show status             Show status summary, default\n"
 		);
+	fputs("\nValid debug subsystems:\n", stderr);
+	debug_print();
 
 	return rc;
 }
