@@ -244,29 +244,33 @@ static int show_generic(int cmd, int detail)
 
 static int usage(int rc)
 {
-	fprintf(stderr,
-		"Usage: mroutectl [OPTIONS] [COMMAND]\n"
-		"\n"
-		"Options:\n"
-		"  -d, --detail            Detailed output, where applicable\n"
-		"  -p, --plain             Use plain table headings, no ctrl chars\n"
-		"  -h, --help              This help text\n"
-		"  -t, --no-heading        Skip table headings\n"
-		"\n"
-		"Commands:\n"
-		"  debug [? | none | SYS]  Debug subystem(s), separate multiple with comma\n"
-		"  help                    This help text\n"
-		"  kill                    Kill running mrouted, like SIGTERM\n"
-		"  log [? | none | LEVEL]  Set log level: none, err, notice*, info, debug\n"
-		"  restart                 Restart mrouted and reload .conf file, like SIGHUP\n"
-		"  version                 Show version, and uptime (-d), of running mrouted\n"
-		"  show igmp               Show IGMP group memberships\n"
-		"  show interfaces         Show interface table\n"
-		"  show routes             Show DVMRP routing table\n"
-		"  show status             Show status summary, default\n"
-		);
+	printf("Usage: mroutectl [OPTIONS] [COMMAND]\n"
+	       "\n"
+	       "Options:\n"
+	       "  -d, --detail            Detailed output, where applicable\n"
+	       "  -p, --plain             Use plain table headings, no ctrl chars\n"
+	       "  -h, --help              This help text\n"
+	       "  -t, --no-heading        Skip table headings\n"
+	       "\n"
+	       "Commands:\n"
+	       "  debug [? | none | SYS]  Debug subystem(s), separate multiple with comma\n"
+	       "  help                    This help text\n"
+	       "  kill                    Kill running mrouted, like SIGTERM\n"
+	       "  log [? | none | LEVEL]  Set log level: none, err, notice*, info, debug\n"
+	       "  restart                 Restart mrouted and reload .conf file, like SIGHUP\n"
+	       "  version                 Show version, and uptime (-d), of running mrouted\n"
+	       "  show igmp               Show IGMP group memberships\n"
+	       "  show interfaces         Show interface table\n"
+	       "  show routes             Show DVMRP routing table\n"
+	       "  show status             Show status summary, default\n");
+
 	fputs("\nValid debug subsystems:\n", stderr);
 	debug_print();
+
+	printf("\nBug report address: %-40s\n", PACKAGE_BUGREPORT);
+#ifdef PACKAGE_URL
+	printf("Project homepage: %s\n", PACKAGE_URL);
+#endif
 
 	return rc;
 }

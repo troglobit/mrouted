@@ -135,16 +135,16 @@ static int usage(int code)
 {
     printf("Usage: mrouted [-hnpv] [-f FILE] [-d SYS[,SYS...]] [-l LEVEL]\n"
 	   "\n"
-	   "  -d, --debug=SYS[,SYS]      Debug subsystem(s), see below for valid system names\n"
-	   "  -f, --config=FILE          Configuration file to use, default /etc/mrouted.conf\n"
-	   "  -h, --help                 Show this help text\n"
-	   "  -l, --loglevel=LEVEL       Set log level: none, err, notice (default), info, debug\n"
-	   "  -n, --foreground           Run in foreground, do not detach from calling terminal\n"
-	   "      --no-interfaces        Disable all interfaces by default\n"
-	   "      --missing-ok           Missing interfaces from mrouted.conf are OK\n"
-	   "      --startup-delay=DELAY  Startup delay before forwarding, default %d seconds\n"
-	   "  -p                         Disable pruning.  Deprecated, compatibility option\n"
-	   "  -v, --version              Show mrouted version\n", DEFAULT_STARTUP_DELAY);
+	   "  -d, --debug=SYS[,SYS]    Debug subsystem(s), see below for valid system names\n"
+	   "  -f, --config=FILE        Configuration file to use, default /etc/mrouted.conf\n"
+	   "  -h, --help               Show this help text\n"
+	   "  -l, --loglevel=LEVEL     Set log level: none, err, notice (default), info, debug\n"
+	   "  -n, --foreground         Run in foreground, do not detach from controlling terminal\n"
+	   "      --no-interfaces      Disable all interfaces by default\n"
+	   "      --missing-ok         Missing interfaces from mrouted.conf are OK\n"
+	   "      --startup-delay=SEC  Startup delay before forwarding, default %d seconds\n"
+	   "  -p                       Disable pruning.  Deprecated, compatibility option\n"
+	   "  -v, --version            Show mrouted version\n", DEFAULT_STARTUP_DELAY);
 
     fputs("\nValid debug subsystems:\n", stderr);
     debug_print();
