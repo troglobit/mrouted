@@ -259,6 +259,7 @@ static int usage(int rc)
 	       "  log [? | none | LEVEL]  Set log level: none, err, notice*, info, debug\n"
 	       "  restart                 Restart mrouted and reload .conf file, like SIGHUP\n"
 	       "  version                 Show version, and uptime (-d), of running mrouted\n"
+	       "  show detail             Show detailed low-level status\n"
 	       "  show igmp               Show IGMP group memberships\n"
 	       "  show interfaces         Show interface table\n"
 	       "  show routes             Show DVMRP routing table\n"
@@ -328,6 +329,8 @@ int main(int argc, char *argv[])
 		{ NULL, 0, NULL, 0 }
 	};
 	struct cmd show[] = {
+		{ "compat",    NULL, NULL,         IPC_SHOW_DETAIL_CMD }, /* alias */
+		{ "detail",    NULL, NULL,         IPC_SHOW_DETAIL_CMD },
 		{ "igmp",      NULL, NULL,         IPC_SHOW_IGMP_CMD   },
 		{ "interface", NULL, NULL,         IPC_SHOW_IFACE_CMD  },
 		{ "iface",     NULL, NULL,         IPC_SHOW_IFACE_CMD  }, /* alias */

@@ -429,7 +429,7 @@ int pidfile(const char *basename);
  */
 #define IPC_OK_CMD                0
 #define IPC_RESTART_CMD           1
-#define IPC_SHOW_STATUS_CMD       IPC_SHOW_DUMP_CMD
+#define IPC_SHOW_STATUS_CMD       2
 #define IPC_DEBUG_CMD             3
 #define IPC_LOGLEVEL_CMD          4
 #define IPC_VERSION_CMD           5
@@ -440,7 +440,7 @@ int pidfile(const char *basename);
 #define IPC_SHOW_ROUTES_CMD       22
 #define IPC_SHOW_PIM_RP_CMD       23
 #define IPC_SHOW_PIM_CRP_CMD      24
-#define IPC_SHOW_DUMP_CMD         250
+#define IPC_SHOW_DETAIL_CMD       250
 #define IPC_EOF_CMD               254
 #define IPC_ERR_CMD               255
 
