@@ -31,7 +31,7 @@ Files: debian/*
 Comment: mrouted was repackaged by Joachim Nilsson <troglobit@gmail.com>
          on Mon, 17 Aug 2010 08:32:02 +0100 based on an earlier (failed)
 	 attempt by Christoph Martin <christoph.martin@uni-mainz.de> on
-	 Mon, 1 Mar 1999 21:36:23 +0100, which was droppped by Debian:
+	 Mon, 1 Mar 1999 21:36:23 +0100, which was dropped by Debian:
 	 http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=288112
 Copyright: 2010-2019 Joachim Nilsson <troglobit@gmail.com>
 License: ISC
