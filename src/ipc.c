@@ -129,21 +129,40 @@ static char *vif2name(int vif)
 	return NULL;
 }
 
+static void show_routes_header(FILE *fp, int detail)
+{
+	if (!detail)
+		fprintf(fp, "%-14s %-15s %-15s=\n",
+			"Origin", "Neighbor", "Interface");
+	else
+		fprintf(fp, "%-14s %-15s %-15s%6s %8s=\n",
+			"Origin", "Neighbor", "Interface", "Metric", "Expire");
+}
+
 static void show_routes(FILE *fp, int detail)
 {
 	struct rtentry *r;
 	vifi_t i;
+	int once = 1;
 
 	if (!routing_table)
 		return;
 
-	fprintf(fp, "Source Network     Neighbor        Metric Expire %s=\n",
-		detail ? "Inbound          Outbound" : "Interface");
-
 	for (r = routing_table; r; r = r->rt_next) {
-		fprintf(fp, "%-18s %-15s ",
+		if (once) {
+			show_routes_header(fp, detail);
+			once = 0;
+		}
+
+		fprintf(fp, "%-14s %-15s %-15s",
 			inet_fmts(r->rt_origin, r->rt_originmask, s1, sizeof(s1)),
-			(r->rt_gateway == 0) ? "" : inet_fmt(r->rt_gateway, s2, sizeof(s2)));
+			(r->rt_gateway == 0
+			 ? "Local"
+			 : inet_fmt(r->rt_gateway, s2, sizeof(s2))),
+			vif2name(r->rt_parent));
+
+		if (!detail)
+			goto next;
 
 		if (r->rt_metric == UNREACHABLE)
 			fprintf(fp, "   NR ");
@@ -151,12 +170,14 @@ static void show_routes(FILE *fp, int detail)
 			fprintf(fp, "  %4u ", r->rt_metric);
 
 		if (r->rt_timer == 0)
-			fprintf(fp, "Never  ");
+			fprintf(fp, "%8s", "Never");
 		else
-			fprintf(fp, "%3us   ", r->rt_timer);
+			fprintf(fp, "%7us", r->rt_timer);
 
-		if (!detail) {
-			fprintf(fp, "%s\n", vif2name(r->rt_parent));
+	next:
+		fprintf(fp, "\n");
+	}
+}
 			continue;
 		}
 
