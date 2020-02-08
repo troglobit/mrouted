@@ -27,6 +27,10 @@ Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Display configuration info from a multicast router
  mrinfo displays configuration information about DVMRP routers.  It does
  this by sending ASK_NEIGHBORS IGMP messages to the specified router.
+ .
+ If the router responds, its version number and a list of all neighboring
+ multicast routers is included in the response.  mrinfo then proceeds to
+ request additional information, such as metrics, thresholds and flags.
 
 Package: mtrace
 Architecture: any
