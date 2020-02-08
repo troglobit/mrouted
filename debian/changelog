@@ -6,42 +6,42 @@ mrouted (4.0) unstable; urgency=medium
 
  -- Joachim Nilsson <troglobit@gmail.com>  Tue, 26 Mar 2019 07:49:36 +0100
 
-mrouted (3.9.8-1) unstable; urgency=low
+mrouted (3.9.8) unstable; urgency=low
 
   * New upstream release.  For details see the GitHub release page at
     https://github.com/troglobit/mrouted/releases/tag/3.9.8
 
  -- Joachim Nilsson <troglobit@gmail.com>  Sun,  1 Jan 2017 20:23:00 +0100
 
-mrouted (3.9.7-1) unstable; urgency=low
+mrouted (3.9.7) unstable; urgency=low
 
   * New upstream release.  For details see the GitHub release page at
     https://github.com/troglobit/mrouted/releases/tag/3.9.7
 
  -- Joachim Nilsson <troglobit@gmail.com>  Sun, 28 Dec 2014 16:15:14 +0100
 
-mrouted (3.9.6-1) unstable; urgency=low
+mrouted (3.9.6) unstable; urgency=low
 
   * New upstream release.
   * Fix: Breakage caused by link list refactor.
 
  -- Joachim Nilsson <troglobit@gmail.com>  Sun,  9 Jun 2013 22:45:00 +0100
 
-mrouted (3.9.5-1) unstable; urgency=low
+mrouted (3.9.5) unstable; urgency=low
 
   * New upstream release.
   * Fix: Insecure file creation in /var/tmp, files now in /var/run/mrouted
 
  -- Joachim Nilsson <troglobit@vmlinux.org>  Sun,  5 Mar 2011 21:30:00 +0100
 
-mrouted (3.9.4-1) unstable; urgency=low
+mrouted (3.9.4) unstable; urgency=low
 
   * New upstream release.
   * Fix: mrouted exits with error when trying to remove interface gone down.
 
  -- Joachim Nilsson <troglobit@vmlinux.org>  Sun,  3 Oct 2010 01:42:00 +0100
 
-mrouted (3.9.3-1) unstable; urgency=low
+mrouted (3.9.3) unstable; urgency=low
 
   * New upstream release.
   * Removes restriction on interfaces not having a 255.255.255.255 netmask.
@@ -51,7 +51,7 @@ mrouted (3.9.3-1) unstable; urgency=low
 
  -- Joachim Nilsson <troglobit@vmlinux.org>  Sun,  3 Oct 2010 01:42:00 +0100
 
-mrouted (3.9.2-1) unstable; urgency=low
+mrouted (3.9.2) unstable; urgency=low
 
   * New upstream (bugfix) release.
   * New maintainer and new upstream.
