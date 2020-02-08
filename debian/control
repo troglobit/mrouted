@@ -12,7 +12,7 @@ Package: mrouted
 Architecture: any
 Conflicts: smcroute, pimd, quagga-pimd
 Depends: ${shlibs:Depends}, ${misc:Depends}, lsb-base (>= 3.0-6)
-Description: Simple multicast routing for UNIX.
+Description: Simple multicast routing for UNIX
  mrouted is the original implementation of the DVMRP multicast routing
  protocol, RFC 1075.
  .
@@ -24,14 +24,14 @@ Description: Simple multicast routing for UNIX.
 Package: mrinfo
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: displays configuration info from a multicast router.
+Description: Display configuration info from a multicast router
  mrinfo displays configuration information about DVMRP routers.  It does
  this by sending ASK_NEIGHBORS IGMP messages to the specified router.
 
 Package: mtrace
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: print multicast path from a source to a receiver.
+Description: Print multicast path from a source to a receiver
  Assessing problems in the distribution of IP multicast traffic
  can be difficult.  mtrace utilizes a tracing feature implemented
  in DVMRP multicast routers, mrouted version 3.3 and later, that is
@@ -44,7 +44,7 @@ Description: print multicast path from a source to a receiver.
 Package: map-mbone
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: multicast connection mapper.
+Description: Multicast connection mapper
  map-mbone attempts to display all multicast routers reachable from
  the current multicast router.  Like mrinfo it sends ASK_NEIGHBORS
  IGMP messages to discover available DVMRP, mrouted, routers.
