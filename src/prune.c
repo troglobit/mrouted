@@ -24,7 +24,7 @@ extern int allow_black_holes;
 #define	CACHE_LIFETIME(x) JITTERED_VALUE(x) /* XXX */
 
 struct gtable *kernel_table;		/* ptr to list of kernel grp entries*/
-static struct gtable *kernel_no_route;	/* list of grp entries w/o routes   */
+struct gtable *kernel_no_route;		/* list of grp entries w/o routes   */
 struct gtable *gtp;			/* pointer for kernel rt entries    */
 unsigned int kroutes;			/* current number of cache entries  */
 

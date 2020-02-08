@@ -356,6 +356,10 @@ extern uint32_t		inet_parse(char *, int);
 extern int		inet_cksum(uint16_t *, uint32_t);
 
 /* prune.c */
+extern struct gtable	*kernel_table;
+extern struct gtable	*kernel_no_route;
+extern struct gtable	*gtp;
+
 extern unsigned		kroutes;
 extern void		determine_forwvifs(struct gtable *);
 extern void		send_prune_or_graft(struct gtable *);
@@ -398,10 +402,6 @@ extern int		k_del_rg(uint32_t, struct gtable *);
 extern int		k_get_version(void);
 
 #ifdef RSRR
-/* prune.c */
-extern struct gtable	*kernel_table;
-extern struct gtable	*gtp;
-
 /* rsrr.c */
 extern void		rsrr_init(void);
 extern void		rsrr_clean(void);
@@ -438,8 +438,7 @@ int pidfile(const char *basename);
 #define IPC_SHOW_IFACE_CMD        11
 #define IPC_SHOW_PIM_NEIGH_CMD    21
 #define IPC_SHOW_ROUTES_CMD       22
-#define IPC_SHOW_PIM_RP_CMD       23
-#define IPC_SHOW_PIM_CRP_CMD      24
+#define IPC_SHOW_MFC_CMD          23
 #define IPC_SHOW_DETAIL_CMD       250
 #define IPC_EOF_CMD               254
 #define IPC_ERR_CMD               255

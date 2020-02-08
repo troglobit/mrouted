@@ -178,36 +178,150 @@ static void show_routes(FILE *fp, int detail)
 		fprintf(fp, "\n");
 	}
 }
+
+static void show_mfc_header(FILE *fp, int detail)
+{
+	if (!detail)
+		fprintf(fp, "%-15s %-15s %-15s %s=\n",
+			"Origin", "Group", "Inbound", "Outbound");
+	else
+		fprintf(fp, "%-15s %-15s %-15s %2s%10s %8s  %s=\n",
+			"Origin", "Group", "Inbound", "<>", "Uptime", "Expire", "Outbound");
+}
+
+static void show_mfc(FILE *fp, int detail)
+{
+	struct rtentry *r;
+	struct gtable *gt;
+	struct stable *st;
+	struct ptable *pt;
+	time_t thyme = time(NULL);
+	vifi_t i;
+	char flags[5];
+	char c;
+	int once = 1;
+
+	for (gt = kernel_no_route; gt; gt = gt->gt_next) {
+		if (gt->gt_srctbl) {
+			if (once) {
+				show_mfc_header(fp, detail);
+				once = 0;
+			}
+
+			fprintf(fp, "%-15s %-15s %-16s",
+				inet_fmts(gt->gt_srctbl->st_origin, 0xffffffff, s1, sizeof(s1)),
+				inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)),
+				"-");			     /* No routes -> no incoming */
+
+			if (detail)
+				fprintf(fp, "%2s%10s %8s  ",
+					"!!",			     /* No route */
+					scaletime(thyme - gt->gt_ctime), /* Age/Uptime */
+					scaletime(gt->gt_timer));	     /* Timeout/Expire */
+
+			for (i = 0; i < numvifs; ++i) {
+				if (VIFM_ISSET(i, gt->gt_grpmems))
+					fprintf(fp, "%s ", vif2name(i));
+			}
+			fprintf(fp, "\n");
+		}
+	}
+
+	for (gt = kernel_table; gt; gt = gt->gt_gnext) {
+		int any = 0;
+
+		/* Pruned upstream and no detail? */
+		if (gt->gt_prsent_timer && !detail)
 			continue;
+
+		/* Pruned downstream, no outbounds, and no detail? */
+		for (i = 0; i < numvifs; i++) {
+			if (VIFM_ISSET(i, gt->gt_grpmems))
+				any++;
+		}
+		if (!any && !detail)
+			continue;
+
+		if (once) {
+			show_mfc_header(fp, detail);
+			once = 0;
 		}
 
-		fprintf(fp, "%-16s", vif2name(r->rt_parent));
-		for (i = 0; i < numvifs; ++i) {
-			struct listaddr *n;
-			char l = '[';
+		r = gt->gt_route;
+		fprintf(fp, "%-15s %-15s %-16s",
+			RT_FMT(r, s1),
+			inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)),
+			vif2name(r->rt_parent));
 
-			if (VIFM_ISSET(i, r->rt_children)) {
-				if ((uvifs[i].uv_flags & VIFF_TUNNEL) &&
-				    !NBRM_ISSETMASK(uvifs[i].uv_nbrmap, r->rt_subordinates))
-					/* Don't print out parenthood of a leaf tunnel. */
-					continue;
+		if (detail) {
+			snprintf(flags, sizeof(flags), "%c%c",
+				 gt->gt_prsent_timer
+				 ? 'P'
+				 : (gt->gt_grftsnt
+				    ? 'G'
+				    : ' '),
+				 VIFM_ISSET(r->rt_parent, gt->gt_scope)
+				 ? 'B'
+				 : ' ');
+			fprintf(fp, "%2s%10s %8s  ",
+				flags,
+				scaletime(thyme - gt->gt_ctime),	/* Age/Uptime */
+				scaletime(gt->gt_timer));		/* Timeout/Expire */
+		}
 
-				fprintf(fp, " %s", vif2name(i));
-				if (!NBRM_ISSETMASK(uvifs[i].uv_nbrmap, r->rt_subordinates))
-					fprintf(fp, "*");
-
-				for (n = uvifs[i].uv_neighbors; n; n = n->al_next) {
-					if (NBRM_ISSET(n->al_index, r->rt_subordinates)) {
-						fprintf(fp, "%c%d", l, n->al_index);
-						l = ',';
-					}
-				}
-
-				if (l == ',')
-					fprintf(fp, "]");
-			}
+		for (i = 0; i < numvifs; i++) {
+			if (VIFM_ISSET(i, gt->gt_grpmems))
+				fprintf(fp, "%s ", vif2name(i));
+			else if (VIFM_ISSET(i, r->rt_children) &&
+				 NBRM_ISSETMASK(uvifs[i].uv_nbrmap, r->rt_subordinates))
+				fprintf(fp, "%s%s ", vif2name(i),
+					VIFM_ISSET(i, gt->gt_scope)
+					? ":b"
+					: (SUBS_ARE_PRUNED(r->rt_subordinates, uvifs[i].uv_nbrmap, gt->gt_prunes)
+					   ? ":p"
+					   : ":!"));
 		}
 		fprintf(fp, "\n");
+	}
+
+	if (!detail)
+		return;
+
+	once = 1;
+	for (gt = kernel_table; gt; gt = gt->gt_gnext) {
+		if (gt->gt_prsent_timer)
+			continue;
+
+		r = gt->gt_route;
+		for (st = gt->gt_srctbl; st; st = st->st_next) {
+			if (once) {
+				fprintf(fp, "\n%-15s %-15s %-15s   %10s %8s  %8s=\n",
+					"Source", "Group", "Inbound", "Uptime", "Packets", "Bytes");
+				once = 0;
+			}
+
+			fprintf(fp, "%-15s %-15s %-16s  ",
+				inet_fmt(st->st_origin, s1, sizeof(s1)),
+				inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)),
+				vif2name(r->rt_parent));
+
+			if (st->st_ctime) {
+				struct sioc_sg_req rq = { 0 };
+
+				fprintf(fp, "%10s ", scaletime(thyme - st->st_ctime));
+
+				rq.src.s_addr = st->st_origin;
+				rq.grp.s_addr = gt->gt_mcastgrp;
+				if (ioctl(udp_socket, SIOCGETSGCNT, &rq) < 0)
+					logit(LOG_WARNING, errno, "Failed reading (S,G) count for (%s,%s)",
+					      inet_fmt(st->st_origin, s1, sizeof(s1)),
+					      inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)));
+				else
+					fprintf(fp, "%8ld  %8ld", rq.pktcnt, rq.bytecnt);
+			} else
+				fprintf(fp, "%10s", "-");
+			fputs("\n", fp);
+		}
 	}
 }
 
@@ -413,6 +527,10 @@ static void ipc_handle(int sd)
 
 	case IPC_SHOW_ROUTES_CMD:
 		ipc_show(client, &msg, show_routes);
+		break;
+
+	case IPC_SHOW_MFC_CMD:
+		ipc_show(client, &msg, show_mfc);
 		break;
 
 	default:
