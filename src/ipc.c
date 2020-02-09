@@ -394,11 +394,11 @@ static void show_igmp_groups(FILE *fp, int detail)
 	for (vifi = 0, uv = uvifs; vifi < numvifs; vifi++, uv++) {
 		for (group = uv->uv_groups; group; group = group->al_next) {
 			if (once) {
-				fprintf(fp, "Interface         Group            Last Reported    Timeout=\n");
+				fprintf(fp, "Interface         Group            Last Reported    Expire=\n");
 				once = 0;
 			}
 
-			fprintf(fp, "%-16s  %-15s  %-15s  %7u\n",
+			fprintf(fp, "%-16s  %-15s  %-15s  %us\n",
 				uv->uv_name,
 				inet_fmt(group->al_addr, s1, sizeof(s1)),
 				inet_fmt(group->al_reporter, s2, sizeof(s2)),
@@ -427,7 +427,7 @@ static void show_igmp_iface(FILE *fp, int detail)
 	if (numvifs == 0)
 		return;
 
-	fprintf(fp, "Interface         State     Querier          Timeout Version  Groups=\n");
+	fprintf(fp, "Interface         State     Querier          Expire Version  Groups=\n");
 
 	for (vifi = 0, uv = uvifs; vifi < numvifs; vifi++, uv++) {
 		size_t num = 0;
@@ -436,10 +436,10 @@ static void show_igmp_iface(FILE *fp, int detail)
 
 		if (!uv->uv_querier) {
 			strlcpy(s1, "Local", sizeof(s1));
-			snprintf(timeout, sizeof(timeout), "None");
+			snprintf(timeout, sizeof(timeout), "Never");
 		} else {
 			inet_fmt(uv->uv_querier->al_addr, s1, sizeof(s1));
-			snprintf(timeout, sizeof(timeout), "%u",
+			snprintf(timeout, sizeof(timeout), "%us",
 				 IGMP_OTHER_QUERIER_PRESENT_INTERVAL - uv->uv_querier->al_timer);
 		}
 
@@ -453,7 +453,7 @@ static void show_igmp_iface(FILE *fp, int detail)
 		else
 			version = 3;
 
-		fprintf(fp, "%-16s  %-8s  %-15s  %7s %7d  %6zu\n", uv->uv_name,
+		fprintf(fp, "%-16s  %-8s  %-15s  %6s %7d  %6zu\n", uv->uv_name,
 			ifstate(uv), s1, timeout, version, num);
 	}
 }
