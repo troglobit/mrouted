@@ -140,11 +140,12 @@ static int usage(int code)
 	   "  -h, --help               Show this help text\n"
 	   "  -l, --loglevel=LEVEL     Set log level: none, err, notice (default), info, debug\n"
 	   "  -n, --foreground         Run in foreground, do not detach from controlling terminal\n"
+	   "  -p                       Disable pruning.  Deprecated, compatibility option\n"
 	   "      --no-interfaces      Disable all interfaces by default\n"
 	   "      --missing-ok         Missing interfaces from mrouted.conf are OK\n"
-	   "      --startup-delay=SEC  Startup delay before forwarding, default %d seconds\n"
-	   "  -p                       Disable pruning.  Deprecated, compatibility option\n"
-	   "  -v, --version            Show mrouted version\n", DEFAULT_STARTUP_DELAY);
+	   "  -v, --version            Show mrouted version\n"
+	   "  -w, --startup-delay=SEC  Startup delay before forwarding, default %d seconds\n",
+	   DEFAULT_STARTUP_DELAY);
 
     fputs("\nValid debug subsystems:\n", stderr);
     debug_print();
@@ -175,18 +176,14 @@ int main(int argc, char *argv[])
 	{ "no-interfaces", 0, 0, 'N' },
 	{ "no-intefaces",  0, 0, 'N' },
 	{ "missing-ok",    0, 0, 'M' },
-	{ "startup-delay", 1, 0, 'D' },
+	{ "startup-delay", 1, 0, 'w' },
 	{ NULL, 0, 0, 0 }
     };
 
     snprintf(versionstring, sizeof(versionstring), "mrouted version %s", PACKAGE_VERSION);
 
-    while ((ch = getopt_long(argc, argv, "D:l:MNnd:f:hpv", long_options, NULL)) != EOF) {
+    while ((ch = getopt_long(argc, argv, "D:l:MNnd:f:hpvw:", long_options, NULL)) != EOF) {
 	switch (ch) {
-	    case 'D':
-		startupdelay = atoi(optarg);
-		break;
-
 	    case 'l':
 		if (!strcmp(optarg, "?")) {
 		    char buf[128];
@@ -237,6 +234,11 @@ int main(int argc, char *argv[])
 	    case 'v':
 		printf("%s\n", versionstring);
 		return 0;
+
+	    case 'D':
+	    case 'w':
+		startupdelay = atoi(optarg);
+		break;
 
 	    default:
 		return usage(1);
