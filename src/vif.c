@@ -1680,22 +1680,44 @@ static struct vnflags {
 	char    vn_ch;
 	char   *vn_name;
 } vifflags[] = {
-    { VIFF_DOWN,		'!', "down" },
-	{ VIFF_DISABLED,	'D', "disabled" },
+    { VIFF_DOWN,		  0, "down" },
+	{ VIFF_DISABLED,	'!', "disabled" },
 	{ VIFF_QUERIER,		'Q', "querier" },
 	{ VIFF_ONEWAY,		'1', "one-way" },
 	{ VIFF_LEAF,		'L', "leaf" },
-	{ VIFF_IGMPV1,		'i', "IGMPv1" },
-	{ VIFF_IGMPV2,		'I', "IGMPv2" },
-	{ VIFF_REXMIT_PRUNES,	'X', "rexmit_prunes" },
+	{ VIFF_IGMPV1,		  0, "IGMPv1" },
+	{ VIFF_IGMPV2,		  0, "IGMPv2" },
+	{ VIFF_REXMIT_PRUNES,	  0, "rexmit_prunes" },
 	{ VIFF_PASSIVE,		'-', "passive" },
-	{ VIFF_ALLOW_NONPRUNERS,'A', "allow_nonpruners" },
-	{ VIFF_NOFLOOD,		'f', "noflood" },
-	{ VIFF_NOTRANSIT,	't', "notransit" },
-	{ VIFF_BLASTER,		'B', "blaster" },
-	{ VIFF_FORCE_LEAF,	'l', "force_leaf" },
-	{ VIFF_OTUNNEL,		't', "old-tunnel" },
+	{ VIFF_ALLOW_NONPRUNERS,  0, "allow_nonpruners" },
+	{ VIFF_NOFLOOD,		  0, "noflood" },
+	{ VIFF_NOTRANSIT,	  0, "notransit" },
+	{ VIFF_BLASTER,		  0, "blaster" },
+	{ VIFF_FORCE_LEAF,	  0, "force_leaf" },
+	{ VIFF_OTUNNEL,		  0, "old-tunnel" },
 };
+
+char *vif_sflags(uint32_t flags)
+{
+    static char buf[10];
+    size_t i, j = 0;
+
+    /*
+     * Skip useless flags, we only target ipc.c:show_iface() for now.
+     */
+    flags &= VIFF_DISABLED | VIFF_QUERIER | VIFF_ONEWAY | VIFF_LEAF | VIFF_PASSIVE;
+
+    memset(buf, 0, sizeof(buf));
+    for (i = 0; i < ARRAY_LEN(vifflags); i++) {
+	if (!vifflags[i].vn_ch)
+	    continue;
+
+	if (flags & vifflags[i].vn_flag)
+	    buf[j++] = vifflags[i].vn_ch;
+    }
+
+    return buf;
+}
 
 /*
  * Short forms of vn_name taken from JunOS

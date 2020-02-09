@@ -322,6 +322,7 @@ extern void		send_on_vif(struct uvif *, uint32_t, int, size_t);
 extern vifi_t		find_vif(uint32_t, uint32_t);
 extern uint32_t         vif_nbr_expire_time(struct listaddr *);
 extern void		age_vifs(void);
+extern char            *vif_sflags(uint32_t);
 extern char            *vif_nbr_flags(uint16_t, char *, size_t);
 extern char            *vif_nbr_sflags(uint16_t);
 extern void		dump_vifs(FILE *, int);
