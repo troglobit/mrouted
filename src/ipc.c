@@ -129,6 +129,29 @@ static char *vif2name(int vif)
 	return NULL;
 }
 
+static void show_iface(FILE *fp, int detail)
+{
+	struct listaddr *al;
+	struct uvif *v;
+	vifi_t vifi;
+	time_t thyme = time(NULL);
+
+	fprintf(fp, "%3s %-15s %-15s %-5s %6s %3s%10s %-5s=\n",
+		"VIF", "Interface", "Address", "State", "Metric", "TTL", "Uptime", "Flags");
+
+	for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
+		fprintf(fp, "%3u %-16s%-15s %-5s %6u %3u%10s %s\n",
+			vifi,
+			v->uv_name,
+			inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)),
+			(v->uv_flags & VIFF_DOWN) ? "Down" : "Up",
+			v->uv_metric,
+			v->uv_threshold, /* TTL scoping */
+			"00:00:00",	 /* XXX fixme */
+			vif_sflags(v->uv_flags));
+	}
+}
+
 static void show_neighbor(FILE *fp, int detail)
 {
 	struct listaddr *al;
@@ -560,6 +583,10 @@ static void ipc_handle(int sd)
 
 	case IPC_SHOW_ROUTES_CMD:
 		ipc_show(client, &msg, show_routes);
+		break;
+
+	case IPC_SHOW_IFACE_CMD:
+		ipc_show(client, &msg, show_iface);
 		break;
 
 	case IPC_SHOW_MFC_CMD:

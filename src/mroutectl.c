@@ -263,6 +263,7 @@ static int usage(int rc)
 	       "  show compat             Show status, compat mode, previously `mrouted -r`\n"
 	       "  show igmp groups        Show IGMP group memberships\n"
 	       "  show igmp interface     Show IGMP interface status\n"
+	       "  show interfaces         Show interface table\n"
 	       "  show mfc                Show multicast forwarding cache\n"
 	       "  show neighbor           Show information about DVMRP neighbors\n"
 	       "  show routes             Show DVMRP routing table\n");
@@ -339,6 +340,8 @@ int main(int argc, char *argv[])
 		{ "compat",     NULL, NULL,         IPC_SHOW_COMPAT_CMD     },
 		{ "routes",     NULL, NULL,         IPC_SHOW_ROUTES_CMD     },
 		{ "igmp",       igmp, NULL,         0                       },
+		{ "interfaces", NULL, NULL,         IPC_SHOW_IFACE_CMD      },
+		{ "ifaces",     NULL, NULL,         IPC_SHOW_IFACE_CMD      }, /* alias */
 		{ "mfc",        NULL, NULL,         IPC_SHOW_MFC_CMD        },
 		{ "neighbor",   NULL, NULL,         IPC_SHOW_NEIGH_CMD      },
 		{ "status",     NULL, NULL,         IPC_SHOW_STATUS_CMD     },
