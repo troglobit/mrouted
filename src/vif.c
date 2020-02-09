@@ -1581,6 +1581,13 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
     return n;
 }
 
+uint32_t vif_nbr_expire_time(struct listaddr *al)
+{
+    if ((al->al_pv == 3 && al->al_mv >= 3) || (al->al_pv > 3 && al->al_pv < 10))
+	return NEIGHBOR_EXPIRE_TIME;
+
+    return OLD_NEIGHBOR_EXPIRE_TIME;
+}
 
 /*
  * On every timer interrupt, advance the timer in each neighbor and
@@ -1599,13 +1606,8 @@ void age_vifs(void)
 
 	prev_a = (struct listaddr *)&v->uv_neighbors;
 	for (a = v->uv_neighbors; a; prev_a = a, a = a->al_next) {
-	    uint32_t exp_time;
+	    uint32_t exp_time = vif_nbr_expire_time(a);
 	    int idx;
-
-	    if ((a->al_pv == 3 && a->al_mv >= 3) || (a->al_pv > 3 && a->al_pv < 10))
-		exp_time = NEIGHBOR_EXPIRE_TIME;
-	    else
-		exp_time = OLD_NEIGHBOR_EXPIRE_TIME;
 
 	    a->al_timer += TIMER_INTERVAL;
 	    if (a->al_timer < exp_time)
