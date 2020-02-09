@@ -242,6 +242,17 @@ static int show_generic(int cmd, int detail)
 	return 0;
 }
 
+/* mroutectl show igmp => show igmp ifaces + show igmp groups */
+static int igmp_cb(char *arg)
+{
+	if (!show_generic(IPC_SHOW_IGMP_IFACE_CMD, detail)) {
+		puts("");
+		return show_generic(IPC_SHOW_IGMP_GROUP_CMD, detail);
+	}
+
+	return -1;
+}
+
 static int usage(int rc)
 {
 	printf("Usage: mroutectl [OPTIONS] [COMMAND]\n"
@@ -300,9 +311,11 @@ static int cmd_parse(int argc, char *argv[], struct cmd *command)
 		if (!string_match(command[i].cmd, argv[0]))
 			continue;
 
-		if (command[i].ctx)
+		/* If more args, then pass parsing to sub-context */
+		if (command[i].ctx && argc > 1)
 			return cmd_parse(argc - 1, &argv[1], command[i].ctx);
 
+		/* If out of args, despite sub-context, then check for local cb */
 		if (command[i].cb) {
 			char arg[80] = "";
 			int j;
@@ -339,7 +352,7 @@ int main(int argc, char *argv[])
 	struct cmd show[] = {
 		{ "compat",     NULL, NULL,         IPC_SHOW_COMPAT_CMD     },
 		{ "routes",     NULL, NULL,         IPC_SHOW_ROUTES_CMD     },
-		{ "igmp",       igmp, NULL,         0                       },
+		{ "igmp",       igmp, igmp_cb,      0                       },
 		{ "interfaces", NULL, NULL,         IPC_SHOW_IFACE_CMD      },
 		{ "ifaces",     NULL, NULL,         IPC_SHOW_IFACE_CMD      }, /* alias */
 		{ "mfc",        NULL, NULL,         IPC_SHOW_MFC_CMD        },
