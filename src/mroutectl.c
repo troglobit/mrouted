@@ -259,13 +259,13 @@ static int usage(int rc)
 	       "  log [? | none | LEVEL]  Set log level: none, err, notice*, info, debug\n"
 	       "  restart                 Restart mrouted and reload .conf file, like SIGHUP\n"
 	       "  version                 Show version, and uptime (-d), of running mrouted\n"
-	       "  show detail             Show detailed low-level status\n"
+	       "  show status             Show status summary, default\n"
+	       "  show compat             Show status, compat mode, previously `mrouted -r`\n"
 	       "  show igmp               Show IGMP group memberships\n"
 	       "  show interfaces         Show interface table\n"
 	       "  show mfc                Show multicast forwarding cache\n"
 	       "  show neighbor           Show information about DVMRP neighbors\n"
-	       "  show routes             Show DVMRP routing table\n"
-	       "  show status             Show status summary, default\n");
+	       "  show routes             Show DVMRP routing table\n");
 
 	fputs("\nValid debug subsystems:\n", stderr);
 	debug_print();
@@ -331,8 +331,7 @@ int main(int argc, char *argv[])
 		{ NULL, 0, NULL, 0 }
 	};
 	struct cmd show[] = {
-		{ "compat",    NULL, NULL,         IPC_SHOW_DETAIL_CMD }, /* alias */
-		{ "detail",    NULL, NULL,         IPC_SHOW_DETAIL_CMD },
+		{ "compat",    NULL, NULL,         IPC_SHOW_COMPAT_CMD },
 		{ "igmp",      NULL, NULL,         IPC_SHOW_IGMP_CMD   },
 		{ "interface", NULL, NULL,         IPC_SHOW_IFACE_CMD  },
 		{ "iface",     NULL, NULL,         IPC_SHOW_IFACE_CMD  }, /* alias */

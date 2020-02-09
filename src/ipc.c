@@ -542,7 +542,7 @@ static void ipc_handle(int sd)
 		ipc_generic(client, &msg, do_loglevel, &msg);
 		break;
 
-	case IPC_SHOW_DETAIL_CMD:
+	case IPC_SHOW_COMPAT_CMD:
 		ipc_show(client, &msg, show_dump);
 		break;
 

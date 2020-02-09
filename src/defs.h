@@ -442,7 +442,7 @@ int pidfile(const char *basename);
 #define IPC_SHOW_NEIGH_CMD        21
 #define IPC_SHOW_ROUTES_CMD       22
 #define IPC_SHOW_MFC_CMD          23
-#define IPC_SHOW_DETAIL_CMD       250
+#define IPC_SHOW_COMPAT_CMD       250
 #define IPC_EOF_CMD               254
 #define IPC_ERR_CMD               255
 
