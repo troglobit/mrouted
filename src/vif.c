@@ -1677,34 +1677,69 @@ struct listaddr *neighbor_info(vifi_t vifi, uint32_t addr)
 
 static struct vnflags {
 	int	vn_flag;
+	char    vn_ch;
 	char   *vn_name;
 } vifflags[] = {
-	{ VIFF_DOWN,		"down" },
-	{ VIFF_DISABLED,	"disabled" },
-	{ VIFF_QUERIER,		"querier" },
-	{ VIFF_ONEWAY,		"one-way" },
-	{ VIFF_LEAF,		"leaf" },
-	{ VIFF_IGMPV1,		"IGMPv1" },
-	{ VIFF_IGMPV2,		"IGMPv2" },
-	{ VIFF_REXMIT_PRUNES,	"rexmit_prunes" },
-	{ VIFF_PASSIVE,		"passive" },
-	{ VIFF_ALLOW_NONPRUNERS,"allow_nonpruners" },
-	{ VIFF_NOFLOOD,		"noflood" },
-	{ VIFF_NOTRANSIT,	"notransit" },
-	{ VIFF_BLASTER,		"blaster" },
-	{ VIFF_FORCE_LEAF,	"force_leaf" },
-	{ VIFF_OTUNNEL,		"old-tunnel" },
+    { VIFF_DOWN,		'!', "down" },
+	{ VIFF_DISABLED,	'D', "disabled" },
+	{ VIFF_QUERIER,		'Q', "querier" },
+	{ VIFF_ONEWAY,		'1', "one-way" },
+	{ VIFF_LEAF,		'L', "leaf" },
+	{ VIFF_IGMPV1,		'i', "IGMPv1" },
+	{ VIFF_IGMPV2,		'I', "IGMPv2" },
+	{ VIFF_REXMIT_PRUNES,	'X', "rexmit_prunes" },
+	{ VIFF_PASSIVE,		'-', "passive" },
+	{ VIFF_ALLOW_NONPRUNERS,'A', "allow_nonpruners" },
+	{ VIFF_NOFLOOD,		'f', "noflood" },
+	{ VIFF_NOTRANSIT,	't', "notransit" },
+	{ VIFF_BLASTER,		'B', "blaster" },
+	{ VIFF_FORCE_LEAF,	'l', "force_leaf" },
+	{ VIFF_OTUNNEL,		't', "old-tunnel" },
 };
 
+/*
+ * Short forms of vn_name taken from JunOS
+ * https://www.juniper.net/documentation/en_US/junos/topics/reference/command-summary/show-dvmrp-neighbors.html
+ */
 static struct vnflags nbrflags[] = {
-	{ NBRF_LEAF,		"leaf" },
-	{ NBRF_GENID,		"have-genid" },
-	{ NBRF_WAITING,		"waiting" },
-	{ NBRF_ONEWAY,		"one-way" },
-	{ NBRF_TOOOLD,		"too old" },
-	{ NBRF_TOOMANYROUTES,	"too many routes" },
-	{ NBRF_NOTPRUNING,	"not pruning?" },
+	{ NBRF_LEAF,		'L', "leaf" },
+	{ NBRF_GENID,		'G', "have-genid" },
+	{ NBRF_WAITING,		'W', "waiting" },
+	{ NBRF_ONEWAY,		'1', "one-way" },
+	{ NBRF_TOOOLD,		'O', "too old" },
+	{ NBRF_TOOMANYROUTES,	'!', "too many routes" },
+	{ NBRF_NOTPRUNING,	'p', "not pruning?" },
 };
+
+char *vif_nbr_flags(uint16_t flags, char *buf, size_t len)
+{
+    size_t i;
+
+    memset(buf, 0, len);
+    for (i = 0; i < ARRAY_LEN(nbrflags); i++) {
+	if (flags & nbrflags[i].vn_flag) {
+	    if (buf[0])
+		strlcat(buf, " ", len);
+	    strlcat(buf, nbrflags[i].vn_name, len);
+	}
+    }
+
+    return buf;
+}
+
+char *vif_nbr_sflags(uint16_t flags)
+{
+    static char buf[10];
+    size_t i, j = 0;
+
+    memset(buf, 0, sizeof(buf));
+    for (i = 0; i < ARRAY_LEN(nbrflags); i++) {
+	if (flags & nbrflags[i].vn_flag)
+	    buf[j++] = nbrflags[i].vn_ch;
+    }
+
+    return buf;
+}
 
 /*
  * Print the contents of the uvifs array on file 'fp'.
