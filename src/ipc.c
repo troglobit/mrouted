@@ -550,11 +550,11 @@ static void ipc_handle(int sd)
 		ipc_show(client, &msg, show_neighbor);
 		break;
 
-	case IPC_SHOW_IGMP_CMD:
+	case IPC_SHOW_IGMP_GROUP_CMD:
 		ipc_show(client, &msg, show_igmp_groups);
 		break;
 
-	case IPC_SHOW_IFACE_CMD:
+	case IPC_SHOW_IGMP_IFACE_CMD:
 		ipc_show(client, &msg, show_igmp_iface);
 		break;
 

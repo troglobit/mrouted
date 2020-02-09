@@ -261,8 +261,8 @@ static int usage(int rc)
 	       "  version                 Show version, and uptime (-d), of running mrouted\n"
 	       "  show status             Show status summary, default\n"
 	       "  show compat             Show status, compat mode, previously `mrouted -r`\n"
-	       "  show igmp               Show IGMP group memberships\n"
-	       "  show interfaces         Show interface table\n"
+	       "  show igmp groups        Show IGMP group memberships\n"
+	       "  show igmp interface     Show IGMP interface status\n"
 	       "  show mfc                Show multicast forwarding cache\n"
 	       "  show neighbor           Show information about DVMRP neighbors\n"
 	       "  show routes             Show DVMRP routing table\n");
@@ -330,25 +330,28 @@ int main(int argc, char *argv[])
 		{ "help",       0, NULL, 'h' },
 		{ NULL, 0, NULL, 0 }
 	};
+	struct cmd igmp[] = {
+		{ "groups",     NULL, NULL,         IPC_SHOW_IGMP_GROUP_CMD },
+		{ "interfaces", NULL, NULL,         IPC_SHOW_IGMP_IFACE_CMD },
+		{ "ifaces",     NULL, NULL,         IPC_SHOW_IGMP_IFACE_CMD }, /* alias */
+	};
 	struct cmd show[] = {
-		{ "compat",    NULL, NULL,         IPC_SHOW_COMPAT_CMD },
-		{ "igmp",      NULL, NULL,         IPC_SHOW_IGMP_CMD   },
-		{ "interface", NULL, NULL,         IPC_SHOW_IFACE_CMD  },
-		{ "iface",     NULL, NULL,         IPC_SHOW_IFACE_CMD  }, /* alias */
-		{ "routes",    NULL, NULL,         IPC_SHOW_ROUTES_CMD },
-		{ "mfc",       NULL, NULL,         IPC_SHOW_MFC_CMD    },
-		{ "neighbor",  NULL, NULL,         IPC_SHOW_NEIGH_CMD  },
-		{ "status",    NULL, NULL,         IPC_SHOW_STATUS_CMD },
+		{ "compat",     NULL, NULL,         IPC_SHOW_COMPAT_CMD     },
+		{ "routes",     NULL, NULL,         IPC_SHOW_ROUTES_CMD     },
+		{ "igmp",       igmp, NULL,         0                       },
+		{ "mfc",        NULL, NULL,         IPC_SHOW_MFC_CMD        },
+		{ "neighbor",   NULL, NULL,         IPC_SHOW_NEIGH_CMD      },
+		{ "status",     NULL, NULL,         IPC_SHOW_STATUS_CMD     },
 		{ NULL }
 	};
 	struct cmd command[] = {
-		{ "debug",     NULL, set_debug,    0                   },
-		{ "help",      NULL, help,         0                   },
-		{ "kill",      NULL, NULL,         IPC_KILL_CMD        },
-		{ "log",       NULL, set_loglevel, 0                   },
-		{ "restart",   NULL, NULL,         IPC_RESTART_CMD     },
-		{ "show",      show, NULL,         0                   },
-		{ "version",   NULL, NULL,         IPC_VERSION_CMD     },
+		{ "debug",      NULL, set_debug,    0                       },
+		{ "help",       NULL, help,         0                       },
+		{ "kill",       NULL, NULL,         IPC_KILL_CMD            },
+		{ "log",        NULL, set_loglevel, 0                       },
+		{ "restart",    NULL, NULL,         IPC_RESTART_CMD         },
+		{ "show",       show, NULL,         0                       },
+		{ "version",    NULL, NULL,         IPC_VERSION_CMD         },
 		{ NULL }
 	};
 	int c;
