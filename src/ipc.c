@@ -129,6 +129,35 @@ static char *vif2name(int vif)
 	return NULL;
 }
 
+static void show_neighbor(FILE *fp, int detail)
+{
+	struct listaddr *al;
+	struct uvif *v;
+	vifi_t vifi;
+	time_t thyme = time(NULL);
+
+	fprintf(fp, "%-15s %-15s %7s %-5s %7s%10s=\n",
+		"Neighbor", "Interface", "Version", "Flags", "Timeout", "Uptime");
+
+	for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
+		for (al = v->uv_neighbors; al; al = al->al_next) {
+			char ver[10];
+
+			/* Protocol version . mrouted version */
+			snprintf(ver, sizeof(ver), "%d.%d", al->al_pv, al->al_mv);
+
+			fprintf(fp, "%-15s %-16s%7s %-5s %7u%10s\n",
+				inet_fmt(al->al_addr, s1, sizeof(s1)),
+				v->uv_name,
+				ver,
+				vif_nbr_sflags(al->al_flags),
+				vif_nbr_expire_time(al) - al->al_timer,
+				scaletime(thyme - al->al_ctime)
+				);
+		}
+	}
+}
+
 static void show_routes_header(FILE *fp, int detail)
 {
 	if (!detail)
@@ -515,6 +544,10 @@ static void ipc_handle(int sd)
 
 	case IPC_SHOW_DETAIL_CMD:
 		ipc_show(client, &msg, show_dump);
+		break;
+
+	case IPC_SHOW_NEIGH_CMD:
+		ipc_show(client, &msg, show_neighbor);
 		break;
 
 	case IPC_SHOW_IGMP_CMD:

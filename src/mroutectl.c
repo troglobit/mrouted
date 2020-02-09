@@ -263,6 +263,7 @@ static int usage(int rc)
 	       "  show igmp               Show IGMP group memberships\n"
 	       "  show interfaces         Show interface table\n"
 	       "  show mfc                Show multicast forwarding cache\n"
+	       "  show neighbor           Show information about DVMRP neighbors\n"
 	       "  show routes             Show DVMRP routing table\n"
 	       "  show status             Show status summary, default\n");
 
@@ -337,6 +338,7 @@ int main(int argc, char *argv[])
 		{ "iface",     NULL, NULL,         IPC_SHOW_IFACE_CMD  }, /* alias */
 		{ "routes",    NULL, NULL,         IPC_SHOW_ROUTES_CMD },
 		{ "mfc",       NULL, NULL,         IPC_SHOW_MFC_CMD    },
+		{ "neighbor",  NULL, NULL,         IPC_SHOW_NEIGH_CMD  },
 		{ "status",    NULL, NULL,         IPC_SHOW_STATUS_CMD },
 		{ NULL }
 	};
