@@ -18,9 +18,11 @@
 .Ar log Op ? | none | LEVEL
 .Pp
 .Nm
-.Ar show igmp
+.Ar show igmp Op Ar interfaces | groups
 .Nm
 .Ar show interfaces
+.Nm
+.Ar show mfc
 .Nm
 .Ar show routes
 .Nm
@@ -154,21 +156,50 @@ Restart daemon and reload
 .Pa /etc/mrouted.conf ,
 like sending SIGHUP to
 .Xr mrouted 8
-.It Nm Ar show igmp
-Show IGMP group memberships
+.It Nm Ar show compat
+Previously available as
+.Nm mrouted Fl r ,
+as well as sending
+.Ar SIGUSR1
+to
+.Xr mrouted 8 ,
+to get output in
+.Pa /var/run/mrouted/mrouted.dump .
+.Sy Note:
+this command is only intended for developers and hard core
+.Nm
+users, it can be hard to read.  See below EXAMPLES section for more help.
+.It Nm Ar show igmp Op Ar interfaces | groups
+Show IGMP status for interfaces and groups.  To show only the interfaces
+or groups, use the following sub-arguments:
+.Pp
+.Bl -tag -width interfaces -compact
+.It Ar interfaces
+Show IGMP interface status; elected IGMP querier, expiration timer, and
+IGMP version used per link, number of joined groups per link.
+.It Ar groups
+Show IGMP group memberships per interface; last reporter, and expiration
+timer.
+.El
 .It Nm Ar show interfaces
-Show interface status, including elected IGMP querier
+Show interface table; address, state, cost (metric) for interface,
+threshold TTL (required for crossing), uptime (still TODO), and
+interface flags like: Querier, Leaf, etc.
+.It Nm Ar show mfc
+Show multicast forwarding cache, i.e., the actual multicast routing
+table.  Use
+.Fl d
+for more detailed output.  The 'P' and ':p' shows upstream and
+downstream prunes, respectively.
+.It Nm Ar show neighbor
+Show information about DVMRP neighbors.
 .It Nm Ar show routes
-Show DVMRP routing table
+Show DVMRP routing table, i.e. the unicast routing table used for RPF
+calculations.
 .It Nm Op Ar show status
 Show
 .Xr mrouted 8
-status summary, default.  (Previously available as
-.Nm mrouted Fl r ,
-as well as sending
-.Xr mrouted 8
-SIGUSR1 to get output in
-.Pa /var/run/mrouted/mrouted.dump )
+status summary, default.
 .It Nm Ar version
 Show version, and uptime if
 .Fl d
