@@ -140,9 +140,9 @@ static int usage(int code)
 	   "  -h, --help               Show this help text\n"
 	   "  -i, --no-interfaces      Disable all interfaces by default\n"
 	   "  -l, --loglevel=LEVEL     Set log level: none, err, notice (default), info, debug\n"
+	   "  -m, --missing-ok         Missing interfaces from mrouted.conf are OK\n"
 	   "  -n, --foreground         Run in foreground, do not detach from controlling terminal\n"
 	   "  -p                       Disable pruning.  Deprecated, compatibility option\n"
-	   "      --missing-ok         Missing interfaces from mrouted.conf are OK\n"
 	   "  -v, --version            Show mrouted version\n"
 	   "  -w, --startup-delay=SEC  Startup delay before forwarding, default %d seconds\n",
 	   DEFAULT_STARTUP_DELAY);
@@ -175,14 +175,14 @@ int main(int argc, char *argv[])
 	{ "disable-vifs",  0, 0, 'i' },
 	{ "no-interfaces", 0, 0, 'i' },
 	{ "no-intefaces",  0, 0, 'i' },
-	{ "missing-ok",    0, 0, 'M' },
+	{ "missing-ok",    0, 0, 'm' },
 	{ "startup-delay", 1, 0, 'w' },
 	{ NULL, 0, 0, 0 }
     };
 
     snprintf(versionstring, sizeof(versionstring), "mrouted version %s", PACKAGE_VERSION);
 
-    while ((ch = getopt_long(argc, argv, "D:l:MNnid:f:hpvw:", long_options, NULL)) != EOF) {
+    while ((ch = getopt_long(argc, argv, "D:l:MmNnid:f:hpvw:", long_options, NULL)) != EOF) {
 	switch (ch) {
 	    case 'l':
 		if (!strcmp(optarg, "?")) {
@@ -198,6 +198,7 @@ int main(int argc, char *argv[])
 		break;
 
 	    case 'M':
+	    case 'm':
 		missingok++;
 		break;
 
