@@ -180,6 +180,7 @@ struct debugnm {
 
 extern int		debug;
 extern int		loglevel;
+extern int		use_syslog;
 extern int		running;
 extern int		haveterminal;
 extern int		did_final_init;

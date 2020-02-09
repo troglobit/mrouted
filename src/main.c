@@ -44,6 +44,7 @@ int missingok = 0;
 
 int debug = 0;
 int running = 1;
+int use_syslog = 1;
 time_t mrouted_init_time;
 
 #define NHANDLERS	2
@@ -133,7 +134,7 @@ static void init_gendid(void)
 
 static int usage(int code)
 {
-    printf("Usage: mrouted [-hnpv] [-f FILE] [-d SYS[,SYS...]] [-l LEVEL]\n"
+    printf("Usage: mrouted [-himnpsv] [-f FILE] [-d SYS[,SYS...]] [-l LEVEL]\n"
 	   "\n"
 	   "  -d, --debug=SYS[,SYS]    Debug subsystem(s), see below for valid system names\n"
 	   "  -f, --config=FILE        Configuration file to use, default /etc/mrouted.conf\n"
@@ -143,6 +144,7 @@ static int usage(int code)
 	   "  -m, --missing-ok         Missing interfaces from mrouted.conf are OK\n"
 	   "  -n, --foreground         Run in foreground, do not detach from controlling terminal\n"
 	   "  -p                       Disable pruning.  Deprecated, compatibility option\n"
+	   "  -s, --syslog             Log to syslog, default unless running in --foreground\n"
 	   "  -v, --version            Show mrouted version\n"
 	   "  -w, --startup-delay=SEC  Startup delay before forwarding, default %d seconds\n",
 	   DEFAULT_STARTUP_DELAY);
@@ -182,7 +184,7 @@ int main(int argc, char *argv[])
 
     snprintf(versionstring, sizeof(versionstring), "mrouted version %s", PACKAGE_VERSION);
 
-    while ((ch = getopt_long(argc, argv, "D:l:MmNnid:f:hpvw:", long_options, NULL)) != EOF) {
+    while ((ch = getopt_long(argc, argv, "d:D:f:hil:MmNnpsvw:", long_options, NULL)) != EOF) {
 	switch (ch) {
 	    case 'l':
 		if (!strcmp(optarg, "?")) {
@@ -224,6 +226,7 @@ int main(int argc, char *argv[])
 
 	    case 'n':
 		foreground = 1;
+		use_syslog--;
 		break;
 
 	    case 'h':
@@ -231,6 +234,10 @@ int main(int argc, char *argv[])
 
 	    case 'p':
 		warnx("Disabling pruning is no longer supported.");
+		break;
+
+	    case 's':	/* --syslog */
+		use_syslog++;
 		break;
 
 	    case 'v':

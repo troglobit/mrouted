@@ -101,6 +101,9 @@ void resetlogging(void *arg)
  */
 void log_init(void)
 {
+    if (!use_syslog)
+	return;
+
     openlog("mrouted", LOG_PID, LOG_DAEMON);
     setlogmask(LOG_UPTO(loglevel));
 
@@ -128,11 +131,10 @@ void logit(int severity, int syserr, const char *format, ...)
     va_end(ap);
     msg = (severity == LOG_WARNING) ? fmt : &fmt[10];
 
-    /*
-     * Log to stderr if we haven't forked yet and it's a warning or worse,
-     * or if we're debugging.
-     */
-    if (haveterminal && (debug || severity <= LOG_WARNING)) {
+    if (!use_syslog) {
+	if (severity > loglevel)
+	    return;
+     
 	gettimeofday(&now, NULL);
 	now_sec = now.tv_sec;
 	thyme = localtime(&now_sec);
@@ -144,6 +146,8 @@ void logit(int severity, int syserr, const char *format, ...)
 	    fprintf(stderr, "\n");
 	else
 	    fprintf(stderr, ": %s\n", strerror(syserr));
+
+	goto end;
     }
 
     /*
@@ -164,6 +168,7 @@ void logit(int severity, int syserr, const char *format, ...)
 	    syslog(severity, "%s", msg);
     }
 
+  end:
     if (severity <= LOG_ERR)
 	exit(1);
 }
