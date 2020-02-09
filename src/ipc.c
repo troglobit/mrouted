@@ -136,18 +136,17 @@ static void show_iface(FILE *fp, int detail)
 	vifi_t vifi;
 	time_t thyme = time(NULL);
 
-	fprintf(fp, "%3s %-15s %-15s %-5s %6s %3s%10s %-5s=\n",
-		"VIF", "Interface", "Address", "State", "Metric", "TTL", "Uptime", "Flags");
+	fprintf(fp, "%-15s %-15s %-4s %4s %3s%10s %-5s=\n",
+		"Address", "Interface", "", "Cost", "TTL", "Uptime", "Flags");
 
 	for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
-		fprintf(fp, "%3u %-16s%-15s %-5s %6u %3u%10s %s\n",
-			vifi,
-			v->uv_name,
+		fprintf(fp, "%-15s %-16s%-4s %4u %3u%10s %s\n",
 			inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)),
+			v->uv_name,
 			(v->uv_flags & VIFF_DOWN) ? "Down" : "Up",
 			v->uv_metric,
 			v->uv_threshold, /* TTL scoping */
-			"00:00:00",	 /* XXX fixme */
+			"0:00:00",	 /* XXX fixme */
 			vif_sflags(v->uv_flags));
 	}
 }
@@ -159,8 +158,8 @@ static void show_neighbor(FILE *fp, int detail)
 	vifi_t vifi;
 	time_t thyme = time(NULL);
 
-	fprintf(fp, "%-15s %-15s %7s %-5s %7s%10s=\n",
-		"Neighbor", "Interface", "Version", "Flags", "Timeout", "Uptime");
+	fprintf(fp, "%-15s %-15s %7s %-5s%10s %6s=\n",
+		"Neighbor", "Interface", "Version", "Flags", "Uptime", "Expire");
 
 	for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
 		for (al = v->uv_neighbors; al; al = al->al_next) {
@@ -169,13 +168,13 @@ static void show_neighbor(FILE *fp, int detail)
 			/* Protocol version . mrouted version */
 			snprintf(ver, sizeof(ver), "%d.%d", al->al_pv, al->al_mv);
 
-			fprintf(fp, "%-15s %-16s%7s %-5s %7u%10s\n",
+			fprintf(fp, "%-15s %-16s%-7s %-5s%10s %5us\n",
 				inet_fmt(al->al_addr, s1, sizeof(s1)),
 				v->uv_name,
 				ver,
 				vif_nbr_sflags(al->al_flags),
-				vif_nbr_expire_time(al) - al->al_timer,
-				scaletime(thyme - al->al_ctime)
+				scaletime(thyme - al->al_ctime),
+				vif_nbr_expire_time(al) - al->al_timer
 				);
 		}
 	}
@@ -184,11 +183,11 @@ static void show_neighbor(FILE *fp, int detail)
 static void show_routes_header(FILE *fp, int detail)
 {
 	if (!detail)
-		fprintf(fp, "%-14s %-15s %-15s=\n",
+		fprintf(fp, "%-15s %-15s %-15s=\n",
 			"Origin", "Neighbor", "Interface");
 	else
-		fprintf(fp, "%-14s %-15s %-15s%6s %8s=\n",
-			"Origin", "Neighbor", "Interface", "Metric", "Expire");
+		fprintf(fp, "%-15s %-15s %-15s%6s %8s=\n",
+			"Origin", "Neighbor", "Interface", "Cost", "Expire");
 }
 
 static void show_routes(FILE *fp, int detail)
@@ -206,7 +205,7 @@ static void show_routes(FILE *fp, int detail)
 			once = 0;
 		}
 
-		fprintf(fp, "%-14s %-15s %-15s",
+		fprintf(fp, "%-15s %-15s %-15s",
 			inet_fmts(r->rt_origin, r->rt_originmask, s1, sizeof(s1)),
 			(r->rt_gateway == 0
 			 ? "Local"
