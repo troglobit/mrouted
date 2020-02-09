@@ -5,7 +5,7 @@
 .\"
 .\" The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
 .\" Leland Stanford Junior University.
-.Dd Feb 06 2020
+.Dd Feb 9, 2020
 .Dt MROUTED 8 SMM
 .Os
 .Sh NAME
@@ -13,15 +13,16 @@
 .Nd IP multicast routing daemon
 .Sh SYNOPSIS
 .Nm mrouted
-.Op Fl hnpv
-.Op Fl f, -config Ar FILE
-.Op Fl d, -debug Ar SYS[,SYS,...
-.Op Fl l, -loglevel Ar LEVEL
-.Op Fl -startup-delay Ar SEC
+.Op Fl himnpsv
+.Op Fl d Ar SYS[,SYS,...
+.Op Fl f Ar FILE
+.Op Fl l Ar LEVEL
+.Op Fl w Ar SEC
 .Sh DESCRIPTION
 .Nm
 is the original implementation of the Distance-Vector Multicast Routing
-Protocol (DVMRP), RFC 1075.
+Protocol (DVMRP), RFC 1075.  A dynamic (automatic) multicast routing
+daemon.
 .Pp
 .Nm
 is
@@ -37,7 +38,7 @@ multicast datagram forwarding algorithm called Reverse Path
 Multicasting.
 .Pp
 .Nm
-forwards a multicast datagrams along the shortest (reverse) path tree
+forwards multicast datagrams along the shortest (reverse) path tree
 rooted at the subnet on which the datagram originates.  The multicast
 delivery tree may be thought of as a broadcast delivery tree that has
 been pruned back so that it does not extend beyond those subnetworks
@@ -47,7 +48,8 @@ group.  The IP time-to-live of a multicast datagram can be used to limit
 the range of multicast datagrams.
 .Pp
 In order to support multicasting among subnets that are separated by
-(unicast) routers that do not support IP multicasting,
+(unicast) routers that do not support IP multicasting, you can set up
+GRE tunnels.  However,
 .Nm
 includes (built-in) support for IP-in-IP tunnels, which are virtual
 point-to-point links between pairs of DVMRP capable rotuers located
@@ -150,10 +152,13 @@ Informational
 Debug-level messages
 .El
 .It Fl n, -foreground
-Run in foreground, do not detach from the calling terminal.
-.Fl n
-option.  The
-.It Fl -missing-ok
+Run in foreground, do not detach from controlling terminal.  This option
+is usually required when running under process supervisors like systemd
+and Finit, but is also useful when running from the terminal, when
+debugging a config or at initial set up.  Remember to also give the
+.Fl s
+option if you still want to redirect log messages to the syslog.
+.It Fl m, -missing-ok
 If an interface in
 .Pa /etc/mrouted.conf
 does not exist yet, print a warning and continue.  Useful with VPN, PPP
@@ -163,7 +168,7 @@ must still be restarted to start listening on such interfaces, if they
 did not exist when
 .Nm
 was started.
-.It Fl -no-interfaces
+.It Fl i, -no-interfaces
 Change
 .Nm
 default behavior and assume all interfaces are disabled unless
@@ -171,7 +176,7 @@ explicitly enabled with
 .Cm phyint enable
 in
 .Pa /etc/mrouted.conf
-.It Fl -startup-delay Ar SEC
+.It Fl w, -startup-delay Ar SEC
 Wait for
 .Ar SEC
 seconds before applying the routes. This delay enables to exchange
@@ -184,6 +189,13 @@ Start
 in a non-pruning mode.  This was previously used in routers for test purposes only.
 However, this is no longer supported and this option is only kept for compatibility
 reasons.
+.It Fl s, -syslog
+Use
+.Xr syslog 3
+for log messages, warnings and error conditions.  This is the default
+when running in the background.  When running in the foreground, see
+.Fl n ,
+log messages are printed to stdout.
 .El
 .Pp
 .Sh SIGNALS
