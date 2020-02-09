@@ -198,17 +198,17 @@ struct listaddr {
     time_t	     al_ctime;		/* entry creation time		    */
     union {
 	struct {
-    	    uint32_t  alur_genid;	/* generation id for neighbor       */
-	    uint32_t    alur_nroutes;	/* # of routes w/ nbr as parent	    */
-    	    uint8_t   alur_pv;		/* router protocol version	    */
-    	    uint8_t   alur_mv;		/* router mrouted version	    */
-    	    uint8_t   alur_index;	/* neighbor index		    */
+    	    uint32_t alur_genid;	/* generation id for neighbor       */
+	    uint32_t alur_nroutes;	/* # of routes w/ nbr as parent	    */
+    	    uint8_t  alur_pv;		/* router protocol version	    */
+    	    uint8_t  alur_mv;		/* router mrouted version	    */
+    	    uint8_t  alur_index;	/* neighbor index		    */
 	} alu_router;
 	struct {
-    	    uint32_t  alug_reporter;	/* a host which reported membership */
-    	    uint32_t   alug_timerid;	/* timer for group membership	    */
-    	    uint32_t   alug_query;	/* timer for repeated leave query   */
-    	    uint8_t   alug_old;		/* time since heard old report      */
+    	    uint32_t alug_reporter;	/* a host which reported membership */
+    	    uint32_t alug_timerid;	/* timer for group membership	    */
+    	    uint32_t alug_query;	/* timer for repeated leave query   */
+    	    uint8_t  alug_old;		/* time since heard old report      */
 	} alu_group;
     } al_alu;
     uint16_t	     al_flags;		/* flags related to this neighbor   */
