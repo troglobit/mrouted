@@ -138,10 +138,10 @@ static int usage(int code)
 	   "  -d, --debug=SYS[,SYS]    Debug subsystem(s), see below for valid system names\n"
 	   "  -f, --config=FILE        Configuration file to use, default /etc/mrouted.conf\n"
 	   "  -h, --help               Show this help text\n"
+	   "  -i, --no-interfaces      Disable all interfaces by default\n"
 	   "  -l, --loglevel=LEVEL     Set log level: none, err, notice (default), info, debug\n"
 	   "  -n, --foreground         Run in foreground, do not detach from controlling terminal\n"
 	   "  -p                       Disable pruning.  Deprecated, compatibility option\n"
-	   "      --no-interfaces      Disable all interfaces by default\n"
 	   "      --missing-ok         Missing interfaces from mrouted.conf are OK\n"
 	   "  -v, --version            Show mrouted version\n"
 	   "  -w, --startup-delay=SEC  Startup delay before forwarding, default %d seconds\n",
@@ -172,9 +172,9 @@ int main(int argc, char *argv[])
 	{ "help",          0, 0, 'h' },
 	{ "loglevel",      1, 0, 'l' },
 	{ "version",       0, 0, 'v' },
-	{ "disable-vifs",  0, 0, 'N' },
-	{ "no-interfaces", 0, 0, 'N' },
-	{ "no-intefaces",  0, 0, 'N' },
+	{ "disable-vifs",  0, 0, 'i' },
+	{ "no-interfaces", 0, 0, 'i' },
+	{ "no-intefaces",  0, 0, 'i' },
 	{ "missing-ok",    0, 0, 'M' },
 	{ "startup-delay", 1, 0, 'w' },
 	{ NULL, 0, 0, 0 }
@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
 
     snprintf(versionstring, sizeof(versionstring), "mrouted version %s", PACKAGE_VERSION);
 
-    while ((ch = getopt_long(argc, argv, "D:l:MNnd:f:hpvw:", long_options, NULL)) != EOF) {
+    while ((ch = getopt_long(argc, argv, "D:l:MNnid:f:hpvw:", long_options, NULL)) != EOF) {
 	switch (ch) {
 	    case 'l':
 		if (!strcmp(optarg, "?")) {
@@ -202,6 +202,7 @@ int main(int argc, char *argv[])
 		break;
 
 	    case 'N':
+	    case 'i':
 		vifstatedefault = VIFF_DISABLED;
 		break;
 
