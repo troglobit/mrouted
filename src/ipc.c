@@ -459,6 +459,17 @@ static void show_igmp_iface(FILE *fp, int detail)
 	}
 }
 
+static void show_status(FILE *fp, int detail)
+{
+	show_iface(fp, detail);
+	fputs("\n", fp);
+	show_neighbor(fp, detail);
+	fputs("\n", fp);
+	show_routes(fp, detail);
+	fputs("\n", fp);
+	show_mfc(fp, detail);
+}
+
 static void show_version(FILE *fp, int detail)
 {
     time_t t;
@@ -592,6 +603,9 @@ static void ipc_handle(int sd)
 	case IPC_SHOW_MFC_CMD:
 		ipc_show(client, &msg, show_mfc);
 		break;
+
+	case IPC_SHOW_STATUS_CMD:
+		ipc_show(client, &msg, show_status);
 
 	default:
 		break;
