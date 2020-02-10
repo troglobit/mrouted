@@ -97,10 +97,10 @@ int timer_next_delay(void)
 	return -1;
 
     IF_DEBUG(DEBUG_TIMEOUT)
-	logit(LOG_DEBUG, 0, "%s(): Q->time: %d", __func__, Q->time);
+	logit(LOG_DEBUG, 0, "%s(): Q->time: %d", __func__, difftime(Q->time, (time_t) 0));
 
     if (Q->time < 0) {
-	logit(LOG_WARNING, 0, "%s(): top of queue says %d", __func__, Q->time);
+	logit(LOG_WARNING, 0, "%s(): top of queue says %d", __func__, difftime(Q->time, (time_t) 0));
 	return 0;
     }
 
@@ -261,7 +261,7 @@ static void print_Q(void)
 
     IF_DEBUG(DEBUG_TIMEOUT) {
 	for (ptr = Q; ptr; ptr = ptr->next)
-	    logit(LOG_DEBUG, 0, "(%d,%d) ", ptr->id, ptr->time);
+	    logit(LOG_DEBUG, 0, "(%d,%d) ", ptr->id, difftime(ptr->time, (time_t) 0));
     }
 }
 #endif /* IGMP_DEBUG */
