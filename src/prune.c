@@ -2342,7 +2342,7 @@ sendit:
      * mtrace, set an error code and send to requestor anyway.
      */
     IF_DEBUG(DEBUG_TRACE)
-	logit(LOG_DEBUG, 0, "rcount:%u, no:%u", rcount, no);
+	logit(LOG_DEBUG, 0, "rcount:%zu, no:%u", rcount, no);
 
     if ((rcount + 1 == no) || (rt == NULL) || (rt->rt_metric == 1)) {
 	resptype = IGMP_MTRACE_RESP;

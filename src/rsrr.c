@@ -122,7 +122,7 @@ static void rsrr_accept(size_t recvlen)
     struct rsrr_rq *route_query;
     
     if (recvlen < RSRR_HEADER_LEN) {
-	logit(LOG_WARNING, 0, "Received RSRR packet of %d bytes, which is less than MIN size %d.",
+	logit(LOG_WARNING, 0, "Received RSRR packet of %zu bytes, which is less than MIN size %zu.",
 	      recvlen, RSRR_HEADER_LEN);
 	return;
     }
@@ -180,8 +180,8 @@ static void rsrr_accept_iq(void)
      */
     if (numvifs > RSRR_MAX_VIFS) {
 	logit(LOG_WARNING, 0,
-	    "Cannot send RSRR Route Reply because %d is too many vifs %d",
-	    numvifs);
+	      "Cannot send RSRR Route Reply because %u is too many vifs (%d)",
+	      numvifs, RSRR_MAX_VIFS);
 	return;
     }
     
@@ -407,7 +407,7 @@ static void rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query)
     gt->gt_rsrr_cache = rc;
 
     IF_DEBUG(DEBUG_RSRR) {
-	logit(LOG_DEBUG, 0, "Cached query id %ld from client %s\n",
+	logit(LOG_DEBUG, 0, "Cached query id %u from client %s\n",
 	      rc->route_query.query_id, rc->client_addr.sun_path);
     }
 }
@@ -429,7 +429,7 @@ void rsrr_cache_send(struct gtable *gt, int notify)
     while ((rc = *rcnp)) {
 	if (rsrr_accept_rq(&rc->route_query, flags, gt) < 0) {
 	    IF_DEBUG(DEBUG_RSRR) {
-		logit(LOG_DEBUG, 0, "Deleting cached query id %ld from client %s\n",
+		logit(LOG_DEBUG, 0, "Deleting cached query id %u from client %s\n",
 		      rc->route_query.query_id, rc->client_addr.sun_path);
 	    }
 	    /* Delete cache entry. */

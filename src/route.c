@@ -809,7 +809,7 @@ void accept_probe(uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t 
 	    match->al_timer *= 2;
 	} else {
 	    IF_DEBUG(DEBUG_PEER) {
-		logit(LOG_DEBUG, 0, "Ignoring probe from non-neighbor %s (%d seconds until next warning)",
+		logit(LOG_DEBUG, 0, "Ignoring probe from non-neighbor %s (%ld seconds until next warning)",
 		      inet_fmt(src, s1, sizeof(s1)), match->al_ctime + match->al_timer - now);
 	    }
 	}
@@ -1001,7 +1001,7 @@ void accept_report(uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t
 	return;
 
     if (datalen > 2 * 4096) {
-	logit(LOG_INFO, 0, "Ignoring oversized (%d bytes) route report from %s",
+	logit(LOG_INFO, 0, "Ignoring oversized (%zu bytes) route report from %s",
 	      datalen, inet_fmt(src, s1, sizeof(s1)));
 	return;
     }
@@ -1052,7 +1052,7 @@ void accept_report(uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t
 	rt[nrt - 1].mask = 0;
 
     IF_DEBUG(DEBUG_ROUTE) {
-	logit(LOG_DEBUG, 0, "Updating %d routes from %s to %s", nrt,
+	logit(LOG_DEBUG, 0, "Updating %zu routes from %s to %s", nrt,
 	      inet_fmt(src, s1, sizeof(s1)), inet_fmt(dst, s2, sizeof(s2)));
     }
 

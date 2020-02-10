@@ -65,7 +65,7 @@ static void icmp_handler(int fd)
     if (iphdrlen + ipdatalen != len) {
 	/* Malformed ICMP, just return. */
 	IF_DEBUG(DEBUG_ICMP) {
-	    logit(LOG_DEBUG, 0, "hdr %d data %d != rcv %d", iphdrlen, ipdatalen, len);
+	    logit(LOG_DEBUG, 0, "hdr %d data %d != rcv %zd", iphdrlen, ipdatalen, len);
 	}
 
 	return;

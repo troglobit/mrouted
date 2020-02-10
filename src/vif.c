@@ -681,7 +681,7 @@ void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo
 	    i >>= 1;
 
 	if (i == 1) {
-	    logit(LOG_WARNING, 0, "Received IGMPv%d report from %s on %s, "
+	    logit(LOG_WARNING, 0, "Received IGMPv%d report from %s on vif %u, "
 		  "which is configured for IGMPv%d",
 		  ver, inet_fmt(src, s1, sizeof(s1)), vifi,
 		  v->uv_flags & VIFF_IGMPV1 ? 1 : 2);
@@ -698,7 +698,7 @@ void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo
 	 */
 	if (ntohl(src) < (v->uv_querier ? ntohl(v->uv_querier->al_addr) : ntohl(v->uv_lcl_addr))) {
 	    IF_DEBUG(DEBUG_IGMP) {
-		logit(LOG_DEBUG, 0, "New querier %s (was %s) on vif %d", inet_fmt(src, s1, sizeof(s1)),
+		logit(LOG_DEBUG, 0, "New querier %s (was %s) on vif %u", inet_fmt(src, s1, sizeof(s1)),
 		      v->uv_querier ? inet_fmt(v->uv_querier->al_addr, s2, sizeof(s2)) : "me", vifi);
 	    }
 
@@ -916,7 +916,7 @@ void accept_membership_report(uint32_t src, uint32_t dst, struct igmpv3_report *
     }
 
     IF_DEBUG(DEBUG_IGMP) {
-	logit(LOG_DEBUG, 0, "IGMP v3 report, %d bytes, from %s to %s with %d group records.",
+	logit(LOG_DEBUG, 0, "IGMP v3 report, %zd bytes, from %s to %s with %d group records.",
 	      reportlen, inet_fmt(src, s1, sizeof(s1)), inet_fmt(dst, s2, sizeof(s2)), num_groups);
     }
 
@@ -1314,12 +1314,12 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 	uint32_t router;
 
 	IF_DEBUG(DEBUG_PEER) {
-	    logit(LOG_DEBUG, 0, "Checking probe from %s (%d.%d) on vif %d",
+	    logit(LOG_DEBUG, 0, "Checking probe from %s (%d.%d) on vif %u",
 		  inet_fmt(addr, s1, sizeof(s1)), pv, mv, vifi);
 	}
 
 	if (datalen < 4) {
-	    logit(LOG_WARNING, 0, "Received truncated probe message from %s (len %d)",
+	    logit(LOG_WARNING, 0, "Received truncated probe message from %s (len %zd)",
 		  inet_fmt(addr, s1, sizeof(s1)), datalen);
 	    return NULL;
 	}
@@ -1332,7 +1332,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 
 	while (datalen > 0) {
 	    if (datalen < 4) {
-		logit(LOG_WARNING, 0, "Received truncated probe message from %s (len %d)",
+		logit(LOG_WARNING, 0, "Received truncated probe message from %s (len %zd)",
 		      inet_fmt(addr, s1, sizeof(s1)), datalen);
 		return NULL;
 	    }
@@ -1378,7 +1378,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 	if (i == MAXNBRS) {
 	    /* XXX This is a severe new restriction. */
 	    /* XXX want extensible bitmaps! */
-	    logit(LOG_ERR, 0, "Cannot handle %dth neighbor %s on vif %d!",
+	    logit(LOG_ERR, 0, "Cannot handle %dth neighbor %s on vif %ld!",
 		  MAXNBRS, inet_fmt(addr, s1, sizeof(s1)), vifi);
 	    return NULL;	/* NOTREACHED */
 	}
@@ -1387,7 +1387,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 	 * Add it to our list of neighbors.
 	 */
 	IF_DEBUG(DEBUG_PEER) {
-	    logit(LOG_DEBUG, 0, "New neighbor %s on vif %d v%d.%d nf 0x%02x idx %d",
+	    logit(LOG_DEBUG, 0, "New neighbor %s on vif %u v%d.%d nf 0x%02x idx %zu",
 		  inet_fmt(addr, s1, sizeof(s1)), vifi, level & 0xff, (level >> 8) & 0xff,
 		  (level >> 16) & 0xff, i);
 	}

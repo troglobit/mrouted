@@ -435,7 +435,7 @@ int main(int argc, char *argv[])
 			}
 
 			if (recvlen < (ssize_t)sizeof(struct ip)) {
-				logit(LOG_WARNING, 0, "packet too short (%u bytes) for IP header", recvlen);
+				logit(LOG_WARNING, 0, "packet too short (%zd bytes) for IP header", recvlen);
 				continue;
 			}
 
@@ -452,7 +452,7 @@ int main(int argc, char *argv[])
 			ipdatalen = ntohs(ip->ip_len) - iphdrlen;
 #endif
 			if (iphdrlen + ipdatalen != (size_t)recvlen) {
-				logit(LOG_WARNING, 0, "packet shorter (%u bytes) than hdr+data length (%u+%u)",
+				logit(LOG_WARNING, 0, "packet shorter (%zd bytes) than hdr+data length (%zu+%zu)",
 				      recvlen, iphdrlen, ipdatalen);
 				continue;
 			}
@@ -460,7 +460,7 @@ int main(int argc, char *argv[])
 			igmp = (struct igmp *)(recv_buf + iphdrlen);
 			group = igmp->igmp_group.s_addr;
 			if (ipdatalen < IGMP_MINLEN) {
-				logit(LOG_WARNING, 0, "IP data field too short (%u bytes) for IGMP, from %s",
+				logit(LOG_WARNING, 0, "IP data field too short (%zu bytes) for IGMP, from %s",
 				      ipdatalen, inet_fmt(src, s1, sizeof(s1)));
 				continue;
 			}

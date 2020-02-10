@@ -230,7 +230,7 @@ void accept_igmp(size_t recvlen)
 
     if ((size_t)(iphdrlen + ipdatalen) != recvlen) {
 	logit(LOG_INFO, 0,
-	      "received packet from %s shorter (%u bytes) than hdr+data length (%u+%u)",
+	      "received packet from %s shorter (%zu bytes) than hdr+data length (%d+%d)",
 	      inet_fmt(src, s1, sizeof(s1)), recvlen, iphdrlen, ipdatalen);
 	return;
     }
