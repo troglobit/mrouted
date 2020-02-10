@@ -548,7 +548,7 @@ static void timer(void *arg)
  */
 static int timeout(int n)
 {
-    static struct timeval difftime, curtime, lasttime;
+    static struct timespec difftime, curtime, lasttime;
     static int init = 1, secs = 0;
 
     /* Age queue */
@@ -559,27 +559,27 @@ static int timeout(int n)
 	 */
 	if (n == 0) {
 	    curtime.tv_sec = lasttime.tv_sec + secs;
-	    curtime.tv_usec = lasttime.tv_usec;
+	    curtime.tv_nsec = lasttime.tv_nsec;
 	    n = -1; /* don't do this next time through the loop */
 	} else {
-	    gettimeofday(&curtime, NULL);
+	    clock_gettime(CLOCK_MONOTONIC, &curtime);
 	    if (init) {
 		init = 0;	/* First time only */
 		lasttime = curtime;
-		difftime.tv_usec = 0;
+		difftime.tv_nsec = 0;
 	    }
 	}
 
 	difftime.tv_sec = curtime.tv_sec - lasttime.tv_sec;
-	difftime.tv_usec += curtime.tv_usec - lasttime.tv_usec;
-	while (difftime.tv_usec > 1000000) {
+	difftime.tv_nsec += curtime.tv_nsec - lasttime.tv_nsec;
+	while (difftime.tv_nsec > 1000000000) {
 	    difftime.tv_sec++;
-	    difftime.tv_usec -= 1000000;
+	    difftime.tv_nsec -= 1000000000;
 	}
 
-	if (difftime.tv_usec < 0) {
+	if (difftime.tv_nsec < 0) {
 	    difftime.tv_sec--;
-	    difftime.tv_usec += 1000000;
+	    difftime.tv_nsec += 1000000000;
 	}
 	lasttime = curtime;
 
