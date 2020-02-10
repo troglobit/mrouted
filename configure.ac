@@ -18,8 +18,8 @@ PKG_PROG_PKG_CONFIG
 
 # Check for linux/netlink.h is only to be able to define LINUX below
 AC_HEADER_STDC
-AC_CHECK_HEADERS([fcntl.h ifaddrs.h netinet/igmp.h sys/time.h linux/netlink.h termios.h])
-AC_CHECK_HEADERS([net/if.h], [], [], [
+AC_CHECK_HEADERS([fcntl.h ifaddrs.h sys/time.h linux/netlink.h termios.h])
+AC_CHECK_HEADERS([net/if.h netinet/igmp.h], [], [], [
 #include <stdio.h>
 #ifdef STDC_HEADERS
 # include <stdlib.h>
@@ -31,7 +31,9 @@ AC_CHECK_HEADERS([net/if.h], [], [], [
 #endif
 #ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
-#endif])
+#endif
+#include <sys/types.h>
+#include <netinet/in.h>])
 
 # Check if some func is not in libc
 AC_CHECK_LIB([util], [pidfile])
