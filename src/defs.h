@@ -264,7 +264,7 @@ extern int		register_input_handler(int, ihfunc_t);
 /* log.c */
 extern void             log_init(void);
 extern int		log_str2lvl(char *);
-extern char *		log_lvl2str(int);
+extern const char *	log_lvl2str(int);
 extern int		log_list(char *, size_t);
 extern void		logit(int, int, const char *, ...);
 extern void             resetlogging(void *);
