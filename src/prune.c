@@ -288,7 +288,7 @@ static void rexmit_prune(void *arg)
     /* Make sure we're still not forwarding traffic */
     if (!VIFM_ISEMPTY(gt->gt_grpmems)) {
 	IF_DEBUG(DEBUG_PRUNE) {
-	    logit(LOG_DEBUG, 0, "rexmit_prune() (%s %s): gm:%x", RT_FMT(gt->gt_route, s1),
+	    logit(LOG_DEBUG, 0, "rexmit_prune() (%s %s): gm:%lx", RT_FMT(gt->gt_route, s1),
 		  inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)), gt->gt_grpmems);
 	}
 	return;
@@ -692,7 +692,7 @@ void add_table_entry(uint32_t origin, uint32_t mcastgrp)
     k_add_rg(origin, gt);
 
     IF_DEBUG(DEBUG_CACHE) {
-	logit(LOG_DEBUG, 0, "Add cache entry (%s %s) gm:%x, parent-vif:%d",
+	logit(LOG_DEBUG, 0, "Add cache entry (%s %s) gm:%lx, parent-vif:%d",
 	      inet_fmt(origin, s1, sizeof(s1)),
 	      inet_fmt(mcastgrp, s2, sizeof(s2)),
 	      gt->gt_grpmems, r ? r->rt_parent : -1);
@@ -780,7 +780,7 @@ void reset_neighbor_state(vifi_t vifi, uint32_t addr)
 		    send_graft(g);
 
 		IF_DEBUG(DEBUG_PEER) {
-		    logit(LOG_DEBUG, 0, "Reset neighbor state (%s %s) gm:%x",
+		    logit(LOG_DEBUG, 0, "Reset neighbor state (%s %s) gm:%lx",
 			  RT_FMT(r, s1), inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)), g->gt_grpmems);
 		}
 	    }
@@ -957,7 +957,7 @@ void update_table_entry(struct rtentry *r, uint32_t old_parent_gw)
 	}
 
 	IF_DEBUG(DEBUG_CACHE) {
-	    logit(LOG_DEBUG, 0, "Updating cache entries (%s %s) old gm:%x",
+	    logit(LOG_DEBUG, 0, "Updating cache entries (%s %s) old gm:%lx",
 		  RT_FMT(r, s1), inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)), g->gt_grpmems);
 	}
 
@@ -978,7 +978,7 @@ void update_table_entry(struct rtentry *r, uint32_t old_parent_gw)
 	send_prune_or_graft(g);
 
 	IF_DEBUG(DEBUG_CACHE) {
-	    logit(LOG_DEBUG, 0, "Updating cache entries (%s %s) new gm:%x",
+	    logit(LOG_DEBUG, 0, "Updating cache entries (%s %s) new gm:%lx",
 		  RT_FMT(r, s1), inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)), g->gt_grpmems);
 	}
 
@@ -1018,7 +1018,7 @@ void update_lclgrp(vifi_t vifi, uint32_t mcastgrp)
 
 	    prun_add_ttls(g);
 	    IF_DEBUG(DEBUG_CACHE){
-		logit(LOG_DEBUG, 0, "Update lclgrp (%s %s) gm:%x", RT_FMT(r, s1),
+		logit(LOG_DEBUG, 0, "Update lclgrp (%s %s) gm:%lx", RT_FMT(r, s1),
 		      inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)), g->gt_grpmems);
 	    }
 
@@ -1052,7 +1052,7 @@ void delete_lclgrp(vifi_t vifi, uint32_t mcastgrp)
 
 		if (g->gt_route) {
 		    IF_DEBUG(DEBUG_CACHE) {
-			logit(LOG_DEBUG, 0, "Delete lclgrp (%s %s) gm:%x",
+			logit(LOG_DEBUG, 0, "Delete lclgrp (%s %s) gm:%lx",
 			      RT_FMT(g->gt_route, s1),
 			      inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)), g->gt_grpmems);
 		    }
@@ -1162,7 +1162,7 @@ void accept_prune(uint32_t src, uint32_t dst, char *p, size_t datalen)
 	}
 	if ((pt = find_prune_entry(src, g->gt_pruntbl)) != NULL) {
 	    IF_DEBUG(DEBUG_PRUNE) {
-		logit(LOG_DEBUG, 0, "Duplicate prune received on vif %d from %s for (%s %s)/%d old timer: %d cur gm: %x",
+		logit(LOG_DEBUG, 0, "Duplicate prune received on vif %d from %s for (%s %s)/%d old timer: %d cur gm: %lx",
 		      vifi, inet_fmt(src, s1, sizeof(s1)), inet_fmt(prun_src, s2, sizeof(s2)),
 		      inet_fmt(prun_grp, s3, sizeof(s3)), prun_tmr, pt->pt_timer, g->gt_grpmems);
 	    }
@@ -1220,7 +1220,7 @@ void accept_prune(uint32_t src, uint32_t dst, char *p, size_t datalen)
 	    /* XXX end debugging */
 
 	    IF_DEBUG(DEBUG_PRUNE|DEBUG_CACHE) {
-		logit(LOG_DEBUG, 0, "Prune (%s %s), stop sending on vif %d, gm:%x",
+		logit(LOG_DEBUG, 0, "Prune (%s %s), stop sending on vif %d, gm:%lx",
 		      RT_FMT(r, s1), inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)), vifi, g->gt_grpmems);
 	    }
 
@@ -1288,7 +1288,7 @@ void chkgrp_graft(vifi_t vifi, uint32_t mcastgrp)
 		g->gt_timer = CACHE_LIFETIME(cache_lifetime);
 
 		IF_DEBUG(DEBUG_PRUNE|DEBUG_CACHE) {
-		    logit(LOG_DEBUG, 0, "chkgrp graft (%s %s) gm:%x",
+		    logit(LOG_DEBUG, 0, "chkgrp graft (%s %s) gm:%lx",
 			  RT_FMT(r, s1), inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)), g->gt_grpmems);
 		}
 
@@ -1371,7 +1371,7 @@ void accept_graft(uint32_t src, uint32_t dst, char *p, size_t datalen)
 
 		VIFM_SET(vifi, g->gt_grpmems);
 		IF_DEBUG(DEBUG_PRUNE|DEBUG_CACHE) {
-		    logit(LOG_DEBUG, 0, "Accept graft (%s %s) gm:%x", RT_FMT(r, s1),
+		    logit(LOG_DEBUG, 0, "Accept graft (%s %s) gm:%lx", RT_FMT(r, s1),
 			  inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)), g->gt_grpmems);
 		}
 
@@ -1640,11 +1640,11 @@ void age_table_entry(void)
 	    }
 	}
 	if (fixit) {
-	    logit(LOG_WARNING, 0, "Fixing membership for (%s %s) gm:%x",
+	    logit(LOG_WARNING, 0, "Fixing membership for (%s %s) gm:%lx",
 		  RT_FMT(r, s1), inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)), gt->gt_grpmems);
 	    determine_forwvifs(gt);
 	    send_prune_or_graft(gt);
-	    logit(LOG_WARNING, 0, "Fixed  membership for (%s %s) gm:%x",
+	    logit(LOG_WARNING, 0, "Fixed  membership for (%s %s) gm:%lx",
 		  RT_FMT(r, s1), inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)), gt->gt_grpmems);
 	}
 	/*DEBUG2*/
@@ -1933,7 +1933,7 @@ static void expire_prune(vifi_t vifi, struct gtable *gt)
 
         VIFM_SET(vifi, gt->gt_grpmems);
 	IF_DEBUG(DEBUG_CACHE) {
-	    logit(LOG_DEBUG, 0, "Forwarding again (%s %s) gm:%x vif:%d",
+	    logit(LOG_DEBUG, 0, "Forwarding again (%s %s) gm:%lx vif:%d",
 		  RT_FMT(rt, s1), inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)), gt->gt_grpmems, vifi);
 	}
 
