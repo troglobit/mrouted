@@ -54,13 +54,10 @@ Skip table headings altogether.
 .Sh COMMANDS
 The following commands are available:
 .Bl -tag -width Ds
-.It Nm Ar help
-Show usage instructions and exit.
-.It Nm Ar kill
-Kill running daemon, like sending SIGTERM to
-.Xr mrouted 8
 .It Nm Ar debug Op ? | none | SYSTEM Op ,SYSTEM
-Control subystem debugging at runtime.  Multiple subsystems can be
+Control
+.Nm mrouted
+subystem debugging at runtime.  Multiple subsystems can be
 enabled, separate with comma.  E.g.
 .Bd -unfilled -offset indent
 mroutectl debug igmp,routes
@@ -114,8 +111,13 @@ Enable all subsystems (may trigger log rate limiter)
 .It Nm Ar help
 Show usage instructions and exit.
 .It Nm Ar kill
-Kill running daemon, like sending SIGTERM to
-.Xr mrouted 8
+Stop a running
+.Nm mrouted ,
+similar to sending SIGTERM.
+.Nm
+returns when the command has been delivered and
+.Nm mrouted
+has begun shutting down.
 .It Nm Ar log Op ? | none | LEVEL
 Control, query, or disable
 .Xr mrouted 8
@@ -207,8 +209,14 @@ is given,
 of running mrouted
 .El
 .Sh EXAMPLES
-The routing table looks like this:
-.Bd -unfilled -offset left
+This section shows example interactions with
+.Nm
+for some of the supported commands.
+.Ss Sy mroutectl -dp show compat
+The output from the
+.Ar compat
+command is very verbose and can look scary at first sight:
+.Bd -unfilled -offset indent
 Virtual Interface Table
  VIF  Local-Address                    Metric  Thresh  Flags
   0   36.2.0.8      subnet: 36.2          1       1    querier
