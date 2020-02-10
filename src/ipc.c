@@ -395,7 +395,7 @@ static uint32_t diff_vtime(uint32_t mtime)
 	return virtual_time - mtime;
 }
 
-static void show_igmp_groups(FILE *fp, int detail)
+static void show_igmp_group(FILE *fp, int detail)
 {
 	struct listaddr *group, *source;
 	struct uvif *uv;
@@ -418,6 +418,7 @@ static void show_igmp_groups(FILE *fp, int detail)
 		}
 	}
 }
+
 
 static void show_igmp_iface(FILE *fp, int detail)
 {
@@ -462,6 +463,14 @@ static void show_igmp_iface(FILE *fp, int detail)
 			num,
 			timeout);
 	}
+}
+
+static void show_igmp(FILE *fp, int detail)
+{
+	fputs("IGMP Interfaces ...\n", fp);
+	show_igmp_iface(fp, detail);
+	fputs("IGMP Groups ...\n", fp);
+	show_igmp_group(fp, detail);
 }
 
 static void show_status(FILE *fp, int detail)
@@ -590,11 +599,15 @@ static void ipc_handle(int sd)
 		break;
 
 	case IPC_SHOW_IGMP_GROUP_CMD:
-		ipc_show(client, &msg, show_igmp_groups);
+		ipc_show(client, &msg, show_igmp_group);
 		break;
 
 	case IPC_SHOW_IGMP_IFACE_CMD:
 		ipc_show(client, &msg, show_igmp_iface);
+		break;
+
+	case IPC_SHOW_IGMP_CMD:
+		ipc_show(client, &msg, show_igmp);
 		break;
 
 	case IPC_SHOW_ROUTES_CMD:

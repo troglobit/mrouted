@@ -244,14 +244,14 @@ static int show_generic(int cmd, int detail)
 }
 
 /* mroutectl show igmp => show igmp ifaces + show igmp groups */
-static int igmp_cb(char *arg)
+static int show_igmp(char *arg)
 {
-	if (!show_generic(IPC_SHOW_IGMP_IFACE_CMD, detail)) {
-		puts("");
-		return show_generic(IPC_SHOW_IGMP_GROUP_CMD, detail);
-	}
+	return show_generic(IPC_SHOW_IGMP_CMD, detail);
+}
 
-	return -1;
+static int show_status(char *arg)
+{
+	return show_generic(IPC_SHOW_STATUS_CMD, detail);
 }
 
 static int usage(int rc)
@@ -353,7 +353,7 @@ int main(int argc, char *argv[])
 	struct cmd show[] = {
 		{ "compat",     NULL, NULL,         IPC_SHOW_COMPAT_CMD     },
 		{ "routes",     NULL, NULL,         IPC_SHOW_ROUTES_CMD     },
-		{ "igmp",       igmp, igmp_cb,      0                       },
+		{ "igmp",       igmp, show_igmp,    0                       },
 		{ "interfaces", NULL, NULL,         IPC_SHOW_IFACE_CMD      },
 		{ "ifaces",     NULL, NULL,         IPC_SHOW_IFACE_CMD      }, /* alias */
 		{ "mfc",        NULL, NULL,         IPC_SHOW_MFC_CMD        },
@@ -367,7 +367,7 @@ int main(int argc, char *argv[])
 		{ "kill",       NULL, NULL,         IPC_KILL_CMD            },
 		{ "log",        NULL, set_loglevel, 0                       },
 		{ "restart",    NULL, NULL,         IPC_RESTART_CMD         },
-		{ "show",       show, NULL,         0                       },
+		{ "show",       show, show_status,  0                       },
 		{ "version",    NULL, NULL,         IPC_VERSION_CMD         },
 		{ NULL }
 	};
@@ -394,7 +394,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (optind >= argc)
-		return show_generic(IPC_SHOW_STATUS_CMD, detail);
+		return show_status(NULL);
 
 	return cmd_parse(argc - optind, &argv[optind], command);
 }

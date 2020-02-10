@@ -441,6 +441,7 @@ int pidfile(const char *basename);
 #define IPC_KILL_CMD              9
 #define IPC_SHOW_IGMP_GROUP_CMD   10
 #define IPC_SHOW_IGMP_IFACE_CMD   11
+#define IPC_SHOW_IGMP_CMD         12
 #define IPC_SHOW_IFACE_CMD        20
 #define IPC_SHOW_MFC_CMD          21
 #define IPC_SHOW_NEIGH_CMD        22
