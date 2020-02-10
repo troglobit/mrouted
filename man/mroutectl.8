@@ -59,19 +59,19 @@ Control
 .Nm mrouted
 subystem debugging at runtime.  Multiple subsystems can be
 enabled, separate with comma.  E.g.
-.Bd -unfilled -offset indent
+.Bd -literal -offset indent
 mroutectl debug igmp,routes
 .Ed
 .Pp
 The command returns a list of enabled subsystems.  Without any debug
 argument, the command lists the currently enabled subsystems.  To list
 all available subsystems, use
-.Bd -unfilled -offset indent
+.Bd -literal -offset indent
 mroutectl debug ?
 .Ed
 .Pp
 To disable all subsystems, use
-.Bd -unfilled -offset indent
+.Bd -literal -offset indent
 mroutectl debug none
 .Ed
 .Pp
@@ -123,18 +123,18 @@ Control, query, or disable
 .Xr mrouted 8
 log level.  E.g.
 .Pp
-.Bd -unfilled -offset indent
+.Bd -literal -offset indent
 mroutectl log debug
 .Ed
 .Pp
 Without any argument, the command lists the current log level.
 To list all available log levels, use
-.Bd -unfilled -offset indent
+.Bd -literal -offset indent
 mroutectl log ?
 .Ed
 .Pp
 To disable logging completely, use
-.Bd -unfilled -offset indent
+.Bd -literal -offset indent
 mroutectl log none
 .Ed
 .Pp
@@ -212,11 +212,63 @@ of running mrouted
 This section shows example interactions with
 .Nm
 for some of the supported commands.
+.Ss Sy mroutectl show iface
+.Bd -literal -offset indent
+Address         Interface      State Cost TTL    Uptime Flags
+10.0.1.2        eth0              Up    1   1  00:00:00
+172.16.1.1      eth1              Up    1   1  00:00:00 QL
+.Ed
+.Ss Sy mroutectl show neighbor
+.Bd -literal -offset indent
+Neighbor        Interface       Version Flags    Uptime Expire                  
+10.0.1.2        eth0            3.255   G       0:00:16    25s
+10.0.1.1        eth0            3.255   G       0:00:17    30s
+.Ed
+.Ss Sy mroutectl -d show routes
+.Bd -literal -offset indent
+Origin          Neighbor        Interface        Cost   Expire                  
+192.168.0/24    10.0.1.1        eth0                3      30s
+172.16.1/24     10.0.1.2        eth0                2      30s
+172.16.0/24     Local           eth1                1      60s
+10.0.1/24       Local           eth0                1      60s
+10.0.0/24       10.0.1.1        eth0                2      30s
+.Ed
+.Ss Sy mroutectl show igmp iface
+.Bd -literal -offset indent
+Interface         Querier          Version  Groups  Expire                      
+eth1              Local                  3       1   Never
+eth0              10.0.1.1               3       0    220s
+.Ed
+.Ss Sy mroutectl show igmp group
+.Bd -literal -offset indent
+Interface         Group            Last Reporter    Expire                      
+eth1              225.1.2.6        172.16.0.10        190s
+.Ed
+.Ss Sy mroutectl -d show mfc       
+.Bd -literal -offset indent
+Origin          Group           Inbound         <>    Uptime   Expire  Outbound 
+192.168.0/24    225.1.2.3       eth0            P    0:10:42  0:04:03  
+192.168.0/24    225.1.2.4       eth0            P    0:10:42  0:03:42  
+192.168.0/24    225.1.2.5       eth0            P    0:10:42  0:04:49  
+172.16.1/24     225.1.2.6       eth0                 0:10:51  0:00:24  eth1 
+192.168.0/24    225.1.2.6       eth0                 0:10:42  0:01:51  eth1 
+172.16.1/24     225.1.2.7       eth0            P    0:10:51  0:03:13  
+192.168.0/24    225.1.2.7       eth0            P    0:10:42  0:01:16  
+172.16.1/24     225.1.2.8       eth0            P    0:10:51  0:02:07  
+192.168.0/24    225.1.2.8       eth0            P    0:10:42  0:00:09  
+
+Source          Group           Inbound               Uptime  Packets     Bytes 
+172.16.1.11     225.1.2.6       eth0                 0:10:51     6518    834304
+192.168.0.10    225.1.2.6       eth0                 0:10:42     6425    822400
+.Ed
 .Ss Sy mroutectl -dp show compat
 The output from the
 .Ar compat
-command is very verbose and can look scary at first sight:
-.Bd -unfilled -offset indent
+command is very verbose and looks quite scary at first sight.  It is
+kept for backwards compatibility and developer debug purposes and has
+a lot of details encoded.  See below for a breakdown.
+.Pp
+.Bd -literal -offset indent
 Virtual Interface Table
  VIF  Local-Address                    Metric  Thresh  Flags
   0   36.2.0.8      subnet: 36.2          1       1    querier
@@ -280,7 +332,7 @@ Entries are created and deleted by
 .Nm mrouted .
 .Pp
 The cache tables look like this:
-.Bd -unfilled -offset left
+.Bd -literal -offset left
 Multicast Routing Cache Table (147 entries)
  Origin             Mcast-group     CTmr  Age Ptmr IVif Forwvifs
  13.2.116/22        224.2.127.255     3m   2m    -  0    1
