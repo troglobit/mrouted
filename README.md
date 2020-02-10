@@ -33,6 +33,7 @@ UNIX variants should also work, but are not as thoroughly tested.
 Manual pages available here:
 
    * [mrouted(8)][]
+   * [mroutectl(8)][]
    * [mrouted.conf(5)][]
 
 Running
@@ -165,6 +166,7 @@ mrouted on [GitHub][].
 [mgen(1)]:         https://www.nrl.navy.mil/itd/ncs/products/mgen
 [mcjoin(1)]:       https://github.com/troglobit/mcjoin/
 [mrouted(8)]:      https://man.troglobit.com/man8/mrouted.8.html
+[mroutectl(8)]:    https://man.troglobit.com/man8/mroutectl.8.html
 [mrouted.conf(5)]: https://man.troglobit.com/man5/mrouted.conf.5.html
 [GitHub]:          https://github.com/troglobit/mrouted/
 [Travis]:          https://travis-ci.org/troglobit/mrouted
