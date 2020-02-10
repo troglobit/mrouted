@@ -202,7 +202,7 @@ void accept_igmp(size_t recvlen)
     int igmp_version = 3;
 
     if (recvlen < sizeof(struct ip)) {
-	logit(LOG_INFO, 0, "received packet too short (%u bytes) for IP header", recvlen);
+	logit(LOG_INFO, 0, "received packet too short (%zu bytes) for IP header", recvlen);
 	return;
     }
 

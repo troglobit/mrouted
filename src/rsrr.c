@@ -145,7 +145,7 @@ static void rsrr_accept(size_t recvlen)
 	case RSRR_ROUTE_QUERY:
 	    /* Check size */
 	    if (recvlen < RSRR_RQ_LEN) {
-		logit(LOG_WARNING, 0, "Received Route Query of %d bytes, which is too small", recvlen);
+		logit(LOG_WARNING, 0, "Received Route Query of %zu bytes, which is too small", recvlen);
 		break;
 	    }
 	    /* Get the query */
@@ -377,7 +377,7 @@ static void rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query)
 		rc->route_query.query_id = route_query->query_id;
 		IF_DEBUG(DEBUG_RSRR) {
 		    logit(LOG_DEBUG, 0,
-			  "Update cached query id %ld from client %s\n",
+			  "Update cached query id %u from client %s\n",
 			  rc->route_query.query_id, rc->client_addr.sun_path);
 		}
 	    }
