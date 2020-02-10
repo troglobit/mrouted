@@ -249,13 +249,12 @@ void k_add_rg(uint32_t origin, struct gtable *g)
 	mc.mfcc_ttls[i] = g->gt_ttls[i];
 
     /* write to kernel space */
-    if (setsockopt(igmp_socket, IPPROTO_IP, MRT_ADD_MFC,
-		   (char *)&mc, sizeof(mc)) < 0) {
+    if (setsockopt(igmp_socket, IPPROTO_IP, MRT_ADD_MFC, (char *)&mc, sizeof(mc)) < 0) {
 #ifdef DEBUG_MFC
 	md_log(MD_ADD_FAIL, origin, g->gt_mcastgrp);
 #endif
-	logit(LOG_WARNING, errno, "setsockopt MRT_ADD_MFC",
-		inet_fmt(origin, s1, sizeof(s1)), inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)));
+	logit(LOG_WARNING, errno, "setsockopt MRT_ADD_MFC (%s, %s)",
+	      inet_fmt(origin, s1, sizeof(s1)), inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)));
     }
 }
 
