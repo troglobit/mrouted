@@ -123,28 +123,42 @@ static char *chomp(char *str)
 
 static void print(char *line)
 {
-	int len, head = 0;
+	int len, head = 0, title = 0;
 
 	chomp(line);
 
 	/* Table headings, or repeat headers, end with a '=' */
 	len = (int)strlen(line) - 1;
-	if (len > 0 && line[len] == '=') {
-		if (!heading)
-			return;
-		line[len] = 0;
-		head = 1;
-		if (!plain)
-			len = get_width() - len;
+	if (len > 0) {
+		if (line[len] == '=')
+			head = 1;
+		if (line[len] == '_' )
+			title = 1;
+
+		if (head || title) {
+			if (!heading)
+				return;
+
+			line[len] = 0;
+			if (!plain) {
+				if (head)
+					len = get_width() - len;
+				else
+					len = get_width();
+			}
+		}
 	}
 
-	if (!head) {
+	if (!head && !title) {
 		puts(line);
 		return;
 	}
 
 	if (!plain) {
-		fprintf(stdout, "\e[7m%s%*s\e[0m\n", line, len < 0 ? 0 : len, "");
+		if (head)
+			fprintf(stdout, "\e[7m%s%*s\e[0m\n", line, len < 0 ? 0 : len, "");
+		else
+			fprintf(stdout, "\e[4m%*s\e[0m\n\e[1m%s\e[0m\n", len < 0 ? 0 : len, "", line);
 	} else {
 		fprintf(stdout, "%s\n", line);
 		while (len--)

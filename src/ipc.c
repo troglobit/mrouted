@@ -147,6 +147,10 @@ static void show_iface(FILE *fp, int detail)
 	vifi_t vifi;
 	time_t thyme = time(NULL);
 
+	if (numvifs == 0)
+		return;
+
+	fputs("Interface Table_\n", fp);
 	fprintf(fp, "%-15s %-15s %5s %4s %3s%10s %-5s=\n",
 		"Address", "Interface", "State", "Cost", "TTL", "Uptime", "Flags");
 
@@ -169,6 +173,10 @@ static void show_neighbor(FILE *fp, int detail)
 	vifi_t vifi;
 	time_t thyme = time(NULL);
 
+	if (numvifs == 0)
+		return;
+
+	fputs("Neighbor Table_\n", fp);
 	fprintf(fp, "%-15s %-15s %7s %-5s%10s %6s=\n",
 		"Neighbor", "Interface", "Version", "Flags", "Uptime", "Expire");
 
@@ -193,6 +201,7 @@ static void show_neighbor(FILE *fp, int detail)
 
 static void show_routes_header(FILE *fp, int detail)
 {
+	fputs("DVMRP Route Table_\n", fp);
 	if (!detail)
 		fprintf(fp, "%-15s %-15s %-15s=\n",
 			"Origin", "Neighbor", "Interface");
@@ -243,6 +252,7 @@ static void show_routes(FILE *fp, int detail)
 
 static void show_mfc_header(FILE *fp, int detail)
 {
+	fputs("Multicast Forwarding Cache Table_\n", fp);
 	if (!detail)
 		fprintf(fp, "%-15s %-15s %-15s %s=\n",
 			"Origin", "Group", "Inbound", "Outbound");
@@ -405,6 +415,7 @@ static void show_igmp_group(FILE *fp, int detail)
 	for (vifi = 0, uv = uvifs; vifi < numvifs; vifi++, uv++) {
 		for (group = uv->uv_groups; group; group = group->al_next) {
 			if (once) {
+				fputs("IGMP Group Table_\n", fp);
 				fprintf(fp, "%-16s  %-15s  %-15s  %6s=\n",
 					"Interface", "Group", "Last Reporter", "Expire");
 				once = 0;
@@ -429,6 +440,7 @@ static void show_igmp_iface(FILE *fp, int detail)
 	if (numvifs == 0)
 		return;
 
+	fputs("IGMP Interface Table_\n", fp);
 	fprintf(fp, "%-16s  %-15s  %7s  %6s  %6s=\n",
 		"Interface", "Querier", "Version", "Groups", "Expire");
 
@@ -467,20 +479,15 @@ static void show_igmp_iface(FILE *fp, int detail)
 
 static void show_igmp(FILE *fp, int detail)
 {
-	fputs("IGMP Interfaces ...\n", fp);
 	show_igmp_iface(fp, detail);
-	fputs("IGMP Groups ...\n", fp);
 	show_igmp_group(fp, detail);
 }
 
 static void show_status(FILE *fp, int detail)
 {
 	show_iface(fp, detail);
-	fputs("\n", fp);
 	show_neighbor(fp, detail);
-	fputs("\n", fp);
 	show_routes(fp, detail);
-	fputs("\n", fp);
 	show_mfc(fp, detail);
 }
 
