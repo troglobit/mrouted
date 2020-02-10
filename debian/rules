@@ -7,3 +7,6 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 %:
 	dh $@ --with autoreconf,systemd
+
+override_dh_installchangelogs:
+	dh_installchangelogs ChangeLog.md
