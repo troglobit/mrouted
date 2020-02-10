@@ -430,7 +430,7 @@ static void start_vif2(vifi_t vifi)
 	 */
 	v->uv_flags |= VIFF_QUERIER;
 	IF_DEBUG(DEBUG_IGMP) {
-	    logit(LOG_DEBUG, 0, "Assuming querier duties on vif %d", vifi);
+	    logit(LOG_DEBUG, 0, "Assuming querier duties on vif %u", vifi);
 	}
 	send_query(v, allhosts_group, IGMP_QUERY_RESPONSE_INTERVAL * IGMP_TIMER_SCALE, 0);
     }
@@ -493,7 +493,7 @@ static void stop_vif(vifi_t vifi)
 	}
 
 	IF_DEBUG(DEBUG_IGMP) {
-	    logit(LOG_DEBUG, 0, "Releasing querier duties on vif %d", vifi);
+	    logit(LOG_DEBUG, 0, "Releasing querier duties on vif %u", vifi);
 	}
 	v->uv_flags &= ~VIFF_QUERIER;
     }
@@ -713,7 +713,7 @@ void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo
 	    }
 	} else {
 	    IF_DEBUG(DEBUG_IGMP) {
-		logit(LOG_DEBUG, 0, "Ignoring query from %s; querier on vif %d is still %s",
+		logit(LOG_DEBUG, 0, "Ignoring query from %s; querier on vif %u is still %s",
 		      inet_fmt(src, s1, sizeof(s1)), vifi,
 		      v->uv_querier ? inet_fmt(v->uv_querier->al_addr, s2, sizeof(s2)) : "me");
 	    }
@@ -737,7 +737,7 @@ void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo
 	struct listaddr *g;
 
 	IF_DEBUG(DEBUG_IGMP) {
-	    logit(LOG_DEBUG, 0, "Group-specific membership query for %s from %s on vif %d, timer %d",
+	    logit(LOG_DEBUG, 0, "Group-specific membership query for %s from %s on vif %u, timer %d",
 		  inet_fmt(group, s2, sizeof(s2)),
 		  inet_fmt(src, s1, sizeof(s1)), vifi, tmo);
 	}
@@ -754,7 +754,7 @@ void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo
 		g->al_timerid = SetTimer(vifi, g);
 
 		IF_DEBUG(DEBUG_IGMP) {
-		    logit(LOG_DEBUG, 0, "Timer for grp %s on vif %d set to %d",
+		    logit(LOG_DEBUG, 0, "Timer for grp %s on vif %u set to %d",
 			  inet_fmt(group, s2, sizeof(s2)), vifi, g->al_timer);
 		}
 		break;
@@ -1378,7 +1378,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 	if (i == MAXNBRS) {
 	    /* XXX This is a severe new restriction. */
 	    /* XXX want extensible bitmaps! */
-	    logit(LOG_ERR, 0, "Cannot handle %dth neighbor %s on vif %ld!",
+	    logit(LOG_ERR, 0, "Cannot handle %dth neighbor %s on vif %u",
 		  MAXNBRS, inet_fmt(addr, s1, sizeof(s1)), vifi);
 	    return NULL;	/* NOTREACHED */
 	}
@@ -1439,7 +1439,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 
 	if (n->al_flags & NBRF_DONTPEER) {
 	    IF_DEBUG(DEBUG_PEER) {
-		logit(LOG_DEBUG, 0, "Not peering with %s on vif %d because %x",
+		logit(LOG_DEBUG, 0, "Not peering with %s on vif %u because %x",
 		      inet_fmt(addr, s1, sizeof(s1)), vifi, n->al_flags & NBRF_DONTPEER);
 	    }
 	    return NULL;
@@ -1469,7 +1469,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 	if (n->al_flags & NBRF_WAITING && msgtype == DVMRP_PROBE) {
 	    n->al_flags &= ~NBRF_WAITING;
 	    if (!in_router_list) {
-		logit(LOG_WARNING, 0, "Possible one-way peering with %s on vif %d",
+		logit(LOG_WARNING, 0, "Possible one-way peering with %s on vif %u",
 		      inet_fmt(addr, s1, sizeof(s1)), vifi);
 		n->al_flags |= NBRF_ONEWAY;
 		return NULL;
@@ -1483,7 +1483,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 		NBRM_SET(n->al_index, v->uv_nbrmap);
 		add_neighbor_to_routes(vifi, n->al_index);
 		IF_DEBUG(DEBUG_PEER) {
-		    logit(LOG_DEBUG, 0, "%s on vif %d exits WAITING",
+		    logit(LOG_DEBUG, 0, "%s on vif %u exits WAITING",
 			  inet_fmt(addr, s1, sizeof(s1)), vifi);
 		}
 	    }
@@ -1495,13 +1495,13 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 		    vifs_with_neighbors++;
 		NBRM_SET(n->al_index, v->uv_nbrmap);
 		add_neighbor_to_routes(vifi, n->al_index);
-		logit(LOG_NOTICE, 0, "Peering with %s on vif %d is no longer one-way",
+		logit(LOG_NOTICE, 0, "Peering with %s on vif %u is no longer one-way",
 			inet_fmt(addr, s1, sizeof(s1)), vifi);
 		n->al_flags &= ~NBRF_ONEWAY;
 	    } else {
 		/* XXX rate-limited warning message? */
 		IF_DEBUG(DEBUG_PEER) {
-		    logit(LOG_DEBUG, 0, "%s on vif %d is still ONEWAY",
+		    logit(LOG_DEBUG, 0, "%s on vif %u is still ONEWAY",
 			  inet_fmt(addr, s1, sizeof(s1)), vifi);
 		}
 	    }
@@ -1550,7 +1550,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 		}
 		delete_neighbor_from_routes(addr, vifi, n->al_index);
 		reset_neighbor_state(vifi, addr);
-		logit(LOG_WARNING, 0, "Peering with %s on vif %d is one-way",
+		logit(LOG_WARNING, 0, "Peering with %s on vif %u is one-way",
 		      inet_fmt(addr, s1, sizeof(s1)), vifi);
 		n->al_flags |= NBRF_ONEWAY;
 	    }
@@ -1558,7 +1558,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 
 	if (n->al_flags & NBRF_DONTPEER) {
 	    IF_DEBUG(DEBUG_PEER) {
-		logit(LOG_DEBUG, 0, "Not peering with %s on vif %d because %x",
+		logit(LOG_DEBUG, 0, "Not peering with %s on vif %u because %x",
 		      inet_fmt(addr, s1, sizeof(s1)), vifi, n->al_flags & NBRF_DONTPEER);
 	    }
 	    return NULL;
@@ -1894,7 +1894,7 @@ void dump_vifs(FILE *fp, int detail)
 	v_req.vifi = vifi;
 	if (did_final_init) {
 	    if (ioctl(udp_socket, SIOCGETVIFCNT, (char *)&v_req) < 0) {
-		logit(LOG_WARNING, errno, "Failed ioctl SIOCGETVIFCNT on vif %d", vifi);
+		logit(LOG_WARNING, errno, "Failed ioctl SIOCGETVIFCNT on vif %u", vifi);
 	    } else {
 		fprintf(fp, "                   pkts/bytes in : %lu/%lu\n",
 			v_req.icount, v_req.ibytes);
