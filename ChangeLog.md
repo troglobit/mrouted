@@ -17,8 +17,9 @@ Major release with full IGMPv3 (ASM) support and a new `mroutectl` tool.
 - Support for configurable IGMP robustness variable, issue #27
 - *Incompatible* command line option refactor
 - Add systemd unit file
-- Add `mroutectl`, replaces `mrouted.cache` and `mrouted.dump`,
-  including `SIGUSR1` and `SIGUSR2` signals
+- Introduce `mroutectl`, a helpful tool to interact with `mrouted`.
+  This completely replaces `mrouted.cache` and `mrouted.dump`, including
+  `SIGUSR1` and `SIGUSR2` signals, which are now ignored, issue #24
 - The `mrouted.pid` file, and the new `mrouted.sock` file, are now
   located in `/var/run`
 - Major cleanup of logging directives take from command line, and now

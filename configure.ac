@@ -1,5 +1,6 @@
 AC_PREREQ(2.61)
-AC_INIT(mrouted, 4.0-dev, https://github.com/troglobit/mrouted/issues, , http://troglobit.com/mrouted.html)
+AC_INIT([mrouted], [4.0-dev], [https://github.com/troglobit/mrouted/issues],,
+		[https://troglobit.com/projects/mrouted/])
 AM_INIT_AUTOMAKE([1.11 foreign])
 AM_SILENT_RULES([yes])
 
