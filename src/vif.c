@@ -1378,7 +1378,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 	if (i == MAXNBRS) {
 	    /* XXX This is a severe new restriction. */
 	    /* XXX want extensible bitmaps! */
-	    logit(LOG_ERR, 0, "Cannot handle %dth neighbor %s on vif %u",
+	    logit(LOG_ERR, 0, "Cannot handle %zuth neighbor %s on vif %u",
 		  MAXNBRS, inet_fmt(addr, s1, sizeof(s1)), vifi);
 	    return NULL;	/* NOTREACHED */
 	}
