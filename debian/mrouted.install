@@ -1,3 +1,4 @@
+lib/systemd/system/mrouted.service
 usr/sbin/mrouted
 usr/sbin/mroutectl
 usr/share/man/man8/mrouted.8
