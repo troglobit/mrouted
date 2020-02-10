@@ -10,7 +10,7 @@ AM_CPPFLAGS     += -DSYSCONFDIR=\"@sysconfdir@\" -DRUNSTATEDIR=\"@runstatedir@\"
 if LINUX
 AM_CPPFLAGS     += -DIOCTL_OK_ON_RAW_SOCKET
 endif
-AM_CFLAGS        = -W -Wall -Wextra -Wno-unused
+AM_CFLAGS        = -W -Wall -Wextra -Wno-unused -Wno-unused-parameter
 
 sbin_PROGRAMS    = mrouted mroutectl map-mbone mrinfo mtrace
 mrouted_SOURCES  = main.c timer.c cfparse.y common.c config.c defs.h dvmrp.h	\
