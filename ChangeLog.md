@@ -34,6 +34,12 @@ Major release with full IGMPv3 (ASM) support and a new `mroutectl` tool.
 - Fixed libc portability issues, e.g. GNU:isms like `%m` etc.
 - Import OpenBSD fix to `daemon()` equivalent, use `/dev/null` for
   stdin, stdout and stderr
+- Use `clock_gettime()`, with monotonic clock, instead of the unsafe
+  `gethostbyname()`, for all non-date-printing code paths.  Only for
+  mrouted, other tools have not been changed
+- Fix lots of invalid format specifiers, found by Coverity Scan and
+  clang on FreeBSD
+- Fix detection of `netinet/igmp.h` on FreeBSD
 
 
 [v3.9.8][] - 2017-01-01
