@@ -166,23 +166,29 @@ static void show_iface(FILE *fp, int detail)
 	}
 }
 
+static void show_neighbor_header(FILE *fp, int detail)
+{
+	fputs("Neighbor Table_\n", fp);
+	fprintf(fp, "%-15s %-15s %7s %-5s%10s %6s=\n",
+		"Neighbor", "Interface", "Version", "Flags", "Uptime", "Expire");
+}
+
 static void show_neighbor(FILE *fp, int detail)
 {
 	struct listaddr *al;
 	struct uvif *v;
 	vifi_t vifi;
 	time_t thyme = time(NULL);
-
-	if (numvifs == 0)
-		return;
-
-	fputs("Neighbor Table_\n", fp);
-	fprintf(fp, "%-15s %-15s %7s %-5s%10s %6s=\n",
-		"Neighbor", "Interface", "Version", "Flags", "Uptime", "Expire");
+	int once = 1;
 
 	for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
 		for (al = v->uv_neighbors; al; al = al->al_next) {
 			char ver[10];
+
+			if (once) {
+				show_neighbor_header(fp, detail);
+				once = 0;
+			}
 
 			/* Protocol version . mrouted version */
 			snprintf(ver, sizeof(ver), "%d.%d", al->al_pv, al->al_mv);
