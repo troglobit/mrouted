@@ -14,8 +14,8 @@ AM_CFLAGS        = -W -Wall -Wextra -Wno-unused -Wno-unused-parameter
 
 sbin_PROGRAMS    = mrouted mroutectl map-mbone mrinfo mtrace
 mrouted_SOURCES  = main.c timer.c cfparse.y common.c config.c defs.h dvmrp.h	\
-		   icmp.c igmp.c igmpv2.h ipc.c ipip.c inet.c kern.c 		\
-		   log.c pathnames.h prune.c route.c route.h vif.c vif.h
+		   icmp.c igmp.c igmpv2.h igmpv3.h ipc.c ipip.c inet.c kern.c	\
+		   log.c pathnames.h prune.c prune.h route.c route.h vif.c vif.h
 mrouted_LDADD    = $(LIBS) $(LIBOBJS)
 if RSRR
 mrouted_SOURCES += rsrr.c rsrr_var.h rsrr.h
