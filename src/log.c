@@ -134,7 +134,8 @@ void logit(int severity, int syserr, const char *format, ...)
     if (!use_syslog) {
 	if (severity > loglevel)
 	    return;
-     
+
+	/* Only OK use-case for unsafe gettimeofday(), logging. */
 	gettimeofday(&now, NULL);
 	now_sec = now.tv_sec;
 	thyme = localtime(&now_sec);

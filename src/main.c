@@ -111,9 +111,9 @@ static void init_gendid(void)
 
     fp = fopen_genid("r");
     if (!fp) {
-	struct timeval tv;
+	struct timespec tv;
 
-	gettimeofday(&tv, NULL);
+	clock_gettime(CLOCK_MONOTONIC, &tv);
 	dvmrp_genid = (uint32_t)tv.tv_sec;	/* for a while after 2038 */
     } else {
 	uint32_t prev_genid;
@@ -555,7 +555,7 @@ static int timeout(int n)
     do {
 	/*
 	 * If poll() timed out, then there's no other activity to
-	 * account for and we don't need to call gettimeofday().
+	 * account for and we don't need to call clock_gettime().
 	 */
 	if (n == 0) {
 	    curtime.tv_sec = lasttime.tv_sec + secs;
