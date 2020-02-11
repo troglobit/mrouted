@@ -24,7 +24,6 @@
 #include <poll.h>
 
 extern char *configfilename;
-char versionstring[MAX_VERSION_LEN];
 
 int haveterminal = 1;
 int did_final_init = 0;
@@ -181,8 +180,6 @@ int main(int argc, char *argv[])
 	{ "startup-delay", 1, 0, 'w' },
 	{ NULL, 0, 0, 0 }
     };
-
-    snprintf(versionstring, sizeof(versionstring), "mrouted version %s", PACKAGE_VERSION);
 
     while ((ch = getopt_long(argc, argv, "d:D:f:hil:MmNnpsvw:", long_options, NULL)) != EOF) {
 	switch (ch) {

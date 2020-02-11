@@ -202,9 +202,6 @@ extern char		s2[MAX_INET_BUF_LEN];
 extern char		s3[MAX_INET_BUF_LEN];
 extern char		s4[MAX_INET_BUF_LEN];
 
-#define MAX_VERSION_LEN 100
-extern char             versionstring[MAX_VERSION_LEN];
-
 #ifndef IGMP_PIM
 #define	IGMP_PIM	0x14
 #endif
@@ -461,5 +458,8 @@ struct ipc {
 /* ipc.c */
 void ipc_init(void);
 void ipc_exit(void);
+
+/* Shared constants between mrouted and mroutectl */
+static const char *versionstring = "mrouted version " PACKAGE_VERSION;
 
 #endif /* MROUTED_DEFS_H_ */

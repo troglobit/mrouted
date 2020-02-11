@@ -7,10 +7,11 @@
 .Xr mrouted 8
 .Sh SYNOPSIS
 .Nm mroutectl
-.Op Fl dpth
+.Op Fl dpthv
 .Op COMMAND
+.Pp
 .Nm
-.Ar help | kill | restart | version
+.Ar help | kill | restart
 .Pp
 .Nm
 .Ar debug Op ? | none | SYSTEM Op ,SYSTEM
@@ -27,6 +28,8 @@
 .Ar show routes
 .Nm
 .Op Ar show status
+.Nm
+.Ar show version
 .Sh DESCRIPTION
 .Nm
 is the friendly control tool for
@@ -50,6 +53,12 @@ Show usage instructions and exit.
 Use plain table headings, no ANSI ctrl characters.
 .It Fl t, -no-heading
 Skip table headings altogether.
+.It Fl v, -version
+Show
+.Nm mrouted
+version that
+.Nm
+is built against.
 .El
 .Sh COMMANDS
 The following commands are available:
@@ -202,7 +211,7 @@ calculations.
 Show
 .Xr mrouted 8
 status summary, default.
-.It Nm Ar version
+.It Nm Ar show version
 Show version, and uptime if
 .Fl d
 is given,

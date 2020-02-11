@@ -277,6 +277,7 @@ static int usage(int rc)
 	       "  -p, --plain             Use plain table headings, no ctrl chars\n"
 	       "  -h, --help              This help text\n"
 	       "  -t, --no-heading        Skip table headings\n"
+	       "  -v, --version           Show mrouted version mroutectl is built against\n"
 	       "\n"
 	       "Commands:\n"
 	       "  debug [? | none | SYS]  Debug subystem(s), separate multiple with comma\n"
@@ -284,7 +285,7 @@ static int usage(int rc)
 	       "  kill                    Kill running mrouted, like SIGTERM\n"
 	       "  log [? | none | LEVEL]  Set log level: none, err, notice*, info, debug\n"
 	       "  restart                 Restart mrouted and reload .conf file, like SIGHUP\n"
-	       "  version                 Show version, and uptime (-d), of running mrouted\n"
+	       "  show version            Show version, and uptime (-d), of running mrouted\n"
 	       "  show status             Show status summary, default\n"
 	       "  show compat             Show status, compat mode, previously `mrouted -r`\n"
 	       "  show igmp groups        Show IGMP group memberships\n"
@@ -357,6 +358,7 @@ int main(int argc, char *argv[])
 		{ "plain",      0, NULL, 'p' },
 		{ "no-heading", 0, NULL, 't' },
 		{ "help",       0, NULL, 'h' },
+		{ "version",    0, NULL, 'v' },
 		{ 0 }
 	};
 	struct cmd igmp[] = {
@@ -374,6 +376,7 @@ int main(int argc, char *argv[])
 		{ "mfc",        NULL, NULL,         IPC_SHOW_MFC_CMD        },
 		{ "neighbor",   NULL, NULL,         IPC_SHOW_NEIGH_CMD      },
 		{ "status",     NULL, NULL,         IPC_SHOW_STATUS_CMD     },
+		{ "version",    NULL, NULL,         IPC_VERSION_CMD         },
 		{ 0 }
 	};
 	struct cmd command[] = {
@@ -383,7 +386,6 @@ int main(int argc, char *argv[])
 		{ "log",        NULL, set_loglevel, 0                       },
 		{ "restart",    NULL, NULL,         IPC_RESTART_CMD         },
 		{ "show",       show, show_status,  0                       },
-		{ "version",    NULL, NULL,         IPC_VERSION_CMD         },
 		{ 0 }
 	};
 	int c;
@@ -394,6 +396,10 @@ int main(int argc, char *argv[])
 			detail = 1;
 			break;
 
+		case 'h':
+		case '?':
+			return usage(0);
+
 		case 'p':
 			plain = 1;
 			break;
@@ -402,9 +408,9 @@ int main(int argc, char *argv[])
 			heading = 0;
 			break;
 
-		case 'h':
-		case '?':
-			return usage(0);
+		case 'v':
+			printf("%s\n", versionstring);
+			return 0;
 		}
 	}
 
