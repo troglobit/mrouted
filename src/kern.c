@@ -92,7 +92,7 @@ void k_hdr_include(int bool)
 {
 #ifdef IP_HDRINCL
     if (setsockopt(igmp_socket, IPPROTO_IP, IP_HDRINCL, (char *)&bool, sizeof(bool)) < 0)
-        logit(LOG_ERR, errno, "setsockopt IP_HDRINCL %u", bool);
+        logit(LOG_ERR, errno, "Failed setting socket IP_HDRINCL %u", bool);
 #endif
 }
 
@@ -106,7 +106,7 @@ void k_set_ttl(int t)
 
     ttl = t;
     if (setsockopt(igmp_socket, IPPROTO_IP, IP_MULTICAST_TTL, (char *)&ttl, sizeof(ttl)) < 0)
-	logit(LOG_ERR, errno, "setsockopt IP_MULTICAST_TTL %u", ttl);
+	logit(LOG_ERR, errno, "Failed setting IP_MULTICAST_TTL %u", ttl);
 
     curttl = t;
 }
@@ -121,7 +121,7 @@ void k_set_loop(int flag)
 
     loop = flag;
     if (setsockopt(igmp_socket, IPPROTO_IP, IP_MULTICAST_LOOP, (char *)&loop, sizeof(loop)) < 0)
-        logit(LOG_ERR, errno, "setsockopt IP_MULTICAST_LOOP %u", loop);
+        logit(LOG_ERR, errno, "Failed setting socket IP_MULTICAST_LOOP to %u", loop);
 }
 
 
@@ -136,7 +136,7 @@ void k_set_if(uint32_t ifa)
     if (setsockopt(igmp_socket, IPPROTO_IP, IP_MULTICAST_IF, (char *)&adr, sizeof(adr)) < 0) {
         if (errno == EADDRNOTAVAIL || errno == EINVAL)
             return;
-        logit(LOG_ERR, errno, "setsockopt IP_MULTICAST_IF %s",
+        logit(LOG_ERR, errno, "Failed setting IP_MULTICAST_IF to %s",
               inet_fmt(ifa, s1, sizeof(s1)));
     }
 }
@@ -195,7 +195,7 @@ void k_add_vif(vifi_t vifi, struct uvif *v)
     vc.vifc_vifi = vifi;
     uvif_to_vifctl(&vc, v);
     if (setsockopt(igmp_socket, IPPROTO_IP, MRT_ADD_VIF, (char *)&vc, sizeof(vc)) < 0)
-	logit(LOG_ERR, errno, "setsockopt MRT_ADD_VIF on vif %d", vifi);
+	logit(LOG_ERR, errno, "Failed MRT_ADD_VIF(%d) for %s", vifi, v->uv_name);
 }
 
 
@@ -224,7 +224,7 @@ void k_del_vif(vifi_t vifi, struct uvif *v)
         if (errno == EADDRNOTAVAIL || errno == EINVAL)
             return;
 
-	logit(LOG_ERR, errno, "setsockopt MRT_DEL_VIF on vif %d", vifi);
+	logit(LOG_ERR, errno, "Failed MRT_DEL_VIF(%d), cannot delete VIF for %s", vifi, v->uv_name);
     }
 }
 
@@ -237,7 +237,6 @@ void k_add_rg(uint32_t origin, struct gtable *g)
     struct mfcctl mc;
     vifi_t i;
 
-    /* copy table values so that setsockopt can process it */
     memset(&mc, 0, sizeof(mc));
     mc.mfcc_origin.s_addr = origin;
     mc.mfcc_mcastgrp.s_addr = g->gt_mcastgrp;
@@ -245,10 +244,19 @@ void k_add_rg(uint32_t origin, struct gtable *g)
     for (i = 0; i < numvifs; i++)
 	mc.mfcc_ttls[i] = g->gt_ttls[i];
 
-    /* write to kernel space */
     if (setsockopt(igmp_socket, IPPROTO_IP, MRT_ADD_MFC, (char *)&mc, sizeof(mc)) < 0) {
-	logit(LOG_WARNING, errno, "setsockopt MRT_ADD_MFC (%s, %s)",
-	      inet_fmt(origin, s1, sizeof(s1)), inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)));
+	char ttls[3 * MAXVIFS + 1] = { 0 };
+
+	for (i = 0; i < numvifs; i++) {
+	    char buf[10];
+
+	    snprintf(buf, sizeof(buf), "%d%s", mc.mfcc_ttls[i], i + 1 < numvifs ? ", " : "");
+	    strlcat(ttls, buf, sizeof(ttls));
+	}
+
+	logit(LOG_WARNING, errno, "Failed MRT_ADD_MFC(%s, %s) from vif %d to vif(s) %s",
+	      inet_fmt(origin, s1, sizeof(s1)), inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)),
+	      mc.mfcc_parent, ttls);
     }
 }
 
@@ -260,14 +268,13 @@ int k_del_rg(uint32_t origin, struct gtable *g)
 {
     struct mfcctl mc;
 
-    /* copy table values so that setsockopt can process it */
     memset(&mc, 0, sizeof(mc));
     mc.mfcc_origin.s_addr = origin;
     mc.mfcc_mcastgrp.s_addr = g->gt_mcastgrp;
 
     /* write to kernel space */
     if (setsockopt(igmp_socket, IPPROTO_IP, MRT_DEL_MFC, (char *)&mc, sizeof(mc)) < 0) {
-	logit(LOG_WARNING, errno, "setsockopt MRT_DEL_MFC of (%s %s)",
+	logit(LOG_WARNING, errno, "Failed MRT_DEL_MFC(%s %s)",
 	      inet_fmt(origin, s1, sizeof(s1)), inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)));
 
 	return -1;
@@ -285,7 +292,7 @@ int k_get_version(void)
     socklen_t len = sizeof(vers);
 
     if (getsockopt(igmp_socket, IPPROTO_IP, MRT_VERSION, (char *)&vers, &len) < 0)
-	logit(LOG_ERR, errno, "getsockopt MRT_VERSION: perhaps your kernel is too old?");
+	logit(LOG_ERR, errno, "Failed MRT_VERSION(): Cannot read version of multicast routing stack");
 
     return vers;
 }
