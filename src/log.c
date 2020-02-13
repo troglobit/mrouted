@@ -174,29 +174,6 @@ void logit(int severity, int syserr, const char *format, ...)
 	exit(1);
 }
 
-#ifdef DEBUG_MFC
-void md_log(int what, uint32_t origin, uint32_t mcastgrp)
-{
-    static FILE *f = NULL;
-    struct timeval tv;
-    uint32_t buf[4];
-
-    if (!f) {
-	if ((f = fopen("/tmp/mrouted.clog", "w")) == NULL) {
-	    logit(LOG_ERR, errno, "open /tmp/mrouted.clog");
-	}
-    }
-
-    gettimeofday(&tv, NULL);
-    buf[0] = tv.tv_sec;
-    buf[1] = what;
-    buf[2] = origin;
-    buf[3] = mcastgrp;
-
-    fwrite(buf, sizeof(uint32_t), 4, f);
-}
-#endif
-
 /**
  * Local Variables:
  *  indent-tabs-mode: t

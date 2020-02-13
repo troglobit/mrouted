@@ -565,10 +565,6 @@ void add_table_entry(uint32_t origin, uint32_t mcastgrp)
 	return;
     }
 
-#ifdef DEBUG_MFC
-    md_log(MD_MISS, origin, mcastgrp);
-#endif
-
     r = determine_route(origin);
     prev_gt = NULL;
     if (r == NULL) {
@@ -676,9 +672,6 @@ void add_table_entry(uint32_t origin, uint32_t mcastgrp)
 	    /* An old source which we're keeping around for statistics */
 	    time(&st->st_ctime);
 	} else {
-#ifdef DEBUG_MFC
-	    md_log(MD_DUPE, origin, mcastgrp);
-#endif
 	    /* Ignore kernel->mrouted retransmissions */
 	    if (time(0) - st->st_ctime > 5)
 		logit(LOG_WARNING, 0, "Kernel entry already exists for (%s %s)",

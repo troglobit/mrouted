@@ -237,9 +237,6 @@ void k_add_rg(uint32_t origin, struct gtable *g)
     struct mfcctl mc;
     vifi_t i;
 
-#ifdef DEBUG_MFC
-    md_log(MD_ADD, origin, g->gt_mcastgrp);
-#endif
     /* copy table values so that setsockopt can process it */
     memset(&mc, 0, sizeof(mc));
     mc.mfcc_origin.s_addr = origin;
@@ -250,9 +247,6 @@ void k_add_rg(uint32_t origin, struct gtable *g)
 
     /* write to kernel space */
     if (setsockopt(igmp_socket, IPPROTO_IP, MRT_ADD_MFC, (char *)&mc, sizeof(mc)) < 0) {
-#ifdef DEBUG_MFC
-	md_log(MD_ADD_FAIL, origin, g->gt_mcastgrp);
-#endif
 	logit(LOG_WARNING, errno, "setsockopt MRT_ADD_MFC (%s, %s)",
 	      inet_fmt(origin, s1, sizeof(s1)), inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)));
     }
@@ -266,9 +260,6 @@ int k_del_rg(uint32_t origin, struct gtable *g)
 {
     struct mfcctl mc;
 
-#ifdef DEBUG_MFC
-    md_log(MD_DEL, origin, g->gt_mcastgrp);
-#endif
     /* copy table values so that setsockopt can process it */
     memset(&mc, 0, sizeof(mc));
     mc.mfcc_origin.s_addr = origin;
@@ -276,9 +267,6 @@ int k_del_rg(uint32_t origin, struct gtable *g)
 
     /* write to kernel space */
     if (setsockopt(igmp_socket, IPPROTO_IP, MRT_DEL_MFC, (char *)&mc, sizeof(mc)) < 0) {
-#ifdef DEBUG_MFC
-	md_log(MD_DEL_FAIL, origin, g->gt_mcastgrp);
-#endif
 	logit(LOG_WARNING, errno, "setsockopt MRT_DEL_MFC of (%s %s)",
 	      inet_fmt(origin, s1, sizeof(s1)), inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)));
 
