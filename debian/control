@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Joachim Nilsson <troglobit@gmail.com>
 Build-Depends: debhelper (>= 10), bison | byacc | btyacc, pkg-config, systemd
 Standards-Version: 4.3.0
-Homepage: http://troglobit.com/mrouted.shtml
+Homepage: https://troglobit.com/mrouted.shtml
 Vcs-Browser: https://github.com/troglobit/mrouted
 Vcs-Git: https://github.com/troglobit/mrouted.git
 
