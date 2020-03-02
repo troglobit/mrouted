@@ -190,14 +190,14 @@ int timer_get(int timer_id)
     return -1;
 }
 
-/* clears the associated timer.  Returns 1 if succeeded. */
-int timer_clear(int timer_id)
+/* clear the associated timer */
+void timer_clear(int timer_id)
 {
     struct timeout_q  *ptr, *prev;
     int i = 0;
 
     if (!timer_id)
-	return 0;
+	return;
 
     prev = ptr = Q;
 
@@ -208,42 +208,39 @@ int timer_clear(int timer_id)
 
     print_Q();
     while (ptr) {
-	if (ptr->id == timer_id) {
-	    /* got the right node */
+	if (ptr->id == timer_id)
+	    break;
 
-	    /* unlink it from the queue */
-	    if (ptr == Q)
-		Q = Q->next;
-	    else
-		prev->next = ptr->next;
-
-	    /* increment next node if any */
-	    if (ptr->next != 0)
-		(ptr->next)->time += ptr->time;
-
-	    if (ptr->data)
-		free(ptr->data);
-
-	    IF_DEBUG(DEBUG_TIMEOUT) {
-		logit(LOG_DEBUG, 0, "deleted timer %d (#%d)", ptr->id, i);
-	    }
-	    free(ptr);
-
-	    print_Q();
-
-	    return 1;
-	}
 	prev = ptr;
-	ptr = ptr->next;
+	ptr  = ptr->next;
 	i++;
     }
 
-    print_Q();
-    IF_DEBUG(DEBUG_TIMEOUT) {
-	logit(LOG_DEBUG, 0, "failed to delete timer %d (#%d)", timer_id, i);
+    if (!ptr) {
+	print_Q();
+	IF_DEBUG(DEBUG_TIMEOUT)
+	    logit(LOG_DEBUG, 0, "failed to delete timer %d (#%d)", timer_id, i);
+	return;
     }
 
-    return 0;
+    /* Found it, now unlink it from the queue */
+    if (ptr == Q)
+	Q = Q->next;
+    else
+	prev->next = ptr->next;
+
+    /* increment next node if any */
+    if (ptr->next)
+	(ptr->next)->time += ptr->time;
+
+    if (ptr->data)
+	free(ptr->data);
+
+    IF_DEBUG(DEBUG_TIMEOUT)
+	logit(LOG_DEBUG, 0, "deleted timer %d (#%d)", ptr->id, i);
+    free(ptr);
+
+    print_Q();
 }
 
 /*
