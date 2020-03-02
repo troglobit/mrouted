@@ -21,11 +21,8 @@ struct timeout_q {
 	time_t	       	 time;		/* time offset to next event*/
 };
 
-#ifdef IGMP_DEBUG
 static void print_Q(void);
-#else
-#define	print_Q()
-#endif
+
 
 /* Get next free (non-zero) ID
  *
@@ -152,9 +149,8 @@ int timer_set(time_t delay, cfunc_t action, void *data)
 		ptr->time -= node->time;
 
 		print_Q();
-		IF_DEBUG(DEBUG_TIMEOUT) {
+		IF_DEBUG(DEBUG_TIMEOUT)
 		    logit(LOG_DEBUG, 0, "created timeout %d (#%d)", node->id, i);
-		}
 
 		return node->id;
 	    } else  {
@@ -170,9 +166,8 @@ int timer_set(time_t delay, cfunc_t action, void *data)
     }
 
     print_Q();
-    IF_DEBUG(DEBUG_TIMEOUT) {
+    IF_DEBUG(DEBUG_TIMEOUT)
 	logit(LOG_DEBUG, 0, "created timeout %d (#%d)", node->id, i);
-    }
 
     return node->id;
 }
@@ -251,20 +246,18 @@ int timer_clear(int timer_id)
     return 0;
 }
 
-#ifdef IGMP_DEBUG
 /*
  * debugging utility
  */
 static void print_Q(void)
 {
-    struct timeout_q  *ptr;
+    struct timeout_q *ptr;
 
     IF_DEBUG(DEBUG_TIMEOUT) {
 	for (ptr = Q; ptr; ptr = ptr->next)
 	    logit(LOG_DEBUG, 0, "(%d,%ld) ", ptr->id, (long)ptr->time);
     }
 }
-#endif /* IGMP_DEBUG */
 
 /**
  * Local Variables:
