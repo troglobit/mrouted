@@ -153,13 +153,13 @@ int timer_set(time_t delay, cfunc_t action, void *data)
 		    logit(LOG_DEBUG, 0, "created timeout %d (#%d)", node->id, i);
 
 		return node->id;
-	    } else  {
-		/* keep moving */
-
-		delay -= ptr->time; node->time = delay;
-		prev = ptr;
-		ptr = ptr->next;
 	    }
+
+	    /* keep moving */
+	    delay -= ptr->time;
+	    node->time = delay;
+	    prev = ptr;
+	    ptr = ptr->next;
 	    i++;
 	}
 	prev->next = node;
