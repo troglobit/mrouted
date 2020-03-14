@@ -545,21 +545,25 @@ void stop_all_vifs(void)
 
     for (vifi = 0; vifi < numvifs; vifi++) {
 	v = &uvifs[vifi];
-	while (v->uv_groups != NULL) {
+	if (v->uv_querier) {
+	    free(v->uv_querier);
+	    v->uv_querier = NULL;
+	}
+	while (v->uv_groups) {
 	    a = v->uv_groups;
 	    v->uv_groups = a->al_next;
-	    free((char *)a);
+	    free(a);
 	}
-	while (v->uv_neighbors != NULL) {
+	while (v->uv_neighbors) {
 	    a = v->uv_neighbors;
 	    v->uv_neighbors = a->al_next;
 	    nbrs[a->al_index] = NULL;
-	    free((char *)a);
+	    free(a);
 	}
-	while (v->uv_acl != NULL) {
+	while (v->uv_acl) {
 	    acl = v->uv_acl;
 	    v->uv_acl = acl->acl_next;
-	    free((char *)acl);
+	    free(acl);
 	}
     }
 }
