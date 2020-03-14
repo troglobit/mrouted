@@ -78,7 +78,8 @@ void init_vifs(void)
 #ifdef IOCTL_OK_ON_RAW_SOCKET
     udp_socket = igmp_socket;
 #else
-    if ((udp_socket = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+    udp_socket = socket(AF_INET, SOCK_DGRAM, 0);
+    if (udp_socket < 0)
 	logit(LOG_ERR, errno, "UDP socket");
 #endif
     logit(LOG_INFO,0,"Getting vifs from kernel interfaces");
@@ -93,16 +94,18 @@ void init_vifs(void)
     enabled_phyints = 0;
     phys_vif	    = -1;
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
-	if (!(v->uv_flags & VIFF_DISABLED)) {
-	    ++enabled_vifs;
+	if (v->uv_flags & VIFF_DISABLED)
+	    continue;
 
-	    if (!(v->uv_flags & VIFF_TUNNEL)) {
-    	    	if (phys_vif == -1)
-    	    	    phys_vif = vifi;
+	++enabled_vifs;
 
-		++enabled_phyints;
-	    }
-	}
+	if (v->uv_flags & VIFF_TUNNEL)
+	    continue;
+
+	if (phys_vif == -1)
+	    phys_vif = vifi;
+
+	++enabled_phyints;
     }
 
     if (enabled_vifs < 2)
@@ -114,22 +117,24 @@ void init_vifs(void)
 
     logit(LOG_INFO, 0, "Installing vifs in mrouted ...");
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
-	if (!(v->uv_flags & VIFF_DISABLED)) {
-	    if (!(v->uv_flags & VIFF_DOWN)) {
-		if (v->uv_flags & VIFF_TUNNEL)
-		    logit(LOG_INFO, 0, "vif #%d, tunnel %s -> %s", vifi,
-			  inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)),
-			  inet_fmt(v->uv_rmt_addr, s2, sizeof(s2)));
-		else
-		    logit(LOG_INFO, 0, "vif #%d, phyint %s", vifi,
-			  inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)));
+	if (v->uv_flags & VIFF_DISABLED)
+	    continue;
 
-		start_vif2(vifi);
-	    } else {
-		logit(LOG_INFO, 0, "%s is not yet up; vif #%u not in service",
-		      v->uv_name, vifi);
-	    }
+	if (v->uv_flags & VIFF_DOWN) {
+	    logit(LOG_INFO, 0, "%s is not yet up; vif #%u not in service",
+		  v->uv_name, vifi);
+	    continue;
 	}
+
+	if (v->uv_flags & VIFF_TUNNEL)
+	    logit(LOG_INFO, 0, "vif #%d, tunnel %s -> %s", vifi,
+		  inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)),
+		  inet_fmt(v->uv_rmt_addr, s2, sizeof(s2)));
+	else
+	    logit(LOG_INFO, 0, "vif #%d, phyint %s", vifi,
+		  inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)));
+
+	start_vif2(vifi);
     }
 
     /*
@@ -197,22 +202,26 @@ void init_installvifs(void)
 
     logit(LOG_INFO, 0, "Installing vifs in kernel...");
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
-	if (!(v->uv_flags & VIFF_DISABLED)) {
-	    if (!(v->uv_flags & VIFF_DOWN)) {
-		if (v->uv_flags & VIFF_TUNNEL) {
-		    logit(LOG_INFO, 0, "vif #%d, tunnel %s -> %s", vifi,
-			  inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)),
-			  inet_fmt(v->uv_rmt_addr, s2, sizeof(s2)));
-		} else {
-		    logit(LOG_INFO, 0, "vif #%d, phyint %s", vifi,
-			  inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)));
-		}
-		k_add_vif(vifi, &uvifs[vifi]);
-	    } else {
-		logit(LOG_INFO, 0, "%s is not yet up; vif #%u not in service",
-		      v->uv_name, vifi);
-	    }
+	if (v->uv_flags & VIFF_DISABLED) {
+	    logit(LOG_DEBUG, 0, "%s is disabled", v->uv_name);
+	    continue;
 	}
+
+	if (v->uv_flags & VIFF_DOWN) {
+	    logit(LOG_INFO, 0, "%s is not yet up; vif #%u not in service",
+		  v->uv_name, vifi);
+	    continue;
+	}
+
+	if (v->uv_flags & VIFF_TUNNEL) {
+	    logit(LOG_INFO, 0, "vif #%d, tunnel %s -> %s", vifi,
+		  inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)),
+		  inet_fmt(v->uv_rmt_addr, s2, sizeof(s2)));
+	} else {
+	    logit(LOG_INFO, 0, "vif #%d, phyint %s", vifi,
+		  inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)));
+	}
+	k_add_vif(vifi, &uvifs[vifi]);
     }
 }
 
@@ -567,21 +576,24 @@ vifi_t find_vif(uint32_t src, uint32_t dst)
     struct phaddr *p;
 
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
-	if (!(v->uv_flags & (VIFF_DOWN|VIFF_DISABLED))) {
-	    if (v->uv_flags & VIFF_TUNNEL) {
-		if (src == v->uv_rmt_addr && (dst == v->uv_lcl_addr || dst == dvmrp_group))
-		    return vifi;
-	    } else {
-		if ((src & v->uv_subnetmask) == v->uv_subnet &&
-		    (v->uv_subnetmask == 0xffffffff || src != v->uv_subnetbcast))
-		    return vifi;
+	if (v->uv_flags & (VIFF_DOWN|VIFF_DISABLED))
+	    continue;
 
-		for (p = v->uv_addrs; p; p = p->pa_next) {
-		    if ((src & p->pa_subnetmask) == p->pa_subnet &&
-			(p->pa_subnetmask == 0xffffffff || src != p->pa_subnetbcast))
-			return vifi;
-		}
-	    }
+	if (v->uv_flags & VIFF_TUNNEL) {
+	    if (src == v->uv_rmt_addr && (dst == v->uv_lcl_addr || dst == dvmrp_group))
+		return vifi;
+
+	    continue;
+	}
+
+	if ((src & v->uv_subnetmask) == v->uv_subnet &&
+	    (v->uv_subnetmask == 0xffffffff || src != v->uv_subnetbcast))
+	    return vifi;
+
+	for (p = v->uv_addrs; p; p = p->pa_next) {
+	    if ((src & p->pa_subnetmask) == p->pa_subnet &&
+		(p->pa_subnetmask == 0xffffffff || src != p->pa_subnetbcast))
+		return vifi;
 	}
     }
 
