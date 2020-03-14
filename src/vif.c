@@ -1197,7 +1197,7 @@ void accept_info_request(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
 	switch (*p) {
 	    case DVMRP_INFO_VERSION:
 		/* Never let version be more than 100 bytes, see below for more. */
-		len = info_version(q, sizeof(versionstring));
+		len = info_version(q, strlen(versionstring));
 		break;
 
 	    case DVMRP_INFO_NEIGHBORS:
