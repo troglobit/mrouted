@@ -160,7 +160,14 @@ static void print(char *line)
 		else
 			fprintf(stdout, "\e[4m%*s\e[0m\n\e[1m%s\e[0m\n", len < 0 ? 0 : len, "", line);
 	} else {
-		fprintf(stdout, "%s\n", line);
+		len = get_width();
+
+		if (title) {
+			fprintf(stdout, "\n%s ", line);
+			len -= strlen(line) + 1;
+		} else
+			fprintf(stdout, "%s\n", line);
+
 		while (len--)
 			fputc('=', stdout);
 		fputs("\n", stdout);
