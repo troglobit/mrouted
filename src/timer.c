@@ -9,12 +9,14 @@
  */
 
 #include "defs.h"
+#include "queue.h"
 
 static int id = 0;
-static struct timeout_q  *Q = NULL;
+static TAILQ_HEAD(tmr_head,tmr) tl;
 
-struct timeout_q {
-	struct timeout_q *next;		/* next event */
+struct tmr_head headp;
+struct tmr {
+	TAILQ_ENTRY(tmr) link;
 	int	   	 id;
 	cfunc_t          func;	  	/* function to call */
 	void	   	 *data;		/* func's data */
@@ -40,17 +42,16 @@ static int next_id(void)
 
 void timer_init(void)
 {
-    Q = NULL;
+    TAILQ_INIT(&tl);
 }
 
 void timer_free_all(void)
 {
-    struct timeout_q *p;
+    struct tmr *ptr, *tmp;
 
-    while (Q) {
-	p = Q;
-	Q = Q->next;
-	free(p);
+    TAILQ_FOREACH_SAFE(ptr, &tl, link, tmp) {
+	TAILQ_REMOVE(&tl, ptr, link);
+	free(ptr);
     }
 }
 
@@ -61,23 +62,26 @@ void timer_free_all(void)
  */
 void timer_age_queue(time_t elapsed_time)
 {
-    struct timeout_q *ptr;
+    struct tmr *ptr, *tmp;
     int i = 0;
 
-    for (ptr = Q; ptr; ptr = Q, i++) {
+    TAILQ_FOREACH_SAFE(ptr, &tl, link, tmp) {
 	if (ptr->time > elapsed_time) {
 	    ptr->time -= elapsed_time;
 	    return;
 	}
 
 	elapsed_time -= ptr->time;
-	Q = Q->next;
+
 	IF_DEBUG(DEBUG_TIMEOUT)
 	    logit(LOG_DEBUG, 0, "about to call timeout %d (#%d)", ptr->id, i);
 
 	if (ptr->func)
 	    ptr->func(ptr->data);
+
+	TAILQ_REMOVE(&tl, ptr, link);
 	free(ptr);
+	i++;
     }
 }
 
@@ -87,21 +91,23 @@ void timer_age_queue(time_t elapsed_time)
  */
 int timer_next_delay(void)
 {
-    IF_DEBUG(DEBUG_TIMEOUT)
-	logit(LOG_DEBUG, 0, "%s(): Q: %p", __func__, Q);
+    struct tmr *ptr = TAILQ_FIRST(&tl);
 
-    if (!Q)
+    IF_DEBUG(DEBUG_TIMEOUT)
+	logit(LOG_DEBUG, 0, "%s(): tl: %sempty", __func__, !ptr ? "" : "not ");
+
+    if (!ptr)
 	return -1;
 
     IF_DEBUG(DEBUG_TIMEOUT)
-	logit(LOG_DEBUG, 0, "%s(): Q->time: %ld", __func__, (long)Q->time);
+	logit(LOG_DEBUG, 0, "%s(): first timer: %ld sec", __func__, (long)ptr->time);
 
-    if (Q->time < 0) {
-	logit(LOG_WARNING, 0, "%s(): top of queue says %ld", __func__, (long)Q->time);
+    if (ptr->time < 0) {
+	logit(LOG_WARNING, 0, "%s(): top of queue says %ld", __func__, (long)ptr->time);
 	return 0;
     }
 
-    return Q->time;
+    return ptr->time;
 }
 
 /*
@@ -112,11 +118,11 @@ int timer_next_delay(void)
  */
 int timer_set(time_t delay, cfunc_t action, void *data)
 {
-    struct timeout_q *ptr, *node, *prev;
+    struct tmr *node;
     int i = 0;
 
     /* create a node */
-    node = calloc(1, sizeof(struct timeout_q));
+    node = calloc(1, sizeof(struct tmr));
     if (!node) {
 	logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
 	return -1;
@@ -127,25 +133,21 @@ int timer_set(time_t delay, cfunc_t action, void *data)
     node->time = delay;
     node->id   = next_id();
 
-    prev = ptr = Q;
-
     /* insert node in the queue */
 
     /* if the queue is empty, insert the node and return */
-    if (!Q) {
-	Q = node;
+    if (TAILQ_EMPTY(&tl)) {
+	TAILQ_INSERT_HEAD(&tl, node, link);
     } else {
-	/* chase the pointer looking for the right place */
-	while (ptr) {
+	struct tmr *ptr;
 
+	/* chase the pointer looking for the right place */
+	TAILQ_FOREACH(ptr, &tl, link) {
 	    if (delay < ptr->time) {
 		/* right place */
+		TAILQ_INSERT_BEFORE(ptr, node, link);
 
-		node->next = ptr;
-		if (ptr == Q)
-		    Q = node;
-		else
-		    prev->next = node;
+		/* adjust current ptr for timer we just added */
 		ptr->time -= node->time;
 
 		print_Q();
@@ -155,14 +157,14 @@ int timer_set(time_t delay, cfunc_t action, void *data)
 		return node->id;
 	    }
 
-	    /* keep moving */
+	    /* adjust new node time for each ptr we traverse */
 	    delay -= ptr->time;
 	    node->time = delay;
-	    prev = ptr;
-	    ptr = ptr->next;
+
 	    i++;
 	}
-	prev->next = node;
+
+	TAILQ_INSERT_TAIL(&tl, node, link);
     }
 
     print_Q();
@@ -175,13 +177,13 @@ int timer_set(time_t delay, cfunc_t action, void *data)
 /* returns the time until the timer is scheduled */
 int timer_get(int timer_id)
 {
-    struct timeout_q *ptr;
+    struct tmr *ptr;
     time_t left = 0;
 
     if (!timer_id)
 	return -1;
 
-    for (ptr = Q; ptr; ptr = ptr->next) {
+    TAILQ_FOREACH(ptr, &tl, link) {
 	left += ptr->time;
 	if (ptr->id == timer_id)
 	    return left;
@@ -193,13 +195,11 @@ int timer_get(int timer_id)
 /* clear the associated timer */
 void timer_clear(int timer_id)
 {
-    struct timeout_q  *ptr, *prev;
+    struct tmr *ptr, *next;
     int i = 0;
 
     if (!timer_id)
 	return;
-
-    prev = ptr = Q;
 
     /*
      * find the right node, delete it. the subsequent node's time
@@ -207,12 +207,10 @@ void timer_clear(int timer_id)
      */
 
     print_Q();
-    while (ptr) {
+    TAILQ_FOREACH(ptr, &tl, link) {
 	if (ptr->id == timer_id)
 	    break;
 
-	prev = ptr;
-	ptr  = ptr->next;
 	i++;
     }
 
@@ -224,14 +222,12 @@ void timer_clear(int timer_id)
     }
 
     /* Found it, now unlink it from the queue */
-    if (ptr == Q)
-	Q = Q->next;
-    else
-	prev->next = ptr->next;
+    TAILQ_REMOVE(&tl, ptr, link);
 
     /* increment next node if any */
-    if (ptr->next)
-	(ptr->next)->time += ptr->time;
+    next = TAILQ_NEXT(ptr, link);
+    if (next)
+	next->time += ptr->time;
 
     if (ptr->data)
 	free(ptr->data);
@@ -248,10 +244,10 @@ void timer_clear(int timer_id)
  */
 static void print_Q(void)
 {
-    struct timeout_q *ptr;
+    struct tmr *ptr;
 
     IF_DEBUG(DEBUG_TIMEOUT) {
-	for (ptr = Q; ptr; ptr = ptr->next)
+	TAILQ_FOREACH(ptr, &tl, link)
 	    logit(LOG_DEBUG, 0, "(%d,%ld) ", ptr->id, (long)ptr->time);
     }
 }
