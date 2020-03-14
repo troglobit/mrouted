@@ -207,7 +207,7 @@ static void show_neighbor(FILE *fp, int detail)
 
 static void show_routes_header(FILE *fp, int detail)
 {
-	fputs("DVMRP Route Table_\n", fp);
+	fputs("DVMRP Routing Table_\n", fp);
 	if (!detail)
 		fprintf(fp, "%-15s %-15s %-15s=\n",
 			"Origin", "Neighbor", "Interface");
