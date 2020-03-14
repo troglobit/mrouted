@@ -415,6 +415,7 @@ int main(int argc, char *argv[])
     }
 
     logit(LOG_NOTICE, 0, "%s exiting", versionstring);
+    timer_exit();
     free(pfd);
     cleanup();
 
@@ -679,7 +680,7 @@ void restart(void)
      */
     free_all_prunes();
     free_all_routes();
-    timer_free_all();
+    timer_stop_all();
     stop_all_vifs();
     k_stop_dvmrp();
     close(igmp_socket);

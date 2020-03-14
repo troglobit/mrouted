@@ -284,7 +284,8 @@ extern void		send_ipip(uint32_t, uint32_t, int, int, uint32_t, int, struct uvif 
 
 /* timer.c */
 extern void		timer_init(void);
-extern void		timer_free_all(void);
+extern void		timer_exit(void);
+extern void		timer_stop_all(void);
 extern void		timer_age_queue(time_t);
 extern int		timer_next_delay(void);
 extern int		timer_set(time_t, cfunc_t, void *);

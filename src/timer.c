@@ -11,10 +11,6 @@
 #include "defs.h"
 #include "queue.h"
 
-static int id = 0;
-static TAILQ_HEAD(tmr_head,tmr) tl;
-
-struct tmr_head headp;
 struct tmr {
 	TAILQ_ENTRY(tmr) link;
 	int	   	 id;
@@ -22,6 +18,10 @@ struct tmr {
 	void	   	 *data;		/* func's data */
 	time_t	       	 time;		/* time offset to next event*/
 };
+
+static TAILQ_HEAD(,tmr) tl;
+static TAILQ_HEAD(,tmr) fl;
+static int id = 0;
 
 static void print_Q(void);
 
@@ -43,18 +43,34 @@ static int next_id(void)
 void timer_init(void)
 {
     TAILQ_INIT(&tl);
+    TAILQ_INIT(&fl);
 }
 
-void timer_free_all(void)
+void timer_stop_all(void)
 {
     struct tmr *ptr, *tmp;
 
     TAILQ_FOREACH_SAFE(ptr, &tl, link, tmp) {
 	TAILQ_REMOVE(&tl, ptr, link);
-	free(ptr);
+	if (ptr->data) {
+	    free(ptr->data);
+	    ptr->data = NULL;
+	}
+
+	TAILQ_INSERT_TAIL(&fl, ptr, link);
     }
 }
 
+void timer_exit(void)
+{
+    struct tmr *ptr, *tmp;
+
+    timer_stop_all();
+    TAILQ_FOREACH_SAFE(ptr, &fl, link, tmp) {
+	TAILQ_REMOVE(&fl, ptr, link);
+	free(ptr);
+    }
+}
 
 /*
  * elapsed_time seconds have passed; perform all the events that should
@@ -80,7 +96,7 @@ void timer_age_queue(time_t elapsed_time)
 	    ptr->func(ptr->data);
 
 	TAILQ_REMOVE(&tl, ptr, link);
-	free(ptr);
+	TAILQ_INSERT_TAIL(&fl, ptr, link);
 	i++;
     }
 }
@@ -121,19 +137,21 @@ int timer_set(time_t delay, cfunc_t action, void *data)
     struct tmr *node;
     int i = 0;
 
-    /* create a node */
-    node = calloc(1, sizeof(struct tmr));
-    if (!node) {
-	logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
-	return -1;
+    node = TAILQ_FIRST(&fl);
+    if (node) {
+	TAILQ_REMOVE(&fl, node, link);
+    } else {
+	node = calloc(1, sizeof(struct tmr));
+	if (!node) {
+	    logit(LOG_ERR, errno, "Failed allocating timer");
+	    return -1;
+	}
+	node->id = next_id();
     }
 
     node->func = action;
     node->data = data;
     node->time = delay;
-    node->id   = next_id();
-
-    /* insert node in the queue */
 
     /* if the queue is empty, insert the node and return */
     if (TAILQ_EMPTY(&tl)) {
@@ -229,13 +247,15 @@ void timer_clear(int timer_id)
     if (next)
 	next->time += ptr->time;
 
-    if (ptr->data)
+    if (ptr->data) {
 	free(ptr->data);
+	ptr->data = NULL;
+    }
 
     IF_DEBUG(DEBUG_TIMEOUT)
 	logit(LOG_DEBUG, 0, "deleted timer %d (#%d)", ptr->id, i);
-    free(ptr);
 
+    TAILQ_INSERT_TAIL(&fl, ptr, link);
     print_Q();
 }
 
@@ -247,8 +267,13 @@ static void print_Q(void)
     struct tmr *ptr;
 
     IF_DEBUG(DEBUG_TIMEOUT) {
+	logit(LOG_DEBUG, 0, "Active timers:");
 	TAILQ_FOREACH(ptr, &tl, link)
 	    logit(LOG_DEBUG, 0, "(%d,%ld) ", ptr->id, (long)ptr->time);
+
+	logit(LOG_DEBUG, 0, "Free timers:");
+	TAILQ_FOREACH(ptr, &fl, link)
+	    logit(LOG_DEBUG, 0, "(%d) ", ptr->id);
     }
 }
 
