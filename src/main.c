@@ -415,10 +415,8 @@ int main(int argc, char *argv[])
     }
 
     logit(LOG_NOTICE, 0, "%s exiting", versionstring);
-    timer_exit();
     free(pfd);
     cleanup();
-    igmp_exit();
 
     return 0;
 }
@@ -607,6 +605,15 @@ static void cleanup(void)
 	report_to_all_neighbors(ALL_ROUTES);
 	if (did_final_init)
 	    k_stop_dvmrp();
+
+	free_all_prunes();
+	free_all_routes();
+	stop_all_vifs();
+	k_stop_dvmrp();
+	close(udp_socket);
+
+	timer_exit();
+	igmp_exit();
     }
 }
 
