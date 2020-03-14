@@ -37,7 +37,7 @@ static int sighandled = 0;
 int cache_lifetime 	= DEFAULT_CACHE_LIFETIME;
 int prune_lifetime	= AVERAGE_PRUNE_LIFETIME;
 
-int startupdelay = DEFAULT_STARTUP_DELAY;
+int startupdelay = 0;
 int vifstatedefault = 0;
 int missingok = 0;
 
@@ -145,8 +145,7 @@ static int usage(int code)
 	   "  -p                       Disable pruning.  Deprecated, compatibility option\n"
 	   "  -s, --syslog             Log to syslog, default unless running in --foreground\n"
 	   "  -v, --version            Show mrouted version\n"
-	   "  -w, --startup-delay=SEC  Startup delay before forwarding, default %d seconds\n",
-	   DEFAULT_STARTUP_DELAY);
+	   "  -w, --startup-delay=SEC  Startup delay before forwarding\n");
 
     fputs("\nValid debug subsystems:\n", stderr);
     debug_print();
@@ -378,7 +377,10 @@ int main(int argc, char *argv[])
      * do a report_to_all_neighbors(ALL_ROUTES) immediately before
      * turning on DVMRP.
      */
-    timer_set(startupdelay, final_init, NULL);
+    if (startupdelay > 0)
+	timer_set(startupdelay, final_init, NULL);
+    else
+	final_init(NULL);
 
     /*
      * Main receive loop.

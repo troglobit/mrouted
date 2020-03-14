@@ -179,10 +179,10 @@ in
 .It Fl w, -startup-delay Ar SEC
 Wait for
 .Ar SEC
-seconds before applying the routes. This delay enables to exchange
-routes before starting to forward multicast packets and therefore
-eliminate transient problems at startup, at the cost of a momentary
-black hole. Defaults to 10 seconds.
+seconds before applying routes.  This delay allows exchange of routes
+before starting to forward multicast packets.  In certain setups this
+can prevent transient problems at startup, at the cost of a momentary
+black hole.
 .It Fl p
 Start
 .Nm

@@ -170,8 +170,6 @@ extern int		missingok;
 #define DEBUG_PARSE_ERR 0x80000000
 #define DEBUG_ALL       0xffffffff
 
-#define DEFAULT_STARTUP_DELAY 10  /* default startup delay before forwarding in seconds */
-
 struct debugnm {
 	char		*name;
 	uint32_t	 level;
