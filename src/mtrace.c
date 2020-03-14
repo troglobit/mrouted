@@ -1202,7 +1202,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    init_igmp();
+    igmp_init();
 
     uid = getuid();
     if (setuid(uid) == -1)

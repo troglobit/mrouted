@@ -283,7 +283,7 @@ int main(int argc, char *argv[])
     init_gendid();
 
     timer_init();
-    init_igmp();
+    igmp_init();
     init_icmp();
     init_ipip();
     init_routes();
@@ -418,6 +418,7 @@ int main(int argc, char *argv[])
     timer_exit();
     free(pfd);
     cleanup();
+    igmp_exit();
 
     return 0;
 }
@@ -683,7 +684,7 @@ void restart(void)
     timer_stop_all();
     stop_all_vifs();
     k_stop_dvmrp();
-    close(igmp_socket);
+    igmp_exit();
     close(udp_socket);
     did_final_init = 0;
 
@@ -692,7 +693,7 @@ void restart(void)
      */
     init_gendid();
 
-    init_igmp();
+    igmp_init();
     init_routes();
     init_ktable();
     init_vifs();

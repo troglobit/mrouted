@@ -927,7 +927,7 @@ int main(int argc, char *argv[])
     if (debug)
 	fprintf(stderr, "Debug level %u\n", debug);
 
-    init_igmp();
+    igmp_init();
 
     uid = getuid();
     if (setuid(uid) == -1)
@@ -1014,6 +1014,7 @@ int main(int argc, char *argv[])
 	print_map(routers);
     }
 
+    igmp_exit();
     exit(0);
 }
 

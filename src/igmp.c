@@ -42,7 +42,7 @@ static int	igmp_log_level(uint32_t type, uint32_t code);
  * Open and initialize the igmp socket, and fill in the non-changing
  * IP header fields in the output packet buffer.
  */
-void init_igmp(void)
+void igmp_init(void)
 {
     struct ip *ip;
     uint8_t *ip_opt;
@@ -95,6 +95,13 @@ void init_igmp(void)
     igmp_query_interval = IGMP_QUERY_INTERVAL_DEFAULT;
     igmp_robustness     = IGMP_ROBUSTNESS_DEFAULT;
     router_alert        = 1;
+}
+
+void igmp_exit(void)
+{
+    close(igmp_socket);
+    free(recv_buf);
+    free(send_buf);
 }
 
 char *igmp_packet_kind(uint32_t type, uint32_t code)

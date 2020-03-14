@@ -267,7 +267,8 @@ extern void		logit(int, int, const char *, ...);
 extern void             resetlogging(void *);
 
 /* igmp.c */
-extern void		init_igmp(void);
+extern void		igmp_init(void);
+extern void		igmp_exit(void);
 extern void		accept_igmp(size_t);
 extern size_t		build_igmp(uint32_t, uint32_t, int, int, uint32_t, int);
 extern void		send_igmp(uint32_t, uint32_t, int, int, uint32_t, int);
