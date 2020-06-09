@@ -51,6 +51,8 @@ There are five types of commands:
 .It
 .Cm igmp-robustness Ar COUNT
 .It
+.Cm no phyint
+.It
 .Cm phyint
 .Ar local-addr
 .Oo
@@ -165,26 +167,27 @@ currently hard-codes this to 2
 .Pp
 The
 .Cm phyint
-command can be used to disable multicast routing (or enable if
+command is used for selecting and altering properties of the phyiscal
+interfaces
 .Nm mrouted
-is started with all interfaces disabled) on the physical interface
-identified by local IP address
-.Ar local-addr ,
-or to associate a non-default metric or threshold with the specified
-physical interface.
-The local IP address
-.Ar local-addr
-may be replaced by the interface name (e.g. le0).  If an interface is
-attached to multiple IP subnets, describe each additional subnet with
-the
+should be enabled on, by default all interfaces are enabled.  The
+.Cm no phyint
+command disables all interfaces, useful on routers with lots of
+interfaces where
+.Nm mrouted
+should run on only only a select few.  Interfaces can be identified
+using the local IP address or the interface name (e.g.
+.Cm le0 ).
+If an interface is attached to multiple IP subnets, describe each
+additional subnet with the
 .Cm altnet
 keyword.
 .Nm mrouted
-supports all IGMP versions and defaults to use IGMP v3.  Use
+supports all IGMP versions and defaults to use IGMP v3.  Use the
 .Cm igmpv2
 or
 .Cm igmpv1
-to force compatibility modes on the
+flags to force compatibility modes on the
 .Cm phyint .
 .Pp
 .Sy NOTE:
