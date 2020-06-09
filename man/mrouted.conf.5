@@ -35,109 +35,37 @@ the middle man).
 To override the default settings, for example to to add tunnel links to
 other DVMRP routers, configuration commands may be placed in
 .Pa /etc/mrouted.conf .
-.Pp
 The file format is free-form: whitespace (including newlines) is not
 significant.  The
 .Dq #\&
 character marks start of a comment to end of line.
-.Bl -item -offset indent
-.It
-.Cm cache-lifetime
-.Ar SEC
-.It
-.Cm name
-.Ar boundary-name | scoped-addr Ns / Ns Ar mask-len
-.It
-.Op no
-.Cm router-alert
-.It
-.Cm igmp-query-interval Ar SEC
-.It
-.Cm igmp-robustness Ar COUNT
-.It
-.Op no
-.Cm phyint
-.Ar local-addr
-.Oo
-.Cm altnet
-.Ar network Ns / Ns Ar mask-len
-.Oc
-.Bl -item -offset indent
-.Oo
-.Cm boundary
-.Ar boundary-name | scoped-addr Ns / Ns Ar mask-len
-.Oc
-.br
-.Op Cm igmpv1 | igmpv2 | igmpv3
-.br
-.Op Cm disable | enable
-.br
-.Op Cm metric Ar <1-31>
-.br
-.Op Cm rate-limit Ar kbps
-.br
-.Op Cm threshold Ar ttl
-.El
-.It
-.Cm tunnel
-.Ar local-addr
-.Ar remote-addr
-.Bl -item -offset indent
-.Oo
-.Cm boundary
-.Ar boundary-name | scoped-addr Ns / Ns Ar mask-len
-.Oc
-.br
-.Op Cm metric Ar <1-31>
-.br
-.Op Cm rate-limit Ar kbps
-.br
-.Op Cm threshold Ar ttl
-.El
-.El
-.Pp
-The
-.Cm boundary
-option to all commands can accept either a name or a network boundary;
-the
-.Cm boundary
-and
-.Cm altnet
-options may be specified as many times as necessary.
-.Pp
-The
-.Cm cache-lifetime
-is a value that determines the amount of time that a
-cached multicast route stays in kernel before timing out.
-The value of this entry should lie between 300 (5 min) and 86400 (1 day).
-It defaults to 300.
-.Pp
+.Bl -tag -offset indent
+.It Cm cache-lifetime Ar <60-86400>
+This setting defines the time in seconds that a cached multicast route
+stays in kernel before timing out.  The value of this entry should lie
+between 300 (5 min) and 86400 (1 day).  It defaults to 300.
+.It Cm name Ar boundary-name | scoped-addr Ns / Ns Ar mask-len
 The
 .Cm name
 option assigns names to boundaries to make configuration easier.
-.Pp
+.It Cm no router-alert
 Some multicast routers, and some IGMP snooping switches, do not support
 IP options like Router Alert, which is enabled in
 .Nm mrouted
-by default.  Use
-.Cm no router-alert
-to disable this IP option.  Regardless of this setting,
+by default.  This command to disable this IP option.  Regardless of this
+setting,
 .Nm mrouted
 always calculates the IP payload offset based on the IP header length
 value of ingressing DVMRP and IGMP frames.
-.Pp
-The
-.Cm igmp-query-interval
-setting controls the IGMP query interval used when this router is
-elected querier on a LAN.  It can be set to any value in the range
-1-1024, inclusive.  However, it is not recommended to go below 10 sec.
-Default: 125.
-.Pp
-The
-.Cm igmp-robustness
-setting controls many aspects of IGMP timers.  It can be any value in
-the range 2-10, inclusive.  The query-response-interval used below is
-hard-coded to 10 sec in
+.It Cm igmp-query-interval Ar <1-1024>
+This setting controls the IGMP query interval in seconds, used when this
+router is elected querier on a LAN.  It is not recommended to go below
+10 sec.  Default: 125.
+.It Cm igmp-robustness Ar <2-10>
+This setting controls many aspects of IGMP timers, for end devices and
+routers alike.  The
+.Cm query-response-interval
+used below is hard-coded to 10 sec in
 .Nm mrouted :
 .Pp
 .Bl -tag -indent
@@ -159,59 +87,49 @@ equal to the value of the robustness variable.  However,
 .Nm mrouted
 currently hard-codes this to 2
 .El
+.It Cm no phyint 
+By default all interfaces are enabled.  This command disables all
+interfaces, useful on routers with lots of interfaces where
+.Nm mrouted
+should run on only only a select few.
 .Pp
-The
-.Cm phyint
-command is used for selecting and altering properties of the phyiscal
-interfaces
+.Sy Example:
+.Bd -literal -offset indent -compact
+no phyint
+phyint eth10 enable
+phyint eth12 enable
+.Ed
+.Pp
+.Sy Note:
+Most UNIX kernels, including Linux, have a hard coded limit of 32 VIFs.
+In non-trivial setups this limit is often reached, causing weird errors
+that can be hard to debug.  The recommendation for those cases is to
+disable all phyint (this setting), and then selectively enable only the
+ones needed.
+.It Cm phyint Ar <local-addr | ifname> Oo Cm disable | enable Oc Oo Cm igmpv1 | igmpv2 | igmpv3 Oc Oo Cm altnet Ar network Ns / Ns Ar mask-len Oc Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
+.Pp
+This setting selects and alters properties of the phyiscal interfaces
 .Nm mrouted
-should be enabled on, by default all interfaces are enabled.  The
-.Cm no phyint
-command disables all interfaces, useful on routers with lots of
-interfaces where
-.Nm mrouted
-should run on only only a select few.  Interfaces can be identified
-using the local IP address or the interface name (e.g.
-.Cm le0 ).
-If an interface is attached to multiple IP subnets, describe each
-additional subnet with the
-.Cm altnet
-keyword.
-.Nm mrouted
-supports all IGMP versions and defaults to use IGMP v3.  Use the
-.Cm igmpv2
-or
-.Cm igmpv1
-flags to force compatibility modes on the
-.Cm phyint .
+operates on.  Interfaces can be identified using their local IP address
+or their name.
 .Pp
 .Sy NOTE:
 All
 .Cm phyint
 commands must precede tunnel commands.
 .Pp
-The
-.Cm tunnel
-command can be used to establish a tunnel link between local IP address
-.Ar local-addr
-and remote IP address
-.Ar remote-addr ,
-and to associate a non-default metric or threshold with that tunnel.
-The local IP address
-.Ar local-addr
-may be replaced by the interface name (e.g. le0).
-The remote IP address
-.Ar remote-addr
-may be replaced by a host name, if and only if the host name has a
-single IP address associated with it.  The tunnel must be set up in the
-.Nm
-files of both routers before it can be used.
-.\"For backwards compatibility with older versions of
-.\".Nm mrouted ,
-.\"the srcrt keyword specifies
-.\"encapsulation using IP source routing.
-.Pp
 .Bl -tag -width TERM -compact -offset indent
+.It Cm disable | enable
+Selectively disable or enable this interface.  Only enabled interfaces
+get a VIF in the kernel.
+.It Cm igmpv1 | igmpv2
+.Nm mrouted
+supports all IGMP versions.  Use these flags to force compatibility
+modes on the given interface.  Default:
+.Cm igmpv3
+.It Cm altnet
+If an interface is attached to multiple IP subnets, describe each
+additional subnet with this keyword.
 .It Cm boundary
 allows an interface to be configured as an administrative boundary
 for the specified scoped address.
@@ -233,8 +151,39 @@ forwarded to the given interface or tunnel.  It is used to control the
 scope of multicast datagrams.  (The TTL of forwarded packets is only
 compared to the threshold, it is not decremented by the threshold.
 Every multicast router decrements the TTL by 1.)  The default threshold
-is 1.
+for multicast is 1.
 .El
+.It Cm tunnel Ar local-addr Ar remote-addr Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
+.Pp
+This setting can be used to establish a tunnel link between local IP
+address
+.Ar local-addr
+and remote IP address
+.Ar remote-addr ,
+and to associate a non-default metric or threshold with that tunnel.
+The local IP address
+.Ar local-addr
+may be replaced by the interface name (e.g. le0).
+The remote IP address
+.Ar remote-addr
+may be replaced by a host name, if and only if the host name has a
+single IP address associated with it.  The tunnel must be set up in the
+.Nm
+files of both routers before it can be used.
+.Pp
+See the
+.Cm phyint
+command for details on the relevant tunnel options.
+.El
+.Pp
+The
+.Cm boundary
+option to all commands can accept either a name or a network boundary;
+the
+.Cm boundary
+and
+.Cm altnet
+options may be specified as many times as necessary.
 .Pp
 In general, all DVMRP routers connected to a particular subnet or tunnel
 should use the same metric and threshold for that subnet or tunnel.
