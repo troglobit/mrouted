@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
 	{ NULL, 0, 0, 0 }
     };
 
-    while ((ch = getopt_long(argc, argv, "d:D:f:hl:nsvw:", long_options, NULL)) != EOF) {
+    while ((ch = getopt_long(argc, argv, "d:f:hl:nsvw:", long_options, NULL)) != EOF) {
 	switch (ch) {
 	    case 'l':
 		if (!strcmp(optarg, "?")) {
@@ -217,7 +217,6 @@ int main(int argc, char *argv[])
 		printf("%s\n", versionstring);
 		return 0;
 
-	    case 'D':
 	    case 'w':
 		startupdelay = atoi(optarg);
 		break;
