@@ -76,9 +76,6 @@ There are five types of commands:
 .Op Cm threshold Ar ttl
 .El
 .It
-.Cm pruning
-.Op Cm off | on
-.It
 .Cm tunnel
 .Ar local-addr
 .Ar remote-addr
@@ -194,13 +191,6 @@ flags to force compatibility modes on the
 All
 .Cm phyint
 commands must precede tunnel commands.
-.Pp
-The
-.Cm pruning
-command is provided for
-.Nm mrouted
-to act as a non-pruning router.  This is no longer supported and the
-configuration option is only kept for compatibility reasons.
 .Pp
 The
 .Cm tunnel
