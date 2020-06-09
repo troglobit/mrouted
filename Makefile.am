@@ -20,7 +20,7 @@ package build-deb:
 
 ## Check if tagged in git
 release-hook:
-	@if [ ! `git tag | grep $(PACKAGE_VERSION)` ]; then				\
+	@if [ "x`git tag -l $(PACKAGE_VERSION)|grep $(PACKAGE_VERSION)`" = "x" ]; then	\
 		echo;									\
 		printf "\e[1m\e[41mCannot find release tag $(PACKAGE_VERSION)\e[0m\n";	\
 		printf "\e[1m\e[5mDo release anyway?\e[0m "; read yorn;			\
@@ -37,7 +37,7 @@ release-hook:
 	fi
 
 ## Target to run when building a release
-release: distcheck release-hook package md5-dist
+release: release-hook distcheck package md5-dist
 	@mv $(DIST_ARCHIVES) ../
 	@echo
 	@echo "Resulting release files:"
