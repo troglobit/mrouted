@@ -210,6 +210,10 @@ stmt	: error
 	    if ($2 != 1)
 		warn("Disabling pruning is no longer supported");
 	}
+	| NO ROUTER_ALERT
+	{
+	    router_alert = 0;
+	}
 	| ROUTER_ALERT BOOLEAN
 	{
 	    router_alert = $2;

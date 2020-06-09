@@ -48,15 +48,14 @@ character marks start of a comment to end of line.
 .Cm name
 .Ar boundary-name | scoped-addr Ns / Ns Ar mask-len
 .It
+.Op no
 .Cm router-alert
-.Ar <off | on>
 .It
 .Cm igmp-query-interval Ar SEC
 .It
 .Cm igmp-robustness Ar COUNT
 .It
-.Cm no phyint
-.It
+.Op no
 .Cm phyint
 .Ar local-addr
 .Oo
@@ -121,7 +120,7 @@ Some multicast routers, and some IGMP snooping switches, do not support
 IP options like Router Alert, which is enabled in
 .Nm mrouted
 by default.  Use
-.Cm router-alert Ar off
+.Cm no router-alert
 to disable this IP option.  Regardless of this setting,
 .Nm mrouted
 always calculates the IP payload offset based on the IP header length
