@@ -683,7 +683,7 @@ static void fatal(const char *fmt, ...)
     vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
 
-    logit(LOG_ERR, 0, "%s: %s near line %d", configfilename, buf, lineno);
+    logit(LOG_ERR, 0, "%s:%d: %s", configfilename, lineno, buf);
 }
 
 static void warn(const char *fmt, ...)
@@ -695,12 +695,12 @@ static void warn(const char *fmt, ...)
     vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
 
-    logit(LOG_WARNING, 0, "%s: %s near line %d", configfilename, buf, lineno);
+    logit(LOG_WARNING, 0, "%s:%d: %s", configfilename, lineno, buf);
 }
 
-static void yyerror(char *s)
+static void yyerror(char *msg)
 {
-    logit(LOG_ERR, 0, "%s: %s near line %d", configfilename, s, lineno);
+    logit(LOG_ERR, 0, "%s:%d: %s", configfilename, lineno, msg);
 }
 
 static char *next_word(void)
