@@ -78,11 +78,25 @@ configure it, unless you need to setup tunnel links, change the default
 operating parameters, disable multicast routing over a specific physical
 interfaces, or have dynamic interfaces.
 
-For more help, see the [mrouted(8)][] man page.
+For more help, see the [mrouted(8)][] and [mrouted.conf(5)][] man pages.
 
 
 Build & Install
 ---------------
+
+### Debian/Ubuntu
+
+    curl -sS https://deb.troglobit.com/pubkey.gpg | sudo apt-key add -
+    echo "deb [arch=amd64] https://deb.troglobit.com/debian stable main" | sudo tee /etc/apt/sources.list.d/troglobit.list
+    sudo apt-get update && sudo apt-get install mrouted
+
+### Building from Source
+
+Download the latest official *versioned* mrouted release.  Official
+releases contain all the necessary files, unlike building from GIT.
+mrouted has no external dependencies except for a standard C library.
+
+* https://github.com/troglobit/mrouted/releases
 
 The configure script and Makefile supports de facto standard settings
 and environment variables such as `--prefix=PATH` and `DESTDIR=` for the
