@@ -36,6 +36,7 @@ int allow_black_holes = 0;
 static int lineno;
 
 static struct uvif *v;
+static struct uvif scrap;
 
 static int order, state;
 static int noflood = 0;
@@ -120,10 +121,11 @@ stmt	: error
 		    break;
 	    }
 
-	    if (vifi == numvifs && !missingok)
-		fatal("%s is not a configured interface", inet_fmt($2, s1, sizeof(s1)));
-	    if (vifi == numvifs)
-		warn("%s is not a configured interface, continuing", inet_fmt($2, s1, sizeof(s1)));
+	    if (vifi == numvifs) {
+		if ($2)
+			warn("phyint %s not available, continuing ...", inet_fmt($2, s1, sizeof(s1)));
+		v = &scrap;
+	    }
 	}
 	ifmods
 	| TUNNEL interface addrname
@@ -570,8 +572,8 @@ interface: ADDR
 	| STRING
 	{
 	    $$ = valid_if($1);
-	    if ($$ == 0 && !missingok)
-		fatal("Invalid interface name %s", $1);
+	    if ($$ == 0)
+		warn("phyint %s not available, continuing ...", $1);
 	}
 	;
 

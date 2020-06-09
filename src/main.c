@@ -38,7 +38,6 @@ int cache_lifetime 	= DEFAULT_CACHE_LIFETIME;
 int prune_lifetime	= AVERAGE_PRUNE_LIFETIME;
 
 int startupdelay = 0;
-int missingok = 0;
 
 int debug = 0;
 int running = 1;
@@ -138,7 +137,6 @@ static int usage(int code)
 	   "  -f, --config=FILE        Configuration file to use, default /etc/mrouted.conf\n"
 	   "  -h, --help               Show this help text\n"
 	   "  -l, --loglevel=LEVEL     Set log level: none, err, notice (default), info, debug\n"
-	   "  -m, --missing-ok         Missing interfaces from mrouted.conf are OK\n"
 	   "  -n, --foreground         Run in foreground, do not detach from controlling terminal\n"
 	   "  -s, --syslog             Log to syslog, default unless running in --foreground\n"
 	   "  -v, --version            Show mrouted version\n"
@@ -169,12 +167,11 @@ int main(int argc, char *argv[])
 	{ "help",          0, 0, 'h' },
 	{ "loglevel",      1, 0, 'l' },
 	{ "version",       0, 0, 'v' },
-	{ "missing-ok",    0, 0, 'm' },
 	{ "startup-delay", 1, 0, 'w' },
 	{ NULL, 0, 0, 0 }
     };
 
-    while ((ch = getopt_long(argc, argv, "d:D:f:hl:Mmnsvw:", long_options, NULL)) != EOF) {
+    while ((ch = getopt_long(argc, argv, "d:D:f:hl:nsvw:", long_options, NULL)) != EOF) {
 	switch (ch) {
 	    case 'l':
 		if (!strcmp(optarg, "?")) {
@@ -187,11 +184,6 @@ int main(int argc, char *argv[])
 		loglevel = log_str2lvl(optarg);
 		if (-1 == loglevel)
 		    return usage(1);
-		break;
-
-	    case 'M':
-	    case 'm':
-		missingok++;
 		break;
 
 	    case 'f':

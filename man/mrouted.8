@@ -13,7 +13,7 @@
 .Nd IP multicast routing daemon
 .Sh SYNOPSIS
 .Nm mrouted
-.Op Fl hmnsv
+.Op Fl hnsv
 .Op Fl d Ar SYS[,SYS,...
 .Op Fl f Ar FILE
 .Op Fl l Ar LEVEL
@@ -158,16 +158,6 @@ and Finit, but is also useful when running from the terminal, when
 debugging a config or at initial set up.  Remember to also give the
 .Fl s
 option if you still want to redirect log messages to the syslog.
-.It Fl m, -missing-ok
-If an interface in
-.Pa /etc/mrouted.conf
-does not exist yet, print a warning and continue.  Useful with VPN, PPP
-and other dynamic interfaces.  However,
-.Nm mrouted
-must still be restarted to start listening on such interfaces, if they
-did not exist when
-.Nm
-was started.
 .It Fl w, -startup-delay Ar SEC
 Wait for
 .Ar SEC
