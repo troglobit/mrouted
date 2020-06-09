@@ -92,7 +92,6 @@ void config_vifs_from_kernel(void)
 	v->uv_subnet      = subnet;
 	v->uv_subnetmask  = mask;
 	v->uv_subnetbcast = subnet | ~mask;
-	v->uv_flags       = vifstatedefault;
 	memcpy(v->uv_name, ifa->ifa_name, sizeof(v->uv_name));
 
 	if (flags & IFF_POINTOPOINT)

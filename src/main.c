@@ -38,7 +38,6 @@ int cache_lifetime 	= DEFAULT_CACHE_LIFETIME;
 int prune_lifetime	= AVERAGE_PRUNE_LIFETIME;
 
 int startupdelay = 0;
-int vifstatedefault = 0;
 int missingok = 0;
 
 int debug = 0;
@@ -138,7 +137,6 @@ static int usage(int code)
 	   "  -d, --debug=SYS[,SYS]    Debug subsystem(s), see below for valid system names\n"
 	   "  -f, --config=FILE        Configuration file to use, default /etc/mrouted.conf\n"
 	   "  -h, --help               Show this help text\n"
-	   "  -i, --no-interfaces      Disable all interfaces by default\n"
 	   "  -l, --loglevel=LEVEL     Set log level: none, err, notice (default), info, debug\n"
 	   "  -m, --missing-ok         Missing interfaces from mrouted.conf are OK\n"
 	   "  -n, --foreground         Run in foreground, do not detach from controlling terminal\n"
@@ -172,15 +170,12 @@ int main(int argc, char *argv[])
 	{ "help",          0, 0, 'h' },
 	{ "loglevel",      1, 0, 'l' },
 	{ "version",       0, 0, 'v' },
-	{ "disable-vifs",  0, 0, 'i' },
-	{ "no-interfaces", 0, 0, 'i' },
-	{ "no-intefaces",  0, 0, 'i' },
 	{ "missing-ok",    0, 0, 'm' },
 	{ "startup-delay", 1, 0, 'w' },
 	{ NULL, 0, 0, 0 }
     };
 
-    while ((ch = getopt_long(argc, argv, "d:D:f:hil:MmNnpsvw:", long_options, NULL)) != EOF) {
+    while ((ch = getopt_long(argc, argv, "d:D:f:hl:Mmnpsvw:", long_options, NULL)) != EOF) {
 	switch (ch) {
 	    case 'l':
 		if (!strcmp(optarg, "?")) {
@@ -198,11 +193,6 @@ int main(int argc, char *argv[])
 	    case 'M':
 	    case 'm':
 		missingok++;
-		break;
-
-	    case 'N':
-	    case 'i':
-		vifstatedefault = VIFF_DISABLED;
 		break;
 
 	    case 'f':

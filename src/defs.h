@@ -147,8 +147,6 @@ extern uint32_t		dvmrp_genid;
 extern uint32_t		igmp_query_interval;
 extern uint32_t		igmp_robustness;
 extern uint32_t		virtual_time;
-
-extern int		vifstatedefault;
 extern int		missingok;
 
 #define	IF_DEBUG(l)	if (debug && debug & (l))

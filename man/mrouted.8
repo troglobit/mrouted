@@ -13,7 +13,7 @@
 .Nd IP multicast routing daemon
 .Sh SYNOPSIS
 .Nm mrouted
-.Op Fl himnpsv
+.Op Fl hmnpsv
 .Op Fl d Ar SYS[,SYS,...
 .Op Fl f Ar FILE
 .Op Fl l Ar LEVEL
@@ -168,14 +168,6 @@ must still be restarted to start listening on such interfaces, if they
 did not exist when
 .Nm
 was started.
-.It Fl i, -no-interfaces
-Change
-.Nm
-default behavior and assume all interfaces are disabled unless
-explicitly enabled with
-.Cm phyint enable
-in
-.Pa /etc/mrouted.conf
 .It Fl w, -startup-delay Ar SEC
 Wait for
 .Ar SEC
