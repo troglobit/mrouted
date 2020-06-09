@@ -14,9 +14,9 @@ md5-dist:
 		$(MD5) $$file > ../$$file.md5;	\
 	done
 
-# lintian --profile debian -i -I --show-overrides ../$PKG.changes
+## Generate .deb package
 package build-deb:
-	@dpkg-buildpackage -uc -us -B
+	@debuild -uc -us -B --lintian-opts --profile debian -i -I --show-overrides
 
 ## Check if tagged in git
 release-hook:
