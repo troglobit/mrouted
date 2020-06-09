@@ -2,6 +2,7 @@ doc_DATA         = README.md ChangeLog.md LICENSE mrouted.conf
 EXTRA_DIST       = README.md ChangeLog.md LICENSE mrouted.conf
 DISTCLEANFILES   = *~ DEADJOE semantic.cache *.gdb *.elf core core.* *.d
 SUBDIRS          = src man
+EXTRADEBS        = mrinfo*_$(VERSION)* mtrace*_$(VERSION)* map-mbone*_$(VERSION)*
 
 if SYSTEMD
 systemd_DATA     = mrouted.service
@@ -46,7 +47,7 @@ release: release-hook distcheck package md5-dist
 		printf "%-32s Distribution tarball\n" $$file;			\
 		printf "%-32s " $$file.md5; cat ../$$file.md5 | cut -f1 -d' ';	\
 	done
-	@for file in `cd ..; ls $(PACKAGE)*_$(VERSION)*`; do			\
+	@for file in `cd ..; ls $(PACKAGE)*_$(VERSION)* $(EXTRADEBS)`; do	\
 		printf "%-32s Debian/Ubuntu package\n" $$file;			\
 	done
 
