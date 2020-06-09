@@ -1,5 +1,3 @@
-DISTCHECK_CONFIGURE_FLAGS = --with-systemd=$$dc_install_base/$(systemd)
-
 doc_DATA         = README.md ChangeLog.md LICENSE mrouted.conf
 EXTRA_DIST       = README.md ChangeLog.md LICENSE mrouted.conf
 DISTCLEANFILES   = *~ DEADJOE semantic.cache *.gdb *.elf core core.* *.d
@@ -51,3 +49,5 @@ release: distcheck release-hook package md5-dist
 	@for file in `cd ..; ls $(PACKAGE)_$(VERSION)*`; do			\
 		printf "%-32s Debian/Ubuntu package\n" $$file;			\
 	done
+
+DISTCHECK_CONFIGURE_FLAGS = --with-systemd=$$dc_install_base/$(systemd)
