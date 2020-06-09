@@ -3,8 +3,8 @@ Change Log
 
 All notable changes to the project are documented in this file.
 
-[v4.0][UNRELEASED]
-------------------
+[v4.0][] - 2020-06-09
+---------------------
 
 Major release with full IGMPv3 (ASM) support and a new `mroutectl` tool.
 
@@ -16,14 +16,25 @@ Major release with full IGMPv3 (ASM) support and a new `mroutectl` tool.
 - Support for configurable IGMP query interval, issue #26
 - Support for configurable IGMP robustness variable, issue #27
 - *Incompatible* command line option refactor
+- New directive in `mrouted.conf`: `no phyint`, reverses the default
+  behavior of `mrouted`.  Interfaces can then selectively be enabled
+
+        no phyint
+        phyint eth1 enable
+        phyint eth2 enable
+
+- Support for disabling the IP router-alert option:
+
+        no router-alert
+
 - Add systemd unit file
 - Introduce `mroutectl`, a helpful tool to interact with `mrouted`.
   This completely replaces `mrouted.cache` and `mrouted.dump`, including
   `SIGUSR1` and `SIGUSR2` signals, which are now ignored, issue #24
 - The `mrouted.pid` file, and the new `mrouted.sock` file, are now
   located in `/var/run`
-- Major cleanup of logging directives take from command line, and now
-  also from `mroutectl`.  Use `-d ?`, and `-l ?` to list alternatives
+- Major cleanup of logging directives read from the command line, and
+  from `mroutectl`.  Use `-d ?`, and `-l ?` to list alternatives
 - GNU Configure & Build system, use `./autogen.sh` only when building
   directly from GIT sources, otherwise use `./configure` from tarball
 
@@ -40,6 +51,7 @@ Major release with full IGMPv3 (ASM) support and a new `mroutectl` tool.
 - Fix lots of invalid format specifiers, found by Coverity Scan and
   clang on FreeBSD
 - Fix detection of `netinet/igmp.h` on FreeBSD
+- Fix memory leaks in `mrouted` on `SIGHUP`
 
 
 [v3.9.8][] - 2017-01-01
@@ -505,7 +517,8 @@ v3.5 - 1995-05-08
 - Multicast traceroute could send a reply on a disabled interface.
 
 
-[UNRELEASED]: https://github.com/troglobit/mrouted/compare/3.9.8...HEAD
+[UNRELEASED]: https://github.com/troglobit/mrouted/compare/4.0...HEAD
+[v4.0]:       https://github.com/troglobit/mrouted/compare/3.9.8...4.0
 [v3.9.8]:     https://github.com/troglobit/mrouted/compare/3.9.7...3.9.8
 [v3.9.7]:     https://github.com/troglobit/mrouted/compare/3.9.6...3.9.7
 [v3.9.6]:     https://github.com/troglobit/mrouted/compare/3.9.5...3.9.6

@@ -1,10 +1,12 @@
 mrouted (4.0) unstable; urgency=medium
 
-  * New upstream release with supoprt for IGMP v3 and a new mroutectl tool.
+  * New upstream release with support for IGMP v3 and a new mroutectl tool.
     For more information, see the upstream release notes at GitHub.
     https://github.com/troglobit/mrouted/releases/tag/4.0
+  * Note: both command line options and .conf file settings have changed
+    significantly from the mroute-3 series.
 
- -- Joachim Nilsson <troglobit@gmail.com>  Tue, 26 Mar 2019 07:49:36 +0100
+ -- Joachim Nilsson <troglobit@gmail.com>  Tue, 09 Jun 2020 22:06:47 +0200
 
 mrouted (3.9.8) unstable; urgency=low
 
