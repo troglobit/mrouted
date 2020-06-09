@@ -46,7 +46,7 @@ release: release-hook distcheck package md5-dist
 		printf "%-32s Distribution tarball\n" $$file;			\
 		printf "%-32s " $$file.md5; cat ../$$file.md5 | cut -f1 -d' ';	\
 	done
-	@for file in `cd ..; ls $(PACKAGE)_$(VERSION)*`; do			\
+	@for file in `cd ..; ls $(PACKAGE)*_$(VERSION)*`; do			\
 		printf "%-32s Debian/Ubuntu package\n" $$file;			\
 	done
 
