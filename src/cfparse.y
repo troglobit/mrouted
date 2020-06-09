@@ -68,7 +68,7 @@ int numbounds = 0;			/* Number of named boundaries */
 };
 
 %token CACHE_LIFETIME PRUNE_LIFETIME PRUNING BLACK_HOLE NOFLOOD
-%token QUERY_INTERVAL IGMP_ROBUSTNESS
+%token QUERY_INTERVAL IGMP_ROBUSTNESS NO
 %token PHYINT TUNNEL NAME
 %token DISABLE ENABLE IGMPV1 IGMPV2 IGMPV3 SRCRT BESIDE
 %token METRIC THRESHOLD RATE_LIMIT BOUNDARY NETMASK ALTNET ADVERT_METRIC
@@ -99,6 +99,13 @@ stmts	: /* Empty */
 	;
 
 stmt	: error
+	| NO PHYINT
+	{
+	    vifi_t vifi;
+
+	    for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v)
+		v->uv_flags |= VIFF_DISABLED;
+	}
 	| PHYINT interface
 	{
 	    vifi_t vifi;
@@ -747,6 +754,7 @@ static struct keyword {
 	{ "prune-lifetime",	PRUNE_LIFETIME,	PRUNE_LIFETIME2 },
 	{ "igmp-query-interval", QUERY_INTERVAL, 0 },
 	{ "igmp-robustness",    IGMP_ROBUSTNESS, 0 },
+	{ "no",                 NO, 0 },
 	{ "pruning",		PRUNING, 0 },
 	{ "phyint",		PHYINT, 0 },
 	{ "tunnel",		TUNNEL, 0 },
