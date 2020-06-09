@@ -35,11 +35,15 @@ the middle man).
 To override the default settings, for example to to add tunnel links to
 other DVMRP routers, configuration commands may be placed in
 .Pa /etc/mrouted.conf .
-There are five types of commands:
+.Pp
+The file format is free-form: whitespace (including newlines) is not
+significant.  The
+.Dq #\&
+character marks start of a comment to end of line.
 .Bl -item -offset indent
 .It
 .Cm cache-lifetime
-.Ar <SEC>
+.Ar SEC
 .It
 .Cm name
 .Ar boundary-name | scoped-addr Ns / Ns Ar mask-len
@@ -92,11 +96,6 @@ There are five types of commands:
 .Op Cm threshold Ar ttl
 .El
 .El
-.Pp
-The file format is free-form: whitespace (including newlines) is not
-significant.  The
-.Dq #\&
-character marks start of a comment to end of line.
 .Pp
 The
 .Cm boundary
