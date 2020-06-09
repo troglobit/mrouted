@@ -140,7 +140,6 @@ static int usage(int code)
 	   "  -l, --loglevel=LEVEL     Set log level: none, err, notice (default), info, debug\n"
 	   "  -m, --missing-ok         Missing interfaces from mrouted.conf are OK\n"
 	   "  -n, --foreground         Run in foreground, do not detach from controlling terminal\n"
-	   "  -p                       Disable pruning.  Deprecated, compatibility option\n"
 	   "  -s, --syslog             Log to syslog, default unless running in --foreground\n"
 	   "  -v, --version            Show mrouted version\n"
 	   "  -w, --startup-delay=SEC  Startup delay before forwarding\n");
@@ -175,7 +174,7 @@ int main(int argc, char *argv[])
 	{ NULL, 0, 0, 0 }
     };
 
-    while ((ch = getopt_long(argc, argv, "d:D:f:hl:Mmnpsvw:", long_options, NULL)) != EOF) {
+    while ((ch = getopt_long(argc, argv, "d:D:f:hl:Mmnsvw:", long_options, NULL)) != EOF) {
 	switch (ch) {
 	    case 'l':
 		if (!strcmp(optarg, "?")) {
@@ -217,10 +216,6 @@ int main(int argc, char *argv[])
 
 	    case 'h':
 		return usage(0);
-
-	    case 'p':
-		warnx("Disabling pruning is no longer supported.");
-		break;
 
 	    case 's':	/* --syslog */
 		use_syslog++;

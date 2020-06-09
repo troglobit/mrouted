@@ -13,7 +13,7 @@
 .Nd IP multicast routing daemon
 .Sh SYNOPSIS
 .Nm mrouted
-.Op Fl hmnpsv
+.Op Fl hmnsv
 .Op Fl d Ar SYS[,SYS,...
 .Op Fl f Ar FILE
 .Op Fl l Ar LEVEL
@@ -175,12 +175,6 @@ seconds before applying routes.  This delay allows exchange of routes
 before starting to forward multicast packets.  In certain setups this
 can prevent transient problems at startup, at the cost of a momentary
 black hole.
-.It Fl p
-Start
-.Nm
-in a non-pruning mode.  This was previously used in routers for test
-purposes only.  However, this is no longer supported and the option is
-only kept for compatibility reasons.
 .It Fl s, -syslog
 Use
 .Xr syslog 3
