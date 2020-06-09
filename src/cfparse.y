@@ -351,11 +351,10 @@ ifmod	: mod
 		return 0;
 	    }
 
-	    if ($2.mask) {
+	    if ($2.mask)
 		VAL_TO_MASK(ph->pa_subnetmask, $2.mask);
-	    } else {
+	    else
 		ph->pa_subnetmask = v->uv_subnetmask;
-	    }
 
 	    ph->pa_subnet = $2.addr & ph->pa_subnetmask;
 	    ph->pa_subnetbcast = ph->pa_subnet | ~ph->pa_subnetmask;
@@ -476,7 +475,7 @@ mod	: THRESHOLD NUMBER
 	}
 	| ALLOW_NONPRUNERS
 	{
-		    v->uv_flags |= VIFF_ALLOW_NONPRUNERS;
+	    v->uv_flags |= VIFF_ALLOW_NONPRUNERS;
 	}
 	| PRUNE_LIFETIME2 NUMBER
 	{

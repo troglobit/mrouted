@@ -142,11 +142,10 @@ struct tr_resp {
                 (i) = 1;                        \
                 while ((_x) <<= 1)              \
                         (i)++;                  \
-        };
+        }
 
-#define VAL_TO_MASK(x, i) {                                          \
-                x = i ? htonl(~((1 << (32 - (i))) - 1)) : 0;         \
-        };
+#define VAL_TO_MASK(x, i)			\
+                x = i ? htonl(~((1 << (32 - (i))) - 1)) : 0
 
 #define NBR_VERS(n)	(((n)->al_pv << 8) + (n)->al_mv)
 
