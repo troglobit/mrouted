@@ -581,13 +581,13 @@ static void cleanup(void)
 #endif
 	expire_all_routes();
 	report_to_all_neighbors(ALL_ROUTES);
-	if (did_final_init)
-	    k_stop_dvmrp();
 
 	free_all_prunes();
 	free_all_routes();
 	stop_all_vifs();
-	k_stop_dvmrp();
+
+	if (did_final_init)
+	    k_stop_dvmrp();
 	close(udp_socket);
 
 	timer_exit();
