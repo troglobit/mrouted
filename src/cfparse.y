@@ -484,7 +484,7 @@ mod	: THRESHOLD NUMBER
 	| BLASTER
 	{
 	    v->uv_flags |= VIFF_BLASTER;
-	    blaster_alloc(v - uvifs);
+	    blaster_alloc(v);
 	}
 	| ALLOW_NONPRUNERS
 	{

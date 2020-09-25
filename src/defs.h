@@ -301,7 +301,7 @@ extern struct rtentry *	determine_route(uint32_t src);
 extern void		report(int, vifi_t, uint32_t);
 extern void		report_to_all_neighbors(int);
 extern int		report_next_chunk(void);
-extern void		blaster_alloc(vifi_t);
+extern void		blaster_alloc(struct uvif *);
 extern void		add_vif_to_routes(vifi_t);
 extern void		delete_vif_from_routes(vifi_t);
 extern void		add_neighbor_to_routes(vifi_t, uint32_t);

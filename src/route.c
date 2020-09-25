@@ -844,11 +844,11 @@ static int compare_rts(const void *rt1, const void *rt2)
     return 0;
 }
 
-void blaster_alloc(vifi_t vifi)
+void blaster_alloc(struct uvif *v)
 {
-    struct uvif *v;
+    if (!v)
+	return;
 
-    v = &uvifs[vifi];
     if (v->uv_blasterbuf)
 	free(v->uv_blasterbuf);
 
