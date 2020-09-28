@@ -230,7 +230,8 @@ void k_del_vif(vifi_t vifi, struct uvif *v)
 
 
 /*
- * Adds a (source, mcastgrp) entry to the kernel
+ * Adds a (source, mcastgrp) entry to the kernel.  Called by
+ * prune.c:add_table_entry() on IGMPMSG_NOCACHE from the kernel.
  */
 void k_add_rg(uint32_t origin, struct gtable *g)
 {
@@ -243,6 +244,20 @@ void k_add_rg(uint32_t origin, struct gtable *g)
     mc.mfcc_parent = g->gt_route ? g->gt_route->rt_parent : NO_VIF;
     for (i = 0; i < numvifs; i++)
 	mc.mfcc_ttls[i] = g->gt_ttls[i];
+
+#ifdef __linux__
+    /* On *BSD, from where the MROUTING stack originates, setting
+     * NO_VIF as parent is OK.  On Linux we will get ENFILE, which
+     * at least GLIBC translates to ENOBUFS.   It's usually a sign
+     * of something wrong, or misconfigured on the system.  Maybe
+     * a secondary IP address/network on an interface.
+     */
+    if (mc.mfcc_parent == NO_VIF) {
+	logit(LOG_INFO, 0, "Skipping mfc entry for (%s, %s), no inbound vif (no reverse path).",
+	      inet_fmt(origin, s1, sizeof(s1)), inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)));
+	return;
+    }
+#endif
 
     if (setsockopt(igmp_socket, IPPROTO_IP, MRT_ADD_MFC, &mc, sizeof(mc)) < 0) {
 	char ttls[3 * MAXVIFS + 1] = { 0 };
