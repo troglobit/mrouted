@@ -84,8 +84,12 @@ void init_vifs(void)
 #endif
     logit(LOG_INFO,0,"Getting vifs from kernel interfaces");
     config_vifs_from_kernel();
-    logit(LOG_INFO,0,"Getting vifs from %s",configfilename);
+
+    logit(LOG_INFO,0,"Getting vifs from %s", configfilename);
     config_vifs_from_file();
+
+    logit(LOG_INFO, 0, "Correlating interfaces and configuration ...");
+    config_vifs_correlate();
 
     /*
      * Quit if there are fewer than two enabled vifs.

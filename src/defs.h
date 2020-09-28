@@ -339,6 +339,11 @@ extern void		accept_membership_query(uint32_t, uint32_t, uint32_t, int, int);
 extern void             accept_membership_report(uint32_t, uint32_t, struct igmpv3_report *, ssize_t);
 
 /* config.c */
+extern void		config_set_ifflag(uint32_t flag);
+extern struct uvif     *config_find_ifname(char *nm);
+extern struct uvif     *config_find_ifaddr(in_addr_t addr);
+extern struct uvif     *config_init_tunnel(in_addr_t lcl_addr, in_addr_t rmt_addr, uint32_t flags);
+extern void		config_vifs_correlate(void);
 extern void		config_vifs_from_kernel(void);
 
 /* cfparse.y */

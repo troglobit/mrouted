@@ -20,8 +20,6 @@ static void        warn(const char *fmt, ...);
 static void        yyerror(char *s);
 static char       *next_word(void);
 static int         yylex(void);
-static uint32_t    valid_if(char *s);
-static const char *ifconfaddr(uint32_t addr);
 int                yyparse(void);
 
 static FILE *fp;
@@ -100,83 +98,50 @@ stmts	: /* Empty */
 	;
 
 stmt	: error
-	| NO PHYINT
-	{
-	    vifi_t vifi;
-
-	    for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v)
-		v->uv_flags |= VIFF_DISABLED;
-	}
+	| NO PHYINT		{ config_set_ifflag(VIFF_DISABLED); }
 	| PHYINT interface
 	{
-	    vifi_t vifi;
-
 	    state++;
 
 	    if (order)
 		fatal("phyints must appear before tunnels");
 
-	    for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
-		if (!(v->uv_flags & VIFF_TUNNEL) && $2 == v->uv_lcl_addr)
-		    break;
-	    }
-
-	    if (vifi == numvifs) {
-		if ($2)
-			warn("phyint %s not available, continuing ...", inet_fmt($2, s1, sizeof(s1)));
+	    v = config_find_ifaddr($2);
+	    if (!v) {
+		warn("phyint %s not available, continuing ...",
+		     inet_fmt($2, s1, sizeof(s1)));
 		v = &scrap;
 	    }
 	}
 	ifmods
 	| TUNNEL interface addrname
 	{
-	    const char *ifname;
-	    struct ifreq ffr;
-	    vifi_t vifi;
-
 	    order++;
-
-	    ifname = ifconfaddr($2);
-	    if (ifname == 0)
-		fatal("Tunnel local address %s is not mine", inet_fmt($2, s1, sizeof(s1)));
-
-	    if (((ntohl($2) & IN_CLASSA_NET) >> IN_CLASSA_NSHIFT) == IN_LOOPBACKNET)
-		fatal("Tunnel local address %s is a loopback address", inet_fmt($2, s1, sizeof(s1)));
-
-	    if (ifconfaddr($3) != NULL)
-		fatal("Tunnel remote address %s is one of mine", inet_fmt($3, s1, sizeof(s1)));
-
-	    for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
-		if (v->uv_flags & VIFF_TUNNEL) {
-		    if ($3 == v->uv_rmt_addr)
-			fatal("Duplicate tunnel to %s",
-			      inet_fmt($3, s1, sizeof(s1)));
-		} else if (!(v->uv_flags & VIFF_DISABLED)) {
-		    if (($3 & v->uv_subnetmask) == v->uv_subnet)
-			fatal("Unnecessary tunnel to %s, same subnet as vif %d (%s)",
-			      inet_fmt($3, s1, sizeof(s1)), vifi, v->uv_name);
+	    v = config_init_tunnel($2, $3, rexmit | noflood);
+	    if (!v) {
+		switch (errno) {
+		case ENOENT:
+		    fatal("Tunnel local address %s is not mine", inet_fmt($2, s1, sizeof(s1)));
+		    break;
+		case ENONET:
+		    fatal("Tunnel local address %s is a loopback address",
+			  inet_fmt($2, s1, sizeof(s1)));
+		    break;
+		case EADDRINUSE:
+		    fatal("Tunnel remote address %s is one of mine",
+			  inet_fmt($3, s1, sizeof(s1)));
+		    break;
+		case EEXIST:
+		    fatal("Duplicate tunnel to %s",
+			  inet_fmt($3, s1, sizeof(s1)));
+		    break;
+		default:
+		    /* Log file and line number at least */
+		    fatal("");
+		    break;
 		}
-	    }
 
-	    if (numvifs == MAXVIFS)
-		fatal("too many vifs");
-
-	    strlcpy(ffr.ifr_name, ifname, sizeof(ffr.ifr_name));
-	    if (ioctl(udp_socket, SIOCGIFFLAGS, (char *)&ffr)<0)
-		fatal("ioctl SIOCGIFFLAGS on %s", ffr.ifr_name);
-
-	    v = &uvifs[numvifs];
-	    zero_vif(v, 1);
-	    v->uv_flags      = VIFF_TUNNEL | rexmit | noflood;
-	    v->uv_flags     |= VIFF_OTUNNEL; /* XXX */
-	    v->uv_lcl_addr   = $2;
-	    v->uv_rmt_addr   = $3;
-	    v->uv_dst_addr   = $3;
-	    strlcpy(v->uv_name, ffr.ifr_name, sizeof(v->uv_name));
-
-	    if (!(ffr.ifr_flags & IFF_UP)) {
-		v->uv_flags |= VIFF_DOWN;
-		vifs_down = TRUE;
+		v = &scrap;
 	    }
 	}
 	tunnelmods
@@ -231,11 +196,8 @@ stmt	: error
 	 */
 	| NOFLOOD
 	{
-	    vifi_t vifi;
-
 	    noflood = VIFF_NOFLOOD;
-	    for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v)
-		v->uv_flags |= VIFF_NOFLOOD;
+	    config_set_ifflag(VIFF_NOFLOOD);
 	}
 	/*
 	 * Turn on prune retransmission on all interfaces.
@@ -244,10 +206,7 @@ stmt	: error
 	 */
 	| REXMIT_PRUNES
 	{
-	    vifi_t vifi;
-
-	    for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v)
-		v->uv_flags |= VIFF_REXMIT_PRUNES;
+	    config_set_ifflag(VIFF_REXMIT_PRUNES);
 	}
 	/*
 	 * If true, do as above.  If false, no need to turn
@@ -256,14 +215,10 @@ stmt	: error
 	 */
 	| REXMIT_PRUNES BOOLEAN
 	{
-	    if ($2) {
-		vifi_t vifi;
-
-		for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v)
-		    v->uv_flags |= VIFF_REXMIT_PRUNES;
-	    } else {
+	    if ($2)
+		config_set_ifflag(VIFF_REXMIT_PRUNES);
+	    else
 		rexmit = 0;
-	    }
 	}
 	| NAME STRING boundary
 	{
@@ -575,9 +530,18 @@ interface: ADDR
 	}
 	| STRING
 	{
-	    $$ = valid_if($1);
-	    if ($$ == 0)
+	    struct uvif *v;
+
+	    /*
+	     * Looks a little weird, but the orig. code was based around
+	     * the addresses being used to identify interfaces.
+	     */
+	    v = config_find_ifname($1);
+	    if (!v) {
 		warn("phyint %s not available, continuing ...", $1);
+		$$ = 0;
+	    } else
+		$$ = v->uv_lcl_addr;
 	}
 	;
 
@@ -892,53 +856,6 @@ void config_vifs_from_file(void)
     yyparse();
 
     fclose(fp);
-}
-
-static uint32_t valid_if(char *s)
-{
-    struct uvif *v;
-    vifi_t vifi;
-
-    if (!s)
-	return 0;
-
-    for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
-        if (!strcmp(v->uv_name, s))
-            return v->uv_lcl_addr;
-    }
-
-    return 0;
-}
-
-static const char *ifconfaddr(uint32_t addr)
-{
-    struct ifaddrs *ifap, *ifa;
-    static char buf[IFNAMSIZ];
-    char *ifname = NULL;
-
-    if (getifaddrs(&ifap) != 0)
-	return NULL;
-
-    for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
-	struct sockaddr_in *sin;
-
-	if (!ifa->ifa_addr)
-	    continue;
-	if (ifa->ifa_addr->sa_family != AF_INET)
-	    continue;
-
-	sin = (struct sockaddr_in *)ifa->ifa_addr;
-	if (sin->sin_addr.s_addr != addr)
-	    continue;
-
-	strlcpy(buf, ifa->ifa_name, sizeof(buf));
-	ifname = buf;
-	break;
-    }
-
-    freeifaddrs(ifap);
-
-    return ifname;
 }
 
 /**
