@@ -424,7 +424,7 @@ mod	: THRESHOLD NUMBER
 	}
 	| ADVERT_METRIC
 	{
-	    warn("Expected number after advert_metric keyword, ignored");
+	    warn("Expected number after advert-metric keyword, ignored");
 	}
 	| RATE_LIMIT NUMBER
 	{
@@ -434,7 +434,7 @@ mod	: THRESHOLD NUMBER
 	}
 	| RATE_LIMIT
 	{
-	    warn("Expected number after rate_limit keyword, ignored");
+	    warn("Expected number after rate-limit keyword, ignored");
 	}
 	| BOUNDARY bound
 	{
