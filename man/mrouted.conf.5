@@ -165,12 +165,12 @@ commands must precede tunnel commands.
 .It Cm disable | enable
 Selectively disable or enable this interface.  Only enabled interfaces
 get a VIF in the kernel.
-.It Cm igmpv1 | igmpv2
+.It Cm igmpv1 | igmpv2 | igmpv3
 .Nm mrouted
 supports all IGMP versions.  Use these flags to force compatibility
 modes on the given interface.  Default:
 .Cm igmpv3
-.It Cm altnet
+.It Cm altnet Ar network Ns / Ns Ar mask-len
 If an interface is attached to multiple IP subnets, describe each
 additional subnet with this keyword.
 .It Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len
@@ -178,9 +178,10 @@ allows an interface to be configured as an administrative boundary
 for the specified scoped address.
 Packets belonging to this address will not be forwarded on a scoped interface.
 The boundary option accepts either a name or a boundary spec.
-.It Cm metric
+.It Cm metric Ar <1-31>
 is the "cost" associated with sending a datagram on the given interface
-or tunnel; it may be used to influence the choice of routes.  The metric
+or tunnel; it may be used to influence the choice of routes.  The
+.Cm metric
 defaults to 1.  Metrics should be kept as small as possible, because
 .Nm mrouted
 cannot route along paths with a sum of metrics greater than 31.
@@ -273,7 +274,7 @@ filtered out.
 allows the network administrator to specify a certain bandwidth in kbps
 which would be allocated to multicast traffic.  It defaults to 500 kbps
 on tunnels, and 0 (unlimited) on physical interfaces.
-.It Cm threshold
+.It Cm threshold Ar ttl
 is the minimum IP time-to-live required for a multicast datagram to be
 forwarded to the given interface or tunnel.  It is used to control the
 scope of multicast datagrams.  (The TTL of forwarded packets is only
