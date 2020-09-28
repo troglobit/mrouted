@@ -149,7 +149,7 @@ In non-trivial setups this limit is often reached, causing weird errors
 that can be hard to debug.  The recommendation for those cases is to
 disable all phyint (this setting), and then selectively enable only the
 ones needed.
-.It Cm phyint Ar <local-addr | ifname> Oo Cm disable | enable Oc Oo Cm passive Oc Oo Cm force-leaf Oc Oo Cm noflood Oc Oo Cm igmpv1 | igmpv2 | igmpv3 Oc Oo Cm altnet Ar network Ns / Ns Ar mask-len Oc Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm advert-metric Ar <0-31> Oc Oo Cm prune-lifetime Ar sec Oc Oo Cm rexmit-prunes Oo Ar on | off Oc Oc Oo Cm allow-nonpruners Oc Oo Cm notransit Oc Oo Cm accept|deny Po Ar route Ns / Ns Ar mask-len Oo Cm exact Oc Pc Ns + Oo Cm bidir Oc Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
+.It Cm phyint Ar <local-addr | ifname> Oo Cm disable | enable Oc Oo Cm passive Oc Oo Cm blaster Oc Oo Cm force-leaf Oc Oo Cm noflood Oc Oo Cm igmpv1 | igmpv2 | igmpv3 Oc Oo Cm altnet Ar network Ns / Ns Ar mask-len Oc Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm advert-metric Ar <0-31> Oc Oo Cm prune-lifetime Ar sec Oc Oo Cm rexmit-prunes Oo Ar on | off Oc Oc Oo Cm allow-nonpruners Oc Oo Cm notransit Oc Oo Cm accept|deny Po Ar route Ns / Ns Ar mask-len Oo Cm exact Oc Pc Ns + Oo Cm bidir Oc Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
 .Pp
 This setting selects and alters properties of the phyiscal interfaces
 .Nm mrouted
@@ -215,6 +215,9 @@ over a dial-on-demand link; configure the "server" end as passive and it
 will not send its periodic probes until it hears one from the other
 side, so will not keep the link up.  If this option is specified on both
 ends of a tunnel, the tunnel will never come up.
+.It Cm blaster
+Enable handling of routers (mostly Cisco) that overwhelm socket buffers
+by "blasting" the whole routing table at once.
 .It Cm prune-lifetime Ar sec
 As described above, but only applicable to this interface/tunnel.
 .It Cm rexmit-prunes Op Ar on | off
@@ -296,7 +299,7 @@ compared to the threshold, it is not decremented by the threshold.
 Every multicast router decrements the TTL by 1.)  The default threshold
 for multicast is 1.
 .El
-.It Cm tunnel Ar local-addr Ar remote-addr Oo Cm beside Oo Ar on | off Oc Oc Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm advert-metric Ar <0-31> Oc Oo Cm noflood Oc Oo Cm passive Oc Oo Cm prune-lifetime Ar sec Oc Oo Cm rexmit-prunes Oo Ar on | off Oc Oc Oo Cm allow-nonpruners Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
+.It Cm tunnel Ar local-addr Ar remote-addr Oo Cm beside Oo Ar on | off Oc Oc Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm advert-metric Ar <0-31> Oc Oo Cm noflood Oc Oo Cm passive Oc Oo Cm blaster Oc Oo Cm prune-lifetime Ar sec Oc Oo Cm rexmit-prunes Oo Ar on | off Oc Oc Oo Cm allow-nonpruners Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
 .Pp
 This setting can be used to establish a tunnel link between local IP
 address
