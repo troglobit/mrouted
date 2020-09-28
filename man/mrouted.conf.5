@@ -149,7 +149,7 @@ In non-trivial setups this limit is often reached, causing weird errors
 that can be hard to debug.  The recommendation for those cases is to
 disable all phyint (this setting), and then selectively enable only the
 ones needed.
-.It Cm phyint Ar <local-addr | ifname> Oo Cm disable | enable Oc Oo Cm passive Oc Oo Cm noflood Oc Oo Cm igmpv1 | igmpv2 | igmpv3 Oc Oo Cm altnet Ar network Ns / Ns Ar mask-len Oc Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm prune-lifetime Ar sec Oc  Oo Cm rexmit-prunes Oo Ar on | off Oc Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
+.It Cm phyint Ar <local-addr | ifname> Oo Cm disable | enable Oc Oo Cm passive Oc Oo Cm noflood Oc Oo Cm igmpv1 | igmpv2 | igmpv3 Oc Oo Cm altnet Ar network Ns / Ns Ar mask-len Oc Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm prune-lifetime Ar sec Oc  Oo Cm rexmit-prunes Oo Ar on | off Oc Oc Oo Cm allow-nonpruners Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
 .Pp
 This setting selects and alters properties of the phyiscal interfaces
 .Nm mrouted
@@ -206,6 +206,11 @@ Recall that prune retransmission defaults to
 on point-to-point links and tunnels, and
 .Ar off
 on multi-access links.
+.It Cm allow-nonpruners
+By default,
+.Nm mrouted
+refuses to peer with DVMRP neighbors that do not claim to support
+pruning.  This option allows such peerings on this interface.
 .It Cm threshold
 is the minimum IP time-to-live required for a multicast datagram to be
 forwarded to the given interface or tunnel.  It is used to control the
@@ -214,7 +219,7 @@ compared to the threshold, it is not decremented by the threshold.
 Every multicast router decrements the TTL by 1.)  The default threshold
 for multicast is 1.
 .El
-.It Cm tunnel Ar local-addr Ar remote-addr Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm noflood Oc Oo Cm passive Oc Oo Cm prune-lifetime Ar sec Oc Oo Cm rexmit-prunes Oo Ar on | off Oc Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
+.It Cm tunnel Ar local-addr Ar remote-addr Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm noflood Oc Oo Cm passive Oc Oo Cm prune-lifetime Ar sec Oc Oo Cm rexmit-prunes Oo Ar on | off Oc Oc Oo Cm allow-nonpruners Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
 .Pp
 This setting can be used to establish a tunnel link between local IP
 address
