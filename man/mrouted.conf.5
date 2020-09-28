@@ -149,7 +149,7 @@ In non-trivial setups this limit is often reached, causing weird errors
 that can be hard to debug.  The recommendation for those cases is to
 disable all phyint (this setting), and then selectively enable only the
 ones needed.
-.It Cm phyint Ar <local-addr | ifname> Oo Cm disable | enable Oc Oo Cm passive Oc Oo Cm noflood Oc Oo Cm igmpv1 | igmpv2 | igmpv3 Oc Oo Cm altnet Ar network Ns / Ns Ar mask-len Oc Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm prune-lifetime Ar sec Oc  Oo Cm rexmit-prunes Oo Ar on | off Oc Oc Oo Cm allow-nonpruners Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
+.It Cm phyint Ar <local-addr | ifname> Oo Cm disable | enable Oc Oo Cm passive Oc Oo Cm noflood Oc Oo Cm igmpv1 | igmpv2 | igmpv3 Oc Oo Cm altnet Ar network Ns / Ns Ar mask-len Oc Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm prune-lifetime Ar sec Oc  Oo Cm rexmit-prunes Oo Ar on | off Oc Oc Oo Cm allow-nonpruners Oc Oo Cm notransit Oc Oo Cm accept|deny Po Ar route Ns / Ns Ar mask-len Oo Cm exact Oc Pc Ns + Oo Cm bidir Oc Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
 .Pp
 This setting selects and alters properties of the phyiscal interfaces
 .Nm mrouted
@@ -207,6 +207,61 @@ By default,
 .Nm mrouted
 refuses to peer with DVMRP neighbors that do not claim to support
 pruning.  This option allows such peerings on this interface.
+.It Cm notransit
+A specialized case of route filtering; no route learned from an
+interface marked
+.Cm notransit
+will be advertised on another interface marked
+.Cm notransit .
+Marking only a single interface
+.Cm notransit
+has no meaning.
+.It Cm accept|deny Po Ar route Ns / Ns Ar mask-len Oo Cm exact Oc Pc Ns + Oo Cm bidir Oc
+The
+.Cm accept
+and
+.Cm deny
+commands allow rudimentary route filtering.  The
+.Cm accept
+command causes
+.Nm mrouted
+to accept only the listed routes on the configured interface; the
+.Cm deny
+command causes
+.Nm mrouted
+to accept all but the listed routes.  Only one of
+.Cm accept
+or
+.Cm deny
+commands may be used on a given interface.
+.Pp
+The list of routes follows the
+.Cm accept
+or
+.Cm deny
+keyword.  If the keyword
+.Ar exact
+follows a route, then only that route is matched; otherwise, that route
+and any more specific route is matched.  For example,
+.Cm deny 0/0
+denys all routes, while
+.Cm deny 0/0 Ar exact
+denys only the default route.  The default route may also be specified
+with the
+.Cm default
+keyword.
+.Pp
+The
+.Cm bidir
+keyword enables bidirectional route filtering; the filter will be
+applied to routes on both output and input.  Without the
+.Cm bidir
+keyword,
+.Cm accept
+and
+.Cm deny
+filters are only applied on input.  Poison reverse routes are never
+filtered out.
 .It Cm rate-limit Ar kbps
 allows the network administrator to specify a certain bandwidth in kbps
 which would be allocated to multicast traffic.  It defaults to 500 kbps
