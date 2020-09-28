@@ -619,7 +619,7 @@ bound	: boundary
 	{
 	    int i;
 
-	    for (i=0; i < numbounds; i++) {
+	    for (i = 0; i < numbounds; i++) {
 		if (!strcmp(boundlist[i].name, $1)) {
 		    $$ = boundlist[i].bound;
 		    break;
