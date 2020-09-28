@@ -165,6 +165,12 @@ commands must precede tunnel commands.
 .It Cm disable | enable
 Selectively disable or enable this interface.  Only enabled interfaces
 get a VIF in the kernel.
+.It Cm beside Op on | off
+This is a tunnel option.  For compatibility with older
+.Nm mrouted
+routers the default is to unicast control traffic "beside" the tunnel.
+To encapsulate all control traffic inside the tunnel use
+.Cm beside Ar off .
 .It Cm igmpv1 | igmpv2 | igmpv3
 .Nm mrouted
 supports all IGMP versions.  Use these flags to force compatibility
@@ -290,7 +296,7 @@ compared to the threshold, it is not decremented by the threshold.
 Every multicast router decrements the TTL by 1.)  The default threshold
 for multicast is 1.
 .El
-.It Cm tunnel Ar local-addr Ar remote-addr Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm advert-metric Ar <0-31> Oc Oo Cm noflood Oc Oo Cm passive Oc Oo Cm prune-lifetime Ar sec Oc Oo Cm rexmit-prunes Oo Ar on | off Oc Oc Oo Cm allow-nonpruners Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
+.It Cm tunnel Ar local-addr Ar remote-addr Oo Cm beside Oo Ar on | off Oc Oc Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm advert-metric Ar <0-31> Oc Oo Cm noflood Oc Oo Cm passive Oc Oo Cm prune-lifetime Ar sec Oc Oo Cm rexmit-prunes Oo Ar on | off Oc Oc Oo Cm allow-nonpruners Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
 .Pp
 This setting can be used to establish a tunnel link between local IP
 address
