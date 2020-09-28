@@ -57,10 +57,11 @@ the
 .Cm prune-lifetime
 keyword may be specified on an interface as described below.  It
 defaults to 7200.
-.It Cm name Ar boundary-name | scoped-addr Ns / Ns Ar mask-len
+.It Cm name Ar boundary-name scoped-addr Ns / Ns Ar mask-len
 The
 .Cm name
-option assigns names to boundaries to make configuration easier.
+option assigns names to boundaries to make configuration per
+interface/tunnel easier.
 .It Cm noflood
 .Nm mrouted
 uses a DVMRP optimization to prevent having to keep individual routing
@@ -172,7 +173,7 @@ modes on the given interface.  Default:
 .It Cm altnet
 If an interface is attached to multiple IP subnets, describe each
 additional subnet with this keyword.
-.It Cm boundary
+.It Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len
 allows an interface to be configured as an administrative boundary
 for the specified scoped address.
 Packets belonging to this address will not be forwarded on a scoped interface.
@@ -192,7 +193,7 @@ over a dial-on-demand link; configure the "server" end as passive and it
 will not send its periodic probes until it hears one from the other
 side, so will not keep the link up.  If this option is specified on both
 ends of a tunnel, the tunnel will never come up.
-.It Cm rate-limit
+.It Cm rate-limit Ar kbps
 allows the network administrator to specify a certain bandwidth in kbps
 which would be allocated to multicast traffic.  It defaults to 500 kbps
 on tunnels, and 0 (unlimited) on physical interfaces.
