@@ -193,10 +193,6 @@ over a dial-on-demand link; configure the "server" end as passive and it
 will not send its periodic probes until it hears one from the other
 side, so will not keep the link up.  If this option is specified on both
 ends of a tunnel, the tunnel will never come up.
-.It Cm rate-limit Ar kbps
-allows the network administrator to specify a certain bandwidth in kbps
-which would be allocated to multicast traffic.  It defaults to 500 kbps
-on tunnels, and 0 (unlimited) on physical interfaces.
 .It Cm prune-lifetime Ar sec
 As described above, but only applicable to this interface/tunnel.
 .It Cm rexmit-prunes Op Ar on | off
@@ -211,6 +207,10 @@ By default,
 .Nm mrouted
 refuses to peer with DVMRP neighbors that do not claim to support
 pruning.  This option allows such peerings on this interface.
+.It Cm rate-limit Ar kbps
+allows the network administrator to specify a certain bandwidth in kbps
+which would be allocated to multicast traffic.  It defaults to 500 kbps
+on tunnels, and 0 (unlimited) on physical interfaces.
 .It Cm threshold
 is the minimum IP time-to-live required for a multicast datagram to be
 forwarded to the given interface or tunnel.  It is used to control the
