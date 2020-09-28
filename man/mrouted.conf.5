@@ -149,7 +149,7 @@ In non-trivial setups this limit is often reached, causing weird errors
 that can be hard to debug.  The recommendation for those cases is to
 disable all phyint (this setting), and then selectively enable only the
 ones needed.
-.It Cm phyint Ar <local-addr | ifname> Oo Cm disable | enable Oc Oo Cm passive Oc Oo Cm noflood Oc Oo Cm igmpv1 | igmpv2 | igmpv3 Oc Oo Cm altnet Ar network Ns / Ns Ar mask-len Oc Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm prune-lifetime Ar sec Oc  Oo Cm rexmit-prunes Oo Ar on | off Oc Oc Oo Cm allow-nonpruners Oc Oo Cm notransit Oc Oo Cm accept|deny Po Ar route Ns / Ns Ar mask-len Oo Cm exact Oc Pc Ns + Oo Cm bidir Oc Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
+.It Cm phyint Ar <local-addr | ifname> Oo Cm disable | enable Oc Oo Cm passive Oc Oo Cm force-leaf Oc Oo Cm noflood Oc Oo Cm igmpv1 | igmpv2 | igmpv3 Oc Oo Cm altnet Ar network Ns / Ns Ar mask-len Oc Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm prune-lifetime Ar sec Oc  Oo Cm rexmit-prunes Oo Ar on | off Oc Oc Oo Cm allow-nonpruners Oc Oo Cm notransit Oc Oo Cm accept|deny Po Ar route Ns / Ns Ar mask-len Oo Cm exact Oc Pc Ns + Oo Cm bidir Oc Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
 .Pp
 This setting selects and alters properties of the phyiscal interfaces
 .Nm mrouted
@@ -184,6 +184,13 @@ or tunnel; it may be used to influence the choice of routes.  The metric
 defaults to 1.  Metrics should be kept as small as possible, because
 .Nm mrouted
 cannot route along paths with a sum of metrics greater than 31.
+.It Cm force-leaf
+Force
+.Nm mrouted
+to ignore other routers on this interface.
+.Nm mrouted
+will never send or accept neighbor probes or route reports on this
+interface.
 .It Cm noflood
 As described above, but only applicable to this interface/tunnel.
 .It Cm passive
