@@ -82,6 +82,14 @@ one full route report interval.
 The
 .Cm noflood
 keyword can also be specified on individual interfaces.
+.It Cm rexmit-prunes Op Ar on | off
+The default is to retransmit prunes on all point-to-point interfaces
+(including tunnels) but no multi-access interfaces.  This option may be
+used to make the default on (or off) for all interfaces.
+.Pp
+The
+.Cm rexmit-prunes
+keyword can also be specified on individual interfaces.
 .It Cm no router-alert
 Some multicast routers, and some IGMP snooping switches, do not support
 IP options like Router Alert, which is enabled in
@@ -140,7 +148,7 @@ In non-trivial setups this limit is often reached, causing weird errors
 that can be hard to debug.  The recommendation for those cases is to
 disable all phyint (this setting), and then selectively enable only the
 ones needed.
-.It Cm phyint Ar <local-addr | ifname> Oo Cm disable | enable Oc Oo Cm passive Oc Oo Cm noflood Oc Oo Cm igmpv1 | igmpv2 | igmpv3 Oc Oo Cm altnet Ar network Ns / Ns Ar mask-len Oc Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm prune-lifetime Ar sec Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
+.It Cm phyint Ar <local-addr | ifname> Oo Cm disable | enable Oc Oo Cm passive Oc Oo Cm noflood Oc Oo Cm igmpv1 | igmpv2 | igmpv3 Oc Oo Cm altnet Ar network Ns / Ns Ar mask-len Oc Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm prune-lifetime Ar sec Oc  Oo Cm rexmit-prunes Oo Ar on | off Oc Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
 .Pp
 This setting selects and alters properties of the phyiscal interfaces
 .Nm mrouted
@@ -190,6 +198,13 @@ which would be allocated to multicast traffic.  It defaults to 500 kbps
 on tunnels, and 0 (unlimited) on physical interfaces.
 .It Cm prune-lifetime Ar sec
 As described above, but only applicable to this interface/tunnel.
+.It Cm rexmit-prunes Op Ar on | off
+As described above, but only applicable to this interface/tunnel.
+Recall that prune retransmission defaults to
+.Ar on
+on point-to-point links and tunnels, and
+.Ar off
+on multi-access links.
 .It Cm threshold
 is the minimum IP time-to-live required for a multicast datagram to be
 forwarded to the given interface or tunnel.  It is used to control the
@@ -198,7 +213,7 @@ compared to the threshold, it is not decremented by the threshold.
 Every multicast router decrements the TTL by 1.)  The default threshold
 for multicast is 1.
 .El
-.It Cm tunnel Ar local-addr Ar remote-addr Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm noflood Oc Oo Cm passive Oc Oo Cm prune-lifetime Ar sec Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
+.It Cm tunnel Ar local-addr Ar remote-addr Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm noflood Oc Oo Cm passive Oc Oo Cm prune-lifetime Ar sec Oc Oo Cm rexmit-prunes Oo Ar on | off Oc Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
 .Pp
 This setting can be used to establish a tunnel link between local IP
 address
