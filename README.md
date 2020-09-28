@@ -55,6 +55,13 @@ to have the "ipip" kernel module loaded or as built-in:
 Alternatively, you may of course also set up GRE tunnels between your
 multicast capable routers.
 
+If you have *many* interfaces on your system you may want to look into
+the `no phyint` setting in [mroute.conf(5)][].  Linux users may also
+need to adjust `/proc/sys/net/ipv4/igmp_max_memberships` to a value
+larger than the default 20.  mrouted needs 3x the number of interfaces
+(vifs) for the relevant control protocol groups.  The kernel (Linux &
+BSD) *maximum* number of interfaces to use for multicast routing is 32.
+
 **Note:** mrouted must run with suffient capabilities, or as root.
 
 
@@ -77,6 +84,9 @@ all multicast capable interfaces.  Hence, you do not need to explicitly
 configure it, unless you need to setup tunnel links, change the default
 operating parameters, disable multicast routing over a specific physical
 interfaces, or have dynamic interfaces.
+
+**Note:** you need to have IP Multicast Routing enabled in the kernel
+  as well.  How this is achieved is outside the scope of this README.
 
 For more help, see the [mrouted(8)][] and [mrouted.conf(5)][] man pages.
 

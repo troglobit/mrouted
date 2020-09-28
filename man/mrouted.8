@@ -217,6 +217,49 @@ Holds active IPv4 multicast routes (Linux).
 Holds the IPv4 virtual interfaces used by the active multicast routing
 daemon (Linux).
 .El
+.Sh COMPATIBILITY
+Dynamic multicast routing has never been use-case 1a for UNIX systems.
+Most systems are by default tuned to act as workstations, end devices.
+When something does not work, or only sort of works, run
+.Ql Nm Fl l Ar debug Fl d Ar all ,
+optionally also with
+.Fl n ,
+to get full logs of its interaction with the system.
+.Pp
+Particular problems include, but are not limted to:
+.Pp
+.Bl -tag -compact
+.It Cm ENOPROTOOPT
+Or similar, with an error message like this:
+.Bd -literal -offset indent
+Cannot enable multicast routing in kernel
+.Ed
+.Pp
+This comes from missing multicast routing support in the kernel.  On
+Linux you need at least:
+.Bd -literal -offset indent
+CONFIG_IP_MROUTE=y
+.Ed
+.Pp
+On *BSD:
+.Bd -literal -offset indent
+options    MROUTING         # Multicast routing
+.Ed
+.It Cm ENOBUFS
+On Linux systems a common problem is that of many interfaces.  The error
+message used to be something like this:
+.Bd -literal -offset indent
+Cannot join group 224.0.0.4: No buffer space available
+.Ed
+.Pp
+Today that cryptic message has been replaced with a request to
+adjust
+.Pa /proc/sys/net/ipv4/igmp_max_memberships
+to a value at least 3x the number of vifs to run on, e.g., by setting it
+in
+.Pa /etc/sysctl.conf
+or similar, depending on the system.
+.El
 .Sh SEE ALSO
 .Xr mrouted.conf 5 ,
 .Xr mroutectl 8 ,

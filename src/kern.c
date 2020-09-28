@@ -152,9 +152,22 @@ void k_join(uint32_t grp, uint32_t ifa)
     mreq.imr_multiaddr.s_addr = grp;
     mreq.imr_interface.s_addr = ifa;
 
-    if (setsockopt(igmp_socket, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) < 0)
-	logit(LOG_WARNING, errno, "Cannot join group %s on interface %s",
-	      inet_fmt(grp, s1, sizeof(s1)), inet_fmt(ifa, s2, sizeof(s2)));
+    if (setsockopt(igmp_socket, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) < 0) {
+	switch (errno) {
+#ifdef __linux__
+	    case ENOBUFS:
+		logit(LOG_ERR, 0, "Maxed out groups per socket, please adjust "
+		      "/proc/sys/net/ipv4/igmp_max_memberships\n"
+		      "You need at least 3x the number of VIFs you want to run"
+		      "mrouted on; 3 x 32 = 96.  Default: 20");
+		break;
+#endif
+	    default:
+		logit(LOG_WARNING, errno, "Cannot join group %s on interface %s",
+		      inet_fmt(grp, s1, sizeof(s1)), inet_fmt(ifa, s2, sizeof(s2)));
+		break;
+	}
+    }
 }
 
 
