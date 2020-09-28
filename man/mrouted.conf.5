@@ -61,6 +61,27 @@ defaults to 7200.
 The
 .Cm name
 option assigns names to boundaries to make configuration easier.
+.It Cm noflood
+.Nm mrouted
+uses a DVMRP optimization to prevent having to keep individual routing
+tables for each neighbor; part of this optimization is that
+.Nm mrouted
+assumes that it is the forwarder for each of its attached subnets on
+startup.  This can cause duplicates for a short period (approximately
+one full route report interval), since both the router that just started
+up and the proper forwarder will be forwarding traffic.  This behavior
+can be turned off with the
+.Cm noflood
+keyword;
+.Nm mrouted
+will not assume that it is the forwarder on startup.  Turning on
+.Cm noflood
+can cause black holes on restart, which generally lasts approximately
+one full route report interval.
+.Pp
+The
+.Cm noflood
+keyword can also be specified on individual interfaces.
 .It Cm no router-alert
 Some multicast routers, and some IGMP snooping switches, do not support
 IP options like Router Alert, which is enabled in
@@ -119,7 +140,7 @@ In non-trivial setups this limit is often reached, causing weird errors
 that can be hard to debug.  The recommendation for those cases is to
 disable all phyint (this setting), and then selectively enable only the
 ones needed.
-.It Cm phyint Ar <local-addr | ifname> Oo Cm disable | enable Oc Oo Cm passive Oc Oo Cm igmpv1 | igmpv2 | igmpv3 Oc Oo Cm altnet Ar network Ns / Ns Ar mask-len Oc Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm prune-lifetime Ar sec Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
+.It Cm phyint Ar <local-addr | ifname> Oo Cm disable | enable Oc Oo Cm passive Oc Oo Cm noflood Oc Oo Cm igmpv1 | igmpv2 | igmpv3 Oc Oo Cm altnet Ar network Ns / Ns Ar mask-len Oc Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm prune-lifetime Ar sec Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
 .Pp
 This setting selects and alters properties of the phyiscal interfaces
 .Nm mrouted
@@ -154,6 +175,8 @@ or tunnel; it may be used to influence the choice of routes.  The metric
 defaults to 1.  Metrics should be kept as small as possible, because
 .Nm mrouted
 cannot route along paths with a sum of metrics greater than 31.
+.It Cm noflood
+As described above, but only applicable to this interface/tunnel.
 .It Cm passive
 No packets will be sent on this link or tunnel until we hear from the
 other end.  This is useful for the "server" end of a tunnel that goes
@@ -175,7 +198,7 @@ compared to the threshold, it is not decremented by the threshold.
 Every multicast router decrements the TTL by 1.)  The default threshold
 for multicast is 1.
 .El
-.It Cm tunnel Ar local-addr Ar remote-addr Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm passive Oc Oo Cm prune-lifetime Ar sec Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
+.It Cm tunnel Ar local-addr Ar remote-addr Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm noflood Oc Oo Cm passive Oc Oo Cm prune-lifetime Ar sec Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
 .Pp
 This setting can be used to establish a tunnel link between local IP
 address
