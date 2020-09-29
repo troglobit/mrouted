@@ -99,7 +99,6 @@ cat <<EOF
   Install prefix........: $prefix
   Configuration file....: `eval echo $sysconfdir`/mrouted.conf
   PID and .sock files...: `eval echo $runstatedir`/
-  Generation ID.........: `eval echo $localstatedir`/mrouted.genid
   C Compiler............: $CC $CFLAGS $CPPFLAGS $LDFLAGS $LIBS
 
 Optional features:
