@@ -1,7 +1,7 @@
 Source: mrouted
 Section: net
 Priority: optional
-Maintainer: Joachim Nilsson <troglobit@gmail.com>
+Maintainer: Joachim Wiberg <troglobit@gmail.com>
 Build-Depends: debhelper (>= 10), bison | byacc | btyacc, pkg-config, systemd
 Standards-Version: 4.3.0
 Homepage: https://troglobit.com/mrouted.shtml

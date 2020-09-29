@@ -1,3 +1,33 @@
+mrouted (4.1) stable; urgency=medium
+
+  * Update maintainer last name
+  * Refactor interface probing to fix `no phyint` on systems with
+    many interfaces.  Now possible to use only a select few phyints
+  * Support for automatically adding secondary IP addresses as altnet
+  * Improve error message, and document in mrouted(8), common startup
+    problems, e.g., running out of IGMP groups on Linux
+  * Improve error message when receiving multicast on unknown vifs
+  * Massive update of mrouted.conf(5), lots of options missing:
+    * prune-lifetime
+    * rexmit-prunes
+    * phyint and tunnel interface flags:
+      * advert-metric
+      * allow-nonpruners
+      * blaster
+      * force-leaf
+      * noflood
+      * passive
+      * prune-lifetime
+       rexmit-prunes
+    * The tunnel option beside off
+    * Route filtering options with accept, deny, and notransit
+  * Fixes to update of mrouted.genid file
+  * Fix location of mrouted.genid, should be in /var/lib/misc
+  * Fix annoying message "cCannot disable multicast routing" at startup
+  * Fix double free in PID file code
+
+ -- Joachim Wiberg <troglobit@gmail.com>  Tue, 29 Sep 2020 08:13:15 +0200
+
 mrouted (4.0) unstable; urgency=medium
 
   * New upstream release with support for IGMP v3 and a new mroutectl tool.
