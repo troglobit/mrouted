@@ -157,16 +157,35 @@ void config_vifs_correlate(void)
 	 * one already installed in the uvifs array.
 	 */
 	for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
-	    if (strcmp(v->uv_name, uv->uv_name) == 0) {
-		logit(LOG_DEBUG, 0, "skipping %s (%s on subnet %s) (alias for vif#%u?)",
-		      uv->uv_name, inet_fmt(uv->uv_lcl_addr, s1, sizeof(s1)),
-		      inet_fmts(uv->uv_subnet, uv->uv_subnetmask, s2, sizeof(s2)), vifi);
-		break;
-	    }
 	    if ((uv->uv_lcl_addr & v->uv_subnetmask) == v->uv_subnet ||
 		(v->uv_subnet & uv->uv_subnetmask) == uv->uv_subnet) {
 		logit(LOG_WARNING, 0, "ignoring %s, same subnet as %s",
 		      uv->uv_name, v->uv_name);
+		break;
+	    }
+
+	    /*
+	     * Same interface, but cannot have multiple VIFs on same
+	     * interface so add as secondary IP address to RPF
+	     */
+	    if (strcmp(v->uv_name, uv->uv_name) == 0) {
+		struct phaddr *ph;
+
+		ph = calloc(1, sizeof(*ph));
+		if (!ph) {
+		    logit(LOG_ERR, errno, "Failed allocating altnet on %s", v->uv_name);
+		    break;
+		}
+
+		logit(LOG_INFO, 0, "Installing %s subnet %s as an altnet", v->uv_name,
+		      inet_fmts(uv->uv_subnet, uv->uv_subnetmask, s2, sizeof(s2)));
+
+		ph->pa_subnet       = uv->uv_subnet;
+		ph->pa_subnetmask  = uv->uv_subnetmask;
+		ph->pa_subnetbcast = uv->uv_subnetbcast;
+
+		ph->pa_next = v->uv_addrs;
+		v->uv_addrs = ph;
 		break;
 	    }
 	}
