@@ -132,6 +132,14 @@ typedef void (*ihfunc_t) (int);
 #endif
 
 /*
+ * Extensions to errno for singaling to cfparse.y
+ */
+#define ENOTMINE 	2000
+#define ELOOPBACK	2001
+#define ERMTLOCAL	2002
+#define EDUPLICATE	2003
+
+/*
  * External declarations for global variables and functions.
  */
 #define RECV_BUF_SIZE 8192

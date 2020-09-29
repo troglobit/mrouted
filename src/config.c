@@ -68,18 +68,18 @@ struct uvif *config_init_tunnel(in_addr_t lcl_addr, in_addr_t rmt_addr, uint32_t
 
     v = config_find_ifaddr(lcl_addr);
     if (!v) {
-	errno = ENOENT;
+	errno = ENOTMINE;
 	return NULL;
     }
     ifname = v->uv_name;
 
     if (((ntohl(lcl_addr) & IN_CLASSA_NET) >> IN_CLASSA_NSHIFT) == IN_LOOPBACKNET) {
-	errno = ENONET;
+	errno = ELOOPBACK;
 	return NULL;
     }
 
     if (config_find_ifaddr(rmt_addr)) {
-	errno = EADDRINUSE;
+	errno = ERMTLOCAL;
 	return NULL;
     }
 
@@ -91,7 +91,7 @@ struct uvif *config_init_tunnel(in_addr_t lcl_addr, in_addr_t rmt_addr, uint32_t
 
 	if (v->uv_flags & VIFF_TUNNEL) {
 	    if (rmt_addr == v->uv_rmt_addr) {
-		errno = EEXIST;
+		errno = EDUPLICATE;
 		return NULL;
 	    }
 

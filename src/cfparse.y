@@ -120,20 +120,19 @@ stmt	: error
 	    v = config_init_tunnel($2, $3, rexmit | noflood);
 	    if (!v) {
 		switch (errno) {
-		case ENOENT:
+		case ENOTMINE:
 		    fatal("Tunnel local address %s is not mine", inet_fmt($2, s1, sizeof(s1)));
 		    break;
-		case ENONET:
+		case ELOOPBACK:
 		    fatal("Tunnel local address %s is a loopback address",
 			  inet_fmt($2, s1, sizeof(s1)));
 		    break;
-		case EADDRINUSE:
+		case ERMTLOCAL:
 		    fatal("Tunnel remote address %s is one of mine",
 			  inet_fmt($3, s1, sizeof(s1)));
 		    break;
-		case EEXIST:
-		    fatal("Duplicate tunnel to %s",
-			  inet_fmt($3, s1, sizeof(s1)));
+		case EDUPLICATE:
+		    fatal("Duplicate tunnel to %s", inet_fmt($3, s1, sizeof(s1)));
 		    break;
 		default:
 		    /* Log file and line number at least */
