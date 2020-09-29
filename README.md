@@ -176,7 +176,7 @@ Unfortunately, and despite the license issue being corrected by OpenBSD,
 in February 2005 [Debian dropped mrouted][1] as an "obsolete protocol".
 
 For a long time the OpenBSD team remained the sole guardian of this
-project.  In 2010 [Joachim Nilsson](https://troglobit.com) revived
+project.  In 2010 [Joachim Wiberg](https://troglobit.com) revived
 mrouted on [GitHub][].
 
 [1]:               http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=288112
