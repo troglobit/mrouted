@@ -68,7 +68,8 @@ int inet_valid_subnet(uint32_t nsubnet, uint32_t nmask)
     subnet = ntohl(nsubnet);
     mask   = ntohl(nmask);
 
-    if ((subnet & mask) != subnet) return FALSE;
+    if ((subnet & mask) != subnet)
+	return FALSE;
 
     if (subnet == 0)
 	return mask == 0;
@@ -76,16 +77,18 @@ int inet_valid_subnet(uint32_t nsubnet, uint32_t nmask)
     if (IN_CLASSA(subnet)) {
 	if (mask < 0xff000000 ||
 	    (subnet & 0xff000000) == 0x7f000000 ||
-	    (subnet & 0xff000000) == 0x00000000) return FALSE;
-    }
-    else if (IN_CLASSD(subnet) || IN_BADCLASS(subnet)) {
+	    (subnet & 0xff000000) == 0x00000000)
+	    return FALSE;
+    } else if (IN_CLASSD(subnet) || IN_BADCLASS(subnet)) {
 	/* Above Class C address space */
 	return FALSE;
     }
+
     if (subnet & ~mask) {
 	/* Host bits are set in the subnet */
 	return FALSE;
     }
+
     if (!inet_valid_mask(mask)) {
 	/* Netmask is not contiguous */
 	return FALSE;
