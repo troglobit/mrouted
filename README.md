@@ -2,7 +2,7 @@ Simple Multicast Routing for UNIX
 =================================
 [![License Badge][]][License] [![Travis Status][]][Travis] [![Coverity Status][]][Coverity Scan]
 
-<img align="right" src="docs/dvmrp-simple.png" alt="Simple overview of what DVMRP is">
+<img align="right" src="doc/dvmrp-simple.png" alt="Simple overview of what DVMRP is">
 
 Table of Contents
 -----------------
@@ -185,7 +185,7 @@ mrouted on [GitHub][].
 [BSD License]:     http://en.wikipedia.org/wiki/BSD_licenses
 [RFC 1075]:        http://tools.ietf.org/html/rfc1075
 [IP-in-IP]:        https://en.wikipedia.org/wiki/IP_in_IP
-[RSRR]:            docs/RSRR.md
+[RSRR]:            doc/RSRR.md
 [buildsystem]:     https://airs.com/ian/configure/
 [mgen(1)]:         https://www.nrl.navy.mil/itd/ncs/products/mgen
 [mcjoin(1)]:       https://github.com/troglobit/mcjoin/
