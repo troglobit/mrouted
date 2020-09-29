@@ -217,6 +217,7 @@ void config_vifs_correlate(void)
      */
     TAILQ_FOREACH_SAFE(ifl, &ifl_kern, ifl_link, tmp)
 	free(ifl);
+    TAILQ_INIT(&ifl_kern);
 }
 
 /*
