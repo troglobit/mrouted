@@ -93,11 +93,22 @@ static void do_randomize(void)
    srandom(seed);
 }
 
+/*
+ * _PATH_MROUTED_GENID is the configurable fallback and old default used
+ * by mrouted, which does not comply with FHS.  We only read that, if it
+ * exists, otherwise we use the system _PATH_VARDB, which works on all
+ * *BSD and GLIBC based Linux systems.  Some Linux systms don't have the
+ * correct FHS /var/lib/misc for that define, so we check for that too.
+ */
 static FILE *fopen_genid(char *mode)
 {
     char fn[80];
 
     snprintf(fn, sizeof(fn), _PATH_MROUTED_GENID);
+    if (access(fn, R_OK | W_OK)) {
+	if (!access(_PATH_VARDB, W_OK))
+	    snprintf(fn, sizeof(fn), "%s/mrouted.genid", _PATH_VARDB);
+    }
 
     return fopen(fn, mode);
 }
