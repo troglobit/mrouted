@@ -102,25 +102,33 @@ static FILE *fopen_genid(char *mode)
     return fopen(fn, mode);
 }
 
-static void init_gendid(void)
+static uint32_t rand_genid(void)
+{
+	struct timespec tv;
+
+	clock_gettime(CLOCK_MONOTONIC, &tv);
+
+	return (uint32_t)tv.tv_sec;	/* for a while after 2038 */
+}
+
+static void init_genid(void)
 {
     FILE *fp;
 
     fp = fopen_genid("r");
-    if (!fp) {
-	struct timespec tv;
-
-	clock_gettime(CLOCK_MONOTONIC, &tv);
-	dvmrp_genid = (uint32_t)tv.tv_sec;	/* for a while after 2038 */
-    } else {
+    if (fp) {
 	uint32_t prev_genid;
 	int ret;
 
 	ret = fscanf(fp, "%u", &prev_genid);
+	(void)fclose(fp);
+
 	if (ret == 1 && prev_genid == dvmrp_genid)
 	    dvmrp_genid++;
-	(void)fclose(fp);
-    }
+	else
+	    dvmrp_genid = rand_genid();
+    } else
+	dvmrp_genid = rand_genid();
 
     fp = fopen_genid("w");
     if (fp) {
@@ -255,7 +263,7 @@ int main(int argc, char *argv[])
     /*
      * Get generation id
      */
-    init_gendid();
+    init_genid();
 
     timer_init();
     igmp_init();
@@ -676,7 +684,7 @@ void restart(void)
     /*
      * start processing again
      */
-    init_gendid();
+    init_genid();
 
     igmp_init();
     init_routes();
