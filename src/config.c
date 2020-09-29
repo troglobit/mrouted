@@ -243,19 +243,16 @@ void config_vifs_from_kernel(void)
 	/*
 	 * Ignore any interface for an address family other than IP.
 	 */
-	if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_INET) {
-	    logit(LOG_INFO, 0, "skipping (this instance of) %s, no IPv4 address.", ifa->ifa_name);
+	if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_INET)
 	    continue;
-	}
 
 	/*
-	 * Ignore interfaces that do not support multicast.
+	 * Ignore loopback interfaces and interfaces that do not support
+	 * multicast.
 	 */
 	flags = ifa->ifa_flags;
-	if (!(flags & IFF_MULTICAST)) {
-	    logit(LOG_INFO, 0, "skipping %s, does not support multicast.", ifa->ifa_name);
+	if ((flags & (IFF_LOOPBACK|IFF_MULTICAST)) != IFF_MULTICAST)
 	    continue;
-	}
 
 	/*
 	 * Perform some sanity checks on the address and subnet, ignore any
