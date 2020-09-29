@@ -542,33 +542,48 @@ static void stop_vif(vifi_t vifi)
  */
 void stop_all_vifs(void)
 {
-    vifi_t vifi;
-    struct uvif *v;
-    struct listaddr *a;
     struct vif_acl *acl;
+    struct listaddr *a;
+    struct phaddr *ph;
+    vifi_t vifi;
 
     for (vifi = 0; vifi < numvifs; vifi++) {
-	v = &uvifs[vifi];
+	struct uvif *v = &uvifs[vifi];
+
 	if (v->uv_querier) {
 	    free(v->uv_querier);
 	    v->uv_querier = NULL;
 	}
+	v->uv_querier = NULL;
+
 	while (v->uv_groups) {
 	    a = v->uv_groups;
 	    v->uv_groups = a->al_next;
 	    free(a);
 	}
+	v->uv_groups = NULL;
+
 	while (v->uv_neighbors) {
 	    a = v->uv_neighbors;
 	    v->uv_neighbors = a->al_next;
 	    nbrs[a->al_index] = NULL;
 	    free(a);
 	}
+	v->uv_neighbors = NULL;
+
 	while (v->uv_acl) {
 	    acl = v->uv_acl;
 	    v->uv_acl = acl->acl_next;
 	    free(acl);
 	}
+	v->uv_acl = NULL;
+
+	while (v->uv_addrs) {
+	    ph = v->uv_addrs;
+	    v->uv_addrs = ph->pa_next;
+	    free(ph);
+	}
+	v->uv_addrs = NULL;
     }
 }
 
