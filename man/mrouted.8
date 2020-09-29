@@ -197,12 +197,14 @@ writes its process ID to
 .Pa /var/run/mrouted.pid
 when it has completed its start up and is ready to receive signals.
 .Sh FILES
-.Bl -tag -width /var/lib/mrouted.genid -compact
+.Bl -tag -width /var/lib/misc/mrouted.genid -compact
 .It Pa /etc/mrouted.conf
 Main configuration file.
-.It Pa /var/lib/mrouted.genid
+.It Pa /var/lib/misc/mrouted.genid
 DVMRP generation ID.  Used by neighboring DVRMP routers to detect when a
-router is restarted.
+router is restarted.  On BSD
+.Pa /var/db/mrouted.genid
+is used.
 .It Pa /var/run/mrouted.pid
 Pidfile (re)created by
 .Nm
