@@ -3,6 +3,46 @@ Change Log
 
 All notable changes to the project are documented in this file.
 
+[v4.1][] - 2020-09-29
+---------------------
+
+Minor feature and bug fix release.
+
+### Changes
+- Issue #40: Automatically detect and add `altnet` to interfaces with
+  multiple addresses, possible thanks to work on #36
+- Document a lot of `mrouted.conf` options available in this version of
+  mrouted since before v3.9, but not in the OpenBSD, based on v3.8:
+  - `prune-lifetime`
+  - `rexmit-prunes`
+  - `phyint` and tunnel interface flags:
+	- `advert-metric`
+	- `allow-nonpruners`
+	- `blaster`
+	- `force-leaf`
+	- `noflood`
+    - `passive`
+	- `prune-lifetime`
+	- `rexmit-prunes`
+  - The tunnel option `beside off`
+  - Router filtering options with `accept`, `deny`, and `notransit`
+
+### Fixes
+- Fix update of `mrouted.genid` on SIGHUP and reboot.  mrouted replaced
+  contents with the value zero (0), causing a zero genid in DVMRP as
+  well, which likely caused peering issues with some implementations
+- Fix double free in `pidfile()`
+- Fix #35: Cannot disable multicast routing in kernel: Permission denied
+  when starting up.
+- Fix #36: Refactor interface probing and bringup.  Fixes issue with the
+  `no phyint` config option not working, introduced in v4.0
+- Fix #37: Fix bad path for mrouted.genid, should be in `/var/lib/misc`
+  on Linux and `/var/db` on *BSD
+- Fix #38: Document and improve error message when running out of IGMP
+  groups on Linux.  When running with many interfaces
+- Fix #40: Detect and warn if multicast ingresses an unknown vif
+
+
 [v4.0][] - 2020-06-09
 ---------------------
 
@@ -517,7 +557,8 @@ v3.5 - 1995-05-08
 - Multicast traceroute could send a reply on a disabled interface.
 
 
-[UNRELEASED]: https://github.com/troglobit/mrouted/compare/4.0...HEAD
+[UNRELEASED]: https://github.com/troglobit/mrouted/compare/4.1...HEAD
+[v4.1]:       https://github.com/troglobit/mrouted/compare/4.0...4.1
 [v4.0]:       https://github.com/troglobit/mrouted/compare/3.9.8...4.0
 [v3.9.8]:     https://github.com/troglobit/mrouted/compare/3.9.7...3.9.8
 [v3.9.7]:     https://github.com/troglobit/mrouted/compare/3.9.6...3.9.7
