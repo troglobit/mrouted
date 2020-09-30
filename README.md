@@ -123,6 +123,9 @@ the default `/usr/local`, and redirect install to a package directory in
 This version of mrouted has [RSRR][] support for running RSVP, disabled
 by default.  Enable with `configure --enable-rsrr`.
 
+**Note:** On some systems `--runstatedir` may not be available in the
+  configure script, try `--localstatedir=/var` instead.
+
 
 Building from GIT
 -----------------
