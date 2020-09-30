@@ -20,7 +20,9 @@ Introduction
 ------------
 
 mrouted is the original implementation of the DVMRP multicast routing
-protocol, [RFC 1075][].
+protocol, [RFC 1075][].  It only works with IPv4 networks.  For IPv6 the
+[pim6sd project](https://github.com/troglobit/pim6sd) may be of
+interest.
 
 mrouted is *simple* to use.  DVMRP is derived from RIP, which means it
 works stand-alone without any extra network setup required.  You can get
@@ -177,7 +179,10 @@ in February 2005 [Debian dropped mrouted][1] as an "obsolete protocol".
 
 For a long time the OpenBSD team remained the sole guardian of this
 project.  In 2010 [Joachim Wiberg](https://troglobit.com) revived
-mrouted on [GitHub][].
+mrouted on [GitHub][] based on the last release by Bill Fenner, the
+`mrouted-3.9beta3+IOS12.tar.gz` tarball.  This project has integrated
+all (?) known patches and continuously track the OpenBSD project, which
+is based on the 3.8 release, for any relevant fixes.
 
 [1]:               http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=288112
 [License]:         http://www.openbsd.org/cgi-bin/cvsweb/src/usr.sbin/mrouted/LICENSE
