@@ -20,8 +20,10 @@ Introduction
 ------------
 
 mrouted is the original implementation of the DVMRP multicast routing
-protocol, [RFC 1075][].  It only works with IPv4 networks.  For IPv6 the
-[pim6sd project](https://github.com/troglobit/pim6sd) may be of
+protocol, [RFC 1075][].  It only works with IPv4 networks.  For more
+advanced setups, the [pimd project](https://github.com/troglobit/pimd)
+or [pimd-dense project](https://github.com/troglobit/pimd-dense), for
+IPv6 the [pim6sd project](https://github.com/troglobit/pim6sd) may be of
 interest.
 
 mrouted is *simple* to use.  DVMRP is derived from RIP, which means it
@@ -32,11 +34,12 @@ tunneling support, or GRE, to traverse Internet or intranets.
 mrouted is developed on Linux and works as-is out of the box.  Other
 UNIX variants should also work, but are not as thoroughly tested.
 
-Manual pages available here:
+Manual pages available online:
 
    * [mrouted(8)][]
    * [mroutectl(8)][]
    * [mrouted.conf(5)][]
+
 
 Running
 -------
@@ -45,9 +48,10 @@ mrouted does not require a `.conf` file.  When it starts up it probes
 all available interfaces and, after an initial 10s delay, starts peering
 with any DVMRP capable neighbors.
 
-Use [mgen(1)][] or [mcjoin(1)][] to send IGMP join packets on the LAN to
-start testing multicast routing.  Use the `mroutectl` tool to query a
-running `mrouted` for status.
+Use [mgen(1)][], [mcjoin(1)][], or [iperf](https://iperf.fr/) to send
+IGMP join packets and multicast data on the LAN to test your multicast
+routing setup.  Use the `mroutectl` tool to query a running `mrouted`
+for status.
 
 For the native mrouted tunnel to work in Linux based systems, you need
 to have the "ipip" kernel module loaded or as built-in:
