@@ -97,37 +97,35 @@ complete list of supported subsystems.
 .Pp
 Available subystems:
 .Pp
-.Bl -tag -width TERM -compact -offset indent
-.It Cm packet | pkt
-Debug inbound/outbout packets
-.It Cm prunes | pruning
-Pruning operations, or pruned routes
-.It Cm routes | routing
-Routing messages
-.It Cm rtdetail | route-detail
-Detailed routing information
-.It Cm peers | neighbors
-Neighbor gossip
+.Bl -tag -width route-detail -compact -offset indent
+.It Cm packet
+Display the type, source and destination of all packets sent or received
+.It Cm pruning
+Display more information about prunes sent or received
+.It Cm routing
+Display more information about routing update packets sent or received
+.It Cm route-detail
+Display routing updates in excruciating detail.  This is generally way too much information
+.It Cm neighbors
+Display information about neighbor discovery
 .It Cm cache
-Debug routing cache
+Display insertions, deletions and refreshes of entries in the kernel forwarding cache
 .It Cm timer
-Debug
-.Nm
-timer handling
-.It Cm vif | interface
-Show interface (VIF) debug messages
-.It Cm groups | membership
-Debug group memberships
-.It Cm mtrace | traceroute
-Multicast traceroute information
+Debug timeouts and periodic processes
+.It Cm interface
+Display information about interfaces and their configuration
+.It Cm membership
+Display information about group memberships on physical interfaces
+.It Cm traceroute
+Display information about multicast traceroute requests passing through this router
 .It Cm igmp
-Debug IGMP messages
+Display IGMP operation including group membership and querier election
 .It Cm icmp
-Debug ICMP messages
+Monitor ICMP handling
 .It Cm rsrr
-Debug RSRR messages
-.It Cm all | 3
-Enable all debug messages
+Monitor RSRR operation
+.It Cm all
+Enable all debug messages (except noisy timer)
 .El
 .It Fl f, -config Ar FILE
 Specify an alternative configuration file, default
