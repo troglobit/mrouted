@@ -173,7 +173,7 @@ extern uint32_t		virtual_time;
 #define	DEBUG_RSRR	0x1000
 #define	DEBUG_ICMP	0x2000
 #define DEBUG_PARSE_ERR 0x80000000
-#define DEBUG_ALL       0xffffffff
+#define DEBUG_ALL       0xffffffdf /* All except noisy timer */
 
 struct debugnm {
 	char		*name;
