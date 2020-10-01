@@ -366,13 +366,13 @@ int main(int argc, char *argv[])
 		{ "no-heading", 0, NULL, 't' },
 		{ "help",       0, NULL, 'h' },
 		{ "version",    0, NULL, 'v' },
-		{ 0 }
+		{ NULL, 0, NULL, 0 }
 	};
 	struct cmd igmp[] = {
 		{ "groups",     NULL, NULL,         IPC_SHOW_IGMP_GROUP_CMD },
 		{ "interfaces", NULL, NULL,         IPC_SHOW_IGMP_IFACE_CMD },
 		{ "ifaces",     NULL, NULL,         IPC_SHOW_IGMP_IFACE_CMD }, /* alias */
-		{ 0 }
+		{ NULL, NULL, NULL, 0 }
 	};
 	struct cmd show[] = {
 		{ "compat",     NULL, NULL,         IPC_SHOW_COMPAT_CMD     },
@@ -384,7 +384,7 @@ int main(int argc, char *argv[])
 		{ "neighbor",   NULL, NULL,         IPC_SHOW_NEIGH_CMD      },
 		{ "status",     NULL, NULL,         IPC_SHOW_STATUS_CMD     },
 		{ "version",    NULL, NULL,         IPC_VERSION_CMD         },
-		{ 0 }
+		{ NULL, NULL, NULL, 0 }
 	};
 	struct cmd command[] = {
 		{ "debug",      NULL, set_debug,    0                       },
@@ -393,7 +393,7 @@ int main(int argc, char *argv[])
 		{ "log",        NULL, set_loglevel, 0                       },
 		{ "restart",    NULL, NULL,         IPC_RESTART_CMD         },
 		{ "show",       show, show_status,  0                       },
-		{ 0 }
+		{ NULL, NULL, NULL, 0 }
 	};
 	int c;
 
