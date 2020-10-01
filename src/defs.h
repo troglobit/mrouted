@@ -422,18 +422,19 @@ extern void		rsrr_cache_clean(struct gtable *);
 #endif
 
 #ifndef HAVE_STRLCPY
-size_t strlcpy(char *dst, const char *src, size_t siz);
+extern size_t		strlcpy(char *dst, const char *src, size_t siz);
 #endif
 
 #ifndef HAVE_STRLCAT
-size_t  strlcat(char *dst, const char *src, size_t siz);
+extern size_t		strlcat(char *dst, const char *src, size_t siz);
 #endif
 
 #ifndef HAVE_STRTONUM
-long long strtonum(const char *numstr, long long minval, long long maxval, const char **errstrp);
+extern long long	strtonum(const char *numstr, long long minval, long long maxval, const char **errstrp);
 #endif
+
 #ifndef HAVE_PIDFILE
-int pidfile(const char *basename);
+extern int		pidfile(const char *basename);
 #endif
 
 /*
@@ -466,10 +467,10 @@ struct ipc {
 };
 
 /* ipc.c */
-void ipc_init(void);
-void ipc_exit(void);
+extern void		ipc_init(void);
+extern void		ipc_exit(void);
 
 /* Shared constants between mrouted and mroutectl */
-static const char *versionstring = "mrouted version " PACKAGE_VERSION;
+static const char      *versionstring = "mrouted version " PACKAGE_VERSION;
 
 #endif /* MROUTED_DEFS_H_ */
