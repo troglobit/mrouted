@@ -3,7 +3,7 @@ Change Log
 
 All notable changes to the project are documented in this file.
 
-[v4.1][] - 2020-09-29
+[v4.1][] - 2020-10-02
 ---------------------
 
 Minor feature and bug fix release.
@@ -11,6 +11,9 @@ Minor feature and bug fix release.
 ### Changes
 - Issue #40: Automatically detect and add `altnet` to interfaces with
   multiple addresses, possible thanks to work on #36
+- Reduce number of exposed aliases to debug sub-systems in online help
+  text and man page.  Only primary name, as of mrouted v3.9-beta3
+- Removed noisy `timer` sub-system from `-d all`, use `-d all, timer`
 - Document a lot of `mrouted.conf` options available in this version of
   mrouted since before v3.9, but not in the OpenBSD, based on v3.8:
   - `prune-lifetime`
@@ -31,6 +34,8 @@ Minor feature and bug fix release.
 - Fix update of `mrouted.genid` on SIGHUP and reboot.  mrouted replaced
   contents with the value zero (0), causing a zero genid in DVMRP as
   well, which likely caused peering issues with some implementations
+- Fix build warning on Clang 3.4.1 (FreeBSD 10.3)
+- Workaround for older autoconf without `--runstatedir` support
 - Fix double free in `pidfile()`
 - Fix #35: Cannot disable multicast routing in kernel: Permission denied
   when starting up.

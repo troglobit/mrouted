@@ -26,7 +26,7 @@ mrouted (4.1) stable; urgency=medium
   * Fix annoying message "cCannot disable multicast routing" at startup
   * Fix double free in PID file code
 
- -- Joachim Wiberg <troglobit@gmail.com>  Tue, 29 Sep 2020 08:13:15 +0200
+ -- Joachim Wiberg <troglobit@gmail.com>  Fri, 02 Oct 2020 05:19:06 +0200
 
 mrouted (4.0) unstable; urgency=medium
 
