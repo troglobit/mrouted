@@ -8,10 +8,10 @@ Table of Contents
 -----------------
 
 * [Introduction](#introduction)
-* [Build & Install](#build--install)
-* [Building from GIT](#building-from-git)
 * [Running](#running)
 * [Configuration](#configuration)
+* [Build & Install](#build--install)
+* [Building from GIT](#building-from-git)
 * [Contributing](#contributing)
 * [Origin & References](#origin--references)
 
