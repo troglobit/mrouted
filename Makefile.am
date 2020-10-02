@@ -16,7 +16,7 @@ md5-dist:
 	done
 
 ## Generate .deb package
-package build-deb:
+package:
 	@debuild -uc -us -B --lintian-opts --profile debian -i -I --show-overrides
 
 ## Check if tagged in git
