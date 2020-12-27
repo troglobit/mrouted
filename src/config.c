@@ -276,7 +276,7 @@ void config_vifs_from_kernel(void)
 	v = &ifl->ifl_uv;
 	zero_vif(v, 0);
 
-	strlcpy(v->uv_name, ifa->ifa_name, sizeof(ifl->ifl_uv.uv_name));
+	strlcpy(v->uv_name, ifa->ifa_name, sizeof(v->uv_name));
 	v->uv_lcl_addr    = addr;
 	v->uv_subnet      = subnet;
 	v->uv_subnetmask  = mask;
