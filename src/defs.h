@@ -295,7 +295,7 @@ extern void		timer_age_queue(time_t);
 extern int		timer_next_delay(void);
 extern int		timer_set(time_t, cfunc_t, void *);
 extern int		timer_get(int);
-extern void		timer_clear(int);
+extern int		timer_clear(int);
 
 /* route.c */
 extern void		init_routes(void);

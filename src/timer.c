@@ -211,13 +211,13 @@ int timer_get(int timer_id)
 }
 
 /* clear the associated timer */
-void timer_clear(int timer_id)
+int timer_clear(int timer_id)
 {
     struct tmr *ptr, *next;
     int i = 0;
 
     if (!timer_id)
-	return;
+	return -1;
 
     /*
      * find the right node, delete it. the subsequent node's time
@@ -236,7 +236,7 @@ void timer_clear(int timer_id)
 	print_Q();
 	IF_DEBUG(DEBUG_TIMEOUT)
 	    logit(LOG_DEBUG, 0, "failed to delete timer %d (#%d)", timer_id, i);
-	return;
+	return -1;
     }
 
     /* Found it, now unlink it from the queue */
@@ -257,6 +257,8 @@ void timer_clear(int timer_id)
 
     TAILQ_INSERT_TAIL(&fl, ptr, link);
     print_Q();
+
+    return 0;
 }
 
 /*
