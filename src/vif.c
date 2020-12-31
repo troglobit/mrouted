@@ -371,7 +371,7 @@ static void send_query(struct uvif *v, uint32_t dst, int code, uint32_t group)
     }
 
     send_igmp(v->uv_lcl_addr, dst, IGMP_MEMBERSHIP_QUERY,
-	      code, 0, datalen);
+	      code, group, datalen);
 }
 
 /*
