@@ -258,7 +258,7 @@ void check_vif_state(void)
 	    continue;
 
 	memcpy(ifr.ifr_name, v->uv_name, sizeof(ifr.ifr_name));
-	if (ioctl(udp_socket, SIOCGIFFLAGS, (char *)&ifr) < 0)
+	if (ioctl(udp_socket, SIOCGIFFLAGS, &ifr) < 0)
 	    logit(LOG_ERR, errno, "Failed ioctl SIOCGIFFLAGS for %s", ifr.ifr_name);
 
 	if (v->uv_flags & VIFF_DOWN) {
@@ -499,10 +499,10 @@ static void stop_vif(vifi_t vifi)
 	 * Discard all group addresses.  (No need to tell kernel;
 	 * the k_del_vif() call, below, will clean up kernel state.)
 	 */
-	while (v->uv_groups != NULL) {
+	while (v->uv_groups) {
 	    a = v->uv_groups;
 	    v->uv_groups = a->al_next;
-	    free((char *)a);
+	    free(a);
 	}
 
 	IF_DEBUG(DEBUG_IGMP) {
@@ -527,11 +527,11 @@ static void stop_vif(vifi_t vifi)
     if (!NBRM_ISEMPTY(v->uv_nbrmap))
 	vifs_with_neighbors--;
 
-    while (v->uv_neighbors != NULL) {
+    while (v->uv_neighbors) {
 	a = v->uv_neighbors;
 	v->uv_neighbors = a->al_next;
 	nbrs[a->al_index] = NULL;
-	free((char *)a);
+	free(a);
     }
     NBRM_CLRALL(v->uv_nbrmap);
 }
@@ -634,7 +634,7 @@ static void age_old_hosts(void)
      * active group on each vif.
      */
     for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
-        for (g = v->uv_groups; g != NULL; g = g->al_next) {
+        for (g = v->uv_groups; g; g = g->al_next) {
 	    if (g->al_old)
 		g->al_old--;
 	}
@@ -777,7 +777,7 @@ void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo
 		  inet_fmt(src, s1, sizeof(s1)), vifi, tmo);
 	}
 	
-	for (g = v->uv_groups; g != NULL; g = g->al_next) {
+	for (g = v->uv_groups; g; g = g->al_next) {
 	    if (group == g->al_addr && g->al_query == 0) {
 		/* setup a timeout to remove the group membership */
 		if (g->al_timerid)
@@ -1128,7 +1128,7 @@ void accept_neighbor_request(uint32_t src, uint32_t dst)
 			*p++ = (temp_addr >> 8) & 0xFF; \
 			*p++ = temp_addr & 0xFF;
 
-    p = (uint8_t *) (send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN);
+    p = (uint8_t *)(send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN);
     datalen = 0;
 
     for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
@@ -1143,7 +1143,7 @@ void accept_neighbor_request(uint32_t src, uint32_t dst)
 	    if (datalen + (ncount == 0 ? 4 + 3 + 4 : 4) > MAX_DVMRP_DATA_LEN) {
 		send_igmp(INADDR_ANY, them, IGMP_DVMRP, DVMRP_NEIGHBORS,
 			  htonl(MROUTED_LEVEL), datalen);
-		p = (uint8_t *) (send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN);
+		p = (uint8_t *)(send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN);
 		datalen = 0;
 		ncount = 0;
 	    }
@@ -1181,7 +1181,7 @@ void accept_neighbor_request2(uint32_t src, uint32_t dst)
     int	datalen;
     uint32_t them = src;
 
-    p = (uint8_t *) (send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN);
+    p = (uint8_t *)(send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN);
     datalen = 0;
 
     for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
@@ -1213,7 +1213,7 @@ void accept_neighbor_request2(uint32_t src, uint32_t dst)
 	    if (datalen > MAX_DVMRP_DATA_LEN - 12) {
 		send_igmp(INADDR_ANY, them, IGMP_DVMRP, DVMRP_NEIGHBORS2,
 			  htonl(MROUTED_LEVEL), datalen);
-		p = (uint8_t *) (send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN);
+		p = (uint8_t *)(send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN);
 		datalen = 0;
 	    }
 	    *(uint32_t*)p = v->uv_lcl_addr;
@@ -1231,7 +1231,7 @@ void accept_neighbor_request2(uint32_t src, uint32_t dst)
 		if (datalen + (ncount == 0 ? 4+4+4 : 4) > MAX_DVMRP_DATA_LEN) {
 		    send_igmp(INADDR_ANY, them, IGMP_DVMRP, DVMRP_NEIGHBORS2,
 			      htonl(MROUTED_LEVEL), datalen);
-		    p = (uint8_t *) (send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN);
+		    p = (uint8_t *)(send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN);
 		    datalen = 0;
 		    ncount = 0;
 		}
@@ -1466,7 +1466,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
     /*
      * Look for addr in list of neighbors.
      */
-    for (n = v->uv_neighbors; n != NULL; n = n->al_next) {
+    for (n = v->uv_neighbors; n; n = n->al_next) {
 	if (addr == n->al_addr) {
 	    break;
 	}
@@ -1936,7 +1936,7 @@ void dump_vifs(FILE *fp, int detail)
 	}
 
 	label = "peers:";
-	for (a = v->uv_neighbors; a != NULL; a = a->al_next) {
+	for (a = v->uv_neighbors; a; a = a->al_next) {
 	    fprintf(fp, "                            %6s %s (%d.%d) [%d]",
 		    label, inet_fmt(a->al_addr, s1, sizeof(s1)), a->al_pv, a->al_mv,
 		    a->al_index);
@@ -1949,7 +1949,7 @@ void dump_vifs(FILE *fp, int detail)
 	}
 
 	label = "group host (time left):";
-	for (a = v->uv_groups; a != NULL; a = a->al_next) {
+	for (a = v->uv_groups; a; a = a->al_next) {
 	    fprintf(fp, "           %23s %-15s %-15s (%s)\n",
 		    label,
 		    inet_fmt(a->al_addr, s1, sizeof(s1)),
@@ -1958,7 +1958,7 @@ void dump_vifs(FILE *fp, int detail)
 	    label = "";
 	}
 	label = "boundaries:";
-	for (acl = v->uv_acl; acl != NULL; acl = acl->acl_next) {
+	for (acl = v->uv_acl; acl; acl = acl->acl_next) {
 	    fprintf(fp, "                       %11s %-18s\n", label,
 			inet_fmts(acl->acl_addr, acl->acl_mask, s1, sizeof(s1)));
 	    label = "";
@@ -1971,8 +1971,7 @@ void dump_vifs(FILE *fp, int detail)
 		     v->uv_filter->vf_flags & VFF_BIDIR  ? "bidir"  : "     ",
 		     v->uv_filter->vf_type == VFT_ACCEPT ? "accept" : "deny");
 	    label = lbuf;
-	    for (vfe = v->uv_filter->vf_filter;
-		 vfe != NULL; vfe = vfe->vfe_next) {
+	    for (vfe = v->uv_filter->vf_filter; vfe; vfe = vfe->vfe_next) {
 		fprintf(fp, "           %23s %-18s%s\n",
 			label,
 			inet_fmts(vfe->vfe_addr, vfe->vfe_mask, s1, sizeof(s1)),
@@ -2005,7 +2004,7 @@ void dump_vifs(FILE *fp, int detail)
 
 	v_req.vifi = vifi;
 	if (did_final_init) {
-	    if (ioctl(udp_socket, SIOCGETVIFCNT, (char *)&v_req) < 0) {
+	    if (ioctl(udp_socket, SIOCGETVIFCNT, &v_req) < 0) {
 		logit(LOG_WARNING, errno, "Failed ioctl SIOCGETVIFCNT on vif %u", vifi);
 	    } else {
 		fprintf(fp, "                   pkts/bytes in : %lu/%lu\n",
