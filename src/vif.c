@@ -40,18 +40,18 @@ static int dvmrp_timerid = -1;
 /*
  * Forward declarations.
  */
-static void start_vif(vifi_t vifi);
-static void start_vif2(vifi_t vifi);
-static void stop_vif(vifi_t vifi);
-static void age_old_hosts(void);
-static void send_probe_on_vif(struct uvif *v);
-static void send_query(struct uvif *v, uint32_t dst, int code, uint32_t group);
-static int info_version(uint8_t *p, size_t plen);
-static void DelVif(void *arg);
-static int SetTimer(vifi_t vifi, struct listaddr *g);
-static int DeleteTimer(int id);
-static void SendQuery(void *arg);
-static int SetQueryTimer(struct listaddr *g, vifi_t vifi, int to_expire, int q_time);
+static void start_vif          (vifi_t vifi);
+static void start_vif2         (vifi_t vifi);
+static void stop_vif           (vifi_t vifi);
+
+static void age_old_hosts      (void);
+static void send_probe_on_vif  (struct uvif *v);
+
+static void send_query         (struct uvif *v, uint32_t dst, int code, uint32_t group);
+static int  info_version       (uint8_t *p, size_t plen);
+
+static int  delete_group_timer (vifi_t vifi, struct listaddr *g);
+static int  send_query_timer   (vifi_t vifi, struct listaddr *g, int to_expire, int q_time);
 
 /*
  * Initialize the virtual interfaces, but do not install
@@ -145,14 +145,14 @@ void init_vifs(void)
      * Periodically query for local group memberships on all subnets for
      * which this router is the elected querier.
      */
-    if (query_timerid != -1)
+    if (query_timerid > 0)
 	timer_clear(query_timerid);
     query_timerid = timer_set(igmp_query_interval, query_groups, NULL);
 
     /*
      * Periodically probe all VIFs for DVMRP neighbors
      */
-    if (dvmrp_timerid != -1)
+    if (dvmrp_timerid > 0)
 	timer_clear(dvmrp_timerid);
     dvmrp_timerid = timer_set(NEIGHBOR_PROBE_INTERVAL, query_dvmrp, NULL);
 }
@@ -779,14 +779,15 @@ void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo
 	
 	for (g = v->uv_groups; g; g = g->al_next) {
 	    if (group == g->al_addr && g->al_query == 0) {
-		/* setup a timeout to remove the group membership */
-		if (g->al_timerid)
-		    g->al_timerid = DeleteTimer(g->al_timerid);
+		if (g->al_timerid > 0)
+		    g->al_timerid = timer_clear(g->al_timerid);
 
-		/* use al_query to record our presence in last-member state */
+		if (g->al_query > 0)
+		    g->al_query = timer_clear(g->al_query);
+
+		/* setup a timeout to remove the group membership */
 		g->al_timer = IGMP_LAST_MEMBER_QUERY_COUNT * tmo / IGMP_TIMER_SCALE;
-		g->al_query = -1;
-		g->al_timerid = SetTimer(vifi, g);
+		g->al_timerid = delete_group_timer(vifi, g);
 
 		IF_DEBUG(DEBUG_IGMP) {
 		    logit(LOG_DEBUG, 0, "Timer for grp %s on vif %u set to %d",
@@ -833,13 +834,13 @@ void accept_group_report(uint32_t src, uint32_t dst, uint32_t group, int r_type)
 	    /** delete old timers, set a timer for expiration **/
 	    g->al_timer = IGMP_GROUP_MEMBERSHIP_INTERVAL;
 
-	    if (g->al_query)
-		g->al_query = DeleteTimer(g->al_query);
+	    if (g->al_query > 0)
+		g->al_query = timer_clear(g->al_query);
 
-	    if (g->al_timerid)
-		g->al_timerid = DeleteTimer(g->al_timerid);
+	    if (g->al_timerid > 0)
+		g->al_timerid = timer_clear(g->al_timerid);
 
-	    g->al_timerid = SetTimer(vifi, g);	
+	    g->al_timerid = delete_group_timer(vifi, g);
 	    break;
 	}
     }
@@ -864,7 +865,7 @@ void accept_group_report(uint32_t src, uint32_t dst, uint32_t group, int r_type)
         g->al_query	= 0;
 	g->al_timer	= IGMP_GROUP_MEMBERSHIP_INTERVAL;
 	g->al_reporter	= src;
-	g->al_timerid	= SetTimer(vifi, g);
+	g->al_timerid	= delete_group_timer(vifi, g);
 	g->al_next	= v->uv_groups;
 	v->uv_groups	= g;
 	time(&g->al_ctime);
@@ -916,8 +917,8 @@ void accept_leave_message(uint32_t src, uint32_t dst, uint32_t group)
 	    return;
 
 	/** delete old timer set a timer for expiration **/
-	if (g->al_timerid)
-	    g->al_timerid = DeleteTimer(g->al_timerid);
+	if (g->al_timerid > 0)
+	    g->al_timerid = timer_clear(g->al_timerid);
 
 #if IGMP_LAST_MEMBER_QUERY_COUNT != 2
 #error This code needs to be updated to keep a counter of the number of queries remaining.
@@ -925,10 +926,10 @@ void accept_leave_message(uint32_t src, uint32_t dst, uint32_t group)
 	/** send a group specific querry **/
 	send_query(v, g->al_addr, IGMP_LAST_MEMBER_QUERY_INTERVAL * IGMP_TIMER_SCALE, g->al_addr);
 
-	g->al_query = SetQueryTimer(g, vifi, IGMP_LAST_MEMBER_QUERY_INTERVAL,
+	g->al_query = send_query_timer(vifi, g, IGMP_LAST_MEMBER_QUERY_INTERVAL,
 				    IGMP_LAST_MEMBER_QUERY_INTERVAL * IGMP_TIMER_SCALE);
 	g->al_timer = IGMP_LAST_MEMBER_QUERY_INTERVAL * (IGMP_LAST_MEMBER_QUERY_COUNT + 1);
-	g->al_timerid = SetTimer(vifi, g);
+	g->al_timerid = delete_group_timer(vifi, g);
 	break;
     }
 }
@@ -2020,7 +2021,7 @@ void dump_vifs(FILE *fp, int detail)
 /*
  * Time out record of a group membership on a vif
  */
-static void DelVif(void *arg)
+static void delete_group_cb(void *arg)
 {
     cbk_t *cbk = (cbk_t *)arg;
     vifi_t vifi = cbk->vifi;
@@ -2031,16 +2032,16 @@ static void DelVif(void *arg)
      * Group has expired
      * delete all kernel cache entries with this group
      */
-    if (g->al_query)
-	DeleteTimer(g->al_query);
+    if (g->al_query > 0)
+	g->al_query = timer_clear(g->al_query);
 
     delete_lclgrp(vifi, g->al_addr);
 
     anp = &(v->uv_groups);
-    while ((a = *anp) != NULL) {
+    while ((a = *anp)) {
     	if (a == g) {
 	    *anp = a->al_next;
-	    free((char *)a);
+	    free(a);
 	} else {
 	    anp = &a->al_next;
 	}
@@ -2052,7 +2053,7 @@ static void DelVif(void *arg)
 /*
  * Set a timer to delete the record of a group membership on a vif.
  */
-static int SetTimer(vifi_t vifi, struct listaddr *g)
+static int delete_group_timer(vifi_t vifi, struct listaddr *g)
 {
     cbk_t *cbk;
 
@@ -2062,29 +2063,19 @@ static int SetTimer(vifi_t vifi, struct listaddr *g)
 	return -1;
     }
 
-    cbk->g = g;
+    cbk->g    = g;
     cbk->vifi = vifi;
 
     /* Record mtime for IPC "show igmp" */
     g->al_mtime = virtual_time;
 
-    return timer_set(g->al_timer, DelVif, cbk);
-}
-
-/*
- * Delete a timer that was set above.
- */
-static int DeleteTimer(int id)
-{
-    timer_clear(id);
-
-    return 0;
+    return timer_set(g->al_timer, delete_group_cb, cbk);
 }
 
 /*
  * Send a group-specific query.
  */
-static void SendQuery(void *arg)
+static void send_query_cb(void *arg)
 {
     cbk_t *cbk = (cbk_t *)arg;
     struct uvif *v = &uvifs[cbk->vifi];
@@ -2097,7 +2088,7 @@ static void SendQuery(void *arg)
 /*
  * Set a timer to send a group-specific query.
  */
-static int SetQueryTimer(struct listaddr *g, vifi_t vifi, int to_expire, int q_time)
+static int send_query_timer(vifi_t vifi, struct listaddr *g, int to_expire, int q_time)
 {
     cbk_t *cbk;
 
@@ -2107,11 +2098,11 @@ static int SetQueryTimer(struct listaddr *g, vifi_t vifi, int to_expire, int q_t
 	return -1;
     }
 
-    cbk->g = g;
+    cbk->g      = g;
     cbk->q_time = q_time;
-    cbk->vifi = vifi;
+    cbk->vifi   = vifi;
 
-    return timer_set(to_expire, SendQuery, cbk);
+    return timer_set(to_expire, send_query_cb, cbk);
 }
 
 /**

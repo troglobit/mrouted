@@ -206,8 +206,8 @@ struct listaddr {
 	} alu_router;
 	struct {
     	    uint32_t alug_reporter;	/* a host which reported membership */
-    	    uint32_t alug_timerid;	/* timer for group membership	    */
-    	    uint32_t alug_query;	/* timer for repeated leave query   */
+    	    int	     alug_timerid;	/* timer for group membership	    */
+    	    int	     alug_query;	/* timer for repeated leave query   */
     	    uint8_t  alug_old;		/* time since heard old report      */
 	} alu_group;
     } al_alu;
