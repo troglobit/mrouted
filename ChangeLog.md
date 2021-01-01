@@ -14,6 +14,8 @@ Major bug fix release.
   `igmp-robustness` setting in `mrouted.conf`, default 2
 - Support for tuning the IGMP Last Member Query Interval using a
   new setting `igmp-query-last-member-interval <1-1024>`, issue #44
+- Improved support for running mroutectl under watch(1).  No more
+  artifacts due to unknown ANSI escape sequences to probe width
 
 ### Fixes
 - Issue #43: IGMPv3 membership reports were parsed incorrectly.  The

@@ -10,6 +10,8 @@ mrouted (4.2) stable; urgency=medium
   * Issue #46: Malformed group-specific IGMP query.  The IGMP header no
     longer had the group field set, despite the query being addressed to a
     specific group.  Regression introduced in v4.0
+  * Improved support for running mroutectl under watch(1).  No more
+    artifacts due to unknown ANSI escape sequences to probe width
 
  -- Joachim Wiberg <troglobit@gmail.com>  Fri, 01 Jan 2021 02:31:52 +0100
 
