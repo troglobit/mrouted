@@ -98,6 +98,19 @@ void k_hdr_include(int bool)
 
 
 /*
+ * For IGMP reports we need to know incoming interface since proxy reporters
+ * may use source IP 0.0.0.0, so we cannot rely on find_vif_direct().
+ */
+void k_set_pktinfo(int val)
+{
+#ifdef IP_PKTINFO
+    if (setsockopt(igmp_socket, SOL_IP, IP_PKTINFO, &val, sizeof(val)) < 0)
+	logit(LOG_ERR, errno, "Failed setting socket IP_PKTINFO to %d", val);
+#endif
+}
+
+
+/*
  * Set the default TTL for the multicast packets outgoing from this socket.
  */
 void k_set_ttl(int t)
@@ -381,8 +394,6 @@ int k_get_sg_count(uint32_t src, uint32_t grp, int *pktcnt, int *bytecnt, int *w
 
 /**
  * Local Variables:
- *  indent-tabs-mode: t
- *  c-file-style: "ellemtel"
- *  c-basic-offset: 4
+ *  c-file-style: "cc-mode"
  * End:
  */

@@ -274,7 +274,7 @@ extern void             resetlogging(void *);
 /* igmp.c */
 extern void		igmp_init(void);
 extern void		igmp_exit(void);
-extern void		accept_igmp(size_t);
+extern void		accept_igmp(int, size_t);
 extern size_t		build_igmp(uint32_t, uint32_t, int, int, uint32_t, int);
 extern void		send_igmp(uint32_t, uint32_t, int, int, uint32_t, int);
 extern char *		igmp_packet_kind(uint32_t, uint32_t);
@@ -324,6 +324,7 @@ extern void		zero_vif(struct uvif *, int);
 extern void		init_installvifs(void);
 extern void		check_vif_state(void);
 extern void		send_on_vif(struct uvif *, uint32_t, int, size_t);
+extern vifi_t		find_vif(int);
 extern vifi_t		find_vif_direct(uint32_t, uint32_t);
 extern uint32_t         vif_nbr_expire_time(struct listaddr *);
 extern void		age_vifs(void);
@@ -333,7 +334,7 @@ extern char            *vif_nbr_sflags(uint16_t);
 extern void		dump_vifs(FILE *, int);
 extern void		stop_all_vifs(void);
 extern struct listaddr *neighbor_info(vifi_t, uint32_t);
-extern void		accept_group_report(uint32_t, uint32_t, uint32_t, int);
+extern void		accept_group_report(int, uint32_t, uint32_t, uint32_t, int);
 extern void		query_groups(void *);
 extern void		query_dvmrp(void *);
 extern void		probe_for_neighbors(void);
@@ -344,9 +345,9 @@ extern void		accept_info_request(uint32_t, uint32_t, uint8_t *, size_t);
 extern void		accept_info_reply(uint32_t, uint32_t, uint8_t *, size_t);
 extern void		accept_neighbors(uint32_t, uint32_t, uint8_t *, size_t, uint32_t);
 extern void		accept_neighbors2(uint32_t, uint32_t, uint8_t *, size_t, uint32_t);
-extern void		accept_leave_message(uint32_t, uint32_t, uint32_t);
-extern void		accept_membership_query(uint32_t, uint32_t, uint32_t, int, int);
-extern void             accept_membership_report(uint32_t, uint32_t, struct igmpv3_report *, ssize_t);
+extern void		accept_leave_message(int, uint32_t, uint32_t, uint32_t);
+extern void		accept_membership_query(int, uint32_t, uint32_t, uint32_t, int, int);
+extern void             accept_membership_report(int, uint32_t, uint32_t, struct igmpv3_report *, ssize_t);
 
 /* config.c */
 extern void		config_set_ifflag(uint32_t flag);
@@ -402,6 +403,7 @@ extern int              curttl;
 
 extern void		k_set_rcvbuf(int, int);
 extern void		k_hdr_include(int);
+extern void		k_set_pktinfo(int);
 extern void		k_set_ttl(int);
 extern void		k_set_loop(int);
 extern void		k_set_if(uint32_t);

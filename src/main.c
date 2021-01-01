@@ -44,7 +44,7 @@ int running = 1;
 int use_syslog = 1;
 time_t mrouted_init_time;
 
-#define NHANDLERS	2
+#define NHANDLERS	5
 static struct ihandler {
     int fd;			/* File descriptor	*/
     ihfunc_t func;		/* Function to call	*/
@@ -392,18 +392,6 @@ int main(int argc, char *argv[])
 	}
 
 	if (n > 0) {
-	    if (pfd[0].revents & POLLIN) {
-		ssize_t len;
-
-		len = recv(igmp_socket, recv_buf, RECV_BUF_SIZE, 0);
-		if (len < 0) {
-		    if (errno != EINTR)
-			logit(LOG_ERR, errno, "recvfrom");
-		    continue;
-		}
-		accept_igmp(len);
-	    }
-
 	    for (i = 0; i < nhandlers; i++) {
 		if (pfd[i + 1].revents & POLLIN)
 		    (*ihandlers[i].func)(ihandlers[i].fd);
@@ -730,8 +718,6 @@ char *scaletime(time_t t)
 
 /**
  * Local Variables:
- *  indent-tabs-mode: t
- *  c-file-style: "ellemtel"
- *  c-basic-offset: 4
+ *  c-file-style: "cc-mode"
  * End:
  */

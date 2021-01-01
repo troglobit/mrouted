@@ -128,6 +128,10 @@ struct uvif *config_init_tunnel(in_addr_t lcl_addr, in_addr_t rmt_addr, uint32_t
     v->uv_dst_addr   = rmt_addr;
     strlcpy(v->uv_name, ffr.ifr_name, sizeof(v->uv_name));
 
+    v->uv_ifindex = if_nametoindex(v->uv_name);
+    if (!v->uv_ifindex)
+	logit(LOG_ERR, errno, "Failed reading ifindex for %s", v->uv_name);
+
     if (!(ffr.ifr_flags & IFF_UP)) {
 	v->uv_flags |= VIFF_DOWN;
 	vifs_down = TRUE;
@@ -285,6 +289,14 @@ void config_vifs_from_kernel(void)
 	if (ifa->ifa_flags & IFF_POINTOPOINT)
 	    v->uv_flags |= VIFF_REXMIT_PRUNES;
 
+	/*
+	 * On Linux we can enumerate vifs using ifindex,
+	 * no need for an IP address.  Also used for the
+	 * VIF lookup in find_vif()
+	 */
+	v->uv_ifindex = if_nametoindex(v->uv_name);
+	if (!v->uv_ifindex)
+	    logit(LOG_ERR, errno, "Failed reading ifindex for %s", v->uv_name);
 	/*
 	 * If the interface is not yet up, set the vifs_down flag to
 	 * remind us to check again later.

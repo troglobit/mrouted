@@ -128,6 +128,7 @@ struct uvif {
     int		     uv_icmp_warn;  /* To rate-limit ICMP warnings	    */
     uint32_t	     uv_nroutes;    /* # of routes with this vif as parent  */
     struct ip 	    *uv_encap_hdr;  /* Pre-formed header to encapsulate msgs*/
+    int		     uv_ifindex;    /* because RTNETLINK returns only index */
 };
 
 #define uv_blasterbuf	uv_blaster.bi_buf

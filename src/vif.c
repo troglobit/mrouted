@@ -593,6 +593,26 @@ void stop_all_vifs(void)
 
 
 /*
+ * Find VIF from ifindex
+ */
+vifi_t find_vif(int ifi)
+{
+    struct uvif *v;
+    vifi_t vifi;
+
+    if (ifi < 0)
+	return NO_VIF;
+
+    for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
+	if (v->uv_ifindex == ifi)
+	    return vifi;
+    }
+
+    return NO_VIF;
+}
+
+
+/*
  * Find the virtual interface from which an incoming packet arrived,
  * based on the packet's source and destination IP addresses.
  */
@@ -695,12 +715,14 @@ void query_dvmrp(void *arg)
  * IGMP version mismatches, perform querier election, and
  * handle group-specific queries when we're not the querier.
  */
-void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo, int ver)
+void accept_membership_query(int ifi, uint32_t src, uint32_t dst, uint32_t group, int tmo, int ver)
 {
     struct uvif *v;
     vifi_t vifi;
 
-    vifi = find_vif_direct(src, dst);
+    vifi = find_vif(ifi);
+    if (vifi == NO_VIF)
+	vifi = find_vif_direct(src, dst);
     if (vifi == NO_VIF || (uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
 	logit(LOG_INFO, 0, "Ignoring group membership query from non-adjacent host %s",
 	      inet_fmt(src, s1, sizeof(s1)));
@@ -806,7 +828,7 @@ void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo
 /*
  * Process an incoming group membership report.
  */
-void accept_group_report(uint32_t src, uint32_t dst, uint32_t group, int r_type)
+void accept_group_report(int ifi, uint32_t src, uint32_t dst, uint32_t group, int r_type)
 {
     vifi_t vifi;
     struct uvif *v;
@@ -816,7 +838,9 @@ void accept_group_report(uint32_t src, uint32_t dst, uint32_t group, int r_type)
     if (ntohl(group) <= INADDR_MAX_LOCAL_GROUP) /* group <= 224.0.0.255? */
 	return;
 
-    vifi = find_vif_direct(src, dst);
+    vifi = find_vif(ifi);
+    if (vifi == NO_VIF)
+	vifi = find_vif_direct(src, dst);
     if (vifi == NO_VIF || (uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
 	logit(LOG_INFO, 0, "Ignoring group membership report from non-adjacent host %s",
 	      inet_fmt(src, s1, sizeof(s1)));
@@ -886,13 +910,15 @@ void accept_group_report(uint32_t src, uint32_t dst, uint32_t group, int r_type)
 /*
  * Process an incoming IGMPv2 Leave Group message.
  */
-void accept_leave_message(uint32_t src, uint32_t dst, uint32_t group)
+void accept_leave_message(int ifi, uint32_t src, uint32_t dst, uint32_t group)
 {
     vifi_t vifi;
     struct uvif *v;
     struct listaddr *g;
 
-    vifi = find_vif_direct(src, dst);
+    vifi = find_vif(ifi);
+    if (vifi == NO_VIF)
+	vifi = find_vif_direct(src, dst);
     if (vifi == NO_VIF || (uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
 	logit(LOG_INFO, 0, "Ignoring group leave report from non-adjacent host %s",
 	      inet_fmt(src, s1, sizeof(s1)));
@@ -947,7 +973,7 @@ void accept_leave_message(uint32_t src, uint32_t dst, uint32_t group)
  * Returns:
  *     1 if succeeded, 0 if failed
  */
-int accept_sources(int igmp_report_type, uint32_t igmp_src, uint32_t group, uint8_t *sources,
+int accept_sources(int ifi, int igmp_report_type, uint32_t igmp_src, uint32_t group, uint8_t *sources,
     uint8_t *canary, int rec_num_sources)
 {
     int j;
@@ -966,7 +992,7 @@ int accept_sources(int igmp_report_type, uint32_t igmp_src, uint32_t group, uint
 	    logit(LOG_DEBUG, 0, "Add source (%s,%s)", inet_fmt(ina->s_addr, s2, sizeof(s2)),
 		  inet_fmt(group, s1, sizeof(s1)));
 
-        accept_group_report(igmp_src, ina->s_addr, group, igmp_report_type);
+        accept_group_report(ifi, igmp_src, ina->s_addr, group, igmp_report_type);
     }
 
     return 1;
@@ -976,7 +1002,7 @@ int accept_sources(int igmp_report_type, uint32_t igmp_src, uint32_t group, uint
 /*
  * Handle IGMP v3 membership reports (join/leave)
  */
-void accept_membership_report(uint32_t src, uint32_t dst, struct igmpv3_report *report, ssize_t reportlen)
+void accept_membership_report(int ifi, uint32_t src, uint32_t dst, struct igmpv3_report *report, ssize_t reportlen)
 {
     struct igmpv3_grec *record;
     int num_groups, i;
@@ -1025,7 +1051,7 @@ void accept_membership_report(uint32_t src, uint32_t dst, struct igmpv3_report *
 		    /* RFC 5790: TO_EX({}) can be interpreted as a (*,G)
 		     *           join, i.e., to include all sources.
 		     */
-		    accept_group_report(src, 0, rec_group.s_addr, report->type);
+		    accept_group_report(ifi, src, 0, rec_group.s_addr, report->type);
 		} else {
 		    /* RFC 5790: LW-IGMPv3 does not use TO_EX({x}),
 		     *           i.e., filter with non-null source.
@@ -1037,17 +1063,17 @@ void accept_membership_report(uint32_t src, uint32_t dst, struct igmpv3_report *
 
 	    case IGMP_MODE_IS_INCLUDE:
 	    case IGMP_CHANGE_TO_INCLUDE_MODE:
-		accept_leave_message(src, dst, rec_group.s_addr);
+		accept_leave_message(ifi, src, dst, rec_group.s_addr);
 		if (rec_num_sources == 0) {
 		    /* RFC5790: TO_IN({}) can be interpreted as an
 		     *          IGMPv2 (*,G) leave.
 		     */
-		    accept_leave_message(src, 0, rec_group.s_addr);
+		    accept_leave_message(ifi, src, 0, rec_group.s_addr);
 		} else {
 		    /* RFC5790: TO_IN({x}), regular RFC3376 (S,G)
 		     *          join with >= 1 source, 'S'.
 		     */
-		    rc = accept_sources(report->type, src, rec_group.s_addr,
+		    rc = accept_sources(ifi, report->type, src, rec_group.s_addr,
 					sources, canary, rec_num_sources);
 		    if (rc)
 			return;
@@ -1056,7 +1082,7 @@ void accept_membership_report(uint32_t src, uint32_t dst, struct igmpv3_report *
 
 	    case IGMP_ALLOW_NEW_SOURCES:
 		/* RFC5790: Same as TO_IN({x}) */
-		if (!accept_sources(report->type, src, rec_group.s_addr,
+		if (!accept_sources(ifi, report->type, src, rec_group.s_addr,
 				    sources, canary, rec_num_sources))
 		    return;
 		break;
@@ -1075,7 +1101,7 @@ void accept_membership_report(uint32_t src, uint32_t dst, struct igmpv3_report *
 		    IF_DEBUG(DEBUG_IGMP)
 			logit(LOG_DEBUG, 0, "Remove source[%d] (%s,%s)", j,
 			      inet_fmt(ina->s_addr, s2, sizeof(s2)), inet_ntoa(rec_group));
-		    accept_leave_message(src, ina->s_addr, rec_group.s_addr);
+		    accept_leave_message(ifi, src, ina->s_addr, rec_group.s_addr);
 		    IF_DEBUG(DEBUG_IGMP)
 			logit(LOG_DEBUG, 0, "Accepted");
 		}

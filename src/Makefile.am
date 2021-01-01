@@ -23,6 +23,7 @@ mrouted_SOURCES  = main.c common.c cfparse.y config.c 	\
 		   route.c route.h 			\
 		   timer.c 				\
 		   vif.c vif.h
+mrouted_CPPFLAGS = -DREGISTER_HANDLER $(AM_CPPFLAGS)
 mrouted_LDADD    = $(LIBS) $(LIBOBJS)
 if RSRR
 mrouted_SOURCES += rsrr.c rsrr_var.h rsrr.h

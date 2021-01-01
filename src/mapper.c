@@ -224,7 +224,7 @@ void ask2(uint32_t dst)
 /*
  * Process an incoming group membership report.
  */
-void accept_group_report(uint32_t src, uint32_t dst, uint32_t group, int r_type)
+void accept_group_report(int ifi, uint32_t src, uint32_t dst, uint32_t group, int r_type)
 {
     logit(LOG_INFO, 0, "ignoring IGMP group membership report from %s to %s",
 	inet_fmt(src, s1, sizeof(s1)), inet_fmt(dst, s2, sizeof(s2)));
@@ -999,7 +999,7 @@ int main(int argc, char *argv[])
 
 	recvlen = recvfrom(igmp_socket, recv_buf, RECV_BUF_SIZE, 0, NULL, &dummy);
 	if (recvlen >= 0)
-	    accept_igmp(recvlen);
+	    accept_igmp(-1, recvlen);
 	else if (errno != EINTR)
 	    perror("recvfrom");
     }
@@ -1031,16 +1031,16 @@ void accept_g_ack(uint32_t src, uint32_t dst, char *p, size_t datalen)
 void add_table_entry(uint32_t origin, uint32_t mcastgrp)
 {
 }
-void accept_leave_message(uint32_t src, uint32_t dst, uint32_t group)
+void accept_leave_message(int ifi, uint32_t src, uint32_t dst, uint32_t group)
 {
 }
 void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8_t no, size_t datalen)
 {
 }
-void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo, int ver)
+void accept_membership_query(int ifi, uint32_t src, uint32_t dst, uint32_t group, int tmo, int ver)
 {
 }
-void accept_membership_report(uint32_t src, uint32_t dst, struct igmpv3_report *report, ssize_t len)
+void accept_membership_report(int ifi, uint32_t src, uint32_t dst, struct igmpv3_report *report, ssize_t len)
 {
 }
 void accept_info_request(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
@@ -1052,8 +1052,6 @@ void accept_info_reply(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
 
 /**
  * Local Variables:
- *  indent-tabs-mode: t
- *  c-file-style: "ellemtel"
- *  c-basic-offset: 4
+ *  c-file-style: "cc-mode"
  * End:
  */
