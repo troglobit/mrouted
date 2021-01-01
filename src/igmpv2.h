@@ -28,7 +28,7 @@
 							/ TIMER_INTERVAL) * TIMER_INTERVAL)
 #define	IGMP_STARTUP_QUERY_COUNT		igmp_robustness
 #define	IGMP_LAST_MEMBER_QUERY_INTERVAL		1
-#define	IGMP_LAST_MEMBER_QUERY_COUNT		IGMP_ROBUSTNESS_DEFAULT /* XXX: Should be igmp_robustness */
+#define	IGMP_LAST_MEMBER_QUERY_COUNT		igmp_robustness
 
 /*
  * OLD_AGE_THRESHOLD is the number of IGMP_QUERY_INTERVAL's to remember the

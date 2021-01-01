@@ -29,9 +29,10 @@ int		vifs_with_neighbors;	/* == 1 if I am a leaf		    */
 struct listaddr	*nbrs[MAXNBRS];	/* array of neighbors			    */
 
 typedef struct {
-        vifi_t  vifi;
-        struct listaddr *g;
-	int    q_time;
+    struct listaddr *g;
+    vifi_t vifi;
+    int    delay;
+    int    num;
 } cbk_t;
 
 static int query_timerid = -1;
@@ -50,8 +51,11 @@ static void send_probe_on_vif  (struct uvif *v);
 static void send_query         (struct uvif *v, uint32_t dst, int code, uint32_t group);
 static int  info_version       (uint8_t *p, size_t plen);
 
+static void delete_group_cb    (void *arg);
 static int  delete_group_timer (vifi_t vifi, struct listaddr *g);
-static int  send_query_timer   (vifi_t vifi, struct listaddr *g, int to_expire, int q_time);
+
+static void send_query_cb      (void *arg);
+static int  send_query_timer   (vifi_t vifi, struct listaddr *g, int delay, int num);
 
 /*
  * Initialize the virtual interfaces, but do not install
@@ -920,14 +924,9 @@ void accept_leave_message(uint32_t src, uint32_t dst, uint32_t group)
 	if (g->al_timerid > 0)
 	    g->al_timerid = timer_clear(g->al_timerid);
 
-#if IGMP_LAST_MEMBER_QUERY_COUNT != 2
-#error This code needs to be updated to keep a counter of the number of queries remaining.
-#endif
-	/** send a group specific querry **/
-	send_query(v, g->al_addr, IGMP_LAST_MEMBER_QUERY_INTERVAL * IGMP_TIMER_SCALE, g->al_addr);
-
+	/** send a group specific query **/
 	g->al_query = send_query_timer(vifi, g, IGMP_LAST_MEMBER_QUERY_INTERVAL,
-				    IGMP_LAST_MEMBER_QUERY_INTERVAL * IGMP_TIMER_SCALE);
+				       IGMP_LAST_MEMBER_QUERY_COUNT);
 	g->al_timer = IGMP_LAST_MEMBER_QUERY_INTERVAL * (IGMP_LAST_MEMBER_QUERY_COUNT + 1);
 	g->al_timerid = delete_group_timer(vifi, g);
 	break;
@@ -2075,40 +2074,48 @@ static int delete_group_timer(vifi_t vifi, struct listaddr *g)
 /*
  * Send a group-specific query.
  */
-static void send_query_cb(void *arg)
+static int do_send_gsq(cbk_t *cbk)
 {
-    cbk_t *cbk = (cbk_t *)arg;
     struct uvif *v = &uvifs[cbk->vifi];
 
-    send_query(v, cbk->g->al_addr, cbk->q_time, cbk->g->al_addr);
-    cbk->g->al_query = 0;
-    free(cbk);
+    send_query(v, cbk->g->al_addr, cbk->delay * IGMP_TIMER_SCALE, cbk->g->al_addr);
+    if (--cbk->num == 0) {
+	cbk->g->al_query = 0;	/* we're done, clear us from group */
+	free(cbk);
+	return 0;
+    }
+
+    return timer_set(cbk->delay, send_query_cb, cbk);
+}
+
+static void send_query_cb(void *arg)
+{
+    do_send_gsq((cbk_t *)arg);
 }
 
 /*
  * Set a timer to send a group-specific query.
  */
-static int send_query_timer(vifi_t vifi, struct listaddr *g, int to_expire, int q_time)
+static int send_query_timer(vifi_t vifi, struct listaddr *g, int delay, int num)
 {
     cbk_t *cbk;
 
     cbk = calloc(1, sizeof(cbk_t));
     if (!cbk) {
-	logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
+	logit(LOG_ERR, errno, "%s(): Failed allocating memory", __func__);
 	return -1;
     }
 
-    cbk->g      = g;
-    cbk->q_time = q_time;
-    cbk->vifi   = vifi;
+    cbk->vifi  = vifi;
+    cbk->g     = g;
+    cbk->delay = delay;
+    cbk->num   = num;
 
-    return timer_set(to_expire, send_query_cb, cbk);
+    return do_send_gsq(cbk);
 }
 
 /**
  * Local Variables:
- *  indent-tabs-mode: t
- *  c-file-style: "ellemtel"
- *  c-basic-offset: 4
+ *  c-file-style: "cc-mode"
  * End:
  */
