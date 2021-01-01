@@ -925,9 +925,9 @@ void accept_leave_message(uint32_t src, uint32_t dst, uint32_t group)
 	    g->al_timerid = timer_clear(g->al_timerid);
 
 	/** send a group specific query **/
-	g->al_query = send_query_timer(vifi, g, IGMP_LAST_MEMBER_QUERY_INTERVAL,
+	g->al_query = send_query_timer(vifi, g, igmp_last_member_interval,
 				       IGMP_LAST_MEMBER_QUERY_COUNT);
-	g->al_timer = IGMP_LAST_MEMBER_QUERY_INTERVAL * (IGMP_LAST_MEMBER_QUERY_COUNT + 1);
+	g->al_timer = igmp_last_member_interval * (IGMP_LAST_MEMBER_QUERY_COUNT + 1);
 	g->al_timerid = delete_group_timer(vifi, g);
 	break;
     }

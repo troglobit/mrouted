@@ -27,7 +27,7 @@
 #define	IGMP_STARTUP_QUERY_INTERVAL		(((igmp_query_interval / 4) \
 							/ TIMER_INTERVAL) * TIMER_INTERVAL)
 #define	IGMP_STARTUP_QUERY_COUNT		igmp_robustness
-#define	IGMP_LAST_MEMBER_QUERY_INTERVAL		1
+#define	IGMP_LAST_MEMBER_INTERVAL_DEFAULT	1
 #define	IGMP_LAST_MEMBER_QUERY_COUNT		igmp_robustness
 
 /*

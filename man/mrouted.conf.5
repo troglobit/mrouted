@@ -5,7 +5,7 @@
 .\"
 .\" The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
 .\" Leland Stanford Junior University.
-.Dd Jun 9, 2020
+.Dd Jan 1, 2021
 .Dt MROUTED.CONF 5
 .Os
 .Sh NAME
@@ -104,6 +104,15 @@ value of ingressing DVMRP and IGMP frames.
 This setting controls the IGMP query interval in seconds, used when this
 router is elected querier on a LAN.  It is not recommended to go below
 10 sec.  Default: 125.
+.It Cm igmp-query-last-member-interval Ar <1-1024>
+This setting controls the maximum time in seconds between group specific
+IGMP queries.  These are sent as response to a host on a LAN requesting
+to leave a multicast group.  The purpose is to double-check that there
+is no other host on the LAN that still wants the group.  Default: 1.
+.Pp
+See also
+.Cm igmp-robustness
+(below), which controls how many group-specific queries are sent.
 .It Cm igmp-robustness Ar <2-10>
 This setting controls many aspects of IGMP timers, for end devices and
 routers alike.  The
@@ -122,13 +131,12 @@ Number of seconds before
 .Nm mrouted
 determines there is no longer an elected querier on the LAN.  Formula:
 (igmp-robustness x igmp-query-interval) + (0.5 x query-response-interval)
-.It Last-member Query Count
+.It Last Member Query Count
 Number of group-specific queries sent before
 .Nm mrouted
-assumes there are no local members of a group.  The number of queries is
-equal to the value of the robustness variable.  However,
-.Nm mrouted
-currently hard-codes this to 2
+assumes there are no further local members of a group on the LAN.  The
+number of group-specific queries is equal to the value of the robustness
+variable.
 .El
 .It Cm no phyint 
 By default all interfaces are enabled.  This command disables all
@@ -384,4 +392,3 @@ Main configuration file.
 .Sh AUTHORS
 This manual page was written by
 .An Joachim Wiberg Aq mailto:troglobit@gmail.com .
-
