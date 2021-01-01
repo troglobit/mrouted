@@ -834,18 +834,27 @@ void accept_group_report(int ifi, uint32_t src, uint32_t dst, uint32_t group, in
     struct uvif *v;
     struct listaddr *g;
 
+    inet_fmt(src, s1, sizeof(s1));
+    inet_fmt(dst, s2, sizeof(s2));
+    inet_fmt(group, s3, sizeof(s3));
+
     /* Do not filter LAN scoped groups */
-    if (ntohl(group) <= INADDR_MAX_LOCAL_GROUP) /* group <= 224.0.0.255? */
+    if (ntohl(group) <= INADDR_MAX_LOCAL_GROUP) { /* group <= 224.0.0.255? */
+	IF_DEBUG(DEBUG_IGMP)
+	    logit(LOG_DEBUG, 0, "    %-16s LAN scoped group, skipping.", s3);
 	return;
+    }
 
     vifi = find_vif(ifi);
     if (vifi == NO_VIF)
 	vifi = find_vif_direct(src, dst);
     if (vifi == NO_VIF || (uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
-	logit(LOG_INFO, 0, "Ignoring group membership report from non-adjacent host %s",
-	      inet_fmt(src, s1, sizeof(s1)));
+	logit(LOG_INFO, 0, "Ignoring group membership report from non-adjacent host %s", s1);
 	return;
     }
+
+    IF_DEBUG(DEBUG_IGMP)
+	logit(LOG_INFO, 0, "accepting IGMP group membership report: src %s, dst %s, grp %s", s1, s2, s3);
 
     v = &uvifs[vifi];
 
