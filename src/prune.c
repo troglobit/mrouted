@@ -1090,7 +1090,7 @@ void accept_prune(uint32_t src, uint32_t dst, char *p, size_t datalen)
     struct gtable *g;
     struct ptable *pt;
     
-    if ((vifi = find_vif(src, dst)) == NO_VIF) {
+    if ((vifi = find_vif_direct(src, dst)) == NO_VIF) {
 	logit(LOG_INFO, 0, "Ignoring prune report from non-neighbor %s",
 	      inet_fmt(src, s1, sizeof(s1)));
 	return;
@@ -1326,7 +1326,7 @@ void accept_graft(uint32_t src, uint32_t dst, char *p, size_t datalen)
     for (i = 0; i< 4; i++)
 	((char *)&graft_grp)[i] = *p++;
 
-    vifi = find_vif(src, dst);
+    vifi = find_vif_direct(src, dst);
     send_graft_ack(dst, src, graft_src, graft_grp, vifi);
 
     if (vifi == NO_VIF) {
@@ -1413,7 +1413,7 @@ void accept_g_ack(uint32_t src, uint32_t dst, char *p, size_t datalen)
     uint32_t	grft_grp;
     int 	i;
 
-    if ((vifi = find_vif(src, dst)) == NO_VIF) {
+    if ((vifi = find_vif_direct(src, dst)) == NO_VIF) {
 	logit(LOG_INFO, 0, "Ignoring graft ack from non-neighbor %s",
 	      inet_fmt(src, s1, sizeof(s1)));
 	return;
@@ -2165,7 +2165,7 @@ void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8
 	    if (IN_MULTICAST(ntohl(dst)))
 		return;
 	}
-	vifi = find_vif(qry->tr_dst, 0);
+	vifi = find_vif_direct(qry->tr_dst, 0);
 
 	if (vifi == NO_VIF) {
 	    /* The traceroute destination is not on one of my subnet vifs. */
@@ -2191,7 +2191,7 @@ void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8
 	 * RESP packets travel hop-by-hop so this either traversed
 	 * a tunnel or came from a directly attached mrouter.
 	 */
-	vifi = find_vif(src, dst);
+	vifi = find_vif_direct(src, dst);
 	if (vifi == NO_VIF) {
 	    IF_DEBUG(DEBUG_TRACE) {
 		logit(LOG_DEBUG, 0, "Wrong interface for packet");

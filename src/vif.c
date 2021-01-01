@@ -596,7 +596,7 @@ void stop_all_vifs(void)
  * Find the virtual interface from which an incoming packet arrived,
  * based on the packet's source and destination IP addresses.
  */
-vifi_t find_vif(uint32_t src, uint32_t dst)
+vifi_t find_vif_direct(uint32_t src, uint32_t dst)
 {
     vifi_t vifi;
     struct uvif *v;
@@ -700,7 +700,7 @@ void accept_membership_query(uint32_t src, uint32_t dst, uint32_t group, int tmo
     struct uvif *v;
     vifi_t vifi;
 
-    vifi = find_vif(src, dst);
+    vifi = find_vif_direct(src, dst);
     if (vifi == NO_VIF || (uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
 	logit(LOG_INFO, 0, "Ignoring group membership query from non-adjacent host %s",
 	      inet_fmt(src, s1, sizeof(s1)));
@@ -816,7 +816,7 @@ void accept_group_report(uint32_t src, uint32_t dst, uint32_t group, int r_type)
     if (ntohl(group) <= INADDR_MAX_LOCAL_GROUP) /* group <= 224.0.0.255? */
 	return;
 
-    vifi = find_vif(src, dst);
+    vifi = find_vif_direct(src, dst);
     if (vifi == NO_VIF || (uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
 	logit(LOG_INFO, 0, "Ignoring group membership report from non-adjacent host %s",
 	      inet_fmt(src, s1, sizeof(s1)));
@@ -892,7 +892,7 @@ void accept_leave_message(uint32_t src, uint32_t dst, uint32_t group)
     struct uvif *v;
     struct listaddr *g;
 
-    vifi = find_vif(src, dst);
+    vifi = find_vif_direct(src, dst);
     if (vifi == NO_VIF || (uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
 	logit(LOG_INFO, 0, "Ignoring group leave report from non-adjacent host %s",
 	      inet_fmt(src, s1, sizeof(s1)));
@@ -1394,16 +1394,18 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 
     /*
      * Confirm that 'addr' is a valid neighbor address on vif 'vifi'.
-     * IT IS ASSUMED that this was preceded by a call to find_vif(), which
-     * checks that 'addr' is either a valid remote tunnel endpoint or a
-     * non-broadcast address belonging to a directly-connected subnet.
-     * Therefore, here we check only that 'addr' is not our own address
-     * (due to an impostor or erroneous loopback) or an address of the form
-     * {subnet,0} ("the unknown host").  These checks are not performed in
-     * find_vif() because those types of address are acceptable for some
-     * types of IGMP message (such as group membership reports).
+     * IT IS ASSUMED that this was preceded by a call to
+     * find_vif_direct(), which checks that 'addr' is either a valid
+     * remote tunnel endpoint or a non-broadcast address belonging to a
+     * directly-connected subnet.  Therefore, here we check only that
+     * 'addr' is not our own address (due to an impostor or erroneous
+     * loopback) or an address of the form {subnet,0} ("the unknown
+     * host").  These checks are not performed in find_vif_direct()
+     * because those types of address are acceptable for some types of
+     * IGMP message (such as group membership reports).
      */
-    if (!(v->uv_flags & VIFF_TUNNEL) && (addr == v->uv_lcl_addr || addr == v->uv_subnet )) {
+    if (!(v->uv_flags & VIFF_TUNNEL) && (addr == v->uv_lcl_addr ||
+					 addr == v->uv_subnet )) {
 	logit(LOG_WARNING, 0, "Received DVMRP message from %s: %s",
 	      (addr == v->uv_lcl_addr) ? "self (check device loopback)" : "'the unknown host'",
 	      inet_fmt(addr, s1, sizeof(s1)));

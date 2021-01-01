@@ -769,7 +769,7 @@ void accept_probe(uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t 
     static struct listaddr *unknowns = NULL;
     vifi_t vifi;
 
-    vifi = find_vif(src, dst);
+    vifi = find_vif_direct(src, dst);
     if (vifi == NO_VIF) {
 	struct listaddr *a, **prev;
 	struct listaddr *match = NULL;
@@ -981,7 +981,7 @@ void accept_report(uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t
      */
     memset(rt, 0, MAX_NUM_RT * sizeof(rt[0]));
 
-    if ((vifi = find_vif(src, dst)) == NO_VIF) {
+    if ((vifi = find_vif_direct(src, dst)) == NO_VIF) {
 	logit(LOG_INFO, 0, "Ignoring route report from non-neighbor %s",
 	      inet_fmt(src, s1, sizeof(s1)));
 	return;

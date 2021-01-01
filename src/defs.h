@@ -324,7 +324,7 @@ extern void		zero_vif(struct uvif *, int);
 extern void		init_installvifs(void);
 extern void		check_vif_state(void);
 extern void		send_on_vif(struct uvif *, uint32_t, int, size_t);
-extern vifi_t		find_vif(uint32_t, uint32_t);
+extern vifi_t		find_vif_direct(uint32_t, uint32_t);
 extern uint32_t         vif_nbr_expire_time(struct listaddr *);
 extern void		age_vifs(void);
 extern char            *vif_sflags(uint32_t);
