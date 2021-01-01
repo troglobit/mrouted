@@ -1,3 +1,18 @@
+mrouted (4.2) stable; urgency=medium
+
+  * Support for controlling IGMP Last Member Query Count using the
+    igmp-robustness setting in mrouted.conf, default 2
+  * Support for tuning the IGMP Last Member Query Interval using a
+    new setting igmp-query-last-member-interval <1-1024>
+  * IGMPv3 membership reports were parsed incorrectly.  The problem affects
+    users that use source specific multicast join, i.e., (S,G) join/leave
+    using IGMPv3.  Support for IGMPv3 was introduced in mrouted v4.0
+  * Issue #46: Malformed group-specific IGMP query.  The IGMP header no
+    longer had the group field set, despite the query being addressed to a
+    specific group.  Regression introduced in v4.0
+
+ -- Joachim Wiberg <troglobit@gmail.com>  Fri, 01 Jan 2021 02:31:52 +0100
+
 mrouted (4.1) stable; urgency=medium
 
   * Update maintainer last name

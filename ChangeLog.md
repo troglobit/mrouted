@@ -3,6 +3,28 @@ Change Log
 
 All notable changes to the project are documented in this file.
 
+
+[v4.2][UNRELEASED]
+------------------
+
+Major bug fix release.
+
+### Changes
+- Support for controlling IGMP Last Member Query Count using the
+  `igmp-robustness` setting in `mrouted.conf`, default 2
+- Support for tuning the IGMP Last Member Query Interval using a
+  new setting `igmp-query-last-member-interval <1-1024>`, issue #44
+
+### Fixes
+- Issue #43: IGMPv3 membership reports were parsed incorrectly.  The
+  problem affects users that use source specific multicast join, i.e.,
+  (S,G) join/leave using IGMPv3.  Support for IGMPv3 was introduced in
+  mrouted [v4.0][]
+- Issue #46: Malformed group-specific IGMP query.  The IGMP header no
+  longer had the group field set, despite the query being addressed to
+  a specific group.  Regression introduced in [v4.0][]
+
+
 [v4.1][] - 2020-10-02
 ---------------------
 
