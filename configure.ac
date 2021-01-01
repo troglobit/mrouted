@@ -19,7 +19,7 @@ PKG_PROG_PKG_CONFIG
 
 # Check for linux/netlink.h is only to be able to define LINUX below
 AC_HEADER_STDC
-AC_CHECK_HEADERS([fcntl.h ifaddrs.h sys/time.h linux/netlink.h termios.h])
+AC_CHECK_HEADERS([fcntl.h ifaddrs.h sys/ioctl.h sys/time.h linux/netlink.h termios.h])
 AC_CHECK_HEADERS([net/if.h netinet/igmp.h], [], [], [
 #include <stdio.h>
 #ifdef STDC_HEADERS

@@ -33,6 +33,9 @@
 #ifdef HAVE_TERMIOS_H
 # include <termios.h>
 #endif
+#ifdef HAVE_SYS_IOCTL_H
+# include <sys/ioctl.h>
+#endif
 
 struct cmd {
 	char        *cmd;
@@ -77,11 +80,26 @@ error:
 
 static int get_width(void)
 {
-	int ret = 74;
+	int ret = 79;
 #ifdef HAVE_TERMIOS_H
-	char buf[42];
-	struct termios tc, saved;
 	struct pollfd fd = { STDIN_FILENO, POLLIN, 0 };
+	struct termios tc, saved;
+	struct winsize ws;
+	char buf[42];
+
+	if (!ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws))
+		return ws.ws_col;
+
+	if (!isatty(STDOUT_FILENO)) {
+		char *columns;
+
+		/* we may be running under watch(1) */
+		columns = getenv("COLUMNS");
+		if (columns)
+			return atoi(columns);
+
+		return ret;
+	}
 
 	memset(buf, 0, sizeof(buf));
 	tcgetattr(STDERR_FILENO, &tc);
