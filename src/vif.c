@@ -973,38 +973,38 @@ void accept_leave_message(int ifi, uint32_t src, uint32_t dst, uint32_t group)
  * Loop through and process all sources in a v3 record.
  *
  * Parameters:
- *     igmp_report_type   Report type of IGMP message
- *     igmp_src           Src address of IGMP message
- *     group              Multicast group
- *     sources            Pointer to the beginning of sources list in the IGMP message
- *     canary             Pointer to the end of IGMP message
+ *     r_type   Report type of IGMP message
+ *     src      Src address of IGMP message
+ *     dst      Multicast group
+ *     sources  Pointer to the beginning of sources list in the IGMP message
+ *     canary   Pointer to the end of IGMP message
  *
  * Returns:
- *     1 if succeeded, 0 if failed
+ *     POSIX OK (0) if succeeded, non-zero on failure.
  */
-int accept_sources(int ifi, int igmp_report_type, uint32_t igmp_src, uint32_t group, uint8_t *sources,
+int accept_sources(int ifi, int r_type, uint32_t src, uint32_t dst, uint8_t *sources,
     uint8_t *canary, int rec_num_sources)
 {
+    uint8_t *ptr;
     int j;
-    uint8_t *src;
 
-    for (j = 0, src = sources; j < rec_num_sources; ++j, src += 4) {
-	struct in_addr *ina = (struct in_addr *)src;
+    for (j = 0, ptr = sources; j < rec_num_sources; ++j, src += 4) {
+	struct in_addr *ina = (struct in_addr *)ptr;
 
-        if ((src + 4) > canary) {
+        if ((ptr + 4) > canary) {
 	    IF_DEBUG(DEBUG_IGMP)
 		logit(LOG_DEBUG, 0, "Invalid IGMPv3 report, too many sources, would overflow.");
-            return 0;
+            return 1;
         }
 
 	IF_DEBUG(DEBUG_IGMP)
 	    logit(LOG_DEBUG, 0, "Add source (%s,%s)", inet_fmt(ina->s_addr, s2, sizeof(s2)),
-		  inet_fmt(group, s1, sizeof(s1)));
+		  inet_fmt(dst, s1, sizeof(s1)));
 
-        accept_group_report(ifi, igmp_src, ina->s_addr, group, igmp_report_type);
+        accept_group_report(ifi, src, ina->s_addr, dst, r_type);
     }
 
-    return 1;
+    return 0;
 }
 
 
@@ -1091,8 +1091,9 @@ void accept_membership_report(int ifi, uint32_t src, uint32_t dst, struct igmpv3
 
 	    case IGMP_ALLOW_NEW_SOURCES:
 		/* RFC5790: Same as TO_IN({x}) */
-		if (!accept_sources(ifi, report->type, src, rec_group.s_addr,
-				    sources, canary, rec_num_sources))
+		rc = accept_sources(ifi, report->type, src, rec_group.s_addr,
+				    sources, canary, rec_num_sources);
+		if (rc)
 		    return;
 		break;
 
