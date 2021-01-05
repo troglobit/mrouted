@@ -4,16 +4,26 @@ mrouted (4.2) stable; urgency=medium
     igmp-robustness setting in mrouted.conf, default 2
   * Support for tuning the IGMP Last Member Query Interval using a
     new setting igmp-query-last-member-interval <1-1024>
+  * Support for static multicast routing, similar to SMCRoute, using a new
+    phyint keyword 'static-group GROUP'.  Works as if an IGMPv2 join was
+    received on the given interface.  Never expires
   * IGMPv3 membership reports were parsed incorrectly.  The problem affects
     users that use source specific multicast join, i.e., (S,G) join/leave
     using IGMPv3.  Support for IGMPv3 was introduced in mrouted v4.0
+  * Proper tracking of lower-version IGMP hosts.  When a lower-version host
+    joins a group no higer-version IGMP is allowed, e.g., IGMPv2 LEAVE is
+    ignored if a group is in IGMPv1 compat mode
+  * Allow IGMP reports from source address 0.0.0.0, for compliance with
+    RFC3376.  Should improve interop with IGMP snooping switches and any
+    DHCP client that has not yet received a lease
   * Issue #46: Malformed group-specific IGMP query.  The IGMP header no
     longer had the group field set, despite the query being addressed to a
     specific group.  Regression introduced in v4.0
+  * Issue #47: parser did not allow the (optional) phyint keyword 'igmpv3'
   * Improved support for running mroutectl under watch(1).  No more
     artifacts due to unknown ANSI escape sequences to probe width
 
- -- Joachim Wiberg <troglobit@gmail.com>  Fri, 01 Jan 2021 02:31:52 +0100
+ -- Joachim Wiberg <troglobit@gmail.com>  Tue, 05 Jan 2021 18:41:30 +0100
 
 mrouted (4.1) stable; urgency=medium
 

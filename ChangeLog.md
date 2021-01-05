@@ -14,6 +14,18 @@ Major bug fix release.
   `igmp-robustness` setting in `mrouted.conf`, default 2
 - Support for tuning the IGMP Last Member Query Interval using a
   new setting `igmp-query-last-member-interval <1-1024>`, issue #44
+- Support for static multicast routing (*,G), similar to SMCRoute.
+  New `phyint static-group GROUP` setting in mrouted.conf, multiple
+  statements supported, but no ranges (yet)
+- Proper tracking of lower-version host members (IGMP), when a lower
+  version host is detected for a group, a timer is set according to
+  RFC3376, and while in this compat mode higher-version IGMP is not
+  allowed to change state.  E.g., in IGMPv1 compat, IGMPv2 LEAVE is
+  ignored, similar to the phyint being in `igmpv1` mode
+- Allow IGMP reports from source address 0.0.0.0, required as per
+  RFC3376, sec. 4.2.13, not supported until now.  This should greatly
+  improve interop with IGMP snooping switches and DHCP clients that
+  have not yet received a lease
 - Improved support for running mroutectl under watch(1).  No more
   artifacts due to unknown ANSI escape sequences to probe width
 
@@ -25,6 +37,7 @@ Major bug fix release.
 - Issue #46: Malformed group-specific IGMP query.  The IGMP header no
   longer had the group field set, despite the query being addressed to
   a specific group.  Regression introduced in [v4.0][]
+- Issue #47: The optional phyint flag `igmpv3` did not work.
 
 
 [v4.1][] - 2020-10-02
