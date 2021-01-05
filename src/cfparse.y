@@ -751,7 +751,7 @@ static struct keyword {
 	{ "netmask",		NETMASK, 0 },
 	{ "igmpv1",		IGMPV1, 0 },
 	{ "igmpv2",		IGMPV2, 0 },
-	{ "igmpv2",		IGMPV3, 0 },
+	{ "igmpv3",		IGMPV3, 0 },
 	{ "altnet",		ALTNET, 0 },
 	{ "name",		NAME, 0 },
 	{ "accept",		ACCEPT, 0 },
