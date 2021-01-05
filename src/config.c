@@ -184,7 +184,7 @@ void config_vifs_correlate(void)
 		logit(LOG_INFO, 0, "Installing %s subnet %s as an altnet", v->uv_name,
 		      inet_fmts(uv->uv_subnet, uv->uv_subnetmask, s2, sizeof(s2)));
 
-		ph->pa_subnet       = uv->uv_subnet;
+		ph->pa_subnet      = uv->uv_subnet;
 		ph->pa_subnetmask  = uv->uv_subnetmask;
 		ph->pa_subnetbcast = uv->uv_subnetbcast;
 

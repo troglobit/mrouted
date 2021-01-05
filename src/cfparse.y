@@ -41,13 +41,13 @@ static int noflood = 0;
 static int rexmit = VIFF_REXMIT_PRUNES;
 
 struct addrmask {
-	uint32_t addr;
-	int mask;
+    uint32_t addr;
+    int mask;
 };
 
 struct boundnam {
-	char		*name;
-	struct addrmask	 bound;
+    char		*name;
+    struct addrmask	 bound;
 };
 
 #define MAXBOUNDS 20
@@ -59,11 +59,11 @@ int numbounds = 0;			/* Number of named boundaries */
 
 %union
 {
-	int num;
-	char *ptr;
-	struct addrmask addrmask;
-	uint32_t addr;
-	struct vf_element *filterelem;
+    int num;
+    char *ptr;
+    struct addrmask addrmask;
+    uint32_t addr;
+    struct vf_element *filterelem;
 };
 
 %token CACHE_LIFETIME PRUNE_LIFETIME PRUNING BLACK_HOLE NOFLOOD

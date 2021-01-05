@@ -207,10 +207,10 @@ void zero_vif(struct uvif *v, int t)
  */
 void init_installvifs(void)
 {
-    vifi_t vifi;
     struct uvif *v;
+    vifi_t vifi;
 
-    logit(LOG_INFO, 0, "Installing vifs in kernel...");
+    logit(LOG_INFO, 0, "Installing vifs in kernel ...");
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
 	if (v->uv_flags & VIFF_DISABLED) {
 	    logit(LOG_DEBUG, 0, "%s is disabled", v->uv_name);
@@ -243,10 +243,10 @@ void init_installvifs(void)
  */
 void check_vif_state(void)
 {
-    vifi_t vifi;
-    struct uvif *v;
-    struct ifreq ifr;
     static int checking_vifs = 0;
+    struct ifreq ifr;
+    struct uvif *v;
+    vifi_t vifi;
 
     /*
      * If we get an error while checking, (e.g. two interfaces go down
@@ -399,9 +399,10 @@ static void start_vif(vifi_t vifi)
  */
 static void start_vif2(vifi_t vifi)
 {
+    struct listaddr *a;
+    struct phaddr *p;
     struct uvif *v;
     uint32_t src;
-    struct phaddr *p;
 
     v   = &uvifs[vifi];
     src = v->uv_lcl_addr;
@@ -467,9 +468,9 @@ static void start_vif2(vifi_t vifi)
  */
 static void stop_vif(vifi_t vifi)
 {
-    struct uvif *v;
     struct listaddr *a;
     struct phaddr *p;
+    struct uvif *v;
 
     v = &uvifs[vifi];
 
