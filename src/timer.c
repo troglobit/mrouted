@@ -12,11 +12,12 @@
 #include "queue.h"
 
 struct tmr {
-	TAILQ_ENTRY(tmr) link;
-	int	   	 id;
-	cfunc_t          func;	  	/* function to call */
-	void	   	 *data;		/* func's data */
-	time_t	       	 time;		/* time offset to next event*/
+    TAILQ_ENTRY(tmr) link;
+    int	     id;
+    int      act;		/* active(1) or deleted/new */
+    time_t   time;		/* time offset to next event*/
+    cfunc_t  func;	  	/* function to call */
+    void    *data;		/* func's data */
 };
 
 static TAILQ_HEAD(,tmr) tl;
@@ -82,9 +83,12 @@ void timer_age_queue(time_t elapsed_time)
     int i = 0;
 
     TAILQ_FOREACH_SAFE(ptr, &tl, link, tmp) {
+	if (!ptr->act)
+	    continue;		/* stopped by previous timer */
+
 	if (ptr->time > elapsed_time) {
 	    ptr->time -= elapsed_time;
-	    return;
+	    return;		/* no more for this interval */
 	}
 
 	elapsed_time -= ptr->time;
@@ -152,6 +156,7 @@ int timer_set(time_t delay, cfunc_t action, void *data)
     node->func = action;
     node->data = data;
     node->time = delay;
+    node->act  = 1;
 
     /* if the queue is empty, insert the node and return */
     if (TAILQ_EMPTY(&tl)) {
@@ -242,6 +247,9 @@ int timer_clear(int timer_id)
     /* Found it, now unlink it from the queue */
     TAILQ_REMOVE(&tl, ptr, link);
 
+    /* protect against stopping timers in callbacks */
+    ptr->act = 0;
+
     /* increment next node if any */
     next = TAILQ_NEXT(ptr, link);
     if (next)
@@ -281,8 +289,6 @@ static void print_Q(void)
 
 /**
  * Local Variables:
- *  indent-tabs-mode: t
- *  c-file-style: "ellemtel"
- *  c-basic-offset: 4
+ *  c-file-style: "cc-mode"
  * End:
  */
