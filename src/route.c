@@ -766,54 +766,11 @@ void free_all_routes(void)
  */
 void accept_probe(uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t level)
 {
-    static struct listaddr *unknowns = NULL;
     vifi_t vifi;
 
     vifi = find_vif_direct(src, dst);
     if (vifi == NO_VIF) {
-	struct listaddr *a, **prev;
-	struct listaddr *match = NULL;
-	time_t now = time(0);
-
-	for (prev = &unknowns, a = *prev; a; a = *prev) {
-	    if (a->al_addr == src)
-		match = a;
-
-	    if (a->al_ctime + 2 * a->al_timer < (uint32_t)now) {
-		/* We haven't heard from it in a long time */
-		*prev = a->al_next;
-		if (match == a)
-		    match = NULL;
-		free(a);
-	    } else {
-		prev = &a->al_next;
-	    }
-	}
-
-	if (!match) {
-	    match = *prev = calloc(1, sizeof(struct listaddr));
-	    if (!match) {
-		logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
-		return;
-	    }
-
-	    match->al_next = NULL;
-	    match->al_addr = src;
-	    match->al_timer = OLD_NEIGHBOR_EXPIRE_TIME;
-	    match->al_ctime = now - match->al_timer;
-	}
-
-	if (match->al_ctime + match->al_timer <= (uint32_t)now) {
-	    logit(LOG_WARNING, 0, "Ignoring probe from non-neighbor %s, check for misconfigured tunnel or routing on %s",
-		  inet_fmt(src, s1, sizeof(s1)), s1);
-	    match->al_timer *= 2;
-	} else {
-	    IF_DEBUG(DEBUG_PEER) {
-		logit(LOG_DEBUG, 0, "Ignoring probe from non-neighbor %s (%ld seconds until next warning)",
-		      inet_fmt(src, s1, sizeof(s1)), match->al_ctime + match->al_timer - now);
-	    }
-	}
-
+	logit(LOG_WARNING, 0, "Ignoring probe from non-neighbor %s" , inet_fmt(src, s1, sizeof(s1)));
 	return;
     }
 
