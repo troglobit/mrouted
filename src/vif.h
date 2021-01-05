@@ -201,7 +201,6 @@ struct listaddr {
 	struct {
     	    uint32_t alur_genid;	/* generation id for neighbor       */
 	    uint32_t alur_nroutes;	/* # of routes w/ nbr as parent	    */
-    	    uint8_t  alur_pv;		/* router protocol version	    */
     	    uint8_t  alur_mv;		/* router mrouted version	    */
     	    uint8_t  alur_index;	/* neighbor index		    */
 	} alu_router;
@@ -209,18 +208,17 @@ struct listaddr {
     	    uint32_t alug_reporter;	/* a host which reported membership */
     	    int	     alug_timerid;	/* timer for group membership	    */
     	    int	     alug_query;	/* timer for repeated leave query   */
-    	    uint8_t  alug_old;		/* time since heard old report      */
 	} alu_group;
     } al_alu;
+    uint8_t	     al_pv;		/* group/router protocol version    */
+    int 	     al_pv_timerid;	/* timer for version switch         */
     uint16_t	     al_flags;		/* flags related to this neighbor   */
 };
 #define	al_genid	al_alu.alu_router.alur_genid
 #define	al_nroutes	al_alu.alu_router.alur_nroutes
-#define al_pv		al_alu.alu_router.alur_pv
 #define al_mv		al_alu.alu_router.alur_mv
 #define	al_index	al_alu.alu_router.alur_index
 #define	al_reporter	al_alu.alu_group.alug_reporter
-#define	al_old		al_alu.alu_group.alug_old
 #define	al_timerid	al_alu.alu_group.alug_timerid
 #define	al_query	al_alu.alu_group.alug_query
 
@@ -239,3 +237,9 @@ struct listaddr {
 				 NBRF_TOOMANYROUTES|NBRF_NOTPRUNING)
 
 #define NO_VIF		((vifi_t)MAXVIFS)  /* An invalid vif index */
+
+/**
+ * Local Variables:
+ *  c-file-style: "cc-mode"
+ * End:
+ */

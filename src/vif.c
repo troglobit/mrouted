@@ -45,7 +45,6 @@ static void start_vif          (vifi_t vifi);
 static void start_vif2         (vifi_t vifi);
 static void stop_vif           (vifi_t vifi);
 
-static void age_old_hosts      (void);
 static void send_probe_on_vif  (struct uvif *v);
 
 static void send_query         (struct uvif *v, uint32_t dst, int code, uint32_t group);
@@ -56,6 +55,9 @@ static int  delete_group_timer (vifi_t vifi, struct listaddr *g);
 
 static void send_query_cb      (void *arg);
 static int  send_query_timer   (vifi_t vifi, struct listaddr *g, int delay, int num);
+
+static void group_version_cb   (void *arg);
+static int  group_version_timer(vifi_t vifi, struct listaddr *g);
 
 /*
  * Initialize the virtual interfaces, but do not install
@@ -647,25 +649,6 @@ vifi_t find_vif_direct(uint32_t src, uint32_t dst)
     return NO_VIF;
 }
 
-static void age_old_hosts(void)
-{
-    vifi_t vifi;
-    struct uvif *v;
-    struct listaddr *g;
-
-    /*
-     * Decrement the old-hosts-present timer for each
-     * active group on each vif.
-     */
-    for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
-        for (g = v->uv_groups; g; g = g->al_next) {
-	    if (g->al_old)
-		g->al_old--;
-	}
-    }
-}
-
-
 /*
  * Send group membership queries on each interface for which I am querier.
  * Note that technically, there should be a timer per interface, as the
@@ -690,8 +673,6 @@ void query_groups(void *arg)
 	    send_query(v, allhosts_group, IGMP_QUERY_RESPONSE_INTERVAL *
 		       IGMP_TIMER_SCALE, 0);
     }
-
-    age_old_hosts();
 }
 
 /*
@@ -825,6 +806,13 @@ void accept_membership_query(int ifi, uint32_t src, uint32_t dst, uint32_t group
     }
 }
 
+static void group_debug(struct listaddr *g, char *s, int is_change)
+{
+    IF_DEBUG(DEBUG_IGMP)
+	logit(LOG_DEBUG, 0, "%sIGMP v%d compatibility mode for group %s",
+	      is_change ? "Change to " : "", g->al_pv, s);
+}
+
 /*
  * Process an incoming group membership report.
  */
@@ -862,9 +850,29 @@ void accept_group_report(int ifi, uint32_t src, uint32_t dst, uint32_t group, in
      * Look for the group in our group list; if found, reset its timer.
      */
     for (g = v->uv_groups; g; g = g->al_next) {
+	int old_report = 0;
+
 	if (group == g->al_addr) {
-	    if (r_type == IGMP_V1_MEMBERSHIP_REPORT)
-		g->al_old = OLD_AGE_THRESHOLD;
+	    switch (r_type) {
+	    case IGMP_V1_MEMBERSHIP_REPORT:
+		old_report = 1;
+		if (g->al_pv > 1) {
+		    g->al_pv = 1;
+		    group_debug(g, s3, 1);
+		}
+		break;
+
+	    case IGMP_V2_MEMBERSHIP_REPORT:
+		old_report = 1;
+		if (g->al_pv > 2) {
+		    g->al_pv = 2;
+		    group_debug(g, s3, 1);
+		}
+		break;
+
+	    default:
+		break;
+	    }
 
 	    g->al_reporter = src;
 
@@ -878,6 +886,17 @@ void accept_group_report(int ifi, uint32_t src, uint32_t dst, uint32_t group, in
 		g->al_timerid = timer_clear(g->al_timerid);
 
 	    g->al_timerid = delete_group_timer(vifi, g);
+
+	    /*
+	     * Reset timer for switching version back every time an older
+	     * version report is received
+	     */
+	    if (g->al_pv < 3 && old_report) {
+		if (g->al_pv_timerid)
+		    g->al_pv_timerid = timer_clear(g->al_pv_timerid);
+
+		g->al_pv_timerid = group_version_timer(vifi, g);
+	    }
 	    break;
 	}
     }
@@ -893,16 +912,36 @@ void accept_group_report(int ifi, uint32_t src, uint32_t dst, uint32_t group, in
 	}
 
 	g->al_addr = group;
-	if (r_type == IGMP_V1_MEMBERSHIP_REPORT)
-	    g->al_old = OLD_AGE_THRESHOLD;
-	else
-	    g->al_old = 0;
+
+	switch (r_type) {
+	case IGMP_V1_MEMBERSHIP_REPORT:
+	    g->al_pv = 1;
+	    break;
+
+	case IGMP_V2_MEMBERSHIP_REPORT:
+	    g->al_pv = 2;
+	    break;
+
+	default:
+	    g->al_pv = 3;
+	    break;
+	}
+
+	group_debug(g, s3, 0);
 
 	/** set a timer for expiration **/
         g->al_query	= 0;
 	g->al_timer	= IGMP_GROUP_MEMBERSHIP_INTERVAL;
 	g->al_reporter	= src;
 	g->al_timerid	= delete_group_timer(vifi, g);
+
+	/*
+	 * Set timer for swithing version back if an older version
+	 * report is received
+	 */
+	if (g->al_pv < 3)
+	    g->al_pv_timerid = group_version_timer(vifi, g);
+
 	g->al_next	= v->uv_groups;
 	v->uv_groups	= g;
 	time(&g->al_ctime);
@@ -917,27 +956,35 @@ void accept_group_report(int ifi, uint32_t src, uint32_t dst, uint32_t group, in
 }
 
 /*
- * Process an incoming IGMPv2 Leave Group message.
+ * Process an incoming IGMPv2 Leave Group message, an IGMPv3 BLOCK(), or
+ * IGMPv3 TO_IN({}) membership report.  Handles older version hosts.
+ *
+ * We detect IGMPv3 by the dst always being 0.
  */
 void accept_leave_message(int ifi, uint32_t src, uint32_t dst, uint32_t group)
 {
-    vifi_t vifi;
-    struct uvif *v;
     struct listaddr *g;
+    struct uvif *v;
+    vifi_t vifi;
+
+    inet_fmt(src, s1, sizeof(s1));
+    inet_fmt(group, s3, sizeof(s3));
 
     vifi = find_vif(ifi);
     if (vifi == NO_VIF)
 	vifi = find_vif_direct(src, dst);
     if (vifi == NO_VIF || (uvifs[vifi].uv_flags & VIFF_TUNNEL)) {
-	logit(LOG_INFO, 0, "Ignoring group leave report from non-adjacent host %s",
-	      inet_fmt(src, s1, sizeof(s1)));
+	logit(LOG_INFO, 0, "Ignoring group leave report from non-adjacent host %s", s1);
 	return;
     }
 
     v = &uvifs[vifi];
 
-    if (!(v->uv_flags & VIFF_QUERIER) || (v->uv_flags & VIFF_IGMPV1))
+    if (!(v->uv_flags & VIFF_QUERIER) || (v->uv_flags & VIFF_IGMPV1)) {
+	IF_DEBUG(DEBUG_IGMP)
+	    logit(LOG_DEBUG, 0, "Ignoring group leave, not querier or interface in IGMPv1 mode.");
 	return;
+    }
 
     /*
      * Look for the group in our group list in order to set up a short-timeout
@@ -947,13 +994,26 @@ void accept_leave_message(int ifi, uint32_t src, uint32_t dst, uint32_t group)
 	if (group != g->al_addr)
 	    continue;
 
-	/* Ignore the leave message if there are old hosts present */
-	if (g->al_old)
+	/* Ignore IGMPv2 LEAVE in IGMPv1 mode, RFC3376, sec. 7.3.2. */
+	if (g->al_pv == 1) {
+	    IF_DEBUG(DEBUG_IGMP)
+		logit(LOG_DEBUG, 0, "Ignoring IGMP LEAVE for %s on %s, IGMPv1 host exists.", s3, s1);
 	    return;
+	}
+
+	/* Ignore IGMPv3 BLOCK in IGMPv2 mode, RFC3376, sec. 7.3.2. */
+	if (g->al_pv == 2 && dst == 0) {
+	    IF_DEBUG(DEBUG_IGMP)
+		logit(LOG_DEBUG, 0, "Ignoring IGMP BLOCK/TO_IN({}) for %s on %s, IGMPv2 host exists.", s3, s1);
+	    return;
+	}
 
 	/* still waiting for a reply to a query, ignore the leave */
-	if (g->al_query)
+	if (g->al_query) {
+	    IF_DEBUG(DEBUG_IGMP)
+		logit(LOG_DEBUG, 0, "Ignoring IGMP LEAVE for %s on %s, pending group-specific query.", s3, s1);
 	    return;
+	}
 
 	/** delete old timer set a timer for expiration **/
 	if (g->al_timerid > 0)
@@ -964,8 +1024,20 @@ void accept_leave_message(int ifi, uint32_t src, uint32_t dst, uint32_t group)
 				       IGMP_LAST_MEMBER_QUERY_COUNT);
 	g->al_timer = igmp_last_member_interval * (IGMP_LAST_MEMBER_QUERY_COUNT + 1);
 	g->al_timerid = delete_group_timer(vifi, g);
-	break;
+
+	IF_DEBUG(DEBUG_IGMP)
+	    logit(LOG_DEBUG, 0, "Accepted group leave for %s on %s", s3, s1);
+
+	return;
     }
+
+    /*
+     * We only get here when we couldn't find the group, or when there
+     * still is a group-specific query pending, or when the group is in
+     * older version compat, RFC3376.
+     */
+    IF_DEBUG(DEBUG_IGMP)
+	logit(LOG_DEBUG, 0, "Ignoring IGMP LEAVE/BLOCK for %s on %s, group not found.");
 }
 
 
@@ -1072,7 +1144,6 @@ void accept_membership_report(int ifi, uint32_t src, uint32_t dst, struct igmpv3
 
 	    case IGMP_MODE_IS_INCLUDE:
 	    case IGMP_CHANGE_TO_INCLUDE_MODE:
-		accept_leave_message(ifi, src, dst, rec_group.s_addr);
 		if (rec_num_sources == 0) {
 		    /* RFC5790: TO_IN({}) can be interpreted as an
 		     *          IGMPv2 (*,G) leave.
@@ -1111,9 +1182,7 @@ void accept_membership_report(int ifi, uint32_t src, uint32_t dst, struct igmpv3
 		    IF_DEBUG(DEBUG_IGMP)
 			logit(LOG_DEBUG, 0, "Remove source[%d] (%s,%s)", j,
 			      inet_fmt(ina->s_addr, s2, sizeof(s2)), inet_ntoa(rec_group));
-		    accept_leave_message(ifi, src, ina->s_addr, rec_group.s_addr);
-		    IF_DEBUG(DEBUG_IGMP)
-			logit(LOG_DEBUG, 0, "Accepted");
+		    accept_leave_message(ifi, src, 0, rec_group.s_addr);
 		}
 		break;
 
@@ -2056,6 +2125,46 @@ void dump_vifs(FILE *fp, int detail)
 }
 
 /*
+ * Time out old version compatibility mode
+ */
+static void group_version_cb(void *arg)
+{
+    cbk_t *cbk = (cbk_t *)arg;
+    vifi_t vifi = cbk->vifi;
+    struct uvif *v = &uvifs[vifi];
+
+    if (cbk->g->al_pv < 3)
+	cbk->g->al_pv++;
+
+    logit(LOG_INFO, 0, "Switching IGMP compatibility mode from v%d to v%d for group %s on %s",
+	  cbk->g->al_pv - 1, cbk->g->al_pv, inet_fmt(cbk->g->al_addr, s1, sizeof(s1)), v->uv_name);
+
+    if (cbk->g->al_pv < 3)
+	timer_set(IGMP_GROUP_MEMBERSHIP_INTERVAL, group_version_cb, cbk);
+    else
+	free(cbk);
+}
+
+/*
+ * Set a timer to switch version back on a vif.
+ */
+static int group_version_timer(vifi_t vifi, struct listaddr *g)
+{
+    cbk_t *cbk;
+
+    cbk = calloc(1, sizeof(cbk_t));
+    if (!cbk) {
+	logit(LOG_ERR, errno, "%s(): Failed allocating memory", __func__);
+	return -1;
+    }
+
+    cbk->vifi = vifi;
+    cbk->g = g;
+
+    return timer_set(IGMP_GROUP_MEMBERSHIP_INTERVAL, group_version_cb, cbk);
+}
+
+/*
  * Time out record of a group membership on a vif
  */
 static void delete_group_cb(void *arg)
@@ -2065,12 +2174,14 @@ static void delete_group_cb(void *arg)
     struct uvif *v = &uvifs[vifi];
     struct listaddr *a, **anp, *g = cbk->g;
 
-    /*
-     * Group has expired
-     * delete all kernel cache entries with this group
-     */
+    logit(LOG_DEBUG, 0, "Group membership timeout for %s on %s",
+	  inet_fmt(cbk->g->al_addr, s1, sizeof(s1)), v->uv_name);
+
     if (g->al_query > 0)
 	g->al_query = timer_clear(g->al_query);
+
+    if (g->al_pv_timerid > 0)
+	g->al_pv_timerid = timer_clear(g->al_pv_timerid);
 
     delete_lclgrp(vifi, g->al_addr);
 
