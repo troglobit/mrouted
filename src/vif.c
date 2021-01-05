@@ -854,7 +854,7 @@ void accept_group_report(int ifi, uint32_t src, uint32_t dst, uint32_t group, in
     }
 
     IF_DEBUG(DEBUG_IGMP)
-	logit(LOG_INFO, 0, "accepting IGMP group membership report: src %s, dst %s, grp %s", s1, s2, s3);
+	logit(LOG_INFO, 0, "Accepting group membership report: src %s, dst %s, grp %s", s1, s2, s3);
 
     v = &uvifs[vifi];
 
@@ -2096,7 +2096,7 @@ static int delete_group_timer(vifi_t vifi, struct listaddr *g)
 
     cbk = calloc(1, sizeof(cbk_t));
     if (!cbk) {
-	logit(LOG_ERR, errno, "Failed allocating memory in %s:%s()", __FILE__, __func__);
+	logit(LOG_ERR, errno, "%s(): Failed allocating memory", __func__);
 	return -1;
     }
 

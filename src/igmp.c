@@ -119,9 +119,9 @@ char *igmp_packet_kind(uint32_t type, uint32_t code)
 
     switch (type) {
 	case IGMP_MEMBERSHIP_QUERY:		return "membership query  ";
-	case IGMP_V1_MEMBERSHIP_REPORT:		return "V1 member report  ";
-	case IGMP_V2_MEMBERSHIP_REPORT:		return "V2 member report  ";
-	case IGMP_V3_MEMBERSHIP_REPORT:		return "V3 member report  ";
+	case IGMP_V1_MEMBERSHIP_REPORT:		return "v1 member report  ";
+	case IGMP_V2_MEMBERSHIP_REPORT:		return "v2 member report  ";
+	case IGMP_V3_MEMBERSHIP_REPORT:		return "v3 member report  ";
 	case IGMP_V2_LEAVE_GROUP:		return "leave message     ";
 	case IGMP_DVMRP:
 	  switch (code) {
