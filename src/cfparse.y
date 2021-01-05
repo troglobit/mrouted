@@ -311,8 +311,9 @@ ifmod	: mod
 	    a->al_addr  = $2;
 	    a->al_pv    = 2;	/* IGMPv2 only, no SSM */
 	    a->al_flags = NBRF_STATIC_GROUP;
-	    a->al_next  = v->uv_static_grps;
-	    v->uv_static_grps = a;
+	    time(&a->al_ctime);
+
+	    TAILQ_INSERT_TAIL(&v->uv_static, a, al_link);
 	}
 	| NETMASK addrname
 	{

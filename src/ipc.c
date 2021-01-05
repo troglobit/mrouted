@@ -182,7 +182,7 @@ static void show_neighbor(FILE *fp, int detail)
 	int once = 1;
 
 	for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
-		for (al = v->uv_neighbors; al; al = al->al_next) {
+		TAILQ_FOREACH(al, &v->uv_neighbors, al_link) {
 			char ver[10];
 
 			if (once) {
@@ -437,7 +437,7 @@ static void show_igmp_group(FILE *fp, int detail)
 	int once = 1;
 
 	for (vifi = 0, uv = uvifs; vifi < numvifs; vifi++, uv++) {
-		for (group = uv->uv_groups; group; group = group->al_next) {
+		TAILQ_FOREACH(group, &uv->uv_groups, al_link) {
 			char timeout[10];
 
 			if (once) {
@@ -490,7 +490,7 @@ static void show_igmp_iface(FILE *fp, int detail)
 				 IGMP_OTHER_QUERIER_PRESENT_INTERVAL - uv->uv_querier->al_timer);
 		}
 
-		for (group = uv->uv_groups; group; group = group->al_next)
+		TAILQ_FOREACH(group, &uv->uv_groups, al_link)
 			num++;
 
 		if (uv->uv_flags & VIFF_IGMPV1)

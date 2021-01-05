@@ -144,6 +144,7 @@ struct uvif *config_init_tunnel(in_addr_t lcl_addr, in_addr_t rmt_addr, uint32_t
 
 void config_vifs_correlate(void)
 {
+    struct listaddr *al, *al_tmp;
     struct iflist *ifl, *tmp;
     vifi_t vifi = 0;
 
@@ -205,12 +206,31 @@ void config_vifs_correlate(void)
 	    continue;
 	}
 
+	/* XXX: The uvfis[] array should be refactored into a TAILQ list,
+	*       then we could reuse the nodes as-is, and wouldn't have to
+	*        re-init the lists below.
+	*/
+	v = &uvifs[numvifs];
+	*v = *uv;
+
+	/*
+	 * Need to re-init pointers, zero_vif() initalized ifl_kern node
+	 * XXX: not needed if we refactor uvifs[] to a TAILQ list.
+	 */
+	TAILQ_INIT(&v->uv_static);
+	TAILQ_INIT(&v->uv_groups);
+	TAILQ_INIT(&v->uv_neighbors);
+	TAILQ_FOREACH_SAFE(al, &uv->uv_static, al_link, al_tmp) {
+	    TAILQ_REMOVE(&uv->uv_static, al, al_link);
+	    TAILQ_INSERT_TAIL(&v->uv_static, al, al_link);
+	}
+
 	logit(LOG_INFO, 0, "Installing %s (%s on subnet %s) as VIF #%u, rate %d pps",
-	      uv->uv_name, inet_fmt(uv->uv_lcl_addr, s1, sizeof(s1)),
-	      inet_fmts(uv->uv_subnet, uv->uv_subnetmask, s2, sizeof(s2)),
+	      v->uv_name, inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)),
+	      inet_fmts(v->uv_subnet, v->uv_subnetmask, s2, sizeof(s2)),
 	      numvifs, v->uv_rate_limit);
 
-	uvifs[numvifs++] = *uv;
+	numvifs++;
     }
 
     /*
@@ -219,8 +239,10 @@ void config_vifs_correlate(void)
      *      be freed on SIGHUP/exit().  Now we free it and let SIGHUP
      *      rebuild it to recheck since we tear down all vifs anyway.
      */
-    TAILQ_FOREACH_SAFE(ifl, &ifl_kern, ifl_link, tmp)
+    TAILQ_FOREACH_SAFE(ifl, &ifl_kern, ifl_link, tmp) {
+	TAILQ_REMOVE(&ifl_kern, ifl, ifl_link);
 	free(ifl);
+    }
     TAILQ_INIT(&ifl_kern);
 }
 

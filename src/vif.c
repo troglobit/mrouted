@@ -166,6 +166,8 @@ void init_vifs(void)
 /*
  * Initialize the passed vif with all appropriate default values.
  * "t" is true if a tunnel, or false if a phyint.
+ *
+ * Note: remember to re-init all relevant TAILQ's in init_vifs()!
  */
 void zero_vif(struct uvif *v, int t)
 {
@@ -181,8 +183,9 @@ void zero_vif(struct uvif *v, int t)
     v->uv_subnetmask	= 0;
     v->uv_subnetbcast	= 0;
     v->uv_name[0]	= '\0';
-    v->uv_groups	= NULL;
-    v->uv_neighbors	= NULL;
+    TAILQ_INIT(&v->uv_static);
+    TAILQ_INIT(&v->uv_groups);
+    TAILQ_INIT(&v->uv_neighbors);
     NBRM_CLRALL(v->uv_nbrmap);
     v->uv_querier	= NULL;
     v->uv_igmpv1_warn	= 0;
@@ -207,7 +210,7 @@ void zero_vif(struct uvif *v, int t)
  */
 void init_installvifs(void)
 {
-    struct listaddr *a;
+    struct listaddr *al, *tmp;
     struct uvif *v;
     vifi_t vifi;
 
@@ -232,19 +235,15 @@ void init_installvifs(void)
 	    logit(LOG_INFO, 0, "vif #%d, phyint %s", vifi,
 		  inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)));
 	}
-	k_add_vif(vifi, &uvifs[vifi]);
+	k_add_vif(vifi, v);
 
 	/* Install static routes/groups from mrouted.conf */
-	while (v->uv_static_grps) {
-	    in_addr_t group;
+	TAILQ_FOREACH_SAFE(al, &v->uv_static, al_link, tmp) {
+	    in_addr_t group = al->al_addr;
 
-	    a = v->uv_static_grps;
-	    v->uv_static_grps = a->al_next;
+	    TAILQ_REMOVE(&v->uv_static, al, al_link);
+	    TAILQ_INSERT_TAIL(&v->uv_groups, al, al_link);
 
-	    v->uv_groups = a;
-	    time(&a->al_ctime);
-
-	    group = a->al_addr;
 	    logit(LOG_INFO, 0, "    static group %s", inet_fmt(group, s3, sizeof(s3)));
 	    update_lclgrp(vifi, group);
 	    chkgrp_graft(vifi, group);
@@ -342,7 +341,7 @@ static void send_probe_on_vif(struct uvif *v)
     size_t datalen = 0;
     int i;
 
-    if ((v->uv_flags & VIFF_PASSIVE && v->uv_neighbors == NULL) ||
+    if ((v->uv_flags & VIFF_PASSIVE && TAILQ_EMPTY(&v->uv_neighbors)) ||
 	(v->uv_flags & VIFF_FORCE_LEAF))
 	return;
 
@@ -355,13 +354,10 @@ static void send_probe_on_vif(struct uvif *v)
     /*
      * add the neighbor list on the interface to the message
      */
-    nbr = v->uv_neighbors;
-
-    while (nbr) {
+    TAILQ_FOREACH(nbr, &v->uv_neighbors, al_link) {
 	for (i = 0; i < 4; i++)
 	    *p++ = ((char *)&nbr->al_addr)[i];
 	datalen +=4;
-	nbr = nbr->al_next;
     }
 
     send_on_vif(v, 0, DVMRP_PROBE, datalen);
@@ -485,7 +481,7 @@ static void start_vif2(vifi_t vifi)
  */
 static void stop_vif(vifi_t vifi)
 {
-    struct listaddr *a;
+    struct listaddr *a, *tmp;
     struct phaddr *p;
     struct uvif *v;
 
@@ -523,9 +519,8 @@ static void stop_vif(vifi_t vifi)
 	 * Discard all group addresses.  (No need to tell kernel;
 	 * the k_del_vif() call, below, will clean up kernel state.)
 	 */
-	while (v->uv_groups) {
-	    a = v->uv_groups;
-	    v->uv_groups = a->al_next;
+	TAILQ_FOREACH_SAFE(a, &v->uv_groups, al_link, tmp) {
+	    TAILQ_REMOVE(&v->uv_groups, a, al_link);
 	    free(a);
 	}
 
@@ -551,9 +546,8 @@ static void stop_vif(vifi_t vifi)
     if (!NBRM_ISEMPTY(v->uv_nbrmap))
 	vifs_with_neighbors--;
 
-    while (v->uv_neighbors) {
-	a = v->uv_neighbors;
-	v->uv_neighbors = a->al_next;
+    TAILQ_FOREACH_SAFE(a, &v->uv_neighbors, al_link, tmp) {
+	TAILQ_REMOVE(&v->uv_neighbors, a, al_link);
 	nbrs[a->al_index] = NULL;
 	free(a);
     }
@@ -566,8 +560,8 @@ static void stop_vif(vifi_t vifi)
  */
 void stop_all_vifs(void)
 {
+    struct listaddr *a, *tmp;
     struct vif_acl *acl;
-    struct listaddr *a;
     struct phaddr *ph;
     vifi_t vifi;
 
@@ -580,20 +574,16 @@ void stop_all_vifs(void)
 	}
 	v->uv_querier = NULL;
 
-	while (v->uv_groups) {
-	    a = v->uv_groups;
-	    v->uv_groups = a->al_next;
+	TAILQ_FOREACH_SAFE(a, &v->uv_groups, al_link, tmp) {
+	    TAILQ_REMOVE(&v->uv_groups, a, al_link);
 	    free(a);
 	}
-	v->uv_groups = NULL;
 
-	while (v->uv_neighbors) {
-	    a = v->uv_neighbors;
-	    v->uv_neighbors = a->al_next;
+	TAILQ_FOREACH_SAFE(a, &v->uv_neighbors, al_link, tmp) {
+	    TAILQ_REMOVE(&v->uv_neighbors, a, al_link);
 	    nbrs[a->al_index] = NULL;
 	    free(a);
 	}
-	v->uv_neighbors = NULL;
 
 	while (v->uv_acl) {
 	    acl = v->uv_acl;
@@ -801,8 +791,8 @@ void accept_membership_query(int ifi, uint32_t src, uint32_t dst, uint32_t group
 		  inet_fmt(group, s2, sizeof(s2)),
 		  inet_fmt(src, s1, sizeof(s1)), vifi, tmo);
 	}
-	
-	for (g = v->uv_groups; g; g = g->al_next) {
+
+	TAILQ_FOREACH(g, &v->uv_groups, al_link) {
 	    if (group == g->al_addr && g->al_query == 0) {
 		if (g->al_timerid > 0)
 		    g->al_timerid = timer_clear(g->al_timerid);
@@ -867,7 +857,7 @@ void accept_group_report(int ifi, uint32_t src, uint32_t dst, uint32_t group, in
     /*
      * Look for the group in our group list; if found, reset its timer.
      */
-    for (g = v->uv_groups; g; g = g->al_next) {
+    TAILQ_FOREACH(g, &v->uv_groups, al_link) {
 	int old_report = 0;
 
 	if (group == g->al_addr) {
@@ -966,8 +956,7 @@ void accept_group_report(int ifi, uint32_t src, uint32_t dst, uint32_t group, in
 	if (g->al_pv < 3)
 	    g->al_pv_timerid = group_version_timer(vifi, g);
 
-	g->al_next	= v->uv_groups;
-	v->uv_groups	= g;
+	TAILQ_INSERT_TAIL(&v->uv_groups, g, al_link);
 	time(&g->al_ctime);
 
 	update_lclgrp(vifi, group);
@@ -1014,7 +1003,7 @@ void accept_leave_message(int ifi, uint32_t src, uint32_t dst, uint32_t group)
      * Look for the group in our group list in order to set up a short-timeout
      * query.
      */
-    for (g = v->uv_groups; g; g = g->al_next) {
+    TAILQ_FOREACH(g, &v->uv_groups, al_link) {
 	if (group != g->al_addr)
 	    continue;
 
@@ -1272,7 +1261,7 @@ void accept_neighbor_request(uint32_t src, uint32_t dst)
 
 	ncount = 0;
 
-	for (la = v->uv_neighbors; la; la = la->al_next) {
+	TAILQ_FOREACH(la, &v->uv_neighbors, al_link) {
 
 	    /* Make sure that there's room for this neighbor... */
 	    if (datalen + (ncount == 0 ? 4 + 3 + 4 : 4) > MAX_DVMRP_DATA_LEN) {
@@ -1337,8 +1326,7 @@ void accept_neighbor_request2(uint32_t src, uint32_t dst)
 	    rflags |= DVMRP_NF_LEAF;
 
 	ncount = 0;
-	la = v->uv_neighbors;
-	if (la == NULL) {
+	if (TAILQ_EMPTY(&v->uv_neighbors)) {
 	    /*
 	     * include down & disabled interfaces and interfaces on
 	     * leaf nets.
@@ -1361,7 +1349,7 @@ void accept_neighbor_request2(uint32_t src, uint32_t dst)
 	    p += 4;
 	    datalen += 12;
 	} else {
-	    for ( ; la; la = la->al_next) {
+	    TAILQ_FOREACH(la, &v->uv_neighbors, al_link) {
 		/* Make sure that there's room for this neighbor... */
 		if (datalen + (ncount == 0 ? 4+4+4 : 4) > MAX_DVMRP_DATA_LEN) {
 		    send_igmp(INADDR_ANY, them, IGMP_DVMRP, DVMRP_NEIGHBORS2,
@@ -1603,7 +1591,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
     /*
      * Look for addr in list of neighbors.
      */
-    for (n = v->uv_neighbors; n; n = n->al_next) {
+    TAILQ_FOREACH(n, &v->uv_neighbors, al_link) {
 	if (addr == n->al_addr) {
 	    break;
 	}
@@ -1657,8 +1645,8 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 	time(&n->al_ctime);
 	n->al_timer     = 0;
 	n->al_flags	= has_genid ? NBRF_GENID : 0;
-	n->al_next      = v->uv_neighbors;
-	v->uv_neighbors = n;
+
+	TAILQ_INSERT_TAIL(&v->uv_neighbors, n, al_link);
 
 	/*
 	 * If we are not configured to peer with non-pruning routers,
@@ -1844,19 +1832,16 @@ uint32_t vif_nbr_expire_time(struct listaddr *al)
  */
 void age_vifs(void)
 {
-    vifi_t vifi;
+    struct listaddr *a, *tmp;
     struct uvif *v;
-    struct listaddr *a, *prev_a;
-    uint32_t addr;
+    vifi_t vifi;
 
     for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
 	if (v->uv_leaf_timer && (v->uv_leaf_timer -= TIMER_INTERVAL == 0))
 		v->uv_flags |= VIFF_LEAF;
 
-	prev_a = (struct listaddr *)&v->uv_neighbors;
-	for (a = v->uv_neighbors; a; prev_a = a, a = a->al_next) {
+	TAILQ_FOREACH_SAFE(a, &v->uv_neighbors, al_link, tmp) {
 	    uint32_t exp_time = vif_nbr_expire_time(a);
-	    int idx;
 
 	    a->al_timer += TIMER_INTERVAL;
 	    if (a->al_timer < exp_time)
@@ -1874,19 +1859,17 @@ void age_vifs(void)
 	     */
 	    NBRM_CLR(a->al_index, v->uv_nbrmap);
 	    nbrs[a->al_index] = NULL;	/* XXX is it a good idea to reuse indxs? */
-	    idx = a->al_index;
-	    addr = a->al_addr;
-	    prev_a->al_next = a->al_next;
-	    free(a);
-	    a = prev_a;		/*XXX use ** */
+	    TAILQ_REMOVE(&v->uv_neighbors, a, al_link);
 
-	    delete_neighbor_from_routes(addr, vifi, idx);
-	    reset_neighbor_state(vifi, addr);
+	    delete_neighbor_from_routes(a->al_addr, vifi, a->al_index);
+	    reset_neighbor_state(vifi, a->al_addr);
 
 	    if (NBRM_ISEMPTY(v->uv_nbrmap))
 		vifs_with_neighbors--;
 
 	    v->uv_leaf_timer = LEAF_CONFIRMATION_TIME;
+
+	    free(a);
 	}
 
 	if (v->uv_querier) {
@@ -1915,11 +1898,12 @@ void age_vifs(void)
  */
 struct listaddr *neighbor_info(vifi_t vifi, uint32_t addr)
 {
-    struct listaddr *u;
+    struct listaddr *al;
 
-    for (u = uvifs[vifi].uv_neighbors; u; u = u->al_next)
-	if (u->al_addr == addr)
-	    return u;
+    TAILQ_FOREACH(al, &uvifs[vifi].uv_neighbors, al_link) {
+	if (al->al_addr == addr)
+	    return al;
+    }
 
     return NULL;
 }
@@ -2073,7 +2057,7 @@ void dump_vifs(FILE *fp, int detail)
 	}
 
 	label = "peers:";
-	for (a = v->uv_neighbors; a; a = a->al_next) {
+	TAILQ_FOREACH(a, &v->uv_neighbors, al_link) {
 	    fprintf(fp, "                            %6s %s (%d.%d) [%d]",
 		    label, inet_fmt(a->al_addr, s1, sizeof(s1)), a->al_pv, a->al_mv,
 		    a->al_index);
@@ -2086,7 +2070,7 @@ void dump_vifs(FILE *fp, int detail)
 	}
 
 	label = "group host (time left):";
-	for (a = v->uv_groups; a; a = a->al_next) {
+	TAILQ_FOREACH(a, &v->uv_groups, al_link) {
 	    fprintf(fp, "           %23s %-15s %-15s (%s)\n",
 		    label,
 		    inet_fmt(a->al_addr, s1, sizeof(s1)),
@@ -2200,9 +2184,9 @@ static int group_version_timer(vifi_t vifi, struct listaddr *g)
 static void delete_group_cb(void *arg)
 {
     cbk_t *cbk = (cbk_t *)arg;
+    struct listaddr *g = cbk->g;
     vifi_t vifi = cbk->vifi;
     struct uvif *v = &uvifs[vifi];
-    struct listaddr *a, **anp, *g = cbk->g;
 
     logit(LOG_DEBUG, 0, "Group membership timeout for %s on %s",
 	  inet_fmt(cbk->g->al_addr, s1, sizeof(s1)), v->uv_name);
@@ -2214,16 +2198,8 @@ static void delete_group_cb(void *arg)
 	g->al_pv_timerid = timer_clear(g->al_pv_timerid);
 
     delete_lclgrp(vifi, g->al_addr);
-
-    anp = &(v->uv_groups);
-    while ((a = *anp)) {
-    	if (a == g) {
-	    *anp = a->al_next;
-	    free(a);
-	} else {
-	    anp = &a->al_next;
-	}
-    }
+    TAILQ_REMOVE(&v->uv_groups, g, al_link);
+    free(g);
 
     free(cbk);
 }

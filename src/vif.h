@@ -10,6 +10,11 @@
  * vif.h,v 3.8.4.26 1998/01/14 21:21:19 fenner Exp
  */
 
+#ifndef MROUTED_VIF_H_
+#define MROUTED_VIF_H_
+
+#include <stdint.h>
+#include "queue.h"
 
 /*
  * Bitmap handling functions.
@@ -22,7 +27,6 @@
  * the kernel no longer uses vifbitmaps.
  */
 #ifndef VIFM_SET
-
 typedef	uint32_t vifbitmap_t;
 
 #define	VIFM_SET(n, m)			((m) |=  (1 << (n)))
@@ -101,35 +105,35 @@ struct blastinfo {
  * (Note: all addresses, subnet numbers and masks are kept in NETWORK order.)
  */
 struct uvif {
-    uint32_t	     uv_flags;	    /* VIFF_ flags defined below            */
-    uint8_t	     uv_metric;     /* cost of this vif                     */
-    uint8_t	     uv_admetric;   /* advertised cost of this vif          */
-    uint8_t	     uv_threshold;  /* min ttl required to forward on vif   */
-    uint32_t	     uv_rate_limit; /* rate limit on this vif               */
-    uint32_t	     uv_lcl_addr;   /* local address of this vif            */
-    uint32_t	     uv_rmt_addr;   /* remote end-point addr (tunnels only) */
-    uint32_t	     uv_dst_addr;   /* destination for DVMRP/PIM messages   */
-    uint32_t	     uv_subnet;     /* subnet number         (phyints only) */
-    uint32_t	     uv_subnetmask; /* subnet mask           (phyints only) */
-    uint32_t	     uv_subnetbcast;/* subnet broadcast addr (phyints only) */
-    char	     uv_name[IFNAMSIZ]; /* interface name                   */
-    struct listaddr *uv_static_grps;/* list of static groups (phyints only) */
-    struct listaddr *uv_groups;     /* list of local groups  (phyints only) */
-    struct listaddr *uv_neighbors;  /* list of neighboring routers          */
-    nbrbitmap_t	     uv_nbrmap;	    /* bitmap of active neighboring routers */
-    struct listaddr *uv_querier;    /* IGMP querier on vif                  */
-    int		     uv_igmpv1_warn;/* To rate-limit IGMPv1 warnings	    */
-    int		     uv_prune_lifetime; /* Prune lifetime or 0 for default  */
-    struct vif_acl  *uv_acl;	    /* access control list of groups        */
-    int		     uv_leaf_timer; /* time until this vif is considrd leaf */
-    struct phaddr   *uv_addrs;	    /* Additional subnets on this vif       */
-    struct vif_filter *uv_filter;   /* Route filters on this vif	    */
-    struct blastinfo uv_blaster;    /* Info about route blasters	    */
-    int		     uv_nbrup;	    /* Counter for neighbor up events       */
-    int		     uv_icmp_warn;  /* To rate-limit ICMP warnings	    */
-    uint32_t	     uv_nroutes;    /* # of routes with this vif as parent  */
-    struct ip 	    *uv_encap_hdr;  /* Pre-formed header to encapsulate msgs*/
-    int		     uv_ifindex;    /* because RTNETLINK returns only index */
+    uint32_t	     uv_flags;	        /* VIFF_ flags defined below         */
+    uint8_t	     uv_metric;         /* cost of this vif                  */
+    uint8_t	     uv_admetric;       /* advertised cost of this vif       */
+    uint8_t	     uv_threshold;      /* min ttl req. to forward on vif    */
+    uint32_t	     uv_rate_limit;     /* rate limit on this vif            */
+    uint32_t	     uv_lcl_addr;       /* local address of this vif         */
+    uint32_t	     uv_rmt_addr;       /* remote end-point addr (tunnels)   */
+    uint32_t	     uv_dst_addr;       /* destination for DVMRP/PIM messages*/
+    uint32_t	     uv_subnet;         /* subnet number         (phyints)   */
+    uint32_t	     uv_subnetmask;     /* subnet mask           (phyints)   */
+    uint32_t	     uv_subnetbcast;    /* subnet broadcast addr (phyints)   */
+    char	     uv_name[IFNAMSIZ]; /* interface name                    */
+    TAILQ_HEAD(,listaddr) uv_static;    /* list of static groups (phyints)   */
+    TAILQ_HEAD(,listaddr) uv_groups;    /* list of local groups  (phyints)   */
+    TAILQ_HEAD(,listaddr) uv_neighbors;	/* list of neighboring routers       */
+    nbrbitmap_t	     uv_nbrmap;	        /* bitmap of active neigh. routers   */
+    struct listaddr *uv_querier;        /* IGMP querier on vif (one or none) */
+    int		     uv_igmpv1_warn;    /* To rate-limit IGMPv1 warnings     */
+    int		     uv_prune_lifetime; /* Prune lifetime or 0 for default   */
+    struct vif_acl  *uv_acl;	        /* access control list of groups     */
+    int		     uv_leaf_timer;     /* time until vif is considrd leaf   */
+    struct phaddr   *uv_addrs;	        /* Additional subnets on this vif    */
+    struct vif_filter *uv_filter;       /* Route filters on this vif	     */
+    struct blastinfo uv_blaster;        /* Info about route blasters	     */
+    int		     uv_nbrup;	        /* Counter for neighbor up events    */
+    int		     uv_icmp_warn;      /* To rate-limit ICMP warnings	     */
+    uint32_t	     uv_nroutes;        /* num routes with this vif as parent*/
+    struct ip 	    *uv_encap_hdr;      /* Pre-formed header to encap msgs   */
+    int		     uv_ifindex;        /* Primarily for Linux systems       */
 };
 
 #define uv_blasterbuf	uv_blaster.bi_buf
@@ -193,7 +197,7 @@ struct vf_element {
 };
 
 struct listaddr {
-    struct listaddr *al_next;		/* link to next addr, MUST BE FIRST */
+    TAILQ_ENTRY(listaddr) al_link;	/* link to next/prev addr           */
     uint32_t	     al_addr;		/* local group or neighbor address  */
     uint32_t	     al_timer;		/* for timing out group or neighbor */
     uint32_t	     al_mtime;		/* mtime from virtual_time, for IPC */
@@ -239,6 +243,8 @@ struct listaddr {
 				 NBRF_TOOMANYROUTES|NBRF_NOTPRUNING)
 
 #define NO_VIF		((vifi_t)MAXVIFS)  /* An invalid vif index */
+
+#endif /* MROUTED_VIF_H_ */
 
 /**
  * Local Variables:

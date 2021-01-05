@@ -139,9 +139,10 @@ int grplst_mem(vifi_t vifi, uint32_t mcastgrp)
 
     v = &uvifs[vifi];
 
-    for (g = v->uv_groups; g != NULL; g = g->al_next)
+    TAILQ_FOREACH(g, &v->uv_groups, al_link) {
 	if (mcastgrp == g->al_addr)
 	    return 1;
+    }
 
     return 0;
 }

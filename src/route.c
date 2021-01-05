@@ -1336,7 +1336,7 @@ void dump_routes(FILE *fp, int detail)
 		if (!NBRM_ISSETMASK(uvifs[i].uv_nbrmap, r->rt_subordinates))
 		    fprintf(fp, "*");
 
-		for (n = uvifs[i].uv_neighbors; n; n = n->al_next) {
+		TAILQ_FOREACH(n, &uvifs[i].uv_neighbors, al_link) {
 		    if (NBRM_ISSET(n->al_index, r->rt_subordinates)) {
 			fprintf(fp, "%c%d", l, n->al_index);
 			l = ',';
