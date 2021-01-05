@@ -361,6 +361,7 @@ extern void		config_vifs_from_kernel(void);
 extern void		config_vifs_from_file(void);
 
 /* inet.c */
+extern int		inet_valid_group(uint32_t);
 extern int		inet_valid_host(uint32_t);
 extern int		inet_valid_mask(uint32_t);
 extern int		inet_valid_subnet(uint32_t, uint32_t);

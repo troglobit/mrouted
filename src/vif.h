@@ -113,6 +113,7 @@ struct uvif {
     uint32_t	     uv_subnetmask; /* subnet mask           (phyints only) */
     uint32_t	     uv_subnetbcast;/* subnet broadcast addr (phyints only) */
     char	     uv_name[IFNAMSIZ]; /* interface name                   */
+    struct listaddr *uv_static_grps;/* list of static groups (phyints only) */
     struct listaddr *uv_groups;     /* list of local groups  (phyints only) */
     struct listaddr *uv_neighbors;  /* list of neighboring routers          */
     nbrbitmap_t	     uv_nbrmap;	    /* bitmap of active neighboring routers */
@@ -212,7 +213,7 @@ struct listaddr {
     } al_alu;
     uint8_t	     al_pv;		/* group/router protocol version    */
     int 	     al_pv_timerid;	/* timer for version switch         */
-    uint16_t	     al_flags;		/* flags related to this neighbor   */
+    uint16_t	     al_flags;		/* flags related to neighbor/group  */
 };
 #define	al_genid	al_alu.alu_router.alur_genid
 #define	al_nroutes	al_alu.alu_router.alur_nroutes
@@ -229,6 +230,7 @@ struct listaddr {
 #define	NBRF_TOOOLD		0x0800	/* Too old (policy decision) 	    */
 #define	NBRF_TOOMANYROUTES	0x1000	/* Neighbor is spouting routes 	    */
 #define	NBRF_NOTPRUNING		0x2000	/* Neighbor doesn't appear to prune */
+#define	NBRF_STATIC_GROUP	0x4000	/* Static group entry		    */
 
 /*
  * Don't peer with neighbors with any of these flags set

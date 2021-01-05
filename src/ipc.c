@@ -411,6 +411,24 @@ static uint32_t diff_vtime(uint32_t mtime)
 	return virtual_time - mtime;
 }
 
+static char *group_flags(struct listaddr *al)
+{
+	static char flags[20];
+
+	memset(flags, 0, sizeof(flags));
+
+	if (al->al_pv < 3)
+		strlcat(flags, al->al_pv == 2 ? "v2" : "v1", sizeof(flags));
+
+	if (al->al_flags & NBRF_STATIC_GROUP) {
+		if (*flags)
+			strlcat(flags, " ", sizeof(flags));
+		strlcat(flags, "static", sizeof(flags));
+	}
+
+	return flags;
+}
+
 static void show_igmp_group(FILE *fp, int detail)
 {
 	struct listaddr *group, *source;
@@ -420,18 +438,26 @@ static void show_igmp_group(FILE *fp, int detail)
 
 	for (vifi = 0, uv = uvifs; vifi < numvifs; vifi++, uv++) {
 		for (group = uv->uv_groups; group; group = group->al_next) {
+			char timeout[10];
+
 			if (once) {
 				fputs("IGMP Group Table_\n", fp);
-				fprintf(fp, "%-16s  %-15s  %-15s  %6s=\n",
-					"Interface", "Group", "Last Reporter", "Expire");
+				fprintf(fp, "%-16s  %-15s  %-15s  %6s  %-10s=\n",
+					"Interface", "Group", "Last Reporter", "Expire", "Flags");
 				once = 0;
 			}
 
-			fprintf(fp, "%-16s  %-15s  %-15s  %5us\n",
+			if (!group->al_timer)
+				snprintf(timeout, sizeof(timeout), "Never");
+			else
+				snprintf(timeout, sizeof(timeout), "%us",
+					 group->al_timer - diff_vtime(group->al_mtime));
+
+			fprintf(fp, "%-16s  %-15s  %-15s  %6s  %-10s\n",
 				uv->uv_name,
 				inet_fmt(group->al_addr, s1, sizeof(s1)),
 				inet_fmt(group->al_reporter, s2, sizeof(s2)),
-				group->al_timer - diff_vtime(group->al_mtime));
+				timeout, group_flags(group));
 		}
 	}
 }

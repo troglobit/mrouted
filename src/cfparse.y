@@ -62,14 +62,14 @@ int numbounds = 0;			/* Number of named boundaries */
     int num;
     char *ptr;
     struct addrmask addrmask;
-    uint32_t addr;
+    uint32_t addr, group;
     struct vf_element *filterelem;
 };
 
 %token CACHE_LIFETIME PRUNE_LIFETIME PRUNING BLACK_HOLE NOFLOOD
 %token QUERY_INTERVAL QUERY_LAST_MEMBER_INTERVAL IGMP_ROBUSTNESS
 %token NO PHYINT TUNNEL NAME
-%token DISABLE ENABLE IGMPV1 IGMPV2 IGMPV3 SRCRT BESIDE
+%token DISABLE ENABLE IGMPV1 IGMPV2 IGMPV3 STATIC_GROUP SRCRT BESIDE
 %token METRIC THRESHOLD RATE_LIMIT BOUNDARY NETMASK ALTNET ADVERT_METRIC
 %token FILTER ACCEPT DENY EXACT BIDIR REXMIT_PRUNES REXMIT_PRUNES2
 %token PASSIVE ALLOW_NONPRUNERS
@@ -80,7 +80,7 @@ int numbounds = 0;			/* Number of named boundaries */
 %token <num> NUMBER
 %token <ptr> STRING
 %token <addrmask> ADDRMASK
-%token <addr> ADDR
+%token <addr> ADDR GROUP
 
 %type <addr> interface addrname
 %type <addrmask> bound boundary addrmask
@@ -298,6 +298,22 @@ ifmod	: mod
 	| IGMPV1		{ v->uv_flags &= ~VIFF_IGMPV2; v->uv_flags |= VIFF_IGMPV1; }
 	| IGMPV2		{ v->uv_flags &= ~VIFF_IGMPV1; v->uv_flags |= VIFF_IGMPV2; }
 	| IGMPV3		{ v->uv_flags &= ~VIFF_IGMPV1; v->uv_flags &= ~VIFF_IGMPV2; }
+	| STATIC_GROUP GROUP
+	{
+	    struct listaddr *a;
+
+	    a = calloc(1, sizeof(struct listaddr));
+	    if (!a) {
+		fatal("Failed allocating memory for 'struct listaddr'");
+		return 0;
+	    }
+
+	    a->al_addr  = $2;
+	    a->al_pv    = 2;	/* IGMPv2 only, no SSM */
+	    a->al_flags = NBRF_STATIC_GROUP;
+	    a->al_next  = v->uv_static_grps;
+	    v->uv_static_grps = a;
+	}
 	| NETMASK addrname
 	{
 	    uint32_t subnet, mask;
@@ -752,6 +768,7 @@ static struct keyword {
 	{ "igmpv1",		IGMPV1, 0 },
 	{ "igmpv2",		IGMPV2, 0 },
 	{ "igmpv3",		IGMPV3, 0 },
+	{ "static-group",	STATIC_GROUP, 0 },
 	{ "altnet",		ALTNET, 0 },
 	{ "name",		NAME, 0 },
 	{ "accept",		ACCEPT, 0 },
@@ -823,10 +840,16 @@ static int yylex(void)
     }
 
     if (sscanf(q,"%[.0-9]%c",s1,s2) == 1) {
-	addr = inet_parse(s1,4);
-        if (addr != 0xffffffff && inet_valid_host(addr)) {
-            yylval.addr = addr;
-            return ADDR;
+	addr = inet_parse(s1, 4);
+        if (addr != 0xffffffff) {
+	    if (inet_valid_host(addr)) {
+		yylval.addr = addr;
+		return ADDR;
+	    }
+	    if (inet_valid_group(addr)) {
+		yylval.addr = addr;
+		return GROUP;
+	    }
         }
     }
 

@@ -207,6 +207,7 @@ void zero_vif(struct uvif *v, int t)
  */
 void init_installvifs(void)
 {
+    struct listaddr *a;
     struct uvif *v;
     vifi_t vifi;
 
@@ -232,6 +233,22 @@ void init_installvifs(void)
 		  inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)));
 	}
 	k_add_vif(vifi, &uvifs[vifi]);
+
+	/* Install static routes/groups from mrouted.conf */
+	while (v->uv_static_grps) {
+	    in_addr_t group;
+
+	    a = v->uv_static_grps;
+	    v->uv_static_grps = a->al_next;
+
+	    v->uv_groups = a;
+	    time(&a->al_ctime);
+
+	    group = a->al_addr;
+	    logit(LOG_INFO, 0, "    static group %s", inet_fmt(group, s3, sizeof(s3)));
+	    update_lclgrp(vifi, group);
+	    chkgrp_graft(vifi, group);
+	}
     }
 }
 
@@ -854,6 +871,12 @@ void accept_group_report(int ifi, uint32_t src, uint32_t dst, uint32_t group, in
 	int old_report = 0;
 
 	if (group == g->al_addr) {
+	    if (g->al_flags & NBRF_STATIC_GROUP) {
+		IF_DEBUG(DEBUG_IGMP)
+		    logit(LOG_DEBUG, 0, "Ignoring IGMP JOIN for static group %s on %s.", s3, s1);
+		return;
+	    }
+
 	    switch (r_type) {
 	    case IGMP_V1_MEMBERSHIP_REPORT:
 		old_report = 1;
@@ -994,6 +1017,12 @@ void accept_leave_message(int ifi, uint32_t src, uint32_t dst, uint32_t group)
     for (g = v->uv_groups; g; g = g->al_next) {
 	if (group != g->al_addr)
 	    continue;
+
+	if (g->al_flags & NBRF_STATIC_GROUP) {
+	    IF_DEBUG(DEBUG_IGMP)
+		logit(LOG_DEBUG, 0, "Ignoring IGMP LEAVE for static group %s on %s.", s3, s1);
+	    return;
+	}
 
 	/* Ignore IGMPv2 LEAVE in IGMPv1 mode, RFC3376, sec. 7.3.2. */
 	if (g->al_pv == 1) {

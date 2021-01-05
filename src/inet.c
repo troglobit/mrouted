@@ -22,6 +22,18 @@ char s4[MAX_INET_BUF_LEN];
 
 
 /*
+ * Verify that a given IP address is a valid multigast group
+ */
+int inet_valid_group(uint32_t naddr)
+{
+    uint32_t addr;
+
+    addr = ntohl(naddr);
+
+    return IN_MULTICAST(addr);
+}
+
+/*
  * Verify that a given IP address is credible as a host address.
  * (Without a mask, cannot detect addresses of the form {subnet,0} or
  * {subnet,-1}.)

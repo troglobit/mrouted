@@ -157,7 +157,7 @@ In non-trivial setups this limit is often reached, causing weird errors
 that can be hard to debug.  The recommendation for those cases is to
 disable all phyint (this setting), and then selectively enable only the
 ones needed.
-.It Cm phyint Ar <local-addr | ifname> Oo Cm disable | enable Oc Oo Cm passive Oc Oo Cm blaster Oc Oo Cm force-leaf Oc Oo Cm noflood Oc Oo Cm igmpv1 | igmpv2 | igmpv3 Oc Oo Cm altnet Ar network Ns / Ns Ar mask-len Oc Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm advert-metric Ar <0-31> Oc Oo Cm prune-lifetime Ar sec Oc Oo Cm rexmit-prunes Oo Ar on | off Oc Oc Oo Cm allow-nonpruners Oc Oo Cm notransit Oc Oo Cm accept|deny Po Ar route Ns / Ns Ar mask-len Oo Cm exact Oc Pc Ns + Oo Cm bidir Oc Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
+.It Cm phyint Ar <local-addr | ifname> Oo Cm disable | enable Oc Oo Cm passive Oc Oo Cm blaster Oc Oo Cm force-leaf Oc Oo Cm noflood Oc Oo Cm igmpv1 | igmpv2 | igmpv3 Oc Oo Cm static-group Ar group Oc Oo Cm altnet Ar network Ns / Ns Ar mask-len Oc Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm advert-metric Ar <0-31> Oc Oo Cm prune-lifetime Ar sec Oc Oo Cm rexmit-prunes Oo Ar on | off Oc Oc Oo Cm allow-nonpruners Oc Oo Cm notransit Oc Oo Cm accept|deny Po Ar route Ns / Ns Ar mask-len Oo Cm exact Oc Pc Ns + Oo Cm bidir Oc Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
 .Pp
 This setting selects and alters properties of the phyiscal interfaces
 .Nm mrouted
@@ -184,6 +184,27 @@ To encapsulate all control traffic inside the tunnel use
 supports all IGMP versions.  Use these flags to force compatibility
 modes on the given interface.  Default:
 .Cm igmpv3
+.It Cm static-group Ar group
+Useful when there is no IGMP capable hosts on the LAN, or when a group
+should always be routed.  It behaves as if an IGMPv2 join for
+.Ar group
+was received on the
+.Cm phyint .
+It is listed as
+.Cm static
+in the
+.Nm mroutectl
+output.
+.Pp
+In setups where there is only a single multicast router running
+.Nm mrouted ,
+this works just as a (*,G) route in
+.Xr smcrouted 8 .
+With the added exception for better handling of dynamic changes to the
+input interface.
+.Pp
+This is also very useful for testing routing without having the set up
+IGMP capable receivers.
 .It Cm altnet Ar network Ns / Ns Ar mask-len
 If an interface is attached to multiple IP subnets, describe each
 additional subnet with this keyword.
