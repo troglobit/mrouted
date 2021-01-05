@@ -206,6 +206,6 @@ is based on the 3.8 release, for any relevant fixes.
 [mrouted.conf(5)]: https://man.troglobit.com/man5/mrouted.conf.5.html
 [GitHub]:          https://github.com/troglobit/mrouted/
 [Travis]:          https://travis-ci.org/troglobit/mrouted
-[Travis Status]:   https://travis-ci.org/troglobit/mrouted.png?branch=master
+[Travis Status]:   https://travis-ci.org/troglobit/mrouted.svg?branch=master
 [Coverity Scan]:   https://scan.coverity.com/projects/3320
 [Coverity Status]: https://scan.coverity.com/projects/3320/badge.svg
