@@ -7,8 +7,8 @@
  * Leland Stanford Junior University.
  */
 
-#include "defs.h"
 #include <fcntl.h>
+#include "defs.h"
 
 /*
  * Exported variables.
@@ -69,7 +69,6 @@ void init_vifs(void)
     vifi_t vifi;
     struct uvif *v;
     int enabled_vifs, enabled_phyints;
-    extern char *configfilename;
 
     numvifs = 0;
     vifs_with_neighbors = 0;

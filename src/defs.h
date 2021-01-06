@@ -358,6 +358,7 @@ extern void		config_vifs_correlate(void);
 extern void		config_vifs_from_kernel(void);
 
 /* cfparse.y */
+extern char	       *configfilename;
 extern void		config_vifs_from_file(void);
 
 /* inet.c */

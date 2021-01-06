@@ -23,8 +23,6 @@
 #include <fcntl.h>
 #include <poll.h>
 
-extern char *configfilename;
-
 int haveterminal = 1;
 int did_final_init = 0;
 

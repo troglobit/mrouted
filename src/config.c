@@ -9,7 +9,6 @@
 
 #include <ifaddrs.h>
 #include "defs.h"
-#include "queue.h"
 
 struct iflist {
     struct uvif         ifl_uv;
