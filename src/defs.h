@@ -112,7 +112,7 @@ typedef void (*ihfunc_t) (int);
 #define MROUTED_LEVEL  (DVMRP_CONSTANT | PROTOCOL_VERSION)
 			    /* for IGMP 'group' field of DVMRP messages */
 
-#define LEAF_FLAGS	(( vifs_with_neighbors == 1 ) ? 0x010000 : 0)
+#define LEAF_FLAGS	(neighbor_vifs == 1 ? 0x010000 : 0)
 			    /* more for IGMP 'group' field of DVMRP messages */
 
 #define	DEL_RTE_GROUP	0
@@ -199,7 +199,7 @@ extern struct uvif	uvifs[MAXVIFS];
 extern vifi_t		numvifs;
 extern int		vifs_down;
 extern int		udp_socket;
-extern int		vifs_with_neighbors;
+extern int		neighbor_vifs;
 
 #define MAX_INET_BUF_LEN 19
 extern char		s1[MAX_INET_BUF_LEN];

@@ -21,7 +21,7 @@ int		udp_socket;	/* Since the honkin' kernel doesn't support */
 				/* ioctls on raw IP sockets, we need a UDP  */
 				/* socket as well as our IGMP (raw) socket. */
 				/* How dumb.                                */
-int		vifs_with_neighbors;	/* == 1 if I am a leaf		    */
+int	     neighbor_vifs;	/* == 1 if I am a leaf		    */
 
 /*
  * Private variables.
@@ -71,7 +71,7 @@ void init_vifs(void)
     int enabled_vifs, enabled_phyints;
 
     numvifs = 0;
-    vifs_with_neighbors = 0;
+    neighbor_vifs = 0;
     vifs_down = FALSE;
 
     /*
@@ -543,7 +543,7 @@ static void stop_vif(vifi_t vifi)
      * Discard all neighbor addresses.
      */
     if (!NBRM_ISEMPTY(v->uv_nbrmap))
-	vifs_with_neighbors--;
+	neighbor_vifs--;
 
     TAILQ_FOREACH_SAFE(a, &v->uv_neighbors, al_link, tmp) {
 	TAILQ_REMOVE(&v->uv_neighbors, a, al_link);
@@ -1688,7 +1688,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 	 */
 	if (NBRM_ISEMPTY(v->uv_nbrmap)) {
 	    send_tables = v->uv_dst_addr;
-	    vifs_with_neighbors++;
+	    neighbor_vifs++;
 	} else {
 	    send_tables = addr;
 	}
@@ -1712,7 +1712,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 	    } else {
 		if (NBRM_ISEMPTY(v->uv_nbrmap)) {
 		    send_tables = v->uv_dst_addr;
-		    vifs_with_neighbors++;
+		    neighbor_vifs++;
 		} else {
 		    send_tables = addr;
 		}
@@ -1728,7 +1728,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 	if (n->al_flags & NBRF_ONEWAY && msgtype == DVMRP_PROBE) {
 	    if (in_router_list) {
 		if (NBRM_ISEMPTY(v->uv_nbrmap))
-		    vifs_with_neighbors++;
+		    neighbor_vifs++;
 		NBRM_SET(n->al_index, v->uv_nbrmap);
 		add_neighbor_to_routes(vifi, n->al_index);
 		logit(LOG_NOTICE, 0, "Peering with %s on vif %u is no longer one-way",
@@ -1782,7 +1782,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 		if (NBRM_ISSET(n->al_index, v->uv_nbrmap)) {
 		    NBRM_CLR(n->al_index, v->uv_nbrmap);
 		    if (NBRM_ISEMPTY(v->uv_nbrmap))
-			vifs_with_neighbors--;
+			neighbor_vifs--;
 		}
 		delete_neighbor_from_routes(addr, vifi, n->al_index);
 		reset_neighbor_state(vifi, addr);
@@ -1864,7 +1864,7 @@ void age_vifs(void)
 	    reset_neighbor_state(vifi, a->al_addr);
 
 	    if (NBRM_ISEMPTY(v->uv_nbrmap))
-		vifs_with_neighbors--;
+		neighbor_vifs--;
 
 	    v->uv_leaf_timer = LEAF_CONFIRMATION_TIME;
 
@@ -2013,10 +2013,10 @@ void dump_vifs(FILE *fp, int detail)
     time(&now);
     if (detail) {
 	fprintf(fp, "Virtual Interface Table ");
-	if (vifs_with_neighbors == 1)
+	if (neighbor_vifs == 1)
 	    fprintf(fp, "(This host is a leaf)\n");
 	else
-	    fprintf(fp, "(%d neighbors)\n", vifs_with_neighbors);
+	    fprintf(fp, "(%d neighbors)\n", neighbor_vifs);
     }
 
     fprintf(fp, "Vif  Name  Local-Address                               M  Thr  Rate   Flags=\n");
