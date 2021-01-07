@@ -433,11 +433,16 @@ static void send_query(struct uvif *v, uint32_t dst, int code, uint32_t group)
  */
 static void start_vif(vifi_t vifi)
 {
+    struct uvif *uv;
+
+    uv = find_uvif(vifi);
+    if (!uv)
+	return;
+
     /*
      * Install the interface in the kernel's vif structure.
      */
-    k_add_vif(vifi, uvifs[vifi]);
-
+    k_add_vif(vifi, uv);
     start_vif2(vifi);
 }
 
@@ -449,18 +454,20 @@ static void start_vif2(vifi_t vifi)
 {
     struct listaddr *a;
     struct phaddr *p;
-    struct uvif *v;
+    struct uvif *uv;
     uint32_t src;
 
-    v   = uvifs[vifi];
-    src = v->uv_lcl_addr;
+    uv = find_uvif(vifi);
+    if (!uv)
+	return;
+    src = uv->uv_lcl_addr;
 
     /*
      * Update the existing route entries to take into account the new vif.
      */
     add_vif_to_routes(vifi);
 
-    if (!(v->uv_flags & VIFF_TUNNEL)) {
+    if (!(uv->uv_flags & VIFF_TUNNEL)) {
 	/*
 	 * Join the DVMRP multicast group on the interface.
 	 * (This is not strictly necessary, since the kernel promiscuously
@@ -485,8 +492,8 @@ static void start_vif2(vifi_t vifi)
 	 * the interface is connected.
 	 */
 	start_route_updates();
-	update_route(v->uv_subnet, v->uv_subnetmask, 0, 0, vifi, NULL);
-	for (p = v->uv_addrs; p; p = p->pa_next) {
+	update_route(uv->uv_subnet, uv->uv_subnetmask, 0, 0, vifi, NULL);
+	for (p = uv->uv_addrs; p; p = p->pa_next) {
 	    start_route_updates();
 	    update_route(p->pa_subnet, p->pa_subnetmask, 0, 0, vifi, NULL);
 	}
@@ -496,19 +503,19 @@ static void start_vif2(vifi_t vifi)
 	 * periodic group membership queries to the subnet.  Send the first
 	 * query.
 	 */
-	v->uv_flags |= VIFF_QUERIER;
+	uv->uv_flags |= VIFF_QUERIER;
 	IF_DEBUG(DEBUG_IGMP) {
 	    logit(LOG_DEBUG, 0, "Assuming querier duties on vif %u", vifi);
 	}
-	send_query(v, allhosts_group, IGMP_QUERY_RESPONSE_INTERVAL * IGMP_TIMER_SCALE, 0);
+	send_query(uv, allhosts_group, IGMP_QUERY_RESPONSE_INTERVAL * IGMP_TIMER_SCALE, 0);
     }
 
-    v->uv_leaf_timer = LEAF_CONFIRMATION_TIME;
+    uv->uv_leaf_timer = LEAF_CONFIRMATION_TIME;
 
     /*
      * Send a probe via the new vif to look for neighbors.
      */
-    send_probe_on_vif(v);
+    send_probe_on_vif(uv);
 }
 
 /*
@@ -518,25 +525,27 @@ static void stop_vif(vifi_t vifi)
 {
     struct listaddr *a, *tmp;
     struct phaddr *p;
-    struct uvif *v;
+    struct uvif *uv;
 
-    v = uvifs[vifi];
+    uv = find_uvif(vifi);
+    if (!uv)
+	return;
 
-    if (!(v->uv_flags & VIFF_TUNNEL)) {
+    if (!(uv->uv_flags & VIFF_TUNNEL)) {
 	/*
 	 * Depart from the DVMRP multicast group on the interface.
 	 */
-	k_leave(dvmrp_group, v->uv_lcl_addr);
+	k_leave(dvmrp_group, uv->uv_lcl_addr);
 
 	/*
 	 * Depart from the ALL-ROUTERS multicast group on the interface.
 	 */
-	k_leave(allrtrs_group, v->uv_lcl_addr);
+	k_leave(allrtrs_group, uv->uv_lcl_addr);
 
 	/*
 	 * Depart from the ALL-REPORTS multicast group on the interface.
 	 */
-	k_leave(allreports_group, v->uv_lcl_addr);
+	k_leave(allreports_group, uv->uv_lcl_addr);
 
 	/*
 	 * Update the entry in the routing table for the subnet to which
@@ -544,8 +553,8 @@ static void stop_vif(vifi_t vifi)
 	 * failure.
 	 */
 	start_route_updates();
-	update_route(v->uv_subnet, v->uv_subnetmask, UNREACHABLE, 0, vifi, NULL);
-	for (p = v->uv_addrs; p; p = p->pa_next) {
+	update_route(uv->uv_subnet, uv->uv_subnetmask, UNREACHABLE, 0, vifi, NULL);
+	for (p = uv->uv_addrs; p; p = p->pa_next) {
 	    start_route_updates();
 	    update_route(p->pa_subnet, p->pa_subnetmask, UNREACHABLE, 0, vifi, NULL);
 	}
@@ -554,15 +563,15 @@ static void stop_vif(vifi_t vifi)
 	 * Discard all group addresses.  (No need to tell kernel;
 	 * the k_del_vif() call, below, will clean up kernel state.)
 	 */
-	TAILQ_FOREACH_SAFE(a, &v->uv_groups, al_link, tmp) {
-	    TAILQ_REMOVE(&v->uv_groups, a, al_link);
+	TAILQ_FOREACH_SAFE(a, &uv->uv_groups, al_link, tmp) {
+	    TAILQ_REMOVE(&uv->uv_groups, a, al_link);
 	    free(a);
 	}
 
 	IF_DEBUG(DEBUG_IGMP) {
 	    logit(LOG_DEBUG, 0, "Releasing querier duties on vif %u", vifi);
 	}
-	v->uv_flags &= ~VIFF_QUERIER;
+	uv->uv_flags &= ~VIFF_QUERIER;
     }
 
     /*
@@ -573,20 +582,20 @@ static void stop_vif(vifi_t vifi)
     /*
      * Delete the interface from the kernel's vif structure.
      */
-    k_del_vif(vifi, v);
+    k_del_vif(vifi, uv);
 
     /*
      * Discard all neighbor addresses.
      */
-    if (!NBRM_ISEMPTY(v->uv_nbrmap))
+    if (!NBRM_ISEMPTY(uv->uv_nbrmap))
 	neighbor_vifs--;
 
-    TAILQ_FOREACH_SAFE(a, &v->uv_neighbors, al_link, tmp) {
-	TAILQ_REMOVE(&v->uv_neighbors, a, al_link);
+    TAILQ_FOREACH_SAFE(a, &uv->uv_neighbors, al_link, tmp) {
+	TAILQ_REMOVE(&uv->uv_neighbors, a, al_link);
 	nbrs[a->al_index] = NULL;
 	free(a);
     }
-    NBRM_CLRALL(v->uv_nbrmap);
+    NBRM_CLRALL(uv->uv_nbrmap);
 }
 
 
@@ -643,7 +652,7 @@ void stop_all_vifs(void)
  */
 struct uvif *find_uvif(vifi_t vifi)
 {
-    if (vifi >= numvifs || !uvifs[vifi])
+    if (vifi >= numvifs || vifi == NO_VIF || !uvifs[vifi])
 	return NULL;
 
     return uvifs[vifi];
@@ -759,13 +768,14 @@ void accept_membership_query(int ifi, uint32_t src, uint32_t dst, uint32_t group
     vifi = find_vif(ifi);
     if (vifi == NO_VIF)
 	vifi = find_vif_direct(src, dst);
-    if (vifi == NO_VIF || (uvifs[vifi]->uv_flags & VIFF_TUNNEL)) {
+
+    uv = find_uvif(vifi);
+    if (!uv || (uv->uv_flags & VIFF_TUNNEL)) {
 	logit(LOG_INFO, 0, "Ignoring group membership query from non-adjacent host %s",
 	      inet_fmt(src, s1, sizeof(s1)));
 	return;
     }
 
-    uv = uvifs[vifi];
     if ((ver == 3 && (uv->uv_flags & VIFF_IGMPV2)) ||
 	(ver == 2 && (uv->uv_flags & VIFF_IGMPV1))) {
 	int i;
@@ -891,15 +901,15 @@ void accept_group_report(int ifi, uint32_t src, uint32_t dst, uint32_t group, in
     vifi = find_vif(ifi);
     if (vifi == NO_VIF)
 	vifi = find_vif_direct(src, dst);
-    if (vifi == NO_VIF || (uvifs[vifi]->uv_flags & VIFF_TUNNEL)) {
+
+    uv = find_uvif(vifi);
+    if (!uv || (uv->uv_flags & VIFF_TUNNEL)) {
 	logit(LOG_INFO, 0, "Ignoring group membership report from non-adjacent host %s", s1);
 	return;
     }
 
     IF_DEBUG(DEBUG_IGMP)
 	logit(LOG_INFO, 0, "Accepting group membership report: src %s, dst %s, grp %s", s1, s2, s3);
-
-    uv = uvifs[vifi];
 
     /*
      * Look for the group in our group list; if found, reset its timer.
@@ -1033,12 +1043,12 @@ void accept_leave_message(int ifi, uint32_t src, uint32_t dst, uint32_t group)
     vifi = find_vif(ifi);
     if (vifi == NO_VIF)
 	vifi = find_vif_direct(src, dst);
-    if (vifi == NO_VIF || (uvifs[vifi]->uv_flags & VIFF_TUNNEL)) {
+
+    uv = find_uvif(vifi);
+    if (!uv || (uv->uv_flags & VIFF_TUNNEL)) {
 	logit(LOG_INFO, 0, "Ignoring group leave report from non-adjacent host %s", s1);
 	return;
     }
-
-    uv = uvifs[vifi];
 
     if (!(uv->uv_flags & VIFF_QUERIER) || (uv->uv_flags & VIFF_IGMPV1)) {
 	IF_DEBUG(DEBUG_IGMP)
@@ -1561,8 +1571,6 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
     struct uvif *uv;
     size_t i;
 
-    uv = uvifs[vifi];
-
     /*
      * Confirm that 'addr' is a valid neighbor address on vif 'vifi'.
      * IT IS ASSUMED that this was preceded by a call to
@@ -1575,6 +1583,10 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
      * because those types of address are acceptable for some types of
      * IGMP message (such as group membership reports).
      */
+    uv = find_uvif(vifi);
+    if (!uv)
+	return NULL;
+
     if (!(uv->uv_flags & VIFF_TUNNEL) && (addr == uv->uv_lcl_addr ||
 					  addr == uv->uv_subnet )) {
 	logit(LOG_WARNING, 0, "Received DVMRP message from %s: %s",
@@ -1946,8 +1958,13 @@ void age_vifs(void)
 struct listaddr *neighbor_info(vifi_t vifi, uint32_t addr)
 {
     struct listaddr *al;
+    struct uvif *uv;
 
-    TAILQ_FOREACH(al, &uvifs[vifi]->uv_neighbors, al_link) {
+    uv = find_uvif(vifi);
+    if (!uv)
+	return NULL;
+
+    TAILQ_FOREACH(al, &uv->uv_neighbors, al_link) {
 	if (al->al_addr == addr)
 	    return al;
     }
@@ -2193,7 +2210,11 @@ static void group_version_cb(void *arg)
 {
     cbk_t *cbk = (cbk_t *)arg;
     vifi_t vifi = cbk->vifi;
-    struct uvif *uv = uvifs[vifi];
+    struct uvif *uv;
+
+    uv = find_uvif(vifi);
+    if (!uv)
+	return;
 
     if (cbk->g->al_pv < 3)
 	cbk->g->al_pv++;
@@ -2234,7 +2255,11 @@ static void delete_group_cb(void *arg)
     cbk_t *cbk = (cbk_t *)arg;
     struct listaddr *g = cbk->g;
     vifi_t vifi = cbk->vifi;
-    struct uvif *uv = uvifs[vifi];
+    struct uvif *uv;
+
+    uv = find_uvif(vifi);
+    if (!uv)
+	return;
 
     logit(LOG_DEBUG, 0, "Group membership timeout for %s on %s",
 	  inet_fmt(cbk->g->al_addr, s1, sizeof(s1)), uv->uv_name);
@@ -2279,7 +2304,11 @@ static int delete_group_timer(vifi_t vifi, struct listaddr *g)
  */
 static int do_send_gsq(cbk_t *cbk)
 {
-    struct uvif *uv = uvifs[cbk->vifi];
+    struct uvif *uv;
+
+    uv = find_uvif(cbk->vifi);
+    if (!uv)
+	return -1;
 
     send_query(uv, cbk->g->al_addr, cbk->delay * IGMP_TIMER_SCALE, cbk->g->al_addr);
     if (--cbk->num == 0) {
