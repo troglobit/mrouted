@@ -94,7 +94,7 @@ void rsrr_init(void)
 	logit(LOG_ERR, errno, "Cannot bind RSRR socket");
 
     if (register_input_handler(rsrr_socket, rsrr_read) < 0)
-	logit(LOG_ERR, 0, "Could not register RSRR as an input handler");
+	logit(LOG_ERR, 0, "Failed registering RSRR handler");
 }
 
 /* Read a message from the RSRR socket */

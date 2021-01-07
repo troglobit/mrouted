@@ -102,7 +102,7 @@ void igmp_init(void)
 
 #ifdef REGISTER_HANDLER
     if (register_input_handler(igmp_socket, igmp_read) < 0)
-	logit(LOG_ERR, 0, "Could not register IGMP as an input handler");
+	logit(LOG_ERR, 0, "Failed registering IGMP handler");
 #endif
 }
 
