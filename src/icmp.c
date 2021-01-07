@@ -30,13 +30,13 @@ static void icmp_handler(int fd)
     uint8_t icmp_buf[RECV_BUF_SIZE];
     struct sockaddr_in from;
     socklen_t fromlen = sizeof(from);
-    ssize_t len;
     int iphdrlen, ipdatalen;
     struct icmp *icmp;
+    struct uvif *uv;
     struct ip *ip;
-    vifi_t i;
-    struct uvif *v;
     uint32_t src;
+    ssize_t len;
+    vifi_t vifi;
 
     memset(icmp_buf, 0, sizeof(icmp_buf));
     while ((len = recvfrom(fd, icmp_buf, sizeof(icmp_buf), 0, (struct sockaddr *)&from, &fromlen)) < 0) {
@@ -97,22 +97,23 @@ static void icmp_handler(int fd)
 	    ip = &icmp->icmp_ip;
 	    if (ip->ip_p != IPPROTO_IGMP && ip->ip_p != IPPROTO_IPIP)
 		return;
-	    for (v = uvifs, i = 0; i < numvifs; v++, i++) {
-		if (ip->ip_src.s_addr == v->uv_lcl_addr &&
-		    ip->ip_dst.s_addr == v->uv_dst_addr) {
+
+	    UVIF_FOREACH(vifi, uv) {
+		if (ip->ip_src.s_addr == uv->uv_lcl_addr &&
+		    ip->ip_dst.s_addr == uv->uv_dst_addr) {
 		    char *p;
 		    int n;
 		    /*
 		     * I sent this packet on this vif.
 		     */
-		    n = ++v->uv_icmp_warn;
+		    n = ++uv->uv_icmp_warn;
 		    while (n && !(n & 1))
 			n >>= 1;
 		    if (n == 1 && ((p = icmp_name(icmp)) != NULL))
 			logit(LOG_WARNING, 0, "Received ICMP %s from %s %s %s on vif %d",
 			    p, inet_fmt(src, s1, sizeof(s1)), "for traffic sent to",
 			    inet_fmt(ip->ip_dst.s_addr, s2, sizeof(s2)),
-			    i);
+			    vifi);
 
 		    break;
 		}

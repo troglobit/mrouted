@@ -195,7 +195,6 @@ extern int		routes_changed;
 extern int		delay_change_reports;
 extern unsigned		nroutes;
 
-extern struct uvif	uvifs[MAXVIFS];
 extern vifi_t		numvifs;
 extern int		vifs_down;
 extern int		udp_socket;
@@ -323,8 +322,10 @@ extern void		dump_routes(FILE *, int);
 extern void		init_vifs(void);
 extern void		zero_vif(struct uvif *, int);
 extern void		init_installvifs(void);
+extern int		install_uvif(struct uvif *);
 extern void		check_vif_state(void);
 extern void		send_on_vif(struct uvif *, uint32_t, int, size_t);
+extern struct uvif     *find_uvif(vifi_t);
 extern vifi_t		find_vif(int);
 extern vifi_t		find_vif_direct(uint32_t, uint32_t);
 extern uint32_t         vif_nbr_expire_time(struct listaddr *);

@@ -172,7 +172,7 @@ static void rsrr_accept_iq(void)
 {
     struct rsrr_header *rsrr = (struct rsrr_header *)rsrr_send_buf;
     struct rsrr_vif *vif_list;
-    struct uvif *v;
+    struct uvif *uv;
     int vifi, sendlen;
     
     /* Check for space.  There should be room for plenty of vifs,
@@ -194,22 +194,22 @@ static void rsrr_accept_iq(void)
     vif_list = (struct rsrr_vif *)(rsrr_send_buf + RSRR_HEADER_LEN);
     
     /* Include the vif list. */
-    for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
+    UVIF_FOREACH(vifi, uv) {
 	vif_list[vifi].id = vifi;
 	vif_list[vifi].status = 0;
-	if (v->uv_flags & VIFF_DISABLED)
-	    BIT_SET(vif_list[vifi].status,RSRR_DISABLED_BIT);
-	vif_list[vifi].threshold = v->uv_threshold;
-	vif_list[vifi].local_addr.s_addr = v->uv_lcl_addr;
+	if (uv->uv_flags & VIFF_DISABLED)
+	    BIT_SET(vif_list[vifi].status, RSRR_DISABLED_BIT);
+	vif_list[vifi].threshold = uv->uv_threshold;
+	vif_list[vifi].local_addr.s_addr = uv->uv_lcl_addr;
     }
     
     /* Get the size. */
     sendlen = RSRR_HEADER_LEN + numvifs*RSRR_VIF_LEN;
     
     /* Send it. */
-    IF_DEBUG(DEBUG_RSRR) {
+    IF_DEBUG(DEBUG_RSRR)
 	logit(LOG_DEBUG, 0, "Send RSRR Initial Reply");
-    }
+
     rsrr_send(sendlen);
 }
 

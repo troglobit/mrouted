@@ -10,33 +10,26 @@
 #include <ifaddrs.h>
 #include "defs.h"
 
-struct iflist {
-    struct uvif         ifl_uv;
-    TAILQ_ENTRY(iflist) ifl_link;
-};
-
-static TAILQ_HEAD(ifi_head, iflist) ifl_kern = TAILQ_HEAD_INITIALIZER(ifl_kern);
+static TAILQ_HEAD(, uvif) vifs = TAILQ_HEAD_INITIALIZER(vifs);
 
 void config_set_ifflag(uint32_t flag)
 {
-    struct iflist *ifl;
+    struct uvif *uv;
 
-    TAILQ_FOREACH(ifl, &ifl_kern, ifl_link)
-	ifl->ifl_uv.uv_flags |= flag;
+    TAILQ_FOREACH(uv, &vifs, uv_link)
+	uv->uv_flags |= flag;
 }
 
 struct uvif *config_find_ifname(char *nm)
 {
-    struct iflist *ifl;
+    struct uvif *uv;
 
     if (!nm) {
 	errno = EINVAL;
 	return NULL;
     }
 
-    TAILQ_FOREACH(ifl, &ifl_kern, ifl_link) {
-	struct uvif *uv = &ifl->ifl_uv;
-
+    TAILQ_FOREACH(uv, &vifs, uv_link) {
         if (!strcmp(uv->uv_name, nm))
             return uv;
     }
@@ -46,11 +39,9 @@ struct uvif *config_find_ifname(char *nm)
 
 struct uvif *config_find_ifaddr(in_addr_t addr)
 {
-    struct iflist *ifl;
+    struct uvif *uv;
 
-    TAILQ_FOREACH(ifl, &ifl_kern, ifl_link) {
-	struct uvif *uv = &ifl->ifl_uv;
-
+    TAILQ_FOREACH(uv, &vifs, uv_link) {
 	if (!(uv->uv_flags & VIFF_TUNNEL) && addr == uv->uv_lcl_addr)
             return uv;
     }
@@ -61,16 +52,15 @@ struct uvif *config_find_ifaddr(in_addr_t addr)
 struct uvif *config_init_tunnel(in_addr_t lcl_addr, in_addr_t rmt_addr, uint32_t flags)
 {
     const char *ifname;
-    struct iflist *ifl;
-    struct ifreq ffr;
-    struct uvif *v;
+    struct ifreq ifr;
+    struct uvif *uv;
 
-    v = config_find_ifaddr(lcl_addr);
-    if (!v) {
+    uv = config_find_ifaddr(lcl_addr);
+    if (!uv) {
 	errno = ENOTMINE;
 	return NULL;
     }
-    ifname = v->uv_name;
+    ifname = uv->uv_name;
 
     if (((ntohl(lcl_addr) & IN_CLASSA_NET) >> IN_CLASSA_NSHIFT) == IN_LOOPBACKNET) {
 	errno = ELOOPBACK;
@@ -82,14 +72,12 @@ struct uvif *config_init_tunnel(in_addr_t lcl_addr, in_addr_t rmt_addr, uint32_t
 	return NULL;
     }
 
-    TAILQ_FOREACH(ifl, &ifl_kern, ifl_link) {
-	v = &ifl->ifl_uv;
-
-	if (v->uv_flags & VIFF_DISABLED)
+    TAILQ_FOREACH(uv, &vifs, uv_link) {
+	if (uv->uv_flags & VIFF_DISABLED)
 	    continue;
 
-	if (v->uv_flags & VIFF_TUNNEL) {
-	    if (rmt_addr == v->uv_rmt_addr) {
+	if (uv->uv_flags & VIFF_TUNNEL) {
+	    if (rmt_addr == uv->uv_rmt_addr) {
 		errno = EDUPLICATE;
 		return NULL;
 	    }
@@ -97,74 +85,69 @@ struct uvif *config_init_tunnel(in_addr_t lcl_addr, in_addr_t rmt_addr, uint32_t
 	    continue;
 	}
 
-	if ((rmt_addr & v->uv_subnetmask) == v->uv_subnet) {
+	if ((rmt_addr & uv->uv_subnetmask) == uv->uv_subnet) {
 	    logit(LOG_INFO, 0,
 		  "Unnecessary tunnel to %s, same subnet as interface %s",
-		  inet_fmt(rmt_addr, s1, sizeof(s1)), v->uv_name);
+		  inet_fmt(rmt_addr, s1, sizeof(s1)), uv->uv_name);
 	    return NULL;
 	}
     }
 
-    strlcpy(ffr.ifr_name, ifname, sizeof(ffr.ifr_name));
-    if (ioctl(udp_socket, SIOCGIFFLAGS, &ffr) < 0) {
-	logit(LOG_INFO, errno, "failed SIOCGIFFLAGS on %s", ffr.ifr_name);
+    strlcpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
+    if (ioctl(udp_socket, SIOCGIFFLAGS, &ifr) < 0) {
+	logit(LOG_INFO, errno, "failed SIOCGIFFLAGS on %s", ifr.ifr_name);
 	return NULL;
     }
 
-    ifl = calloc(1, sizeof(struct iflist));
-    if (!ifl) {
+    uv = calloc(1, sizeof(struct uvif));
+    if (!uv) {
 	logit(LOG_ERR, errno, "failed allocating memory for iflist");
 	return NULL;
     }
 
-    v = &ifl->ifl_uv;
+    zero_vif(uv, 1);
+    uv->uv_flags      = VIFF_TUNNEL | flags;
+    uv->uv_flags     |= VIFF_OTUNNEL; /* XXX */
+    uv->uv_lcl_addr   = lcl_addr;
+    uv->uv_rmt_addr   = rmt_addr;
+    uv->uv_dst_addr   = rmt_addr;
+    strlcpy(uv->uv_name, ifr.ifr_name, sizeof(uv->uv_name));
 
-    zero_vif(v, 1);
-    v->uv_flags      = VIFF_TUNNEL | flags;
-    v->uv_flags     |= VIFF_OTUNNEL; /* XXX */
-    v->uv_lcl_addr   = lcl_addr;
-    v->uv_rmt_addr   = rmt_addr;
-    v->uv_dst_addr   = rmt_addr;
-    strlcpy(v->uv_name, ffr.ifr_name, sizeof(v->uv_name));
+    uv->uv_ifindex = if_nametoindex(uv->uv_name);
+    if (!uv->uv_ifindex)
+	logit(LOG_ERR, errno, "Failed reading ifindex for %s", uv->uv_name);
 
-    v->uv_ifindex = if_nametoindex(v->uv_name);
-    if (!v->uv_ifindex)
-	logit(LOG_ERR, errno, "Failed reading ifindex for %s", v->uv_name);
-
-    if (!(ffr.ifr_flags & IFF_UP)) {
-	v->uv_flags |= VIFF_DOWN;
+    if (!(ifr.ifr_flags & IFF_UP)) {
+	uv->uv_flags |= VIFF_DOWN;
 	vifs_down = TRUE;
     }
 
-    TAILQ_INSERT_TAIL(&ifl_kern, ifl, ifl_link);
+    TAILQ_INSERT_TAIL(&vifs, uv, uv_link);
 
-    return v;
+    return uv;
 }
 
 void config_vifs_correlate(void)
 {
     struct listaddr *al, *al_tmp;
-    struct iflist *ifl, *tmp;
-    vifi_t vifi = 0;
+    struct uvif *uv, *v, *tmp;
+    vifi_t vifi;
 
-    TAILQ_FOREACH(ifl, &ifl_kern, ifl_link) {
-	struct uvif *uv = &ifl->ifl_uv;
-	struct uvif *v;
-
-	if (uv->uv_flags & VIFF_DISABLED) {
-	    logit(LOG_DEBUG, 0, "Skipping %s, disabled", uv->uv_name);
+    TAILQ_FOREACH_SAFE(v, &vifs, uv_link, tmp) {
+	if (v->uv_flags & VIFF_DISABLED) {
+	    logit(LOG_DEBUG, 0, "Skipping %s, disabled", v->uv_name);
 	    continue;
 	}
 
 	/*
 	 * Ignore any interface that is connected to the same subnet as
-	 * one already installed in the uvifs array.
+	 * one already installed in the uvifs[] array.
 	 */
-	for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
-	    if ((uv->uv_lcl_addr & v->uv_subnetmask) == v->uv_subnet ||
-		(v->uv_subnet & uv->uv_subnetmask) == uv->uv_subnet) {
+	UVIF_FOREACH(vifi, uv) {
+	    if ((v->uv_lcl_addr & uv->uv_subnetmask) == uv->uv_subnet ||
+		(uv->uv_subnet  &  v->uv_subnetmask) ==  v->uv_subnet) {
 		logit(LOG_WARNING, 0, "ignoring %s, same subnet as %s",
-		      uv->uv_name, v->uv_name);
+		      v->uv_name, uv->uv_name);
 		break;
 	    }
 
@@ -177,72 +160,48 @@ void config_vifs_correlate(void)
 
 		ph = calloc(1, sizeof(*ph));
 		if (!ph) {
-		    logit(LOG_ERR, errno, "Failed allocating altnet on %s", v->uv_name);
+		    logit(LOG_ERR, errno, "Failed allocating altnet on %s", uv->uv_name);
 		    break;
 		}
 
 		logit(LOG_INFO, 0, "Installing %s subnet %s as an altnet", v->uv_name,
-		      inet_fmts(uv->uv_subnet, uv->uv_subnetmask, s2, sizeof(s2)));
+		      inet_fmts(v->uv_subnet, v->uv_subnetmask, s2, sizeof(s2)));
 
-		ph->pa_subnet      = uv->uv_subnet;
-		ph->pa_subnetmask  = uv->uv_subnetmask;
-		ph->pa_subnetbcast = uv->uv_subnetbcast;
+		ph->pa_subnet      = v->uv_subnet;
+		ph->pa_subnetmask  = v->uv_subnetmask;
+		ph->pa_subnetbcast = v->uv_subnetbcast;
 
-		ph->pa_next = v->uv_addrs;
-		v->uv_addrs = ph;
+		ph->pa_next = uv->uv_addrs;
+		uv->uv_addrs = ph;
 		break;
 	    }
 	}
 
-	if (vifi != numvifs)
+	if (vifi != numvifs) {
+	  drop:
+	    TAILQ_REMOVE(&vifs, v, uv_link);
+	    free(v);
 	    continue;
+	}
 
 	/*
 	 * If there is room in the uvifs array, install this interface.
 	 */
-	if (numvifs == MAXVIFS) {
-	    logit(LOG_WARNING, 0, "too many vifs, ignoring %s", uv->uv_name);
-	    continue;
-	}
-
-	/* XXX: The uvfis[] array should be refactored into a TAILQ list,
-	*       then we could reuse the nodes as-is, and wouldn't have to
-	*        re-init the lists below.
-	*/
-	v = &uvifs[numvifs];
-	*v = *uv;
-
-	/*
-	 * Need to re-init pointers, zero_vif() initalized ifl_kern node
-	 * XXX: not needed if we refactor uvifs[] to a TAILQ list.
-	 */
-	TAILQ_INIT(&v->uv_static);
-	TAILQ_INIT(&v->uv_groups);
-	TAILQ_INIT(&v->uv_neighbors);
-	TAILQ_FOREACH_SAFE(al, &uv->uv_static, al_link, al_tmp) {
-	    TAILQ_REMOVE(&uv->uv_static, al, al_link);
-	    TAILQ_INSERT_TAIL(&v->uv_static, al, al_link);
-	}
+	if (install_uvif(v))
+	    goto drop;
 
 	logit(LOG_INFO, 0, "Installing %s (%s on subnet %s) as VIF #%u, rate %d pps",
 	      v->uv_name, inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)),
 	      inet_fmts(v->uv_subnet, v->uv_subnetmask, s2, sizeof(s2)),
-	      numvifs, v->uv_rate_limit);
-
-	numvifs++;
+	      vifi, v->uv_rate_limit);
     }
 
     /*
      * XXX: one future extension may be to keep this for adding/removing
-     *      dynamic interfaces at runtime.  Then it should probably only
-     *      be freed on SIGHUP/exit().  Now we free it and let SIGHUP
+     *      dynamic interfaces at runtime.  Now we re-init and let SIGHUP
      *      rebuild it to recheck since we tear down all vifs anyway.
      */
-    TAILQ_FOREACH_SAFE(ifl, &ifl_kern, ifl_link, tmp) {
-	TAILQ_REMOVE(&ifl_kern, ifl, ifl_link);
-	free(ifl);
-    }
-    TAILQ_INIT(&ifl_kern);
+    TAILQ_INIT(&vifs);
 }
 
 /*
@@ -253,8 +212,7 @@ void config_vifs_from_kernel(void)
 {
     in_addr_t addr, mask, subnet;
     struct ifaddrs *ifa, *ifap;
-    struct iflist *ifl;
-    struct uvif *v;
+    struct uvif *uv;
     vifi_t vifi;
     int flags;
 
@@ -292,42 +250,41 @@ void config_vifs_from_kernel(void)
 	    continue;
 	}
 
-	ifl = calloc(1, sizeof(struct iflist));
-        if (!ifl) {
+	uv = calloc(1, sizeof(struct uvif));
+        if (!uv) {
             logit(LOG_ERR, errno, "failed allocating memory for iflist");
             return;
         }
 
-	v = &ifl->ifl_uv;
-	zero_vif(v, 0);
+	zero_vif(uv, 0);
 
-	strlcpy(v->uv_name, ifa->ifa_name, sizeof(v->uv_name));
-	v->uv_lcl_addr    = addr;
-	v->uv_subnet      = subnet;
-	v->uv_subnetmask  = mask;
-	v->uv_subnetbcast = subnet | ~mask;
+	strlcpy(uv->uv_name, ifa->ifa_name, sizeof(uv->uv_name));
+	uv->uv_lcl_addr    = addr;
+	uv->uv_subnet      = subnet;
+	uv->uv_subnetmask  = mask;
+	uv->uv_subnetbcast = subnet | ~mask;
 
 	if (ifa->ifa_flags & IFF_POINTOPOINT)
-	    v->uv_flags |= VIFF_REXMIT_PRUNES;
+	    uv->uv_flags |= VIFF_REXMIT_PRUNES;
 
 	/*
 	 * On Linux we can enumerate vifs using ifindex,
 	 * no need for an IP address.  Also used for the
 	 * VIF lookup in find_vif()
 	 */
-	v->uv_ifindex = if_nametoindex(v->uv_name);
-	if (!v->uv_ifindex)
-	    logit(LOG_ERR, errno, "Failed reading ifindex for %s", v->uv_name);
+	uv->uv_ifindex = if_nametoindex(uv->uv_name);
+	if (!uv->uv_ifindex)
+	    logit(LOG_ERR, errno, "Failed reading ifindex for %s", uv->uv_name);
 	/*
 	 * If the interface is not yet up, set the vifs_down flag to
 	 * remind us to check again later.
 	 */
 	if (!(flags & IFF_UP)) {
-	    v->uv_flags |= VIFF_DOWN;
+	    uv->uv_flags |= VIFF_DOWN;
 	    vifs_down = TRUE;
 	}
 
-	TAILQ_INSERT_TAIL(&ifl_kern, ifl, ifl_link);
+	TAILQ_INSERT_TAIL(&vifs, uv, uv_link);
     }
 
     freeifaddrs(ifap);

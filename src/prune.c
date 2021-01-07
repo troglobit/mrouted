@@ -49,12 +49,12 @@ static void		update_kernel(struct gtable *g);
  */
 static void prun_add_ttls(struct gtable *gt)
 {
-    struct uvif *v;
+    struct uvif *uv;
     vifi_t vifi;
 
-    for (vifi = 0, v = uvifs; vifi < numvifs; ++vifi, ++v) {
+    UVIF_FOREACH(vifi, uv) {
 	if (VIFM_ISSET(vifi, gt->gt_grpmems))
-	    gt->gt_ttls[vifi] = v->uv_threshold;
+	    gt->gt_ttls[vifi] = uv->uv_threshold;
 	else
 	    gt->gt_ttls[vifi] = 0;
     }
@@ -74,8 +74,8 @@ static void prun_add_ttls(struct gtable *gt)
 		if (scoped_addr(_i, (gt)->gt_mcastgrp))                 \
 		    VIFM_SET(_i, (gt)->gt_scope);                       \
 	if ((gt)->gt_route == NULL                                      \
-            || ((gt)->gt_route->rt_parent != NO_VIF                     \
-                && VIFM_ISSET((gt)->gt_route->rt_parent, (gt)->gt_scope))) \
+            || ((gt)->gt_route->rt_parent != NO_VIF &&                  \
+                VIFM_ISSET((gt)->gt_route->rt_parent, (gt)->gt_scope))) \
             VIFM_SETALL((gt)->gt_scope);                                \
     }
 
@@ -85,7 +85,7 @@ static void prun_add_ttls(struct gtable *gt)
 	if ((gt)->gt_route                                              \
 	    && VIFM_ISSET((vifi), (gt)->gt_route->rt_children)          \
 	    && (!SUBS_ARE_PRUNED((gt)->gt_route->rt_subordinates,       \
-                                 uvifs[vifi].uv_nbrmap, (gt)->gt_prunes) \
+			find_uvif(vifi)->uv_nbrmap, (gt)->gt_prunes)    \
                 || grplst_mem((vifi), (gt)->gt_mcastgrp)))              \
             VIFM_SET((vifi), (gt)->gt_grpmems);                         \
     }
@@ -93,10 +93,13 @@ static void prun_add_ttls(struct gtable *gt)
 static int scoped_addr(vifi_t vifi, uint32_t addr)
 {
     struct vif_acl *acl;
+    struct uvif *uv;
 
-    for (acl = uvifs[vifi].uv_acl; acl; acl = acl->acl_next)
+    uv = find_uvif(vifi);
+    for (acl = uv->uv_acl; acl; acl = acl->acl_next) {
 	if ((addr & acl->acl_mask) == acl->acl_addr)
 	    return 1;
+    }
 
     return 0;
 }
@@ -135,11 +138,10 @@ void send_prune_or_graft(struct gtable *gt)
 int grplst_mem(vifi_t vifi, uint32_t mcastgrp)
 {
     struct listaddr *g;
-    struct uvif *v;
+    struct uvif *uv;
 
-    v = &uvifs[vifi];
-
-    TAILQ_FOREACH(g, &v->uv_groups, al_link) {
+    uv = find_uvif(vifi);
+    TAILQ_FOREACH(g, &uv->uv_groups, al_link) {
 	if (mcastgrp == g->al_addr)
 	    return 1;
     }
@@ -260,10 +262,11 @@ static void remove_sources(struct gtable *gt)
 		  inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)),
 		  gt->gt_prune_rexmit);
 	}
+
 	sg_req.src.s_addr = st->st_origin;
-	if (ioctl(udp_socket, SIOCGETSGCNT, (char *)&sg_req) < 0) {
+	if (ioctl(udp_socket, SIOCGETSGCNT, &sg_req) < 0)
 	    sg_req.pktcnt = 0;
-	}
+
 	k_del_rg(st->st_origin, gt);
 	st->st_ctime = 0;	/* flag that it's not in the kernel any more */
 	st->st_savpkt += sg_req.pktcnt;
@@ -306,13 +309,13 @@ static void rexmit_prune(void *arg)
  */
 static void send_prune(struct gtable *gt)
 {
+    int rexmitting = 0;
     struct ptable *pt;
-    struct uvif *v;
+    struct uvif *uv;
     uint8_t *p;
     int i, datalen;
     uint32_t dst;
     uint32_t tmp;
-    int rexmitting = 0;
 
     /*
      * Can't process a prune if we don't have an associated route
@@ -328,9 +331,9 @@ static void send_prune(struct gtable *gt)
     /*
      * sends a prune message to the router upstream.
      */
-    v = &uvifs[gt->gt_route->rt_parent];
+    uv = find_uvif(gt->gt_route->rt_parent);
 #if 0
-    dst = v->uv_flags & VIFF_TUNNEL ? dvmrp_group : gt->gt_route->rt_gateway; /*XXX*/
+    dst = uv->uv_flags & VIFF_TUNNEL ? dvmrp_group : gt->gt_route->rt_gateway; /*XXX*/
 #else
     dst = gt->gt_route->rt_gateway;
 #endif
@@ -346,8 +349,8 @@ static void send_prune(struct gtable *gt)
     if (gt->gt_prsent_timer == 0) {
 	int l = prune_lifetime;
 
-	if (v->uv_prune_lifetime != 0)
-	    l = v->uv_prune_lifetime;
+	if (uv->uv_prune_lifetime != 0)
+	    l = uv->uv_prune_lifetime;
 
 	gt->gt_prsent_timer = JITTERED_VALUE(l);
 	for (pt = gt->gt_pruntbl; pt; pt = pt->pt_next) {
@@ -366,7 +369,7 @@ static void send_prune(struct gtable *gt)
 	rexmitting = 1;
     }
 
-    if (rexmitting && !(v->uv_flags & VIFF_REXMIT_PRUNES)) {
+    if (rexmitting && !(uv->uv_flags & VIFF_REXMIT_PRUNES)) {
 	IF_DEBUG(DEBUG_PRUNE) {
 	    logit(LOG_DEBUG, 0, "Not rexmitting prune for (%s %s)/%d on vif %u to %s",
 		  RT_FMT(gt->gt_route, s1), inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)),
@@ -400,7 +403,7 @@ static void send_prune(struct gtable *gt)
 	*p++ = ((char *)&(tmp))[i];
     datalen += 12;
 
-    send_on_vif(v, dst, DVMRP_PRUNE, datalen);
+    send_on_vif(uv, dst, DVMRP_PRUNE, datalen);
 
     IF_DEBUG(DEBUG_PRUNE) {
 	logit(LOG_DEBUG, 0, "%s prune for (%s %s)/%d on vif %u to %s",
@@ -410,7 +413,7 @@ static void send_prune(struct gtable *gt)
 	      inet_fmt(gt->gt_route->rt_gateway, s3, sizeof(s3)));
     }
 
-    if ((v->uv_flags & VIFF_REXMIT_PRUNES) && gt->gt_rexmit_timer == 0 &&
+    if ((uv->uv_flags & VIFF_REXMIT_PRUNES) && gt->gt_rexmit_timer == 0 &&
 	gt->gt_prsent_timer > gt->gt_prune_rexmit) {
 	struct gtable **arg;
 
@@ -435,15 +438,18 @@ static void send_prune(struct gtable *gt)
  */
 static void send_graft(struct gtable *gt)
 {
+    struct uvif *uv;
+    int i, datalen;
     uint32_t dst;
     uint8_t *p;
-    int i, datalen;
 
     /* Can't send a graft without an associated route */
     if (gt->gt_route == NULL || gt->gt_route->rt_parent == NO_VIF) {
 	gt->gt_grftsnt = 0;
 	return;
     }
+
+    uv = find_uvif(gt->gt_route->rt_parent);
 
     gt->gt_prsent_timer = 0;
     gt->gt_prune_rexmit = PRUNE_REXMIT_VAL;
@@ -454,7 +460,9 @@ static void send_graft(struct gtable *gt)
 	gt->gt_grftsnt = 1;
 
 #if 0
-    dst = uvifs[gt->gt_route->rt_parent].uv_flags & VIFF_TUNNEL ? dvmrp_group : gt->gt_route->rt_gateway; /*XXX*/
+    dst = uv->uv_flags & VIFF_TUNNEL
+	? dvmrp_group
+	: gt->gt_route->rt_gateway; /*XXX*/
 #else
     dst = gt->gt_route->rt_gateway;
 #endif
@@ -468,11 +476,12 @@ static void send_graft(struct gtable *gt)
 	*p++ = ((char *)&(gt->gt_mcastgrp))[i];
     datalen += 8;
 
-    send_on_vif(&uvifs[gt->gt_route->rt_parent], dst, DVMRP_GRAFT, datalen);
+    send_on_vif(uv, dst, DVMRP_GRAFT, datalen);
     IF_DEBUG(DEBUG_PRUNE) {
 	logit(LOG_DEBUG, 0, "Sent graft for (%s %s) to %s on vif %u",
 	      RT_FMT(gt->gt_route, s1), inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)),
-	      inet_fmt(gt->gt_route->rt_gateway, s3, sizeof(s3)), gt->gt_route->rt_parent);
+	      inet_fmt(gt->gt_route->rt_gateway, s3, sizeof(s3)),
+	      gt->gt_route->rt_parent);
     }
 }
 
@@ -481,9 +490,11 @@ static void send_graft(struct gtable *gt)
  */
 static void send_graft_ack(uint32_t src, uint32_t dst, uint32_t origin, uint32_t grp, vifi_t vifi)
 {
-    uint8_t *p;
+    struct uvif *uv;
     int i, datalen;
+    uint8_t *p;
 
+    uv = find_uvif(vifi);
     p = send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN;
     datalen = 0;
 
@@ -498,19 +509,21 @@ static void send_graft_ack(uint32_t src, uint32_t dst, uint32_t origin, uint32_t
 		  htonl(MROUTED_LEVEL), datalen);
     else {
 #if 0
-	if (uvifs[vifi].uv_flags & VIFF_TUNNEL)
+	if (uv->uv_flags & VIFF_TUNNEL)
 	    dst = dvmrp_group;	/* XXX */
 #endif
-	send_on_vif(&uvifs[vifi], dst, DVMRP_GRAFT_ACK, datalen);
+	send_on_vif(uv, dst, DVMRP_GRAFT_ACK, datalen);
     }
 
     IF_DEBUG(DEBUG_PRUNE) {
 	if (vifi == NO_VIF)
 	    logit(LOG_DEBUG, 0, "Sent graft ack for (%s, %s) to %s",
-		  inet_fmt(origin, s1, sizeof(s1)), inet_fmt(grp, s2, sizeof(s2)), inet_fmt(dst, s3, sizeof(s3)));
+		  inet_fmt(origin, s1, sizeof(s1)), inet_fmt(grp, s2, sizeof(s2)),
+		  inet_fmt(dst, s3, sizeof(s3)));
 	else
 	    logit(LOG_DEBUG, 0, "Sent graft ack for (%s, %s) to %s on vif %u",
-		  inet_fmt(origin, s1, sizeof(s1)), inet_fmt(grp, s2, sizeof(s2)), inet_fmt(dst, s3, sizeof(s3)), vifi);
+		  inet_fmt(origin, s1, sizeof(s1)), inet_fmt(grp, s2, sizeof(s2)),
+		  inet_fmt(dst, s3, sizeof(s3)), vifi);
     }
 }
 
@@ -1031,7 +1044,9 @@ void update_lclgrp(vifi_t vifi, uint32_t mcastgrp)
 void delete_lclgrp(vifi_t vifi, uint32_t mcastgrp)
 {
     struct gtable *g;
+    struct uvif *uv;
 
+    uv = find_uvif(vifi);
     IF_DEBUG(DEBUG_MEMBER)
 	logit(LOG_DEBUG, 0, "Group %s left on vif %u", inet_fmt(mcastgrp, s1, sizeof(s1)), vifi);
 
@@ -1041,7 +1056,7 @@ void delete_lclgrp(vifi_t vifi, uint32_t mcastgrp)
 
 	if (g->gt_mcastgrp == mcastgrp && VIFM_ISSET(vifi, g->gt_grpmems)) {
 	    if (g->gt_route == NULL ||
-		SUBS_ARE_PRUNED(g->gt_route->rt_subordinates, uvifs[vifi].uv_nbrmap, g->gt_prunes)) {
+		SUBS_ARE_PRUNED(g->gt_route->rt_subordinates, uv->uv_nbrmap, g->gt_prunes)) {
 		VIFM_CLR(vifi, g->gt_grpmems);
 
 		if (g->gt_route) {
@@ -1085,17 +1100,19 @@ void accept_prune(uint32_t src, uint32_t dst, char *p, size_t datalen)
     uint32_t prun_src;
     uint32_t prun_grp;
     uint32_t prun_tmr;
+    struct rtentry *r;
+    struct ptable *pt;
+    struct gtable *g;
+    struct uvif *uv;
     vifi_t vifi;
     int i;
-    struct rtentry *r;
-    struct gtable *g;
-    struct ptable *pt;
     
     if ((vifi = find_vif_direct(src, dst)) == NO_VIF) {
 	logit(LOG_INFO, 0, "Ignoring prune report from non-neighbor %s",
 	      inet_fmt(src, s1, sizeof(s1)));
 	return;
     }
+    uv = find_uvif(vifi);
     
     /* Check if enough data is present */
     if (datalen < 12) {
@@ -1194,21 +1211,21 @@ void accept_prune(uint32_t src, uint32_t dst, char *p, size_t datalen)
 	 * check if any more packets need to be sent on the 
 	 * vif which sent this message
 	 */
-	if (SUBS_ARE_PRUNED(r->rt_subordinates, uvifs[vifi].uv_nbrmap, g->gt_prunes) &&
+	if (SUBS_ARE_PRUNED(r->rt_subordinates, uv->uv_nbrmap, g->gt_prunes) &&
 	    !grplst_mem(vifi, prun_grp)) {
 	    nbrbitmap_t tmp;
 
 	    VIFM_CLR(vifi, g->gt_grpmems);
 	    IF_DEBUG(DEBUG_PRUNE) {
 		logit(LOG_DEBUG, 0, "vifnbrs=0x%08x%08x, subord=0x%08x%08x prunes=0x%08x%08x",
-		      uvifs[vifi].uv_nbrmap.hi,uvifs[vifi].uv_nbrmap.lo,
+		      uv->uv_nbrmap.hi, uv->uv_nbrmap.lo,
 		      r->rt_subordinates.hi, r->rt_subordinates.lo,
 		      g->gt_prunes.hi, g->gt_prunes.lo);
 	    }
 
 	    /* XXX debugging */
 	    NBRM_COPY(r->rt_subordinates, tmp);
-	    NBRM_MASK(tmp, uvifs[vifi].uv_nbrmap);
+	    NBRM_MASK(tmp, uv->uv_nbrmap);
 	    if (!NBRM_ISSETALLMASK(g->gt_prunes, tmp))
 		logit(LOG_WARNING, 0, "Subordinate error");
 	    /* XXX end debugging */
@@ -1614,6 +1631,8 @@ void age_table_entry(void)
 
 	/* XXX Debugging... */
 	for (i = 0; i < numvifs; i++) {
+	    struct uvif *uv = find_uvif(i);
+
 	    /*
 	     * If we're not sending on this vif,
 	     * And this group isn't scoped on this vif,
@@ -1626,8 +1645,8 @@ void age_table_entry(void)
 	    if (!VIFM_ISSET(i, gt->gt_grpmems) &&
 		!VIFM_ISSET(i, gt->gt_scope) &&
 		VIFM_ISSET(i, r->rt_children) &&
-		NBRM_ISSETMASK(uvifs[i].uv_nbrmap, r->rt_subordinates) &&
-		!SUBS_ARE_PRUNED(r->rt_subordinates, uvifs[i].uv_nbrmap, gt->gt_prunes)) {
+		NBRM_ISSETMASK(uv->uv_nbrmap, r->rt_subordinates) &&
+		!SUBS_ARE_PRUNED(r->rt_subordinates, uv->uv_nbrmap, gt->gt_prunes)) {
 		logit(LOG_WARNING, 0, "(%s %s) is blackholing on vif %u",
 		      RT_FMT(r, s1), inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)), i);
 		fixit = 1;
@@ -1749,30 +1768,28 @@ void age_table_entry(void)
 		 * kernel; they have been removed by rexmit_prune() so
 		 * are safe to remove from the list at this point.
 		 */
-		if (st->st_ctime) {
-		    sg_req.src.s_addr = st->st_origin;
-		    if (ioctl(udp_socket, SIOCGETSGCNT, (char *)&sg_req) < 0) {
-			logit(LOG_WARNING, errno, "age_table_entry() Failed ioctl SIOCGETSGCNT for (%s %s)",
-			      inet_fmt(st->st_origin, s1, sizeof(s1)),
-			      inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)));
+		sg_req.pktcnt     = st->st_pktcnt;
+		sg_req.src.s_addr = st->st_origin;
 
-			/* Make sure it gets deleted below */
-			sg_req.pktcnt = st->st_pktcnt;
+		if (st->st_ctime) {
+		    if (ioctl(udp_socket, SIOCGETSGCNT, &sg_req) < 0) {
+			logit(LOG_WARNING, errno, "%s() Failed ioctl SIOCGETSGCNT for (%s %s)",
+			      __func__, inet_fmt(st->st_origin, s1, sizeof(s1)),
+			      inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)));
 		    }
-		} else {
-		    sg_req.pktcnt = st->st_pktcnt;
 		}
+
 		if (sg_req.pktcnt == st->st_pktcnt) {
 		    *stnp = st->st_next;
 		    IF_DEBUG(DEBUG_CACHE) {
-			logit(LOG_DEBUG, 0, "age_table_entry() deleting (%s %s)",
-			      inet_fmt(st->st_origin, s1, sizeof(s1)),
+			logit(LOG_DEBUG, 0, "%s() deleting (%s %s)",
+			      __func__, inet_fmt(st->st_origin, s1, sizeof(s1)),
 			      inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)));
 		    }
 		    if (st->st_ctime != 0) {
 			if (k_del_rg(st->st_origin, gt) < 0) {
-			    logit(LOG_WARNING, errno, "age_table_entry() trying to delete (%s %s)",
-				  inet_fmt(st->st_origin, s1, sizeof(s1)),
+			    logit(LOG_WARNING, errno, "%s() trying to delete (%s %s)",
+				  __func__, inet_fmt(st->st_origin, s1, sizeof(s1)),
 				  inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)));
 			}
 			kroutes--;
@@ -2006,14 +2023,16 @@ void dump_cache(FILE *fp, int detail)
 	    VIFM_ISSET(r->rt_parent, gt->gt_scope) ? 'B' : ' ');
 
 	for (i = 0; i < numvifs; ++i) {
+	    struct uvif *uv = find_uvif(i);
+
 	    if (VIFM_ISSET(i, gt->gt_grpmems))
 		fprintf(fp, " %u ", i);
 	    else if (VIFM_ISSET(i, r->rt_children) &&
-		     NBRM_ISSETMASK(uvifs[i].uv_nbrmap, r->rt_subordinates))
+		     NBRM_ISSETMASK(uv->uv_nbrmap, r->rt_subordinates))
 		fprintf(fp, " %u%c", i,
-			VIFM_ISSET(i, gt->gt_scope) ? 'b' : 
-			SUBS_ARE_PRUNED(r->rt_subordinates,
-			    uvifs[i].uv_nbrmap, gt->gt_prunes) ? 'p' : '!');
+			VIFM_ISSET(i, gt->gt_scope)
+			? 'b' :  SUBS_ARE_PRUNED(r->rt_subordinates, uv->uv_nbrmap, gt->gt_prunes)
+			? 'p' : '!');
 	}
 	fprintf(fp, "\n");
 	if (gt->gt_pruntbl) {
@@ -2036,7 +2055,7 @@ void dump_cache(FILE *fp, int detail)
 
 		sg_req.src.s_addr = st->st_origin;
 		sg_req.grp.s_addr = gt->gt_mcastgrp;
-		if (ioctl(udp_socket, SIOCGETSGCNT, (char *)&sg_req) < 0) {
+		if (ioctl(udp_socket, SIOCGETSGCNT, &sg_req) < 0) {
 		    logit(LOG_WARNING, errno, "dump_cache() Failed ioctl SIOCGETSGCNT on (%s %s)",
 			  inet_fmt(st->st_origin, s1, sizeof(s1)),
 			  inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)));
@@ -2166,8 +2185,8 @@ void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8
 	    if (IN_MULTICAST(ntohl(dst)))
 		return;
 	}
-	vifi = find_vif_direct(qry->tr_dst, 0);
 
+	vifi = find_vif_direct(qry->tr_dst, 0);
 	if (vifi == NO_VIF) {
 	    /* The traceroute destination is not on one of my subnet vifs. */
 	    IF_DEBUG(DEBUG_TRACE) {
@@ -2233,15 +2252,22 @@ void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8
     resp->tr_qarr    = htonl(((tp.tv_sec + JAN_1970) << 16) +
 			     ((tp.tv_usec << 10) / 15625));
     resp->tr_rproto  = PROTO_DVMRP;
-    resp->tr_outaddr = (vifi == NO_VIF) ? dst : uvifs[vifi].uv_lcl_addr;
-    resp->tr_fttl    = (vifi == NO_VIF) ? 0 : uvifs[vifi].uv_threshold;
     resp->tr_rflags  = errcode;
+    if (vifi == NO_VIF) {
+	resp->tr_outaddr = dst;
+	resp->tr_fttl    = 0;
+    } else {
+	struct uvif *uv = find_uvif(vifi);
+
+	resp->tr_outaddr = uv->uv_lcl_addr;
+	resp->tr_fttl    = uv->uv_threshold;
+    }
 
     /*
      * obtain # of packets out on interface
      */
     v_req.vifi = vifi;
-    if (vifi != NO_VIF && ioctl(udp_socket, SIOCGETVIFCNT, (char *)&v_req) >= 0)
+    if (vifi != NO_VIF && ioctl(udp_socket, SIOCGETVIFCNT, &v_req) >= 0)
 	resp->tr_vifout  =  htonl(v_req.ocount);
     else
 	resp->tr_vifout  =  0xffffffff;
@@ -2268,8 +2294,7 @@ void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8
 
 	sg_req.src.s_addr = qry->tr_src;
 	sg_req.grp.s_addr = group;
-	if (st && st->st_ctime != 0 &&
-	    ioctl(udp_socket, SIOCGETSGCNT, (char *)&sg_req) >= 0)
+	if (st && st->st_ctime != 0 && ioctl(udp_socket, SIOCGETSGCNT, &sg_req) >= 0)
 	    resp->tr_pktcnt = htonl(sg_req.pktcnt + st->st_savpkt);
 	else
 	    resp->tr_pktcnt = htonl(st ? st->st_savpkt : 0xffffffff);
@@ -2279,9 +2304,10 @@ void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8
 	} else if (gt->gt_prsent_timer) {
 	    resp->tr_rflags = TR_PRUNED;
 	} else if (vifi != NO_VIF && !VIFM_ISSET(vifi, gt->gt_grpmems)) {
-	    if (!NBRM_ISEMPTY(uvifs[vifi].uv_nbrmap) &&
-		SUBS_ARE_PRUNED(rt->rt_subordinates,
-				uvifs[vifi].uv_nbrmap, gt->gt_prunes))
+	    struct uvif *uv = find_uvif(vifi);
+
+	    if (!NBRM_ISEMPTY(uv->uv_nbrmap) && SUBS_ARE_PRUNED(rt->rt_subordinates,
+								uv->uv_nbrmap, gt->gt_prunes))
 		resp->tr_rflags = TR_OPRUNED;
 	    else
 		resp->tr_rflags = TR_NO_FWD;
@@ -2303,15 +2329,17 @@ void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8
 	resp->tr_rflags   = TR_NO_RTE;
 	resp->tr_rmtaddr  = 0;
     } else {
+	struct uvif *uv = find_uvif(rt->rt_parent);
+
 	/* get # of packets in on interface */
 	v_req.vifi = rt->rt_parent;
-	if (ioctl(udp_socket, SIOCGETVIFCNT, (char *)&v_req) >= 0)
+	if (ioctl(udp_socket, SIOCGETVIFCNT, &v_req) >= 0)
 	    resp->tr_vifin = htonl(v_req.icount);
 	else
 	    resp->tr_vifin = 0xffffffff;
 
 	MASK_TO_VAL(rt->rt_originmask, resp->tr_smask);
-	src = uvifs[rt->rt_parent].uv_lcl_addr;
+	src = uv->uv_lcl_addr;
 	resp->tr_inaddr = src;
 	resp->tr_rmtaddr = rt->rt_gateway;
 	if (vifi != NO_VIF && !VIFM_ISSET(vifi, rt->rt_children)) {
@@ -2358,12 +2386,14 @@ sendit:
 	 * If we don't have one, we can't source any multicasts anyway.
 	 */
 	if (phys_vif != -1) {
+	    struct uvif *uv = find_uvif(phys_vif);
+
 	    IF_DEBUG(DEBUG_TRACE) {
 		logit(LOG_DEBUG, 0, "Sending reply to %s from %s", inet_fmt(dst, s1, sizeof(s1)),
-		      inet_fmt(uvifs[phys_vif].uv_lcl_addr, s2, sizeof(s2)));
+		      inet_fmt(uv->uv_lcl_addr, s2, sizeof(s2)));
 	    }
 	    k_set_ttl(qry->tr_rttl);
-	    send_igmp(uvifs[phys_vif].uv_lcl_addr, dst, resptype, no, group, datalen);
+	    send_igmp(uv->uv_lcl_addr, dst, resptype, no, group, datalen);
 	    k_set_ttl(1);
 	} else {
 	    logit(LOG_INFO, 0, "No enabled phyints -- dropping traceroute reply");

@@ -121,7 +121,7 @@ static char *vif2name(int vif)
 	struct uvif *uv;
 	vifi_t vifi;
 
-	for (vifi = 0, uv = uvifs; vifi < numvifs; vifi++, uv++) {
+	UVIF_FOREACH(vifi, uv) {
 		if (vif == vifi)
 			return uv->uv_name;
 	}
@@ -143,7 +143,7 @@ static const char *ifstate(struct uvif *uv)
 static void show_iface(FILE *fp, int detail)
 {
 	struct listaddr *al;
-	struct uvif *v;
+	struct uvif *uv;
 	vifi_t vifi;
 	time_t thyme = time(NULL);
 
@@ -154,15 +154,15 @@ static void show_iface(FILE *fp, int detail)
 	fprintf(fp, "%-15s %-15s %5s %4s %3s%10s %-5s=\n",
 		"Address", "Interface", "State", "Cost", "TTL", "Uptime", "Flags");
 
-	for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
+	UVIF_FOREACH(vifi, uv) {
 		fprintf(fp, "%-15s %-15s %5s %4u %3u%10s %s\n",
-			inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)),
-			v->uv_name,
-			ifstate(v),
-			v->uv_metric,
-			v->uv_threshold, /* TTL scoping */
-			"0:00:00",	 /* XXX fixme */
-			vif_sflags(v->uv_flags));
+			inet_fmt(uv->uv_lcl_addr, s1, sizeof(s1)),
+			uv->uv_name,
+			ifstate(uv),
+			uv->uv_metric,
+			uv->uv_threshold, /* TTL scoping */
+			"0:00:00",	  /* XXX fixme */
+			vif_sflags(uv->uv_flags));
 	}
 }
 
@@ -176,13 +176,13 @@ static void show_neighbor_header(FILE *fp, int detail)
 static void show_neighbor(FILE *fp, int detail)
 {
 	struct listaddr *al;
-	struct uvif *v;
+	struct uvif *uv;
 	vifi_t vifi;
 	time_t thyme = time(NULL);
 	int once = 1;
 
-	for (vifi = 0, v = uvifs; vifi < numvifs; vifi++, v++) {
-		TAILQ_FOREACH(al, &v->uv_neighbors, al_link) {
+	UVIF_FOREACH(vifi, uv) {
+		TAILQ_FOREACH(al, &uv->uv_neighbors, al_link) {
 			char ver[10];
 
 			if (once) {
@@ -195,7 +195,7 @@ static void show_neighbor(FILE *fp, int detail)
 
 			fprintf(fp, "%-15s %-16s%-7s %-5s%10s %5us\n",
 				inet_fmt(al->al_addr, s1, sizeof(s1)),
-				v->uv_name,
+				uv->uv_name,
 				ver,
 				vif_nbr_sflags(al->al_flags),
 				scaletime(thyme - al->al_ctime),
@@ -348,14 +348,18 @@ static void show_mfc(FILE *fp, int detail)
 		}
 
 		for (i = 0; i < numvifs; i++) {
+			struct uvif *uv = find_uvif(i);
+
 			if (VIFM_ISSET(i, gt->gt_grpmems))
 				fprintf(fp, "%s ", vif2name(i));
 			else if (VIFM_ISSET(i, r->rt_children) &&
-				 NBRM_ISSETMASK(uvifs[i].uv_nbrmap, r->rt_subordinates))
+				 NBRM_ISSETMASK(uv->uv_nbrmap, r->rt_subordinates))
 				fprintf(fp, "%s%s ", vif2name(i),
 					VIFM_ISSET(i, gt->gt_scope)
 					? ":b"
-					: (SUBS_ARE_PRUNED(r->rt_subordinates, uvifs[i].uv_nbrmap, gt->gt_prunes)
+					: (SUBS_ARE_PRUNED(r->rt_subordinates,
+							   uv->uv_nbrmap,
+							   gt->gt_prunes)
 					   ? ":p"
 					   : ":!"));
 		}
@@ -436,7 +440,7 @@ static void show_igmp_group(FILE *fp, int detail)
 	vifi_t vifi;
 	int once = 1;
 
-	for (vifi = 0, uv = uvifs; vifi < numvifs; vifi++, uv++) {
+	UVIF_FOREACH(vifi, uv) {
 		TAILQ_FOREACH(group, &uv->uv_groups, al_link) {
 			char timeout[10];
 
@@ -476,7 +480,7 @@ static void show_igmp_iface(FILE *fp, int detail)
 	fprintf(fp, "%-16s  %-15s  %7s  %6s  %6s=\n",
 		"Interface", "Querier", "Version", "Groups", "Expire");
 
-	for (vifi = 0, uv = uvifs; vifi < numvifs; vifi++, uv++) {
+	UVIF_FOREACH(vifi, uv) {
 		size_t num = 0;
 		char timeout[10];
 		int version;

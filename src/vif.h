@@ -105,6 +105,7 @@ struct blastinfo {
  * (Note: all addresses, subnet numbers and masks are kept in NETWORK order.)
  */
 struct uvif {
+    TAILQ_ENTRY(uvif) uv_link;		/* link to next/prev vif            */
     uint32_t	     uv_flags;	        /* VIFF_ flags defined below         */
     uint8_t	     uv_metric;         /* cost of this vif                  */
     uint8_t	     uv_admetric;       /* advertised cost of this vif       */
@@ -159,11 +160,12 @@ struct uvif {
 #define	VIFF_OTUNNEL		0x200000	/* DVMRP msgs "beside" tunnel*/
 #define	VIFF_IGMPV2		0x400000	/* Act as an IGMPv2 Router   */
 
-#define	AVOID_TRANSIT(v, r)	\
-		(((r)->rt_parent != NO_VIF) && \
-		 ((r)->rt_gateway != 0) && \
-		 (uvifs[(v)].uv_flags & VIFF_NOTRANSIT) && \
-		 (uvifs[(r)->rt_parent].uv_flags & VIFF_NOTRANSIT))
+#define	AVOID_TRANSIT(v, uv, r)						\
+    (((r)->rt_parent != NO_VIF) && ((r)->rt_gateway != 0) &&		\
+     (uv->uv_flags & VIFF_NOTRANSIT) && (find_uvif((r)->rt_parent)->uv_flags & VIFF_NOTRANSIT))
+
+#define UVIF_FOREACH(v, uv)						\
+    for ((v) = 0, (uv) = find_uvif(v); (v) < numvifs && uv; (v)++, (uv) = find_uvif(v))
 
 struct phaddr {
     struct phaddr   *pa_next;
