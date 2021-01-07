@@ -344,7 +344,7 @@ int k_get_version(void)
  */
 int k_get_vif_count(vifi_t vifi, int *icount, int *ocount, int *ibytes, int *obytes)
 {
-    struct sioc_vif_req vreq;
+    struct sioc_vif_req vreq = { 0 };
     int retval = 0;
 
     vreq.vifi = vifi;
@@ -370,7 +370,7 @@ int k_get_vif_count(vifi_t vifi, int *icount, int *ocount, int *ibytes, int *oby
  */
 int k_get_sg_count(uint32_t src, uint32_t grp, int *pktcnt, int *bytecnt, int *wrong_if)
 {
-    struct sioc_sg_req sgreq;
+    struct sioc_sg_req sgreq = { 0 };
     int retval = 0;
 
     sgreq.src.s_addr = src;

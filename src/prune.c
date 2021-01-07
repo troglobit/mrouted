@@ -241,8 +241,8 @@ static struct ptable *find_prune_entry(uint32_t vr, struct ptable *pt)
  */
 static void remove_sources(struct gtable *gt)
 {
+    struct sioc_sg_req sg_req = { 0 };
     struct stable *st;
-    struct sioc_sg_req sg_req;
 
     sg_req.grp.s_addr = gt->gt_mcastgrp;
 
@@ -1612,15 +1612,14 @@ void steal_sources(struct rtentry *rt)
  */
 void age_table_entry(void)
 {
-    struct rtentry *r;
+    struct sioc_sg_req sg_req = { 0 };
     struct gtable *gt, **gtnptr;
     struct stable *st, **stnp;
     struct ptable *pt, **ptnp;
-    struct sioc_sg_req sg_req;
+    struct rtentry *r;
     
-    IF_DEBUG(DEBUG_PRUNE|DEBUG_CACHE) {
+    IF_DEBUG(DEBUG_PRUNE|DEBUG_CACHE)
 	logit(LOG_DEBUG, 0, "Aging forwarding cache entries");
-    }
     
     gtnptr = &kernel_table;
     while ((gt = *gtnptr) != NULL) {
@@ -2051,7 +2050,7 @@ void dump_cache(FILE *fp, int detail)
 		st->st_ctime ? scaletime(thyme - st->st_ctime) : "-",
 		st->st_savpkt);
 	    if (st->st_ctime) {
-		struct sioc_sg_req sg_req;
+		struct sioc_sg_req sg_req = { 0 };
 
 		sg_req.src.s_addr = st->st_origin;
 		sg_req.grp.s_addr = gt->gt_mcastgrp;
@@ -2075,19 +2074,19 @@ void dump_cache(FILE *fp, int detail)
  */
 void accept_mtrace(uint32_t src, uint32_t dst, uint32_t group, char *data, uint8_t no, size_t datalen)
 {
-    uint8_t type;
-    struct rtentry *rt;
-    struct gtable *gt;
+    struct sioc_vif_req v_req = { 0 };
+    struct sioc_sg_req sg_req = { 0 };
     struct tr_query *qry;
     struct tr_resp  *resp;
-    int vifi;
-    uint8_t *p;
+    struct rtentry *rt;
+    struct gtable *gt;
+    struct timeval tp;
     size_t rcount;
+    uint8_t type;
+    uint8_t *p;
     int errcode = TR_NO_ERR;
     int resptype;
-    struct timeval tp;
-    struct sioc_vif_req v_req;
-    struct sioc_sg_req sg_req;
+    int vifi;
 
     /* Remember qid across invocations */
     static uint32_t oqid = 0;

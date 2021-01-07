@@ -306,7 +306,7 @@ int main(int argc, char *argv[])
 #ifdef TIOCNOTTY
 	fd = open("/dev/tty", O_RDWR);
 	if (fd >= 0) {
-	    (void)ioctl(fd, TIOCNOTTY, (char *)0);
+	    (void)ioctl(fd, TIOCNOTTY, NULL);
 	    (void)close(fd);
 	}
 #else

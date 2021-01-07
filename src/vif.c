@@ -286,6 +286,7 @@ void check_vif_state(void)
 	if (uv->uv_flags & VIFF_DISABLED)
 	    continue;
 
+	memset(&ifr, 0, sizeof(ifr));
 	memcpy(ifr.ifr_name, uv->uv_name, sizeof(ifr.ifr_name));
 	if (ioctl(udp_socket, SIOCGIFFLAGS, &ifr) < 0)
 	    logit(LOG_ERR, errno, "Failed ioctl SIOCGIFFLAGS for %s", ifr.ifr_name);
@@ -2019,7 +2020,6 @@ char *vif_nbr_sflags(uint16_t flags)
  */
 void dump_vifs(FILE *fp, int detail)
 {
-    struct sioc_vif_req v_req;
     struct vif_acl *acl;
     struct listaddr *a;
     struct phaddr *p;
@@ -2041,6 +2041,8 @@ void dump_vifs(FILE *fp, int detail)
     fprintf(fp, "Vif  Name  Local-Address                               M  Thr  Rate   Flags=\n");
 
     UVIF_FOREACH(vifi, uv) {
+	struct sioc_vif_req v_req = { 0 };
+
 	fprintf(fp, "%2u %6s  %-15s %6s: %-18s %2u %3u  %5u  ",
 		vifi,
 		uv->uv_name,

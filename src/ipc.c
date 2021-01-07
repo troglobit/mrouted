@@ -388,7 +388,7 @@ static void show_mfc(FILE *fp, int detail)
 				vif2name(r->rt_parent));
 
 			if (st->st_ctime) {
-				struct sioc_sg_req rq;
+				struct sioc_sg_req rq = { 0 };
 
 				fprintf(fp, "%10s ", scaletime(thyme - st->st_ctime));
 
