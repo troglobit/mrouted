@@ -461,13 +461,15 @@ void rsrr_cache_clean(struct gtable *gt)
 
 void rsrr_clean(void)
 {
+    deregister_input_handler(rsrr_socket);
+    close(rsrr_socket);
     unlink(RSRR_SERV_PATH);
+    free(rsrr_recv_buf);
+    free(rsrr_send_buf);
 }
 
 /**
  * Local Variables:
- *  indent-tabs-mode: t
- *  c-file-style: "ellemtel"
- *  c-basic-offset: 4
+ *  c-file-style: "cc-mode"
  * End:
  */
