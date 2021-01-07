@@ -4,8 +4,8 @@ Change Log
 All notable changes to the project are documented in this file.
 
 
-[v4.2][UNRELEASED]
-------------------
+[v4.2][] - 2021-01-07
+---------------------
 
 Major bug fix and feature release.  Support for static routes and
 improved configuration support for IGMP.
@@ -14,15 +14,15 @@ improved configuration support for IGMP.
 - Support for controlling IGMP Last Member Query Count using the
   `igmp-robustness` setting in `mrouted.conf`, default 2
 - Support for tuning the IGMP Last Member Query Interval using a
-  new setting `igmp-query-last-member-interval <1-1024>`, issue #44
-- Issue #31: support for static multicast routing (*,G), similar to
-  SMCRoute.  New `phyint static-group GROUP` setting in mrouted.conf,
-  multiple statements supported, but no ranges (yet)
+  new setting `igmp-query-last-member-interval <1-1024>`.  Issue #44
+- Support for static multicast routing (*,G), similar to SMCRoute.
+  New `phyint static-group GROUP` setting in mrouted.conf, multiple
+  statements supported, but no ranges (yet).  Issue #31
 - Proper tracking of lower-version host members (IGMP), when a lower
   version host is detected for a group, a timer is set according to
   RFC3376, and while in this compat mode higher-version IGMP is not
   allowed to change state.  E.g., in IGMPv1 compat, IGMPv2 LEAVE is
-  ignored, similar to the phyint being in `igmpv1` mode
+  ignored for the group, similar to the phyint being in `igmpv1` mode
 - Allow IGMP reports from source address 0.0.0.0, required as per
   RFC3376, sec. 4.2.13, not supported until now.  This should greatly
   improve interop with IGMP snooping switches and DHCP clients that
@@ -45,6 +45,7 @@ improved configuration support for IGMP.
 - Fix buffer overrun in descriptor `poll()` handling
 - Fix double-close on SIGHUP, Linux systems only
 - Various non-critical memory leak fixes, critical for no-MMU systems
+
 
 [v4.1][] - 2020-10-02
 ---------------------
@@ -605,7 +606,8 @@ v3.5 - 1995-05-08
 - Multicast traceroute could send a reply on a disabled interface.
 
 
-[UNRELEASED]: https://github.com/troglobit/mrouted/compare/4.1...HEAD
+[UNRELEASED]: https://github.com/troglobit/mrouted/compare/4.2...HEAD
+[v4.2]:       https://github.com/troglobit/mrouted/compare/4.1...4.2
 [v4.1]:       https://github.com/troglobit/mrouted/compare/4.0...4.1
 [v4.0]:       https://github.com/troglobit/mrouted/compare/3.9.8...4.0
 [v3.9.8]:     https://github.com/troglobit/mrouted/compare/3.9.7...3.9.8
