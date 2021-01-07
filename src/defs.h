@@ -262,6 +262,7 @@ extern int              debug_parse(char *);
 extern void             restart(void);
 extern char *		scaletime(time_t);
 extern int		register_input_handler(int, ihfunc_t);
+extern void		deregister_input_handler(int);
 
 /* log.c */
 extern void             log_init(void);

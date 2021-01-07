@@ -62,13 +62,39 @@ static void cleanup(void);
 
 int register_input_handler(int fd, ihfunc_t func)
 {
+    int i;
+
     if (nhandlers >= NHANDLERS)
 	return -1;
 
-    ihandlers[nhandlers].fd = fd;
-    ihandlers[nhandlers++].func = func;
+    for (i = 0; i < NHANDLERS; i++) {
+	if (ihandlers[i].func)
+	    continue;
 
-    return 0;
+	ihandlers[i].fd   = fd;
+	ihandlers[i].func = func;
+	nhandlers++;
+
+	return 0;
+    }
+
+    return -1;
+}
+
+void deregister_input_handler(int fd)
+{
+    int i;
+
+    for (i = 0; i < NHANDLERS; i++) {
+	if (ihandlers[i].fd != fd)
+	    continue;
+
+	ihandlers[i].fd   = 0;
+	ihandlers[i].func = NULL;
+	nhandlers--;
+
+	return;
+    }
 }
 
 static void do_randomize(void)
