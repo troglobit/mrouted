@@ -261,6 +261,34 @@ int main(int argc, char *argv[])
 	fprintf(stderr, "debug level 0x%x (%s)\n", debug, buf);
     }
 
+    if (!debug && !foreground) {
+#ifdef TIOCNOTTY
+	int fd;
+#endif
+
+	/* Detach from the terminal */
+	haveterminal = 0;
+	if (fork())
+	    exit(0);
+
+	(void)close(0);
+	(void)close(1);
+	(void)close(2);
+	(void)open("/dev/null", O_RDONLY);
+	(void)dup2(0, 1);
+	(void)dup2(0, 2);
+#ifdef TIOCNOTTY
+	fd = open("/dev/tty", O_RDWR);
+	if (fd >= 0) {
+	    (void)ioctl(fd, TIOCNOTTY, (char *)0);
+	    (void)close(fd);
+	}
+#else
+	if (setsid() < 0)
+	    perror("setsid");
+#endif
+    }
+
     /*
      * Setup logging
      */
@@ -328,34 +356,6 @@ int main(int argc, char *argv[])
     /* schedule first timer interrupt */
     timer_set(1, fasttimer, NULL);
     timer_set(TIMER_INTERVAL, timer, NULL);
-
-    if (!debug && !foreground) {
-#ifdef TIOCNOTTY
-	int fd;
-#endif
-
-	/* Detach from the terminal */
-	haveterminal = 0;
-	if (fork())
-	    exit(0);
-
-	(void)close(0);
-	(void)close(1);
-	(void)close(2);
-	(void)open("/dev/null", O_RDONLY);
-	(void)dup2(0, 1);
-	(void)dup2(0, 2);
-#ifdef TIOCNOTTY
-	fd = open("/dev/tty", O_RDWR);
-	if (fd >= 0) {
-	    (void)ioctl(fd, TIOCNOTTY, (char *)0);
-	    (void)close(fd);
-	}
-#else
-	if (setsid() < 0)
-	    perror("setsid");
-#endif
-    }
 
     if (pidfile(NULL))
 	warn("Cannot create pidfile");
