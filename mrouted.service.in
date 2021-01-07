@@ -1,6 +1,8 @@
 [Unit]
 Description=Multicast routing daemon, mrouted
 Documentation=man:mrouted
+Documentation=man:mrouted.conf
+Documentation=man:mroutectl
 Documentation=file:@DOCDIR@/README.md
 Documentation=https://github.com/troglobit/mrouted
 # ConditionPathExists=@SYSCONFDIR@/mrouted.conf
