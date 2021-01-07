@@ -159,7 +159,7 @@ disable all phyint (this setting), and then selectively enable only the
 ones needed.
 .It Cm phyint Ar <local-addr | ifname> Oo Cm disable | enable Oc Oo Cm passive Oc Oo Cm blaster Oc Oo Cm force-leaf Oc Oo Cm noflood Oc Oo Cm igmpv1 | igmpv2 | igmpv3 Oc Oo Cm static-group Ar group Oc Oo Cm altnet Ar network Ns / Ns Ar mask-len Oc Oo Cm boundary Ar boundary-name | scoped-addr Ns / Ns Ar mask-len Oc Oo Cm metric Ar <1-31> Oc Oo Cm advert-metric Ar <0-31> Oc Oo Cm prune-lifetime Ar sec Oc Oo Cm rexmit-prunes Oo Ar on | off Oc Oc Oo Cm allow-nonpruners Oc Oo Cm notransit Oc Oo Cm accept|deny Po Ar route Ns / Ns Ar mask-len Oo Cm exact Oc Pc Ns + Oo Cm bidir Oc Oc Oo Cm rate-limit Ar kbps Oc Oo Cm threshold Ar ttl Oc
 .Pp
-This setting selects and alters properties of the phyiscal interfaces
+This setting selects and alters properties of the physical interfaces
 .Nm mrouted
 operates on.  Interfaces can be identified using their local IP address
 or their name.
@@ -298,9 +298,9 @@ keyword.  If the keyword
 follows a route, then only that route is matched; otherwise, that route
 and any more specific route is matched.  For example,
 .Cm deny 0/0
-denys all routes, while
+denies all routes, while
 .Cm deny 0/0 Ar exact
-denys only the default route.  The default route may also be specified
+denies only the default route.  The default route may also be specified
 with the
 .Cm default
 keyword.

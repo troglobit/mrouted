@@ -75,7 +75,7 @@ larger than the default 20.  mrouted needs 3x the number of interfaces
 (vifs) for the relevant control protocol groups.  The kernel (Linux &
 BSD) *maximum* number of interfaces to use for multicast routing is 32.
 
-**Note:** mrouted must run with suffient capabilities, or as root.
+**Note:** mrouted must run with sufficient capabilities, or as root.
 
 
 Configuration

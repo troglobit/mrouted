@@ -56,7 +56,7 @@ In order to support multicasting among subnets that are separated by
 GRE tunnels.  However,
 .Nm
 includes (built-in) support for IP-in-IP tunnels, which are virtual
-point-to-point links between pairs of DVMRP capable rotuers located
+point-to-point links between pairs of DVMRP capable routers located
 anywhere in an internet.  IP multicast packets are encapsulated for
 transmission through tunnels, so that they look like normal unicast
 datagrams to intervening routers and subnets.  The encapsulation is
@@ -73,7 +73,7 @@ support for multicast routing by the regular (unicast) routers.
 suffers from the well-known scaling problems of any distance-vector
 routing protocol, and does not support hierarchical multicast routing.
 .Pp
-A more common practise today is to set up GRE tunnels between multicast
+A more common practice today is to set up GRE tunnels between multicast
 capable routers and limit
 .Nm
 to run on a select number of interfaces listed in the configuration.
