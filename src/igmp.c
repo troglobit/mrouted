@@ -108,6 +108,9 @@ void igmp_init(void)
 
 void igmp_exit(void)
 {
+#ifdef REGISTER_HANDLER
+    deregister_input_handler(igmp_socket);
+#endif
     close(igmp_socket);
     free(recv_buf);
     free(send_buf);
