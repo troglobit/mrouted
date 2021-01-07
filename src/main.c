@@ -676,7 +676,9 @@ void restart(void)
     stop_all_vifs();
     k_stop_dvmrp();
     igmp_exit();
+#ifndef IOCTL_OK_ON_RAW_SOCKET
     close(udp_socket);
+#endif
     did_final_init = 0;
 
     /*
