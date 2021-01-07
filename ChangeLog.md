@@ -7,16 +7,17 @@ All notable changes to the project are documented in this file.
 [v4.2][UNRELEASED]
 ------------------
 
-Major bug fix release.
+Major bug fix and feature release.  Support for static routes and
+improved configuration support for IGMP.
 
 ### Changes
 - Support for controlling IGMP Last Member Query Count using the
   `igmp-robustness` setting in `mrouted.conf`, default 2
 - Support for tuning the IGMP Last Member Query Interval using a
   new setting `igmp-query-last-member-interval <1-1024>`, issue #44
-- Support for static multicast routing (*,G), similar to SMCRoute.
-  New `phyint static-group GROUP` setting in mrouted.conf, multiple
-  statements supported, but no ranges (yet)
+- Issue #31: support for static multicast routing (*,G), similar to
+  SMCRoute.  New `phyint static-group GROUP` setting in mrouted.conf,
+  multiple statements supported, but no ranges (yet)
 - Proper tracking of lower-version host members (IGMP), when a lower
   version host is detected for a group, a timer is set according to
   RFC3376, and while in this compat mode higher-version IGMP is not
@@ -28,6 +29,9 @@ Major bug fix release.
   have not yet received a lease
 - Improved support for running mroutectl under watch(1).  No more
   artifacts due to unknown ANSI escape sequences to probe width
+- Delayed PID file creation until after initial startup delay, there
+  is nobody home until after that delay, so no point in announcing
+  availability until after that
 
 ### Fixes
 - Issue #43: IGMPv3 membership reports were parsed incorrectly.  The
@@ -38,7 +42,9 @@ Major bug fix release.
   longer had the group field set, despite the query being addressed to
   a specific group.  Regression introduced in [v4.0][]
 - Issue #47: The optional phyint flag `igmpv3` did not work.
-
+- Fix buffer overrun in descriptor `poll()` handling
+- Fix double-close on SIGHUP, Linux systems only
+- Various non-critical memory leak fixes, critical for no-MMU systems
 
 [v4.1][] - 2020-10-02
 ---------------------
