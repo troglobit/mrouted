@@ -357,9 +357,6 @@ int main(int argc, char *argv[])
     timer_set(1, fasttimer, NULL);
     timer_set(TIMER_INTERVAL, timer, NULL);
 
-    if (pidfile(NULL))
-	warn("Cannot create pidfile");
-
     /* XXX HACK
      * This will cause black holes for the first few seconds after startup,
      * since we are exchanging routes but not actually forwarding.
@@ -374,6 +371,10 @@ int main(int argc, char *argv[])
 	timer_set(startupdelay, final_init, NULL);
     else
 	final_init(NULL);
+
+    /* Signal world we are now ready to start taking calls */
+    if (pidfile(NULL))
+	logit(LOG_WARNING, errno, "Cannot create pidfile");
 
     /*
      * Main receive loop.
