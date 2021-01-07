@@ -811,22 +811,6 @@ static int compare_rts(const void *rt1, const void *rt2)
     return 0;
 }
 
-void blaster_alloc(struct uvif *uv)
-{
-    if (!uv)
-	return;
-
-    if (uv->uv_blasterbuf)
-	free(uv->uv_blasterbuf);
-
-    uv->uv_blasterlen = 64 * 1024;
-    uv->uv_blasterbuf = calloc(1, uv->uv_blasterlen);
-    uv->uv_blastercur = uv->uv_blasterend = uv->uv_blasterbuf;
-    if (uv->uv_blastertimer)
-	timer_clear(uv->uv_blastertimer);
-    uv->uv_blastertimer = 0;
-}
-
 /*
  * Queue a route report from a route-blaster.
  * If the timer isn't running to process these reports,

@@ -200,6 +200,33 @@ void zero_vif(struct uvif *uv, int t)
     uv->uv_nroutes	= 0;
 }
 
+void blaster_alloc(struct uvif *uv)
+{
+    if (!uv)
+	return;
+
+    blaster_free(uv);
+
+    uv->uv_blasterlen = 64 * 1024;
+    uv->uv_blasterbuf = calloc(1, uv->uv_blasterlen);
+    if (!uv->uv_blasterbuf) {
+	logit(LOG_ERR, errno, "%s(): Failed allocating memory", __func__);
+	return;
+    }
+
+    uv->uv_blastercur = uv->uv_blasterend = uv->uv_blasterbuf;
+}
+
+void blaster_free(struct uvif *uv)
+{
+    if (uv->uv_blasterbuf)
+	free(uv->uv_blasterbuf);
+    uv->uv_blasterbuf = NULL;
+
+    if (uv->uv_blastertimer)
+	uv->uv_blastertimer = timer_clear(uv->uv_blastertimer);
+}
+
 /*
  * Start routing on all virtual interfaces that are not down or
  * administratively disabled.
@@ -606,6 +633,7 @@ void stop_all_vifs(void)
 	}
 	uv->uv_addrs = NULL;
 
+	blaster_free(uv);
 	free(uv);
     }
 }
