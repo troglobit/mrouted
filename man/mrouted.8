@@ -5,7 +5,7 @@
 .\"
 .\" The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
 .\" Leland Stanford Junior University.
-.Dd Jun 9, 2020
+.Dd Jan 7, 2021
 .Dt MROUTED 8 SMM
 .Os
 .Sh NAME
@@ -22,7 +22,11 @@
 .Nm
 is the original implementation of the Distance-Vector Multicast Routing
 Protocol (DVMRP), RFC 1075.  A dynamic (automatic) multicast routing
-daemon.
+daemon, that also supports static routing.  See
+.Xr mrouted.conf 5
+for information on the
+.Cm static-group
+configuration directive.
 .Pp
 .Nm
 is
