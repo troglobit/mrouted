@@ -127,6 +127,59 @@ struct uvif *config_init_tunnel(in_addr_t lcl_addr, in_addr_t rmt_addr, uint32_t
     return uv;
 }
 
+/*
+ * Ignore any kernel interface that is disabled, or connected to the
+ * same subnet as one already installed in the uvifs[] array.
+ */
+static vifi_t check_vif(struct uvif *v)
+{
+    struct uvif *uv;
+    vifi_t vifi;
+
+    UVIF_FOREACH(vifi, uv) {
+	if (v->uv_flags & VIFF_DISABLED) {
+	    logit(LOG_DEBUG, 0, "Skipping %s, disabled", v->uv_name);
+	    return NO_VIF;
+	}
+
+	if ((v->uv_lcl_addr & uv->uv_subnetmask) == uv->uv_subnet ||
+	    (uv->uv_subnet  &  v->uv_subnetmask) ==  v->uv_subnet) {
+	    logit(LOG_WARNING, 0, "ignoring %s, same subnet as %s",
+		  v->uv_name, uv->uv_name);
+	    return NO_VIF;
+	}
+
+	/*
+	 * Same interface, but cannot have multiple VIFs on the same
+	 * interface so add as secondary IP address (altnet) for RPF
+	 */
+	if (strcmp(v->uv_name, uv->uv_name) == 0) {
+	    struct phaddr *ph;
+
+	    ph = calloc(1, sizeof(*ph));
+	    if (!ph) {
+		logit(LOG_ERR, errno, "Failed allocating altnet on %s", uv->uv_name);
+		break;
+	    }
+
+	    logit(LOG_INFO, 0, "Installing %s subnet %s as an altnet on %s",
+		  v->uv_name,
+		  inet_fmts(v->uv_subnet, v->uv_subnetmask, s2, sizeof(s2)),
+		  uv->uv_name);
+
+	    ph->pa_subnet      = v->uv_subnet;
+	    ph->pa_subnetmask  = v->uv_subnetmask;
+	    ph->pa_subnetbcast = v->uv_subnetbcast;
+
+	    ph->pa_next = uv->uv_addrs;
+	    uv->uv_addrs = ph;
+	    return NO_VIF;
+	}
+    }
+
+    return vifi;
+}
+
 void config_vifs_correlate(void)
 {
     struct listaddr *al, *al_tmp;
@@ -134,61 +187,12 @@ void config_vifs_correlate(void)
     vifi_t vifi;
 
     TAILQ_FOREACH_SAFE(v, &vifs, uv_link, tmp) {
-	if (v->uv_flags & VIFF_DISABLED) {
-	    logit(LOG_DEBUG, 0, "Skipping %s, disabled", v->uv_name);
-	    continue;
-	}
-
-	/*
-	 * Ignore any interface that is connected to the same subnet as
-	 * one already installed in the uvifs[] array.
-	 */
-	UVIF_FOREACH(vifi, uv) {
-	    if ((v->uv_lcl_addr & uv->uv_subnetmask) == uv->uv_subnet ||
-		(uv->uv_subnet  &  v->uv_subnetmask) ==  v->uv_subnet) {
-		logit(LOG_WARNING, 0, "ignoring %s, same subnet as %s",
-		      v->uv_name, uv->uv_name);
-		break;
-	    }
-
-	    /*
-	     * Same interface, but cannot have multiple VIFs on same
-	     * interface so add as secondary IP address to RPF
-	     */
-	    if (strcmp(v->uv_name, uv->uv_name) == 0) {
-		struct phaddr *ph;
-
-		ph = calloc(1, sizeof(*ph));
-		if (!ph) {
-		    logit(LOG_ERR, errno, "Failed allocating altnet on %s", uv->uv_name);
-		    break;
-		}
-
-		logit(LOG_INFO, 0, "Installing %s subnet %s as an altnet", v->uv_name,
-		      inet_fmts(v->uv_subnet, v->uv_subnetmask, s2, sizeof(s2)));
-
-		ph->pa_subnet      = v->uv_subnet;
-		ph->pa_subnetmask  = v->uv_subnetmask;
-		ph->pa_subnetbcast = v->uv_subnetbcast;
-
-		ph->pa_next = uv->uv_addrs;
-		uv->uv_addrs = ph;
-		break;
-	    }
-	}
-
-	if (vifi != numvifs) {
-	  drop:
+	vifi = check_vif(v);
+	if (vifi == NO_VIF || install_uvif(v)) {
 	    TAILQ_REMOVE(&vifs, v, uv_link);
 	    free(v);
 	    continue;
 	}
-
-	/*
-	 * If there is room in the uvifs array, install this interface.
-	 */
-	if (install_uvif(v))
-	    goto drop;
 
 	logit(LOG_INFO, 0, "Installing %s (%s on subnet %s) as VIF #%u, rate %d pps",
 	      v->uv_name, inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)),
