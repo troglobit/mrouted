@@ -45,13 +45,20 @@ Running
 -------
 
 mrouted does not require a `.conf` file.  When it starts up it probes
-all available interfaces and, after an initial 10s delay, starts peering
-with any DVMRP capable neighbors.
+all available interfaces and starts peering with any DVMRP capable
+neighbor.  Multicast is forwarded to end-devices that *join* a group
+using IGMPv1, IGMPv2, or IGMPv3.  For LANs where there may be hosts that
+do not speak IGMP, or where certain groups should always be forwarded, a
+`static-group` setting is available in `mrouted.conf`.
 
 Use [mgen(1)][], [mcjoin(1)][], or [iperf](https://iperf.fr/) to send
 IGMP join packets and multicast data on the LAN to test your multicast
 routing setup.  Use the `mroutectl` tool to query a running `mrouted`
 for status.
+
+> **NOTE:** Beware of the TTL value in the IP header of your multicast
+>           data.  It defaults to 1 on most operating systems, which
+>           means nothing will be routed by default!
 
 For the native mrouted tunnel to work in Linux based systems, you need
 to have the "ipip" kernel module loaded or as built-in:
