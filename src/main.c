@@ -342,15 +342,10 @@ int main(int argc, char *argv[])
     sigaction(SIGUSR1, &sa, NULL);
     sigaction(SIGUSR2, &sa, NULL);
 
-    pfd = calloc(sizeof(struct pollfd), 1 + nhandlers);
-    if (!pfd)
-	err(1, "Failed allocating internal memory");
-
-    pfd[0].fd = igmp_socket;
-    pfd[0].events = POLLIN;
-    for (i = 0; i < nhandlers; i++) {
-	pfd[i + 1].fd = ihandlers[i].fd;
-	pfd[i + 1].events = POLLIN;
+    pfd = calloc(NHANDLERS, sizeof(struct pollfd));
+    if (!pfd) {
+	logit(LOG_ERR, errno, "Failed allocating struct pollfd");
+	return 1;	/* NOTREACHED */
     }
 
     /* schedule first timer interrupt */
@@ -380,10 +375,15 @@ int main(int argc, char *argv[])
      * Main receive loop.
      */
     while (running) {
+	for (i = 0; i < nhandlers; i++) {
+	    pfd[i].fd = ihandlers[i].fd;
+	    pfd[i].events = POLLIN;
+	}
+
 	if (check_signals())
 	    break;
 
-	n = poll(pfd, nhandlers + 1, timeout(n) * 1000);
+	n = poll(pfd, nhandlers, timeout(n) * 1000);
 	if (n < 0) {
 	    if (errno != EINTR)
 		logit(LOG_WARNING, errno, "poll failed");
@@ -392,7 +392,7 @@ int main(int argc, char *argv[])
 
 	if (n > 0) {
 	    for (i = 0; i < nhandlers; i++) {
-		if (pfd[i + 1].revents & POLLIN)
+		if (pfd[i].revents & POLLIN)
 		    (*ihandlers[i].func)(ihandlers[i].fd);
 	    }
 	}
