@@ -50,7 +50,7 @@ do_reload()
 # mrouted has native support for ip-ip tunnels
 load_module()
 {
-    lsmod |grep ipip
+    lsmod |grep ipip >/dev/null
     if [ $? -ne 0 ]; then
         modprobe ipip 2> /dev/null || true
     fi
