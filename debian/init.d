@@ -83,6 +83,12 @@ case "$1" in
     reload)
         log_daemon_msg "Reloading $DESC" "$NAME"
 	do_reload
+        case "$?" in
+            0) log_end_msg 0 ;;
+            1) log_progress_msg "not running"
+               log_end_msg 1 ;;
+            *) log_end_msg 1 ;;
+        esac
 	;;
 
     restart|force-reload)
