@@ -1113,7 +1113,7 @@ void accept_leave_message(int ifi, uint32_t src, uint32_t dst, uint32_t group)
      * older version compat, RFC3376.
      */
     IF_DEBUG(DEBUG_IGMP)
-	logit(LOG_DEBUG, 0, "Ignoring IGMP LEAVE/BLOCK for %s on %s, group not found.");
+	logit(LOG_DEBUG, 0, "Ignoring IGMP LEAVE/BLOCK for %s on %s, group not found.", s3, s1);
 }
 
 
