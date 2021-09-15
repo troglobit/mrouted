@@ -10,7 +10,6 @@ Vcs-Git: https://github.com/troglobit/mrouted.git
 
 Package: mrouted
 Architecture: any
-Conflicts: smcroute, pimd, quagga-pimd
 Depends: ${shlibs:Depends}, ${misc:Depends}, lsb-base (>= 3.0-6)
 Description: Simple multicast routing for UNIX
  mrouted is the original implementation of the DVMRP multicast routing
