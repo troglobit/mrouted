@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/sh
 ### BEGIN INIT INFO
 # Provides:          mrouted
 # Required-Start:    $remote_fs $syslog $network
@@ -10,7 +10,7 @@
 ### END INIT INFO
 . /lib/lsb/init-functions
 
-PATH=/sbin:/bin:/usr/sbin:/usr/bin
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
 DESC="Multicast routing daemon"
 NAME=mrouted
 
