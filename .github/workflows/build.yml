@@ -72,7 +72,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y build-essential bison flex autoconf automake pkg-config \
-                             libsystemd-dev dpkg-dev debhelper devscripts
+                             libsystemd-dev systemd dpkg-dev debhelper devscripts
       - name: Building Debian package
         run: |
           ./autogen.sh
