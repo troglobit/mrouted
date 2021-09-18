@@ -256,6 +256,9 @@ extern int              debug_parse(char *arg);
 
 
 /* main.c */
+extern char	       *config_file;
+extern int		cache_lifetime;
+extern int		prune_lifetime;
 extern int              debug_list(int, char *, size_t);
 extern int              debug_parse(char *);
 extern void             restart(void);
@@ -361,7 +364,6 @@ extern void		config_vifs_correlate(void);
 extern void		config_vifs_from_kernel(void);
 
 /* cfparse.y */
-extern char	       *configfilename;
 extern void		config_vifs_from_file(void);
 
 /* inet.c */

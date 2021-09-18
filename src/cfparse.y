@@ -24,11 +24,6 @@ int                yyparse(void);
 
 static FILE *fp;
 
-char *configfilename = _PATH_MROUTED_CONF;
-
-extern int cache_lifetime;
-extern int prune_lifetime;
-
 int allow_black_holes = 0;
 
 static int lineno;
@@ -675,7 +670,7 @@ static void fatal(const char *fmt, ...)
     vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
 
-    logit(LOG_ERR, 0, "%s:%d: %s", configfilename, lineno, buf);
+    logit(LOG_ERR, 0, "%s:%d: %s", config_file, lineno, buf);
 }
 
 static void warn(const char *fmt, ...)
@@ -687,12 +682,12 @@ static void warn(const char *fmt, ...)
     vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
 
-    logit(LOG_WARNING, 0, "%s:%d: %s", configfilename, lineno, buf);
+    logit(LOG_WARNING, 0, "%s:%d: %s", config_file, lineno, buf);
 }
 
 static void yyerror(char *msg)
 {
-    logit(LOG_ERR, 0, "%s:%d: %s", configfilename, lineno, msg);
+    logit(LOG_ERR, 0, "%s:%d: %s", config_file, lineno, msg);
 }
 
 static char *next_word(void)
@@ -882,10 +877,10 @@ void config_vifs_from_file(void)
     numbounds = 0;
     lineno = 0;
 
-    fp = fopen(configfilename, "r");
+    fp = fopen(config_file, "r");
     if (!fp) {
         if (errno != ENOENT)
-            logit(LOG_ERR, errno, "Cannot open %s", configfilename);
+            logit(LOG_ERR, errno, "Cannot open %s", config_file);
         return;
     }
 

@@ -42,6 +42,7 @@ int running = 1;
 int use_syslog = 1;
 time_t mrouted_init_time;
 
+char *config_file = NULL;
 char *pid_file    = NULL;
 char *sock_file   = NULL;
 
@@ -237,7 +238,7 @@ int main(int argc, char *argv[])
 		break;
 
 	    case 'f':
-		configfilename = optarg;
+		config_file = optarg;
 		break;
 
 	    case 'd':
