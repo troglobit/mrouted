@@ -71,8 +71,8 @@ jobs:
       - name: Installing dependencies
         run: |
           apt-get update
-          apt-get install -y build-essential autoconf automake pkg-config libsystemd-dev \
-                             dpkg-dev debhelper dh-systemd devscripts
+          apt-get install -y build-essential autoconf automake pkg-config \
+                             libsystemd-dev dpkg-dev debhelper devscripts
       - name: Building Debian package
         run: |
           ./autogen.sh
