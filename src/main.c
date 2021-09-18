@@ -42,6 +42,8 @@ int running = 1;
 int use_syslog = 1;
 time_t mrouted_init_time;
 
+char *pid_file    = NULL;
+
 #define NHANDLERS	5
 static struct ihandler {
     int fd;			/* File descriptor	*/
@@ -181,6 +183,7 @@ static int usage(int code)
 	   "  -h, --help               Show this help text\n"
 	   "  -l, --loglevel=LEVEL     Set log level: none, err, notice (default), info, debug\n"
 	   "  -n, --foreground         Run in foreground, do not detach from controlling terminal\n"
+	   "  -p, --pidfile=FILE       File to store process ID for signaling daemon\n"
 	   "  -s, --syslog             Log to syslog, default unless running in --foreground\n"
 	   "  -v, --version            Show mrouted version\n"
 	   "  -w, --startup-delay=SEC  Startup delay before forwarding\n");
@@ -209,12 +212,13 @@ int main(int argc, char *argv[])
 	{ "foreground",    0, 0, 'n' },
 	{ "help",          0, 0, 'h' },
 	{ "loglevel",      1, 0, 'l' },
+	{ "pidfile",       1, 0, 'p' },
 	{ "version",       0, 0, 'v' },
 	{ "startup-delay", 1, 0, 'w' },
 	{ NULL, 0, 0, 0 }
     };
 
-    while ((ch = getopt_long(argc, argv, "d:f:hl:nsvw:", long_options, NULL)) != EOF) {
+    while ((ch = getopt_long(argc, argv, "d:f:hl:np:svw:", long_options, NULL)) != EOF) {
 	switch (ch) {
 	    case 'l':
 		if (!strcmp(optarg, "?")) {
@@ -251,6 +255,10 @@ int main(int argc, char *argv[])
 
 	    case 'h':
 		return usage(0);
+
+	    case 'p':	/* --pidfile=NAME */
+		pid_file = strdup(optarg);
+		break;
 
 	    case 's':	/* --syslog */
 		use_syslog++;
@@ -394,7 +402,7 @@ int main(int argc, char *argv[])
 	final_init(NULL);
 
     /* Signal world we are now ready to start taking calls */
-    if (pidfile(NULL))
+    if (pidfile(pid_file))
 	logit(LOG_WARNING, errno, "Cannot create pidfile");
 
     /*
@@ -718,6 +726,9 @@ void restart(void)
     init_vifs();
     /*XXX Schedule final_init() as main does? */
     final_init(s);
+
+    /* Touch PID file to acknowledge SIGHUP */
+    pidfile(pid_file);
 
     /* schedule timer interrupts */
     timer_set(1, fasttimer, NULL);

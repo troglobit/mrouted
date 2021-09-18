@@ -17,6 +17,7 @@
 .Op Fl d Ar SYS[,SYS,...
 .Op Fl f Ar FILE
 .Op Fl l Ar LEVEL
+.Op Fl p Ar FILE
 .Op Fl w Ar SEC
 .Sh DESCRIPTION
 .Nm
@@ -168,6 +169,9 @@ seconds before applying routes.  This delay allows exchange of routes
 before starting to forward multicast packets.  In certain setups this
 can prevent transient problems at startup, at the cost of a momentary
 black hole.
+.It Fl p, -pidfile Ar FILE
+Set PID file name and location, defaults to
+.Pa /var/run/mrouted.pid .
 .It Fl s, -syslog
 Use
 .Xr syslog 3
