@@ -4,6 +4,10 @@ DISTCLEANFILES   = *~ DEADJOE semantic.cache *.gdb *.elf core core.* *.d
 SUBDIRS          = src man
 EXTRADEBS        = mrinfo*_$(VERSION)* mtrace*_$(VERSION)* map-mbone*_$(VERSION)*
 
+if ENABLE_TEST
+SUBDIRS         += test
+endif
+
 if SYSTEMD
 systemd_DATA     = mrouted.service
 endif
