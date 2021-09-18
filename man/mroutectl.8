@@ -8,6 +8,7 @@
 .Sh SYNOPSIS
 .Nm mroutectl
 .Op Fl dpthv
+.Op Fl u Ar FILE
 .Op COMMAND
 .Pp
 .Nm
@@ -57,6 +58,9 @@ use
 option instead, it handles ANSI escape sequences.
 .It Fl t, -no-heading
 Skip table headings altogether.
+.It Fl u, -ipc Ar FILE
+Override UNIX domain socket filename, the default on most systems is
+.Pa /var/run/mrouted.sock .
 .It Fl v, -version
 Show
 .Nm mrouted

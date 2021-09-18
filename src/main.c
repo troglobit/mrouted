@@ -43,6 +43,7 @@ int use_syslog = 1;
 time_t mrouted_init_time;
 
 char *pid_file    = NULL;
+char *sock_file   = NULL;
 
 #define NHANDLERS	5
 static struct ihandler {
@@ -185,6 +186,7 @@ static int usage(int code)
 	   "  -n, --foreground         Run in foreground, do not detach from controlling terminal\n"
 	   "  -p, --pidfile=FILE       File to store process ID for signaling daemon\n"
 	   "  -s, --syslog             Log to syslog, default unless running in --foreground\n"
+	   "  -u, --ipc=FILE           Override UNIX domain socket, default from identity, -i\n"
 	   "  -v, --version            Show mrouted version\n"
 	   "  -w, --startup-delay=SEC  Startup delay before forwarding\n");
 
@@ -213,12 +215,13 @@ int main(int argc, char *argv[])
 	{ "help",          0, 0, 'h' },
 	{ "loglevel",      1, 0, 'l' },
 	{ "pidfile",       1, 0, 'p' },
+	{ "ipc",           1, 0, 'u' },
 	{ "version",       0, 0, 'v' },
 	{ "startup-delay", 1, 0, 'w' },
 	{ NULL, 0, 0, 0 }
     };
 
-    while ((ch = getopt_long(argc, argv, "d:f:hl:np:svw:", long_options, NULL)) != EOF) {
+    while ((ch = getopt_long(argc, argv, "d:f:hl:np:su:vw:", long_options, NULL)) != EOF) {
 	switch (ch) {
 	    case 'l':
 		if (!strcmp(optarg, "?")) {
@@ -262,6 +265,10 @@ int main(int argc, char *argv[])
 
 	    case 's':	/* --syslog */
 		use_syslog++;
+		break;
+
+	    case 'u':
+		sock_file = strdup(optarg);
 		break;
 
 	    case 'v':
@@ -362,7 +369,7 @@ int main(int argc, char *argv[])
 	      (vers >> 8) & 0xff, vers & 0xff, PROTOCOL_VERSION, MROUTED_VERSION);
 
     init_vifs();
-    ipc_init();
+    ipc_init(sock_file);
 #ifdef RSRR
     rsrr_init();
 #endif

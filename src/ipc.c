@@ -675,7 +675,7 @@ static void ipc_handle(int sd)
 	close(client);
 }
 
-void ipc_init(void)
+void ipc_init(char *sockfile)
 {
 	socklen_t len;
 	int sd;
@@ -690,7 +690,10 @@ void ipc_init(void)
 	sun.sun_len = 0;	/* <- correct length is set by the OS */
 #endif
 	sun.sun_family = AF_UNIX;
-	strlcpy(sun.sun_path, _PATH_MROUTED_SOCK, sizeof(sun.sun_path));
+	if (sockfile)
+		strlcpy(sun.sun_path, sockfile, sizeof(sun.sun_path));
+	else
+		snprintf(sun.sun_path, sizeof(sun.sun_path), _PATH_MROUTED_SOCK);
 
 	unlink(sun.sun_path);
 	logit(LOG_DEBUG, 0, "Binding IPC socket to %s", sun.sun_path);

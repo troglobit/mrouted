@@ -476,7 +476,7 @@ struct ipc {
 };
 
 /* ipc.c */
-extern void		ipc_init(void);
+extern void		ipc_init(char *sockfile);
 extern void		ipc_exit(void);
 
 /* Shared constants between mrouted and mroutectl */

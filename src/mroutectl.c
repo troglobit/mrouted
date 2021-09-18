@@ -48,6 +48,8 @@ static int plain = 0;
 static int detail = 0;
 static int heading = 1;
 
+static char *sock_file = NULL;
+
 
 static int do_connect(void)
 {
@@ -62,7 +64,10 @@ static int do_connect(void)
 	sun.sun_len = 0;	/* <- correct length is set by the OS */
 #endif
 	sun.sun_family = AF_UNIX;
-	strlcpy(sun.sun_path, _PATH_MROUTED_SOCK, sizeof(sun.sun_path));
+	if (sock_file)
+		strlcpy(sun.sun_path, sock_file, sizeof(sun.sun_path));
+	else
+		strlcpy(sun.sun_path, _PATH_MROUTED_SOCK, sizeof(sun.sun_path));
 	if (connect(sd, (struct sockaddr*)&sun, sizeof(sun)) == -1) {
 		close(sd);
 		goto error;
@@ -301,6 +306,7 @@ static int usage(int rc)
 	       "  -p, --plain             Use plain table headings, no ctrl chars\n"
 	       "  -h, --help              This help text\n"
 	       "  -t, --no-heading        Skip table headings\n"
+	       "  -u, --ipc=FILE          Override UNIX domain socket file\n"
 	       "  -v, --version           Show mrouted version mroutectl is built against\n"
 	       "\n"
 	       "Commands:\n"
@@ -382,6 +388,7 @@ int main(int argc, char *argv[])
 		{ "plain",      0, NULL, 'p' },
 		{ "no-heading", 0, NULL, 't' },
 		{ "help",       0, NULL, 'h' },
+		{ "ipc",        1, NULL, 'u' },
 		{ "version",    0, NULL, 'v' },
 		{ NULL, 0, NULL, 0 }
 	};
@@ -414,7 +421,7 @@ int main(int argc, char *argv[])
 	};
 	int c;
 
-	while ((c = getopt_long(argc, argv, "dh?ptv", long_options, NULL)) != EOF) {
+	while ((c = getopt_long(argc, argv, "dh?ptu:v", long_options, NULL)) != EOF) {
 		switch(c) {
 		case 'd':
 			detail = 1;
@@ -430,6 +437,10 @@ int main(int argc, char *argv[])
 
 		case 't':
 			heading = 0;
+			break;
+
+		case 'u':
+			sock_file = optarg;
 			break;
 
 		case 'v':

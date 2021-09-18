@@ -18,6 +18,7 @@
 .Op Fl f Ar FILE
 .Op Fl l Ar LEVEL
 .Op Fl p Ar FILE
+.Op Fl u Ar FILE
 .Op Fl w Ar SEC
 .Sh DESCRIPTION
 .Nm
@@ -179,6 +180,9 @@ for log messages, warnings and error conditions.  This is the default
 when running in the background.  When running in the foreground, see
 .Fl n ,
 log messages are printed to stdout.
+.It Fl u, -ipc Ar FILE
+Override UNIX domain socket filename, the default on most systems is
+.Pa /var/run/mrouted.sock .
 .El
 .Pp
 .Sh SIGNALS
