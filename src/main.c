@@ -244,13 +244,14 @@ int main(int argc, char *argv[])
     struct pollfd *pfd;
     struct sigaction sa;
     struct option long_options[] = {
-	{ "config",        1, 0, 'f' },
 	{ "debug",         2, 0, 'd' },
-	{ "foreground",    0, 0, 'n' },
+	{ "config",        1, 0, 'f' },
 	{ "help",          0, 0, 'h' },
 	{ "ident",         1, 0, 'i' },
 	{ "loglevel",      1, 0, 'l' },
+	{ "foreground",    0, 0, 'n' },
 	{ "pidfile",       1, 0, 'p' },
+	{ "syslog",        0, 0, 's' },
 #ifdef __linux__
 	{ "table-id",      1, 0, 't' },
 #endif
@@ -264,6 +265,28 @@ int main(int argc, char *argv[])
 	const char *errstr = NULL;
 
 	switch (ch) {
+	    case 'd':
+		if (!strcmp(optarg, "?")) {
+		    debug_print();
+		    return 0;
+		}
+
+		debug = debug_parse(optarg);
+		if ((int)DEBUG_PARSE_ERR == debug)
+		    return usage(1);
+		break;
+
+	    case 'f':
+		config_file = optarg;
+		break;
+
+	    case 'h':
+		return usage(0);
+
+	    case 'i':	/* --ident=NAME */
+		ident = optarg;
+		break;
+
 	    case 'l':
 		if (!strcmp(optarg, "?")) {
 		    char buf[128];
@@ -277,33 +300,10 @@ int main(int argc, char *argv[])
 		    return usage(1);
 		break;
 
-	    case 'f':
-		config_file = optarg;
-		break;
-
-	    case 'd':
-		if (!strcmp(optarg, "?")) {
-		    debug_print();
-		    return 0;
-		}
-
-		debug = debug_parse(optarg);
-		if ((int)DEBUG_PARSE_ERR == debug)
-		    return usage(1);
-		break;
-
-	    case 'i':	/* --ident=NAME */
-		ident = optarg;
-		break;
-
 	    case 'n':
 		foreground = 1;
 		use_syslog--;
 		break;
-
-	    case 'h':
-		return usage(0);
-
 	    case 'p':	/* --pidfile=NAME */
 		pid_file = strdup(optarg);
 		break;
