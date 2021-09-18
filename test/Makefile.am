@@ -1,4 +1,4 @@
-EXTRA_DIST         = lib.sh mping.c single.sh
+EXTRA_DIST         = lib.sh mping.c shared.sh single.sh
 CLEANFILES         = *~ *.trs *.log
 
 # Step VERSION when updating from https://github.com/troglobit/mping/
@@ -9,4 +9,5 @@ mping_SOURCES      = mping.c
 TEST_EXTENSIONS    = .sh
 TESTS_ENVIRONMENT  = unshare -mrun
 
-TESTS              = single.sh
+TESTS              = shared.sh
+TESTS             += single.sh
