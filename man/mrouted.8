@@ -163,13 +163,6 @@ and Finit, but is also useful when running from the terminal, when
 debugging a config or at initial set up.  Remember to also give the
 .Fl s
 option if you still want to redirect log messages to the syslog.
-.It Fl w, -startup-delay Ar SEC
-Wait for
-.Ar SEC
-seconds before applying routes.  This delay allows exchange of routes
-before starting to forward multicast packets.  In certain setups this
-can prevent transient problems at startup, at the cost of a momentary
-black hole.
 .It Fl p, -pidfile Ar FILE
 Set PID file name and location, defaults to
 .Pa /var/run/mrouted.pid .
@@ -183,6 +176,13 @@ log messages are printed to stdout.
 .It Fl u, -ipc Ar FILE
 Override UNIX domain socket filename, the default on most systems is
 .Pa /var/run/mrouted.sock .
+.It Fl w, -startup-delay Ar SEC
+Wait for
+.Ar SEC
+seconds before applying routes.  This delay allows exchange of routes
+before starting to forward multicast packets.  In certain setups this
+can prevent transient problems at startup, at the cost of a momentary
+black hole.
 .El
 .Pp
 .Sh SIGNALS
