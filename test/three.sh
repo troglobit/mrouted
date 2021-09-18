@@ -206,25 +206,42 @@ sleep 1
 # Wait for routers to peer
 print "Waiting for OSPF routers to peer (30 sec) ..."
 tenacious 30 nsenter --net="$NS1" -- ping -qc 1 -W 1 10.0.3.10 >/dev/null
+
+dprint "DVMRP Status $NS2"
+nsenter --net="$NS2" -- ../src/mroutectl -u "/tmp/$NM/r1.sock" show compat detail
+dprint "DVMRP Status $NS3"
+nsenter --net="$NS3" -- ../src/mroutectl -u "/tmp/$NM/r2.sock" show compat detail
+dprint "DVMRP Status $NS4"
+nsenter --net="$NS4" -- ../src/mroutectl -u "/tmp/$NM/r3.sock" show compat detail
+echo
+echo
+print "Sleeping 10 sec to allow mrouted instances to peer ..."
+sleep 10
+dprint "DVMRP Status $NS2"
+nsenter --net="$NS2" -- ../src/mroutectl -u "/tmp/$NM/r1.sock" show compat detail
+dprint "DVMRP Status $NS3"
+nsenter --net="$NS3" -- ../src/mroutectl -u "/tmp/$NM/r2.sock" show compat detail
+dprint "DVMRP Status $NS4"
+nsenter --net="$NS4" -- ../src/mroutectl -u "/tmp/$NM/r3.sock" show compat detail
 dprint "OK"
 
-dprint "OSPF State & Routing Table $NS2:"
-nsenter --net="$NS2" -- echo "show ospf state" | birdc -s "/tmp/$NM/r1-bird.sock"
-nsenter --net="$NS2" -- echo "show ospf int"   | birdc -s "/tmp/$NM/r1-bird.sock"
-nsenter --net="$NS2" -- echo "show ospf neigh" | birdc -s "/tmp/$NM/r1-bird.sock"
-nsenter --net="$NS2" -- ip route
+# dprint "OSPF State & Routing Table $NS2:"
+# nsenter --net="$NS2" -- echo "show ospf state" | birdc -s "/tmp/$NM/r1-bird.sock"
+# nsenter --net="$NS2" -- echo "show ospf int"   | birdc -s "/tmp/$NM/r1-bird.sock"
+# nsenter --net="$NS2" -- echo "show ospf neigh" | birdc -s "/tmp/$NM/r1-bird.sock"
+# nsenter --net="$NS2" -- ip route
 
-dprint "OSPF State & Routing Table $NS3:"
-nsenter --net="$NS4" -- echo "show ospf state" | birdc -s "/tmp/$NM/r2-bird.sock"
-nsenter --net="$NS4" -- echo "show ospf int"   | birdc -s "/tmp/$NM/r2-bird.sock"
-nsenter --net="$NS3" -- echo "show ospf neigh" | birdc -s "/tmp/$NM/r2-bird.sock"
-nsenter --net="$NS3" -- ip route
+# dprint "OSPF State & Routing Table $NS3:"
+# nsenter --net="$NS4" -- echo "show ospf state" | birdc -s "/tmp/$NM/r2-bird.sock"
+# nsenter --net="$NS4" -- echo "show ospf int"   | birdc -s "/tmp/$NM/r2-bird.sock"
+# nsenter --net="$NS3" -- echo "show ospf neigh" | birdc -s "/tmp/$NM/r2-bird.sock"
+# nsenter --net="$NS3" -- ip route
 
-dprint "OSPF State & Routing Table $NS4:"
-nsenter --net="$NS4" -- echo "show ospf state" | birdc -s "/tmp/$NM/r3-bird.sock"
-nsenter --net="$NS4" -- echo "show ospf int"   | birdc -s "/tmp/$NM/r3-bird.sock"
-nsenter --net="$NS4" -- echo "show ospf neigh" | birdc -s "/tmp/$NM/r3-bird.sock"
-nsenter --net="$NS4" -- ip route
+# dprint "OSPF State & Routing Table $NS4:"
+# nsenter --net="$NS4" -- echo "show ospf state" | birdc -s "/tmp/$NM/r3-bird.sock"
+# nsenter --net="$NS4" -- echo "show ospf int"   | birdc -s "/tmp/$NM/r3-bird.sock"
+# nsenter --net="$NS4" -- echo "show ospf neigh" | birdc -s "/tmp/$NM/r3-bird.sock"
+# nsenter --net="$NS4" -- ip route
 
 print "Starting emitter ..."
 nsenter --net="$NS5" -- ./mping -qr -d -i eth0 -t 5 -W 30 225.1.2.3 &
