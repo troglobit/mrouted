@@ -8,6 +8,8 @@ mrouted (4.3) stable; urgency=low
     cannot be found, e.g., phyint eth1 static-group 225.1.2.5
   * Prevent cascading warnings when phyint interface names cannot be found
 
+ -- Joachim Wiberg <troglobit@gmail.com>  Sun, 19 Sep 2021 00:33:12 +0200
+
 mrouted (4.2) stable; urgency=medium
 
   * Support for controlling IGMP Last Member Query Count using the
