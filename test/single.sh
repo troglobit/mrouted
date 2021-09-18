@@ -72,7 +72,7 @@ echo $! >> "/tmp/$NM/PIDs"
 sleep 1
 
 print "Starting mrouted ..."
-../src/mrouted -f "/tmp/$NM/conf" -n -p "/tmp/$NM/pid" -l debug -u "/tmp/$NM/sock" &
+../src/mrouted -i solo -f "/tmp/$NM/conf" -n -p "/tmp/$NM/pid" -l debug -u "/tmp/$NM/sock" &
 sleep 1
 
 print "Starting emitter ..."

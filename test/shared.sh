@@ -281,9 +281,9 @@ echo $! >> "/tmp/$NM/PIDs"
 sleep 1
 
 print "Starting mrouted ..."
-nsenter --net="$R1" -- ../src/mrouted -n -p "/tmp/$NM/r1.pid" -l debug -u "/tmp/$NM/r1.sock" &
+nsenter --net="$R1" -- ../src/mrouted -i R1 -n -p "/tmp/$NM/r1.pid" -l debug -u "/tmp/$NM/r1.sock" &
 echo $! >> "/tmp/$NM/PIDs"
-nsenter --net="$R2" -- ../src/mrouted -n -p "/tmp/$NM/r2.pid" -l debug -u "/tmp/$NM/r2.sock" &
+nsenter --net="$R2" -- ../src/mrouted -i R2 -n -p "/tmp/$NM/r2.pid" -l debug -u "/tmp/$NM/r2.sock" &
 echo $! >> "/tmp/$NM/PIDs"
 sleep 1
 
