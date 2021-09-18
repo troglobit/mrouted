@@ -3,8 +3,8 @@ Change Log
 
 All notable changes to the project are documented in this file.
 
-[v4.3][UNRELEASED]
-------------------
+[v4.3][] - 2021-09-19
+---------------------
 
 ### Changes
 - Add support for `-i,--ident=NAME` to change identity of an instance
@@ -622,7 +622,8 @@ v3.5 - 1995-05-08
 - Multicast traceroute could send a reply on a disabled interface.
 
 
-[UNRELEASED]: https://github.com/troglobit/mrouted/compare/4.2...HEAD
+[UNRELEASED]: https://github.com/troglobit/mrouted/compare/4.3...HEAD
+[v4.3]:       https://github.com/troglobit/mrouted/compare/4.2...4.3
 [v4.2]:       https://github.com/troglobit/mrouted/compare/4.1...4.2
 [v4.1]:       https://github.com/troglobit/mrouted/compare/4.0...4.1
 [v4.0]:       https://github.com/troglobit/mrouted/compare/3.9.8...4.0
