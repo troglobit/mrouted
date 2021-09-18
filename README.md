@@ -1,6 +1,6 @@
 Simple Multicast Routing for UNIX
 =================================
-[![License Badge][]][License] [![Travis Status][]][Travis] [![Coverity Status][]][Coverity Scan]
+[![License Badge][]][License] [![GitHub Status][]][GitHub] [![Coverity Status][]][Coverity Scan]
 
 <img align="right" src="doc/dvmrp-simple.png" alt="Simple overview of what DVMRP is">
 
@@ -167,7 +167,7 @@ Contributing
 
 The basic functionality has been tested thoroughly over the years, but
 that does not mean mrouted is bug free.  Please report bugs, feature
-requests, patches and pull requests at [GitHub][].
+requests, patches and pull requests at [GitHub][repo].
 
 
 Origin & References
@@ -193,7 +193,7 @@ in February 2005 [Debian dropped mrouted][1] as an "obsolete protocol".
 
 For a long time the OpenBSD team remained the sole guardian of this
 project.  In 2010 [Joachim Wiberg](https://troglobit.com) revived
-mrouted on [GitHub][] based on the last release by Bill Fenner, the
+mrouted on [GitHub][repo] based on the last release by Bill Fenner, the
 `mrouted-3.9beta3+IOS12.tar.gz` tarball.  This project has integrated
 all (?) known patches and continuously track the OpenBSD project, which
 is based on the 3.8 release, for any relevant fixes.
@@ -211,8 +211,8 @@ is based on the 3.8 release, for any relevant fixes.
 [mrouted(8)]:      https://man.troglobit.com/man8/mrouted.8.html
 [mroutectl(8)]:    https://man.troglobit.com/man8/mroutectl.8.html
 [mrouted.conf(5)]: https://man.troglobit.com/man5/mrouted.conf.5.html
-[GitHub]:          https://github.com/troglobit/mrouted/
-[Travis]:          https://travis-ci.org/troglobit/mrouted
-[Travis Status]:   https://travis-ci.org/troglobit/mrouted.svg?branch=master
+[repo]:            https://github.com/troglobit/mrouted/
+[GitHub]:          https://github.com/troglobit/mrouted/actions/workflows/build.yml/
+[GitHub Status]:   https://github.com/troglobit/mrouted/actions/workflows/build.yml/badge.svg
 [Coverity Scan]:   https://scan.coverity.com/projects/3320
 [Coverity Status]: https://scan.coverity.com/projects/3320/badge.svg
