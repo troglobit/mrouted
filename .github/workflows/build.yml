@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get -y update
-          sudo apt-get -y install pkg-config libsystemd-dev tree
+          sudo apt-get -y install pkg-config libsystemd-dev bird2 ethtool keepalived tshark tree
       - uses: actions/checkout@v2
       - name: Configure
         # Build in a sub-directory so we can safely set a+w on all
@@ -35,7 +35,7 @@ jobs:
         # root dropped and wants to write .trs and .log files.
         run: |
           ./autogen.sh
-          ./configure --prefix= --enable-rsrr
+          ./configure --prefix= --enable-rsrr --enable-test
       - name: Build
         run: |
           make V=1
@@ -53,3 +53,11 @@ jobs:
           sudo ~/tmp/sbin/mroutectl -u ~/tmp/foo.sock -h
           sudo ~/tmp/sbin/mroutectl -u ~/tmp/foo.sock
           sudo ~/tmp/sbin/mroutectl -u ~/tmp/foo.sock kill
+      - name: Test
+        run: |
+          make check || (cat test/test-suite.log; false)
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v2
+        with:
+          name: mrouted-test-${{ matrix.compiler }}
+          path: test/*
