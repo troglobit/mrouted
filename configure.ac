@@ -43,7 +43,7 @@ AC_CHECK_LIB([util], [pidfile])
 AC_CHECK_FUNCS([atexit getifaddrs])
 
 # Check for usually missing API's, which we can replace
-AC_REPLACE_FUNCS([pidfile strlcpy strlcat strtonum])
+AC_REPLACE_FUNCS([pidfile strlcpy strlcat strtonum utimensat])
 AC_CONFIG_LIBOBJ_DIR([lib])
 
 AC_ARG_ENABLE(rsrr,

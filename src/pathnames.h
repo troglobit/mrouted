@@ -13,6 +13,7 @@
 
 #define _PATH_MROUTED_CONF	SYSCONFDIR   "/mrouted.conf"
 #define _PATH_MROUTED_GENID	PRESERVEDIR  "/mrouted.genid"
+#define _PATH_MROUTED_RUNDIR    RUNSTATEDIR
 #define _PATH_MROUTED_SOCK	RUNSTATEDIR  "/mrouted.sock"
 
 #endif /* MROUTED_PATHNAMES_H_ */

@@ -1,4 +1,5 @@
-/*	$OpenBSD: pidfile.c,v 1.10 2014/06/30 00:26:22 deraadt Exp $	*/
+/*	Updated by troglobit for libite/finit/uftpd projects 2016/07/04 */
+/*	$OpenBSD: pidfile.c,v 1.11 2015/06/03 02:24:36 millert Exp $	*/
 /*	$NetBSD: pidfile.c,v 1.4 2001/02/19 22:43:42 cgd Exp $	*/
 
 /*-
@@ -30,42 +31,52 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config.h>
+#include <sys/stat.h>		/* utimensat() */
+#include <sys/time.h>		/* utimensat() on *BSD */
 #include <sys/types.h>
 #include <errno.h>
-#include <paths.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "pathnames.h"
 
-static char *pidfile_path;
-static pid_t pidfile_pid;
+static char *pidfile_path = NULL;
+static pid_t pidfile_pid  = 0;
 
 static void pidfile_cleanup(void);
 
+const  char *__pidfile_path = _PATH_MROUTED_RUNDIR;
+const  char *__pidfile_name = NULL;
 
 int
 pidfile(const char *basename)
 {
-	int save_errno, result;
+	int save_errno;
+	int atexit_already;
 	pid_t pid;
 	FILE *f;
 
-	if (basename == NULL)
-		basename = PACKAGE_NAME;
+	pid = getpid();
+	atexit_already = 0;
 
 	if (pidfile_path != NULL) {
+		if (!access(pidfile_path, R_OK) && pid == pidfile_pid) {
+			utimensat(0, pidfile_path, NULL, 0);
+			return (0);
+		}
 		free(pidfile_path);
 		pidfile_path = NULL;
+		__pidfile_name = NULL;
+		atexit_already = 1;
 	}
 
-	/* _PATH_VARRUN includes trailing / */
-	if (access(RUNSTATEDIR, W_OK))
-		result = asprintf(&pidfile_path, "%s%s.pid", _PATH_VARRUN, basename);
-	else
-		result = asprintf(&pidfile_path, "%s/%s.pid", RUNSTATEDIR, basename);
-	if (result == -1 || pidfile_path == NULL)
-		return (-1);
+	if (basename[0] != '/') {
+		if (asprintf(&pidfile_path, "%s/%s.pid", __pidfile_path, basename) == -1)
+			return (-1);
+	} else {
+		if (asprintf(&pidfile_path, "%s", basename) == -1)
+			return (-1);
+	}
 
 	if ((f = fopen(pidfile_path, "w")) == NULL) {
 		save_errno = errno;
@@ -75,7 +86,6 @@ pidfile(const char *basename)
 		return (-1);
 	}
 
-	pid = getpid();
 	if (fprintf(f, "%ld\n", (long)pid) <= 0 || fflush(f) != 0) {
 		save_errno = errno;
 		(void) fclose(f);
@@ -86,6 +96,14 @@ pidfile(const char *basename)
 		return (-1);
 	}
 	(void) fclose(f);
+	__pidfile_name = pidfile_path;
+
+	/*
+	 * LITE extension, no need to set up another atexit() handler
+	 * if user only called us to update the mtime of the PID file
+	 */
+	if (atexit_already)
+		return (0);
 
 	pidfile_pid = pid;
 	if (atexit(pidfile_cleanup) < 0) {
@@ -105,7 +123,7 @@ static void
 pidfile_cleanup(void)
 {
 	if (pidfile_path != NULL && pidfile_pid == getpid()) {
-		(void)unlink(pidfile_path);
+		(void) unlink(pidfile_path);
 		free(pidfile_path);
 		pidfile_path = NULL;
 	}
