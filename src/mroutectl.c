@@ -49,8 +49,12 @@ static int detail = 0;
 static int heading = 1;
 
 static char *sock_file = NULL;
+static char *ident = PACKAGE_NAME;
 
-
+/*
+ * if ident is given, that's the name we're going for
+ * if ident starts with a /, we skip all dirs as well
+ */
 static int do_connect(void)
 {
 	struct sockaddr_un sun;
@@ -67,7 +71,7 @@ static int do_connect(void)
 	if (sock_file)
 		strlcpy(sun.sun_path, sock_file, sizeof(sun.sun_path));
 	else
-		strlcpy(sun.sun_path, _PATH_MROUTED_SOCK, sizeof(sun.sun_path));
+		snprintf(sun.sun_path, sizeof(sun.sun_path), _PATH_MROUTED_SOCK, ident);
 	if (connect(sd, (struct sockaddr*)&sun, sizeof(sun)) == -1) {
 		close(sd);
 		goto error;
@@ -305,6 +309,7 @@ static int usage(int rc)
 	       "  -d, --detail            Detailed output, where applicable\n"
 	       "  -p, --plain             Use plain table headings, no ctrl chars\n"
 	       "  -h, --help              This help text\n"
+	       "  -i, --ident=NAME        Connect to named mrouted instance\n"
 	       "  -t, --no-heading        Skip table headings\n"
 	       "  -u, --ipc=FILE          Override UNIX domain socket file\n"
 	       "  -v, --version           Show mrouted version mroutectl is built against\n"
@@ -386,6 +391,7 @@ int main(int argc, char *argv[])
 	struct option long_options[] = {
 		{ "detail",     0, NULL, 'd' },
 		{ "plain",      0, NULL, 'p' },
+		{ "ident",      1, NULL, 'i' },
 		{ "no-heading", 0, NULL, 't' },
 		{ "help",       0, NULL, 'h' },
 		{ "ipc",        1, NULL, 'u' },
@@ -421,7 +427,7 @@ int main(int argc, char *argv[])
 	};
 	int c;
 
-	while ((c = getopt_long(argc, argv, "dh?ptu:v", long_options, NULL)) != EOF) {
+	while ((c = getopt_long(argc, argv, "dh?i:ptu:v", long_options, NULL)) != EOF) {
 		switch(c) {
 		case 'd':
 			detail = 1;
@@ -430,6 +436,10 @@ int main(int argc, char *argv[])
 		case 'h':
 		case '?':
 			return usage(0);
+
+		case 'i':	/* --ident=NAME */
+			ident = optarg;
+			break;
 
 		case 'p':
 			plain = 1;

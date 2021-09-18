@@ -34,6 +34,7 @@ CODE prionm[] =
 
 int loglevel = LOG_NOTICE;
 
+static char *log_name = PACKAGE_NAME;
 static int log_nmsgs = 0;
 
 
@@ -99,12 +100,13 @@ void resetlogging(void *arg)
 /*
  * Open connection to syslog daemon and set initial log level
  */
-void log_init(void)
+void log_init(char *ident)
 {
+    log_name = ident;
     if (!use_syslog)
 	return;
 
-    openlog("mrouted", LOG_PID, LOG_DAEMON);
+    openlog(ident, LOG_PID, LOG_DAEMON);
     setlogmask(LOG_UPTO(loglevel));
 
     /* Start up the log rate-limiter */
@@ -140,9 +142,9 @@ void logit(int severity, int syserr, const char *format, ...)
 	now_sec = now.tv_sec;
 	thyme = localtime(&now_sec);
 	if (!debug)
-	    fprintf(stderr, "%s: ", PACKAGE_NAME);
+	    fprintf(stderr, "%s: ", log_name);
 	fprintf(stderr, "%02d:%02d:%02d.%03ld %s", thyme->tm_hour,
-		    thyme->tm_min, thyme->tm_sec, now.tv_usec / 1000, msg);
+		thyme->tm_min, thyme->tm_sec, now.tv_usec / 1000, msg);
 	if (syserr == 0)
 	    fprintf(stderr, "\n");
 	else

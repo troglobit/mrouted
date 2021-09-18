@@ -7,6 +7,7 @@ All notable changes to the project are documented in this file.
 ------------------
 
 ### Changes
+- Add support for `-i,--ident=NAME` to change identity of an instance
 - Add support for `-p,--pidfile=FILE` to override default PID file
 - Touch PID file at SIGHUP to acknowledge done reloading .conf file
 - Add support for `-u,--ipc=FILE` to override `/var/run/mrouted.sock`

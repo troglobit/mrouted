@@ -267,7 +267,7 @@ extern int		register_input_handler(int, ihfunc_t);
 extern void		deregister_input_handler(int);
 
 /* log.c */
-extern void             log_init(void);
+extern void             log_init(char *);
 extern int		log_str2lvl(char *);
 extern const char *	log_lvl2str(int);
 extern int		log_list(char *, size_t);
@@ -478,7 +478,7 @@ struct ipc {
 };
 
 /* ipc.c */
-extern void		ipc_init(char *sockfile);
+extern void		ipc_init(char *sockfile, char *ident);
 extern void		ipc_exit(void);
 
 /* Shared constants between mrouted and mroutectl */

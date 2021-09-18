@@ -11,9 +11,9 @@
 
 #include <paths.h>
 
-#define _PATH_MROUTED_CONF	SYSCONFDIR   "/mrouted.conf"
-#define _PATH_MROUTED_GENID	PRESERVEDIR  "/mrouted.genid"
+#define _PATH_MROUTED_CONF	SYSCONFDIR   "/%s.conf"
+#define _PATH_MROUTED_GENID	PRESERVEDIR  "/%s.genid"
 #define _PATH_MROUTED_RUNDIR    RUNSTATEDIR
-#define _PATH_MROUTED_SOCK	RUNSTATEDIR  "/mrouted.sock"
+#define _PATH_MROUTED_SOCK	RUNSTATEDIR  "/%s.sock"
 
 #endif /* MROUTED_PATHNAMES_H_ */

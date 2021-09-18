@@ -46,6 +46,8 @@ char *config_file = NULL;
 char *pid_file    = NULL;
 char *sock_file   = NULL;
 
+static char *ident = PACKAGE_NAME;
+
 #define NHANDLERS	5
 static struct ihandler {
     int fd;			/* File descriptor	*/
@@ -132,8 +134,11 @@ static FILE *fopen_genid(char *mode)
 {
     char fn[80];
 
-    snprintf(fn, sizeof(fn), _PATH_MROUTED_GENID);
+    snprintf(fn, sizeof(fn), _PATH_MROUTED_GENID, ident);
     if (access(fn, R_OK | W_OK)) {
+	if (strcmp(ident, PACKAGE_NAME))
+	    return NULL;
+
 	if (!access(_PATH_VARDB, W_OK))
 	    snprintf(fn, sizeof(fn), "%s/mrouted.genid", _PATH_VARDB);
     }
@@ -176,13 +181,37 @@ static void init_genid(void)
     }
 }
 
+static int compose_paths(void)
+{
+    /* Default .conf file path: "/etc" + '/' + "pimd" + ".conf" */
+    if (!config_file) {
+	size_t len = strlen(SYSCONFDIR) + strlen(ident) + 7;
+
+	config_file = malloc(len);
+	if (!config_file) {
+	    logit(LOG_ERR, errno, "Failed allocating memory, exiting.");
+	    exit(1);
+	}
+
+	snprintf(config_file, len, _PATH_MROUTED_CONF, ident);
+    }
+
+    /* Default is to let pidfile() API construct PID file from ident */
+    if (!pid_file)
+	pid_file = strdup(ident);
+
+    return 0;
+}
+
 static int usage(int code)
 {
-    printf("Usage: mrouted [-himnpsv] [-f FILE] [-d SYS[,SYS...]] [-l LEVEL]\n"
+    printf("Usage: mrouted [-himnpsv] [-f FILE] [-i NAME] [-d SYS[,SYS...]] [-l LEVEL]\n"
+	   "                          [-p FILE] [-u FILE] [-w SEC]\n"
 	   "\n"
 	   "  -d, --debug=SYS[,SYS]    Debug subsystem(s), see below for valid system names\n"
 	   "  -f, --config=FILE        Configuration file to use, default /etc/mrouted.conf\n"
 	   "  -h, --help               Show this help text\n"
+	   "  -i, --ident=NAME         Identity for syslog, .cfg & .pid file, default: mrouted\n"
 	   "  -l, --loglevel=LEVEL     Set log level: none, err, notice (default), info, debug\n"
 	   "  -n, --foreground         Run in foreground, do not detach from controlling terminal\n"
 	   "  -p, --pidfile=FILE       File to store process ID for signaling daemon\n"
@@ -214,6 +243,7 @@ int main(int argc, char *argv[])
 	{ "debug",         2, 0, 'd' },
 	{ "foreground",    0, 0, 'n' },
 	{ "help",          0, 0, 'h' },
+	{ "ident",         1, 0, 'i' },
 	{ "loglevel",      1, 0, 'l' },
 	{ "pidfile",       1, 0, 'p' },
 	{ "ipc",           1, 0, 'u' },
@@ -222,7 +252,7 @@ int main(int argc, char *argv[])
 	{ NULL, 0, 0, 0 }
     };
 
-    while ((ch = getopt_long(argc, argv, "d:f:hl:np:su:vw:", long_options, NULL)) != EOF) {
+    while ((ch = getopt_long(argc, argv, "d:f:hi:l:np:su:vw:", long_options, NULL)) != EOF) {
 	switch (ch) {
 	    case 'l':
 		if (!strcmp(optarg, "?")) {
@@ -250,6 +280,10 @@ int main(int argc, char *argv[])
 		debug = debug_parse(optarg);
 		if ((int)DEBUG_PARSE_ERR == debug)
 		    return usage(1);
+		break;
+
+	    case 'i':	/* --ident=NAME */
+		ident = optarg;
 		break;
 
 	    case 'n':
@@ -291,9 +325,11 @@ int main(int argc, char *argv[])
 	return usage(1);
 
     if (geteuid() != 0) {
-	fprintf(stderr, "%s: must be root\n", PACKAGE_NAME);
+	fprintf(stderr, "%s: must be root\n", ident);
 	exit(1);
     }
+
+    compose_paths();
     setlinebuf(stderr);
 
     if (debug != 0) {
@@ -334,7 +370,7 @@ int main(int argc, char *argv[])
     /*
      * Setup logging
      */
-    log_init();
+    log_init(ident);
     logit(LOG_DEBUG, 0, "%s starting", versionstring);
 
     do_randomize();
@@ -370,7 +406,7 @@ int main(int argc, char *argv[])
 	      (vers >> 8) & 0xff, vers & 0xff, PROTOCOL_VERSION, MROUTED_VERSION);
 
     init_vifs();
-    ipc_init(sock_file);
+    ipc_init(sock_file, ident);
 #ifdef RSRR
     rsrr_init();
 #endif

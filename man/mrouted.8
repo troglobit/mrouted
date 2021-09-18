@@ -16,6 +16,7 @@
 .Op Fl hnsv
 .Op Fl d Ar SYS[,SYS,...
 .Op Fl f Ar FILE
+.Op Fl i Ar NAME
 .Op Fl l Ar LEVEL
 .Op Fl p Ar FILE
 .Op Fl u Ar FILE
@@ -138,6 +139,23 @@ Specify an alternative configuration file, default
 .Pa /etc/mrouted.conf
 .It Fl h, -help
 Print a help message and exit.
+.It Fl i, -ident Ar NAME
+Specify program identity (name) to be used for configuration file, PID
+file, generation ID file, UNIX IPC socket, and syslog messages.  Useful
+with multiple instances of
+.Nm ,
+or to adapt to site specific practices, e.g. "DVMRP", without renaming
+the binary.
+.Pp
+Note, this option only changes the base name of the files, not the
+location, which is system specific.  On most systems this is
+.Pa /var/run/mrouted.pid ,
+or
+.Pa /run/mrouted.pid ,
+.Pa /run/mrouted.genid ,
+.Pa /run/mrouted.sock ,
+and
+.Pa /etc/mrouted.conf .
 .It Fl l, -loglevel Ar LEVEL
 Set log level for syslog messages: none, err, notice (default), info,
 debug. Use '?' for a complete list of supported log levels.
@@ -220,8 +238,8 @@ Pidfile (re)created by
 .Nm
 daemon when it has started up and is ready to receive commands.
 .It Pa /var/run/mrouted.sock
-.Ux Ns -domain
-socket used for communication with
+.Ux
+domain socket used for communication with
 .Xr mroutectl 8
 .It Pa /proc/net/ip_mr_cache
 Holds active IPv4 multicast routes (Linux).
