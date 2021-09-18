@@ -12,13 +12,6 @@ if SYSTEMD
 systemd_DATA     = mrouted.service
 endif
 
-## Generate MD5 checksum file
-MD5 = md5sum
-md5-dist:
-	@for file in $(DIST_ARCHIVES); do	\
-		$(MD5) $$file > ../$$file.md5;	\
-	done
-
 ## Generate .deb package
 package:
 	@debuild -uc -us -B --lintian-opts --profile debian -i -I --show-overrides
@@ -42,17 +35,18 @@ release-hook:
 	fi
 
 ## Target to run when building a release
-release: release-hook distcheck package md5-dist
+release: release-hook distcheck
+	@for file in $(DIST_ARCHIVES); do		\
+		md5sum    $$file > ../$$file.md5;	\
+		sha256sum $$file > ../$$file.sha256;	\
+	done
 	@mv $(DIST_ARCHIVES) ../
 	@echo
-	@echo "Resulting release files:"
-	@echo "================================================================="
-	@for file in $(DIST_ARCHIVES); do					\
-		printf "%-32s Distribution tarball\n" $$file;			\
-		printf "%-32s " $$file.md5; cat ../$$file.md5 | cut -f1 -d' ';	\
-	done
-	@for file in `cd ..; ls $(PACKAGE)*_$(VERSION)* $(EXTRADEBS)`; do	\
-		printf "%-32s Debian/Ubuntu package\n" $$file;			\
+	@echo "Resulting release files ========================================================================="
+	@for file in $(DIST_ARCHIVES); do						\
+		printf "%-32s Distribution tarball\n" $$file;				\
+		printf "%-32s " $$file.md5; cat ../$$file.md5 | cut -f1 -d' ';		\
+		printf "%-32s " $$file.sha256; cat ../$$file.sha256 | cut -f1 -d' ';	\
 	done
 
 DISTCHECK_CONFIGURE_FLAGS = --with-systemd=$$dc_install_base/$(systemd)
