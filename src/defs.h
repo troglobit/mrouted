@@ -259,6 +259,7 @@ extern int              debug_parse(char *arg);
 extern char	       *config_file;
 extern int		cache_lifetime;
 extern int		prune_lifetime;
+extern int		mrt_table_id;
 extern int              debug_list(int, char *, size_t);
 extern int              debug_parse(char *);
 extern void             restart(void);

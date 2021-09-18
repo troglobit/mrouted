@@ -78,6 +78,7 @@ typedef struct node {
 Node     *routers = 0;
 uint32_t  our_addr, target_addr = 0;            /* in NET order */
 int       debug = 0;
+int       mrt_table_id = 0;		        /* dummy, unused */
 int       retries = DEFAULT_RETRIES;
 int       timeout = DEFAULT_TIMEOUT;
 int       show_names = TRUE;

@@ -19,6 +19,7 @@
 .Op Fl i Ar NAME
 .Op Fl l Ar LEVEL
 .Op Fl p Ar FILE
+.Op Fl t Ar ID
 .Op Fl u Ar FILE
 .Op Fl w Ar SEC
 .Sh DESCRIPTION
@@ -191,6 +192,16 @@ for log messages, warnings and error conditions.  This is the default
 when running in the background.  When running in the foreground, see
 .Fl n ,
 log messages are printed to stdout.
+.It Fl t, -table-id Ar ID
+Set multicast routing table ID.  Remember to also create routing rules
+directing packets to the table.  This example uses routing table ID 123:
+.Bd -unfilled -offset left
+ip mrule add iif eth0 lookup 123
+ip mrule add oif eth0 lookup 123
+.Ed
+.Pp
+.Nm Note:
+Only available on Linux.
 .It Fl u, -ipc Ar FILE
 Override UNIX domain socket filename, the default on most systems is
 .Pa /var/run/mrouted.sock .

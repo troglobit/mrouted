@@ -36,6 +36,7 @@ int cache_lifetime 	= DEFAULT_CACHE_LIFETIME;
 int prune_lifetime	= AVERAGE_PRUNE_LIFETIME;
 
 int startupdelay = 0;
+int mrt_table_id = 0;
 
 int debug = 0;
 int running = 1;
@@ -216,6 +217,10 @@ static int usage(int code)
 	   "  -n, --foreground         Run in foreground, do not detach from controlling terminal\n"
 	   "  -p, --pidfile=FILE       File to store process ID for signaling daemon\n"
 	   "  -s, --syslog             Log to syslog, default unless running in --foreground\n"
+#ifdef __linux__
+	   "  -t, --table-id=ID        Set multicast routing table ID.  Allowed table ID#:\n"
+	   "                           0 .. 999999999.  Default: 0 (use default table)\n"
+#endif
 	   "  -u, --ipc=FILE           Override UNIX domain socket, default from identity, -i\n"
 	   "  -v, --version            Show mrouted version\n"
 	   "  -w, --startup-delay=SEC  Startup delay before forwarding\n");
@@ -246,13 +251,18 @@ int main(int argc, char *argv[])
 	{ "ident",         1, 0, 'i' },
 	{ "loglevel",      1, 0, 'l' },
 	{ "pidfile",       1, 0, 'p' },
+#ifdef __linux__
+	{ "table-id",      1, 0, 't' },
+#endif
 	{ "ipc",           1, 0, 'u' },
 	{ "version",       0, 0, 'v' },
 	{ "startup-delay", 1, 0, 'w' },
 	{ NULL, 0, 0, 0 }
     };
 
-    while ((ch = getopt_long(argc, argv, "d:f:hi:l:np:su:vw:", long_options, NULL)) != EOF) {
+    while ((ch = getopt_long(argc, argv, "d:f:hi:l:np:st:u:vw:", long_options, NULL)) != EOF) {
+	const char *errstr = NULL;
+
 	switch (ch) {
 	    case 'l':
 		if (!strcmp(optarg, "?")) {
@@ -300,6 +310,18 @@ int main(int argc, char *argv[])
 
 	    case 's':	/* --syslog */
 		use_syslog++;
+		break;
+
+	    case 't':
+#ifndef __linux__
+		errx(1, "-t ID is currently only supported on Linux");
+#else
+		mrt_table_id = strtonum(optarg, 0, 999999999, &errstr);
+		if (errstr) {
+		    fprintf(stderr, "Table ID %s!\n", errstr);
+		    return usage(1);
+		}
+#endif
 		break;
 
 	    case 'u':

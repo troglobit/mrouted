@@ -2,6 +2,7 @@ mrouted (4.3) stable; urgency=low
   * Add support for -i,--ident=NAME` to change identity of an instance
   * Add support for -p,--pidfile=FILE to override default PID file
   * Touch PID file at SIGHUP to acknowledge done reloading .conf file
+  * Add support for -t,--table-id=ID, multicast routing tables
   * Add support for -u,--ipc=FILE to override /var/run/mrouted.sock file
   * Fix segfault when parsing phyint lines in .conf file interface
     cannot be found, e.g., phyint eth1 static-group 225.1.2.5

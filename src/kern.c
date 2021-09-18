@@ -9,6 +9,12 @@
 
 #include "defs.h"
 
+#ifdef __linux__ /* Currently only available on Linux  */
+# ifndef MRT_TABLE
+#  define MRT_TABLE       (MRT_BASE + 9)
+# endif
+#endif
+
 int curttl = 0;
 
 /*
@@ -18,6 +24,16 @@ int curttl = 0;
 void k_init_dvmrp(void)
 {
     int v = 1;
+
+#ifdef MRT_TABLE /* Currently only available on Linux  */
+    if (mrt_table_id != 0) {
+        logit(LOG_INFO, 0, "Initializing multicast routing table id %u", mrt_table_id);
+        if (setsockopt(igmp_socket, IPPROTO_IP, MRT_TABLE, &mrt_table_id, sizeof(mrt_table_id)) < 0) {
+            logit(LOG_WARNING, errno, "Cannot set multicast routing table id");
+	    logit(LOG_ERR, 0, "Make sure your kernel has CONFIG_IP_MROUTE_MULTIPLE_TABLES=y");
+	}
+    }
+#endif
 
     if (setsockopt(igmp_socket, IPPROTO_IP, MRT_INIT, &v, sizeof(int)) < 0) {
 	if (errno == EADDRINUSE)

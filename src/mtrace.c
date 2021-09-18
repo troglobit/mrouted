@@ -98,6 +98,7 @@ int timeout = DEFAULT_TIMEOUT;
 int nqueries = DEFAULT_RETRIES;
 int numeric = FALSE;
 int debug = 0;
+int mrt_table_id = 0;		        /* dummy, unused */
 int passive = FALSE;
 int multicast = FALSE;
 int statint = 10;
