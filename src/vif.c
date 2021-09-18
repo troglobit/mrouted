@@ -2348,6 +2348,7 @@ static int send_query_timer(vifi_t vifi, struct listaddr *g, int delay, int num)
 
 /**
  * Local Variables:
+ *  indent-tabs-mode: t
  *  c-file-style: "cc-mode"
  * End:
  */

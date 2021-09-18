@@ -394,6 +394,7 @@ int k_get_sg_count(uint32_t src, uint32_t grp, int *pktcnt, int *bytecnt, int *w
 
 /**
  * Local Variables:
+ *  indent-tabs-mode: t
  *  c-file-style: "cc-mode"
  * End:
  */

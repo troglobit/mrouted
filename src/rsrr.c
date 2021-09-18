@@ -470,6 +470,7 @@ void rsrr_clean(void)
 
 /**
  * Local Variables:
+ *  indent-tabs-mode: t
  *  c-file-style: "cc-mode"
  * End:
  */

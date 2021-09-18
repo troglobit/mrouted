@@ -565,6 +565,7 @@ void accept_info_reply(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
 
 /**
  * Local Variables:
+ *  indent-tabs-mode: t
  *  c-file-style: "cc-mode"
  * End:
  */
