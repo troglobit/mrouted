@@ -873,6 +873,10 @@ static int yylex(void)
 
 void config_vifs_from_file(void)
 {
+    TAILQ_INIT(&scrap.uv_static);
+    TAILQ_INIT(&scrap.uv_groups);
+    TAILQ_INIT(&scrap.uv_neighbors);
+
     order = 0;
     state = 0;
     numbounds = 0;
