@@ -1,8 +1,10 @@
 .deps
 .dirstamp
+.gdb_history
 *~
 *.bak
 *-stamp
+aux/
 ID
 GPATH
 GRTAGS
