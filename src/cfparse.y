@@ -108,8 +108,8 @@ stmt	: error
 
 	    v = config_find_ifaddr($2);
 	    if (!v) {
-		warn("phyint %s not available, continuing ...",
-		     inet_fmt($2, s1, sizeof(s1)));
+		if ($2 != 0)
+		    warn("phyint %s not available, continuing ...", inet_fmt($2, s1, sizeof(s1)));
 		v = &scrap;
 	    }
 	}
