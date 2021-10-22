@@ -137,6 +137,10 @@ static vifi_t check_vif(struct uvif *v)
     vifi_t vifi;
 
     UVIF_FOREACH(vifi, uv) {
+	if (uv->uv_flags & VIFF_TUNNEL) {
+	    continue;
+	}
+
 	if (v->uv_flags & VIFF_DISABLED) {
 	    logit(LOG_DEBUG, 0, "Skipping %s, disabled", v->uv_name);
 	    return NO_VIF;
