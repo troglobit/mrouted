@@ -147,7 +147,7 @@ stmt	: error
 		  inet_fmt($2, s1, sizeof(s1)), inet_fmt($3, s2, sizeof(s2)),
 		  numvifs, v->uv_rate_limit);
 
-	    ++numvifs;
+	    install_uvif(v);
 
 	}
 	| CACHE_LIFETIME NUMBER
