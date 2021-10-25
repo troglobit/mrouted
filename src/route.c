@@ -1065,10 +1065,11 @@ void accept_report(uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t
 void report(int which_routes, vifi_t vifi, uint32_t dst)
 {
     struct rtentry *rt;
-    int i;
 
     rt = rt_end;
-    while (rt && rt != routing_table) {
+    while (rt) {
+	int i;
+
 	i = report_chunk(which_routes, rt, vifi, dst);
 	while (i-- > 0)
 	    rt = rt->rt_prev;
