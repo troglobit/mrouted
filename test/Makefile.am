@@ -13,3 +13,4 @@ TESTS              = pod.sh
 TESTS             += shared.sh
 TESTS             += single.sh
 TESTS             += three.sh
+TESTS             += tunnel.sh
