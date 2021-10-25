@@ -26,6 +26,7 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
+          sudo modprobe ipip
           sudo apt-get -y update
           sudo apt-get -y install pkg-config libsystemd-dev bird2 ethtool keepalived tshark tree
       - uses: actions/checkout@v2
