@@ -141,7 +141,7 @@ void logit(int severity, int syserr, const char *format, ...)
 	gettimeofday(&now, NULL);
 	now_sec = now.tv_sec;
 	thyme = localtime(&now_sec);
-	if (!debug)
+//	if (!debug)
 	    fprintf(stderr, "%s: ", log_name);
 	fprintf(stderr, "%02d:%02d:%02d.%03ld %s", thyme->tm_hour,
 		thyme->tm_min, thyme->tm_sec, now.tv_usec / 1000, msg);
