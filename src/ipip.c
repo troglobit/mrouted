@@ -117,8 +117,7 @@ void send_ipip(uint32_t src, uint32_t dst, int type, int code, uint32_t group, i
 	if (errno == ENETDOWN)
 	    check_vif_state();
 	else
-	    logit(LOG_WARNING, errno,
-		"sendmsg to %s on %s",
+	    logit(LOG_WARNING, errno, "sendmsg to %s on %s",
 		inet_fmt(sdst.sin_addr.s_addr, s1, sizeof(s1)), inet_fmt(src, s2, sizeof(s2)));
     }
 
