@@ -1785,7 +1785,7 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 	    }
 	}
 
-	if (n->al_flags & NBRF_ONEWAY && msgtype == DVMRP_PROBE) {
+	if ((n->al_flags & NBRF_ONEWAY) && msgtype == DVMRP_PROBE) {
 	    if (in_router_list) {
 		if (NBRM_ISEMPTY(uv->uv_nbrmap))
 		    neighbor_vifs++;
