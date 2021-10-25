@@ -137,9 +137,8 @@ static vifi_t check_vif(struct uvif *v)
     vifi_t vifi;
 
     UVIF_FOREACH(vifi, uv) {
-	if (uv->uv_flags & VIFF_TUNNEL) {
+	if (v->uv_flags & VIFF_TUNNEL)
 	    continue;
-	}
 
 	if (v->uv_flags & VIFF_DISABLED) {
 	    logit(LOG_DEBUG, 0, "Skipping %s, disabled", v->uv_name);
@@ -198,10 +197,16 @@ void config_vifs_correlate(void)
 	    continue;
 	}
 
-	logit(LOG_INFO, 0, "Installing %s (%s on subnet %s) as VIF #%u, rate %d pps",
-	      v->uv_name, inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)),
-	      inet_fmts(v->uv_subnet, v->uv_subnetmask, s2, sizeof(s2)),
-	      vifi, v->uv_rate_limit);
+	if (v->uv_flags & VIFF_TUNNEL)
+	    logit(LOG_INFO, 0, "Installing tunnel %s from %s to %s as VIF #%u, rate %d pps",
+		  v->uv_name, inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)),
+		  inet_fmt(v->uv_rmt_addr, s2, sizeof(s2)),
+		  vifi, v->uv_rate_limit);
+	else
+	    logit(LOG_INFO, 0, "Installing %s (%s on subnet %s) as VIF #%u, rate %d pps",
+		  v->uv_name, inet_fmt(v->uv_lcl_addr, s1, sizeof(s1)),
+		  inet_fmts(v->uv_subnet, v->uv_subnetmask, s2, sizeof(s2)),
+		  vifi, v->uv_rate_limit);
     }
 
     /*

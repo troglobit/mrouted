@@ -142,13 +142,6 @@ stmt	: error
 	{
 	    if (!(v->uv_flags & VIFF_OTUNNEL))
 		init_ipip_on_vif(v);
-
-	    logit(LOG_INFO, 0, "installing tunnel from %s to %s as vif #%u - rate=%d",
-		  inet_fmt($2, s1, sizeof(s1)), inet_fmt($3, s2, sizeof(s2)),
-		  numvifs, v->uv_rate_limit);
-
-	    install_uvif(v);
-
 	}
 	| CACHE_LIFETIME NUMBER
 	{
