@@ -1136,6 +1136,8 @@ static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi,
     int i;
 
     uv = find_uvif(vifi);
+    if (!uv)
+	return 0;
     admetric = uv->uv_admetric;
 
     p = send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN;
