@@ -254,6 +254,9 @@ void init_installvifs(void)
 	    logit(LOG_INFO, 0, "vif #%d, tunnel %s -> %s", vifi,
 		  inet_fmt(uv->uv_lcl_addr, s1, sizeof(s1)),
 		  inet_fmt(uv->uv_rmt_addr, s2, sizeof(s2)));
+
+	    /* Set tunnel vif name, Linux use dvmrpN */
+	    snprintf(uv->uv_name, sizeof(uv->uv_name), "dvmrp%d", vifi);
 	} else {
 	    logit(LOG_INFO, 0, "vif #%d, phyint %s", vifi,
 		  inet_fmt(uv->uv_lcl_addr, s1, sizeof(s1)));
