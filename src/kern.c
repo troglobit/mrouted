@@ -236,8 +236,16 @@ void k_add_vif(vifi_t vifi, struct uvif *v)
 
     vc.vifc_vifi = vifi;
     uvif_to_vifctl(&vc, v);
-    if (setsockopt(igmp_socket, IPPROTO_IP, MRT_ADD_VIF, &vc, sizeof(vc)) < 0)
+    if (setsockopt(igmp_socket, IPPROTO_IP, MRT_ADD_VIF, &vc, sizeof(vc)) < 0) {
+#ifdef __linux__
+	int olderrno = errno;
+
+	if ((v->uv_flags & VIFF_TUNNEL) && errno == ENOBUFS)
+	    logit(LOG_WARNING, 0, "IPIP tunnel, possibly missing ipip.ko module?", vifi, v->uv_name);
+	errno = olderrno;
+#endif
 	logit(LOG_ERR, errno, "Failed MRT_ADD_VIF(%d) for %s", vifi, v->uv_name);
+    }
 }
 
 
