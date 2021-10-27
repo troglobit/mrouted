@@ -3,6 +3,28 @@ Change Log
 
 All notable changes to the project are documented in this file.
 
+[v4.4][UNRELEASED]
+---------------------
+
+### Changes
+- Rename tunnel vifs, from base interface, to use the Linux kernel
+  naming; `dvmrpN`, where `N` is the VIF number.  Other kernels may
+  handle this differently, patches to support other nomenclatures are
+  most welcome!
+- Logging to stdout now always prefixes messages with the daemon ident
+- If adding a tunnel VIF and Linux does not have `ipip.ko` loaded, 
+  mrouted logs this as a warning message
+- Add test for IPIP tunnels
+
+### Fixes
+- Issue #52: IP-IP tunnels don't work anymore.  Somewhere in the big
+  refactor for the mrouted v4.x series, the `tunnel` directive in the
+  .conf parser was never adapted to the new internals
+- Fix a 10 year old regression after a linked-list refactor, causing
+  off-by-one (loss of one) in unicast route distribution.  Which in
+  turn cause VIF tunnels to malfunction
+
+
 [v4.3][] - 2021-09-19
 ---------------------
 
@@ -623,6 +645,7 @@ v3.5 - 1995-05-08
 
 
 [UNRELEASED]: https://github.com/troglobit/mrouted/compare/4.3...HEAD
+[v4.4]:       https://github.com/troglobit/mrouted/compare/4.3...4.4
 [v4.3]:       https://github.com/troglobit/mrouted/compare/4.2...4.3
 [v4.2]:       https://github.com/troglobit/mrouted/compare/4.1...4.2
 [v4.1]:       https://github.com/troglobit/mrouted/compare/4.0...4.1

@@ -1,3 +1,12 @@
+mrouted (4.4) unstable; urgency=medium
+
+  * Issue #52: fix IPIP tunnels, both configuration and an off-by-one
+    problem in unicast route distribution.
+  * Warn if installing tunnel vifs fail, probably missing ipip.ko
+  * Logging to stdout now always prefix messages with daemon identity
+
+ -- Joachim Wiberg <troglobit@gmail.com>  Wed, 27 Oct 2021 18:00:10 +0200
+
 mrouted (4.3) stable; urgency=low
   * Add support for -i,--ident=NAME` to change identity of an instance
   * Add support for -p,--pidfile=FILE to override default PID file
