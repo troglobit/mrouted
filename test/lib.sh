@@ -464,6 +464,7 @@ topo()
 }
 
 # Runs once when including lib.sh
+PATH=/sbin:/usr/sbin:$PATH
 mkdir -p "/tmp/$NM"
 touch "/tmp/$NM/PIDs"
 trapit signal INT TERM QUIT EXIT
