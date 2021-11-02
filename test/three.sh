@@ -244,11 +244,11 @@ dprint "OK"
 # nsenter --net="$NS4" -- ip route
 
 print "Starting emitter ..."
-nsenter --net="$NS5" -- ./mping -qr -d -i eth0 -t 5 -W 30 225.1.2.3 &
+nsenter --net="$NS5" -- ./mping -qr -i eth0 -t 5 -W 30 225.1.2.3 &
 echo $! >> "/tmp/$NM/PIDs"
 sleep 1
 
-if ! nsenter --net="$NS1"  -- ./mping -s -d -i eth0 -t 5 -c 10 -w 15 225.1.2.3; then
+if ! nsenter --net="$NS1"  -- ./mping -s -i eth0 -t 5 -c 10 -w 15 225.1.2.3; then
     dprint "DVMRP Status $NS2"
     nsenter --net="$NS2" -- ../src/mroutectl -u "/tmp/$NM/r1.sock" show compat detail
     dprint "DVMRP Status $NS3"

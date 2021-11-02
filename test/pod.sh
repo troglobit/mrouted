@@ -427,11 +427,11 @@ tenacious 30 nsenter --net="$ED1" -- ping -qc 1 -W 1 10.0.2.10 >/dev/null
 dprint "OK"
 
 print "Starting emitter ..."
-nsenter --net="$ED2" -- ./mping -qr -d -i eth0 -t 5 -W 30 225.1.2.3 &
+nsenter --net="$ED2" -- ./mping -qr -i eth0 -t 5 -W 30 225.1.2.3 &
 echo $! >> "/tmp/$NM/PIDs"
 sleep 1
 
-if ! nsenter --net="$ED1"  -- ./mping -s -d -i eth0 -t 5 -c 10 -w 15 225.1.2.3; then
+if ! nsenter --net="$ED1"  -- ./mping -s -i eth0 -t 5 -c 10 -w 15 225.1.2.3; then
     dprint "PIM Status $R1"
     nsenter --net="$R1" -- ../src/mroutectl -u "/tmp/$NM/r1.sock" show compat detail
     dprint "PIM Status $R2"

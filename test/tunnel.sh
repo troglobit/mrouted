@@ -278,11 +278,11 @@ nsenter --net="$NS5" -- tshark -lni eth0 -w "/tmp/$NM/ed2.pcap" 2>/dev/null &
 echo $! >> "/tmp/$NM/PIDs"
 
 print "Starting emitter ..."
-nsenter --net="$NS5" -- ./mping -qr -d -i eth0 -t 5 -W 30 225.1.2.3 &
+nsenter --net="$NS5" -- ./mping -qr -i eth0 -t 5 -W 30 225.1.2.3 &
 echo $! >> "/tmp/$NM/PIDs"
 sleep 1
 
-if ! nsenter --net="$NS1"  -- ./mping -s -d -i eth0 -t 5 -c 10 -w 15 225.1.2.3; then
+if ! nsenter --net="$NS1"  -- ./mping -s -i eth0 -t 5 -c 10 -w 15 225.1.2.3; then
     dprint "DVMRP Status $NS2"
     nsenter --net="$NS2" -- cat /proc/net/ip_mr_vif
     nsenter --net="$NS2" -- cat /proc/net/ip_mr_cache
