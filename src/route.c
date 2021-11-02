@@ -876,7 +876,7 @@ static void process_blaster_report(void *vifip)
  */
 void accept_report(uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t level)
 {
-    static struct newrt rt[MAX_NUM_RT]; /* Use heap instead of stack */
+    static struct newrt rt[MAX_NUM_RT]; /* Use heap instead of stack */ /* XXX: fixme */
     struct listaddr *nbr;
     struct uvif *uv;
     uint32_t origin;
