@@ -90,7 +90,7 @@ void rsrr_init(void)
     servlen = sizeof(serv_addr.sun_family) + strlen(serv_addr.sun_path);
 #endif
  
-    if (bind(rsrr_socket, (struct sockaddr *) &serv_addr, servlen) < 0)
+    if (bind(rsrr_socket, (struct sockaddr *)&serv_addr, servlen) < 0)
 	logit(LOG_ERR, errno, "Cannot bind RSRR socket");
 
     if (register_input_handler(rsrr_socket, rsrr_read) < 0)
@@ -134,30 +134,27 @@ static void rsrr_accept(size_t recvlen)
     }
 
     switch (rsrr->type) {
-	case RSRR_INITIAL_QUERY:
-	    /* Send Initial Reply to client */
-	    IF_DEBUG(DEBUG_RSRR) {
+	case RSRR_INITIAL_QUERY:	/* Send Initial Reply to client */
+	    IF_DEBUG(DEBUG_RSRR)
 		logit(LOG_DEBUG, 0, "Received Initial Query\n");
-	    }
+
 	    rsrr_accept_iq();
 	    break;
 
-	case RSRR_ROUTE_QUERY:
-	    /* Check size */
+	case RSRR_ROUTE_QUERY:		/* Send Route Reply to client */
 	    if (recvlen < RSRR_RQ_LEN) {
 		logit(LOG_WARNING, 0, "Received Route Query of %zu bytes, which is too small", recvlen);
 		break;
 	    }
-	    /* Get the query */
-	    route_query = (struct rsrr_rq *) (rsrr_recv_buf + RSRR_HEADER_LEN);
-	    IF_DEBUG(DEBUG_RSRR) {
+
+	    route_query = (struct rsrr_rq *)(rsrr_recv_buf + RSRR_HEADER_LEN);
+	    IF_DEBUG(DEBUG_RSRR)
 		logit(LOG_DEBUG, 0,
 		      "Received Route Query for src %s grp %s notification %d",
 		      inet_fmt(route_query->source_addr.s_addr, s1, sizeof(s1)),
 		      inet_fmt(route_query->dest_addr.s_addr, s2, sizeof(s2)),
 		      BIT_TST(rsrr->flags,RSRR_NOTIFICATION_BIT));
-	    }
-	    /* Send Route Reply to client */
+
 	    rsrr_accept_rq(route_query, rsrr->flags, NULL);
 	    break;
 
@@ -175,12 +172,12 @@ static void rsrr_accept_iq(void)
     struct uvif *uv;
     int vifi, sendlen;
     
-    /* Check for space.  There should be room for plenty of vifs,
+    /*
+     * Check for space.  There should be room for plenty of vifs,
      * but we should check anyway.
      */
     if (numvifs > RSRR_MAX_VIFS) {
-	logit(LOG_WARNING, 0,
-	      "Cannot send RSRR Route Reply because %u is too many vifs (%d)",
+	logit(LOG_WARNING, 0, "Cannot send RSRR Route Reply because %u is too many vifs (%d)",
 	      numvifs, RSRR_MAX_VIFS);
 	return;
     }
@@ -204,9 +201,8 @@ static void rsrr_accept_iq(void)
     }
     
     /* Get the size. */
-    sendlen = RSRR_HEADER_LEN + numvifs*RSRR_VIF_LEN;
+    sendlen = RSRR_HEADER_LEN + numvifs * RSRR_VIF_LEN;
     
-    /* Send it. */
     IF_DEBUG(DEBUG_RSRR)
 	logit(LOG_DEBUG, 0, "Send RSRR Initial Reply");
 
@@ -236,7 +232,7 @@ static int rsrr_accept_rq(struct rsrr_rq *route_query, uint8_t flags, struct gta
     rsrr->flags = 0;
     rsrr->num = 0;
     
-    route_reply = (struct rsrr_rr *) (rsrr_send_buf + RSRR_HEADER_LEN);
+    route_reply = (struct rsrr_rr *)(rsrr_send_buf + RSRR_HEADER_LEN);
     route_reply->dest_addr.s_addr = route_query->dest_addr.s_addr;
     route_reply->source_addr.s_addr = route_query->source_addr.s_addr;
     route_reply->query_id = route_query->query_id;
@@ -318,13 +314,12 @@ static int rsrr_accept_rq(struct rsrr_rq *route_query, uint8_t flags, struct gta
 	}
     }
     
-    IF_DEBUG(DEBUG_RSRR) {
+    IF_DEBUG(DEBUG_RSRR)
 	logit(LOG_DEBUG, 0, "%sSend RSRR Route Reply for src %s dst %s in vif %d out vif %d\n",
 	      gt_notify ? "Route Change: " : "",
 	      inet_fmt(route_reply->source_addr.s_addr, s1, sizeof(s1)),
 	      inet_fmt(route_reply->dest_addr.s_addr, s2, sizeof(s2)),
 	      route_reply->in_vif,route_reply->out_vif_bm);
-    }
 
     /* Send it. */
     return rsrr_send(sendlen);
@@ -340,12 +335,11 @@ static int rsrr_send(int sendlen)
 		   (struct sockaddr *)&client_addr, client_length);
     
     /* Check for errors. */
-    if (error < 0) {
+    if (error < 0)
 	logit(LOG_WARNING, errno, "Failed send on RSRR socket");
-    } else if (error != sendlen) {
+    else if (error != sendlen)
 	logit(LOG_WARNING, 0,
 	    "Sent only %d out of %d bytes on RSRR socket\n", error, sendlen);
-    }
 
     return error;
 }
@@ -375,11 +369,9 @@ static void rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query)
 		/* Update */
 		/* TODO: XXX: No need to update iif, oifs, flags */
 		rc->route_query.query_id = route_query->query_id;
-		IF_DEBUG(DEBUG_RSRR) {
-		    logit(LOG_DEBUG, 0,
-			  "Update cached query id %u from client %s\n",
+		IF_DEBUG(DEBUG_RSRR)
+		    logit(LOG_DEBUG, 0, "Update cached query id %u from client %s\n",
 			  rc->route_query.query_id, rc->client_addr.sun_path);
-		}
 	    }
 
 	    return;
@@ -406,10 +398,9 @@ static void rsrr_cache(struct gtable *gt, struct rsrr_rq *route_query)
     rc->next = gt->gt_rsrr_cache;
     gt->gt_rsrr_cache = rc;
 
-    IF_DEBUG(DEBUG_RSRR) {
+    IF_DEBUG(DEBUG_RSRR)
 	logit(LOG_DEBUG, 0, "Cached query id %u from client %s\n",
 	      rc->route_query.query_id, rc->client_addr.sun_path);
-    }
 }
 
 /* Send all the messages in the cache for particular routing entry.
@@ -428,16 +419,15 @@ void rsrr_cache_send(struct gtable *gt, int notify)
     rcnp = &gt->gt_rsrr_cache;
     while ((rc = *rcnp)) {
 	if (rsrr_accept_rq(&rc->route_query, flags, gt) < 0) {
-	    IF_DEBUG(DEBUG_RSRR) {
+	    IF_DEBUG(DEBUG_RSRR)
 		logit(LOG_DEBUG, 0, "Deleting cached query id %u from client %s\n",
 		      rc->route_query.query_id, rc->client_addr.sun_path);
-	    }
+
 	    /* Delete cache entry. */
 	    *rcnp = rc->next;
 	    free(rc);
-	} else {
+	} else
 	    rcnp = &rc->next;
-	}
     }
 }
 
@@ -446,10 +436,10 @@ void rsrr_cache_clean(struct gtable *gt)
 {
     struct rsrr_cache *rc, *rc_next;
 
-    IF_DEBUG(DEBUG_RSRR) {
+    IF_DEBUG(DEBUG_RSRR)
 	logit(LOG_DEBUG, 0, "cleaning cache for group %s\n",
 	      inet_fmt(gt->gt_mcastgrp, s1, sizeof(s1)));
-    }
+
     rc = gt->gt_rsrr_cache;
     while (rc) {
 	rc_next = rc->next;
