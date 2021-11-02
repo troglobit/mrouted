@@ -75,10 +75,6 @@ typedef void (*ihfunc_t) (int);
 #include "route.h"
 #include "prune.h"
 #include "pathnames.h"
-#ifdef RSRR
-#include "rsrr.h"
-#include "rsrr_var.h"
-#endif
 
 /*
  * Miscellaneous constants and macros.
@@ -120,13 +116,6 @@ typedef void (*ihfunc_t) (int);
 			    /* for Deleting kernel table entries */
 
 #define JAN_1970	2208988800UL	/* 1970 - 1900 in seconds */
-
-#ifdef RSRR
-#define BIT_ZERO(X)      ((X) = 0)
-#define BIT_SET(X,n)     ((X) |= 1 << (n))
-#define BIT_CLR(X,n)     ((X) &= ~(1 << (n)))
-#define BIT_TST(X,n)     ((X) & 1 << (n))
-#endif
 
 #if defined(_AIX) || (defined(BSD) && BSD >= 199103)
 #define	HAVE_SA_LEN
@@ -172,7 +161,7 @@ extern uint32_t		virtual_time;
 #define	DEBUG_IGMP	0x0200
 #define	DEBUG_RTDETAIL	0x0400
 #define	DEBUG_KERN	0x0800
-#define	DEBUG_RSRR	0x1000
+#define	DEBUG_RSRR	0x1000		/* UNUSED */
 #define	DEBUG_ICMP	0x2000
 #define DEBUG_PARSE_ERR 0x80000000
 #define DEBUG_ALL       0xffffffdf /* All except noisy timer */
@@ -425,14 +414,6 @@ extern void		k_del_vif(vifi_t, struct uvif *);
 extern void		k_add_rg(uint32_t, struct gtable *);
 extern int		k_del_rg(uint32_t, struct gtable *);
 extern int		k_get_version(void);
-
-#ifdef RSRR
-/* rsrr.c */
-extern void		rsrr_init(void);
-extern void		rsrr_clean(void);
-extern void		rsrr_cache_send(struct gtable *, int);
-extern void		rsrr_cache_clean(struct gtable *);
-#endif
 
 #ifndef HAVE_STRLCPY
 extern size_t		strlcpy(char *dst, const char *src, size_t siz);

@@ -13,7 +13,7 @@ WORKDIR /root/mrouted
 
 RUN	./autogen.sh && 						 \
 	./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var \
-		    --enable-rsrr --without-systemd			 \
+		    --without-systemd			 		 \
 	make && 							 \
 	make install-strip
 

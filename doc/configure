@@ -26,7 +26,6 @@ usage()
         echo
         echo "Usage: $0 [ARG]"
         echo
-        echo "  --enable-rsrr          Routing Support for Resource Reservations, for RSVP."
         echo "  --with-includes=PATH   Use this if the multicast header files are not in the"
         echo "                         standard location on your system. E.g., /sys"
         echo
@@ -48,11 +47,6 @@ while [ "$*" != "" ]; do
         shift
 
         case $opt in
-                enable-rsrr)
-                        echo "DEFS         += -DRSRR" >> $TMP
-                        echo "RSRR_OBJS     = rsrr.o" >> $TMP
-                        ;;
-
                 with-includes)
                         echo "INCLUDES     += -I$arg" >> $TMP
                         ;;

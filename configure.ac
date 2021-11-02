@@ -46,12 +46,6 @@ AC_CHECK_FUNCS([atexit getifaddrs])
 AC_REPLACE_FUNCS([pidfile strlcpy strlcat strtonum utimensat])
 AC_CONFIG_LIBOBJ_DIR([lib])
 
-AC_ARG_ENABLE(rsrr,
-	AS_HELP_STRING([--enable-rsrr], [Routing Support for Resource Reservation
-			currently used by RSVP (EXPERIMENTAL).  For details, see
-			http://tools.ietf.org/html/draft-ietf-rsvp-routing-02]),,
-	enable_rsrr=no)
-
 AC_ARG_ENABLE(test,
         AS_HELP_STRING([--enable-test], [enable tests, requries unshare, tshark, etc.]),
         enable_test="$enableval", enable_test="no")
@@ -61,9 +55,6 @@ AC_ARG_WITH([systemd],
      [with_systemd=auto])
 
 # Create config.h from selected features and fallback defautls
-AS_IF([test "x$enable_rsrr" = "xyes"], [
-        AC_DEFINE(RSRR, 1, [Routing Support for Resource Reservation.])])
-
 AS_IF([test "x$with_systemd" = "xyes" -o "x$with_systemd" = "xauto"], [
      def_systemd=$($PKG_CONFIG --variable=systemdsystemunitdir systemd)
      AS_IF([test "x$def_systemd" = "x"],
@@ -75,7 +66,6 @@ AS_IF([test "x$with_systemd" != "xno"],
 
 AM_CONDITIONAL(BSD,         [test "x$ac_cv_header_net_if_dl_h"     = "xyes"])
 AM_CONDITIONAL(LINUX,       [test "x$ac_cv_header_linux_netlink_h" = "xyes"])
-AM_CONDITIONAL(RSRR,        [test "x$enable_rsrr"                  = "xyes"])
 AM_CONDITIONAL(SYSTEMD,     [test "x$with_systemd"                != "xno"])
 AM_CONDITIONAL(ENABLE_TEST, [test "x$enable_test"                 != "xno"])
 
@@ -112,7 +102,6 @@ cat <<EOF
   C Compiler............: $CC $CFLAGS $CPPFLAGS $LDFLAGS $LIBS
 
 Optional features:
-  RSRR (experimental)...: $enable_rsrr
   systemd...............: $with_systemd
   Unit tests............: $enable_test
 

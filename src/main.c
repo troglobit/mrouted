@@ -429,9 +429,6 @@ int main(int argc, char *argv[])
 
     init_vifs();
     ipc_init(sock_file, ident);
-#ifdef RSRR
-    rsrr_init();
-#endif
 
     sa.sa_handler = handle_signals;
     sa.sa_flags = 0;	/* Interrupt system calls */
@@ -682,9 +679,6 @@ static void cleanup(void)
 
     if (!in_cleanup) {
 	in_cleanup++;
-#ifdef RSRR
-	rsrr_clean();
-#endif
 	expire_all_routes();
 	report_to_all_neighbors(ALL_ROUTES);
 

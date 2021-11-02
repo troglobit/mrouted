@@ -27,7 +27,7 @@ IGMP_SRCS     = igmp.c inet.c kern.c
 IGMP_OBJS     = igmp.o inet.o kern.o
 
 ROUTER_OBJS   = config.o cfparse.o main.o route.o vif.o prune.o callout.o \
-		icmp.o ipip.o vers.o $(RSRR_OBJS) $(EXTRA_OBJS)
+		icmp.o ipip.o vers.o $(EXTRA_OBJS)
 ROUTER_SRCS   = $(ROUTER_OBJS:.o=.c)
 MAPPER_OBJS   = mapper.o $(EXTRA_OBJS)
 MRINFO_OBJS   = mrinfo.o $(EXTRA_OBJS)

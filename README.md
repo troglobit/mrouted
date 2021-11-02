@@ -131,9 +131,6 @@ the default `/usr/local`, and redirect install to a package directory in
     make
     make DESTDIR=/tmp/mrouted-4.0-1 install-strip
 
-This version of mrouted has [RSRR][] support for running RSVP, disabled
-by default.  Enable with `configure --enable-rsrr`.
-
 **Note:** On some systems `--runstatedir` may not be available in the
   configure script, try `--localstatedir=/var` instead.
 
@@ -204,7 +201,6 @@ is based on the 3.8 release, for any relevant fixes.
 [BSD License]:     http://en.wikipedia.org/wiki/BSD_licenses
 [RFC 1075]:        http://tools.ietf.org/html/rfc1075
 [IP-in-IP]:        https://en.wikipedia.org/wiki/IP_in_IP
-[RSRR]:            doc/RSRR.md
 [buildsystem]:     https://airs.com/ian/configure/
 [mgen(1)]:         https://www.nrl.navy.mil/itd/ncs/products/mgen
 [mcjoin(1)]:       https://github.com/troglobit/mcjoin/

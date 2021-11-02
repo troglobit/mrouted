@@ -40,9 +40,6 @@ struct gtable {
     struct rtentry *gt_route;		/* parent route			    */
     int		    gt_rexmit_timer;	/* timer for prune retransmission   */
     int		    gt_prune_rexmit;	/* time til prune retransmission    */
-#ifdef RSRR
-    struct rsrr_cache *gt_rsrr_cache;	/* RSRR cache                       */
-#endif
 };
 
 /*

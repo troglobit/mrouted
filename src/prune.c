@@ -619,9 +619,6 @@ void add_table_entry(uint32_t origin, uint32_t mcastgrp)
 	gt->gt_rexmit_timer = 0;
 	NBRM_CLRALL(gt->gt_prunes);
 	gt->gt_prune_rexmit = PRUNE_REXMIT_VAL;
-#ifdef RSRR
-	gt->gt_rsrr_cache   = NULL;
-#endif
 
 	/* Calculate forwarding vifs */
 	determine_forwvifs(gt);
@@ -772,10 +769,6 @@ void reset_neighbor_state(vifi_t vifi, uint32_t addr)
 
 		/* Update kernel state */
 		update_kernel(g);
-#ifdef RSRR
-		/* Send route change notification to reservation protocol. */
-		rsrr_cache_send(g,1);
-#endif
 
 		/*
 		 * If removing this prune causes us to start forwarding
@@ -843,11 +836,6 @@ void del_table_entry(struct rtentry *r, uint32_t mcastgrp, uint32_t del_flag)
 	    else
 		kernel_table = g->gt_gnext;
 
-#ifdef RSRR
-	    /* Send route change notification to reservation protocol. */
-	    rsrr_cache_send(g,0);
-	    rsrr_cache_clean(g);
-#endif
 	    if (g->gt_rexmit_timer)
 		timer_clear(g->gt_rexmit_timer);
 
@@ -909,11 +897,7 @@ void del_table_entry(struct rtentry *r, uint32_t mcastgrp, uint32_t del_flag)
 
 		if (g->gt_rexmit_timer)
 		    timer_clear(g->gt_rexmit_timer);
-#ifdef RSRR
-		/* Send route change notification to reservation protocol. */
-		rsrr_cache_send(g,0);
-		rsrr_cache_clean(g);
-#endif
+
 		free(g);
 		g = prev_g;
 	    } else {
@@ -991,10 +975,6 @@ void update_table_entry(struct rtentry *r, uint32_t old_parent_gw)
 	/* update ttls and add entry into kernel */
 	prun_add_ttls(g);
 	update_kernel(g);
-#ifdef RSRR
-	/* Send route change notification to reservation protocol. */
-	rsrr_cache_send(g,1);
-#endif
     }
 }
 
@@ -1029,10 +1009,6 @@ void update_lclgrp(vifi_t vifi, uint32_t mcastgrp)
 	    }
 
 	    update_kernel(g);
-#ifdef RSRR
-	    /* Send route change notification to reservation protocol. */
-	    rsrr_cache_send(g, 1);
-#endif
 	}
     }
 }
@@ -1068,10 +1044,6 @@ void delete_lclgrp(vifi_t vifi, uint32_t mcastgrp)
 
 		prun_add_ttls(g);
 		update_kernel(g);
-#ifdef RSRR
-		/* Send route change notification to reservation protocol. */
-		rsrr_cache_send(g, 1);
-#endif
 
 		/*
 		 * If there are no more members of this particular group,
@@ -1236,10 +1208,6 @@ void accept_prune(uint32_t src, uint32_t dst, char *p, size_t datalen)
 
 	    prun_add_ttls(g);
 	    update_kernel(g);
-#ifdef RSRR
-	    /* Send route change notification to reservation protocol. */
-	    rsrr_cache_send(g,1);
-#endif
 	}
 
 	/*
@@ -1304,10 +1272,6 @@ void chkgrp_graft(vifi_t vifi, uint32_t mcastgrp)
 
 		prun_add_ttls(g);
 		update_kernel(g);
-#ifdef RSRR
-		/* Send route change notification to reservation protocol. */
-		rsrr_cache_send(g, 1);
-#endif
 	    }
     }
 }
@@ -1387,10 +1351,6 @@ void accept_graft(uint32_t src, uint32_t dst, char *p, size_t datalen)
 
 		prun_add_ttls(g);
 		update_kernel(g);
-#ifdef RSRR
-		/* Send route change notification to reservation protocol. */
-		rsrr_cache_send(g,1);
-#endif
 		break;
 	    } else {
 		ptnp = &pt->pt_next;
@@ -1854,11 +1814,6 @@ void age_table_entry(void)
 	    if (gt->gt_gnext)
 		gt->gt_gnext->gt_gprev = gt->gt_gprev;
 
-#ifdef RSRR
-	    /* Send route change notification to reservation protocol. */
-	    rsrr_cache_send(gt,0);
-	    rsrr_cache_clean(gt);
-#endif
 	    if (gt->gt_rexmit_timer)
 		timer_clear(gt->gt_rexmit_timer);
 
@@ -1948,10 +1903,6 @@ static void expire_prune(vifi_t vifi, struct gtable *gt)
 
         prun_add_ttls(gt);
         update_kernel(gt);
-#ifdef RSRR
-        /* Send route change notification to reservation protocol. */
-        rsrr_cache_send(gt,1);
-#endif
     }
 }
 

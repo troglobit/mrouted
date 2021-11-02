@@ -30,7 +30,6 @@ struct debugnm debugnames[] = {
     {	"mtrace",	DEBUG_TRACE,	2	},
     {	"igmp",		DEBUG_IGMP,	1	},
     {	"icmp",		DEBUG_ICMP,	2	},
-    {	"rsrr",		DEBUG_RSRR,	2	},
     {	"all",		DEBUG_ALL,	1	},
     {	"3",		DEBUG_ALL,	1	}	/* compat. */
 };
