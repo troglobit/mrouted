@@ -36,14 +36,13 @@ struct blaster_hdr {
  */
 int routes_changed;			/* 1=>some routes have changed */
 int delay_change_reports;		/* 1=>postpone change reports  */
-unsigned int nroutes;			/* current number of route entries  */
-struct rtentry *routing_table;		/* pointer to list of route entries */
+unsigned int nroutes;			/* number of routes            */
 
 /*
  * Private variables.
  */
-static struct rtentry *rtp;		/* pointer to a route entry         */
-static struct rtentry *rt_end;		/* pointer to last route entry      */
+static TAILQ_HEAD(rthead, rtentry) rtable;
+static struct rtentry *rtp;		/* pointer to a route entry    */
 
 /*
  * Private functions.
@@ -53,7 +52,7 @@ static int  find_route               (uint32_t origin, uint32_t mask);
 static void create_route             (uint32_t origin, uint32_t mask);
 static void discard_route            (struct rtentry *rt);
 static int  compare_rts              (const void *rt1, const void *rt2);
-static int  report_chunk             (int, struct rtentry *start_rt, vifi_t vifi, uint32_t dst);
+static struct rtentry *report_chunk  (int, struct rtentry *, vifi_t, uint32_t, int *);
 static void queue_blaster_report     (vifi_t vifi, uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t level);
 static void process_blaster_report   (void *vifip);
 
@@ -63,8 +62,7 @@ static void process_blaster_report   (void *vifip);
  */
 void init_routes(void)
 {
-    routing_table        = NULL;
-    rt_end		 = NULL;
+    TAILQ_INIT(&rtable);
     nroutes		 = 0;
     routes_changed       = FALSE;
     delay_change_reports = FALSE;
@@ -122,9 +120,8 @@ void add_vif_to_routes(vifi_t vifi)
     struct uvif *uv;
 
     uv = find_uvif(vifi);
-    for (r = routing_table; r; r = r->rt_next) {
-	if (r->rt_metric != UNREACHABLE &&
-	    !VIFM_ISSET(vifi, r->rt_children)) {
+    TAILQ_FOREACH(r, &rtable, rt_link) {
+	if (r->rt_metric != UNREACHABLE && !VIFM_ISSET(vifi, r->rt_children)) {
 	    VIFM_SET(vifi, r->rt_children);
 	    r->rt_dominants[vifi] = 0;
 	    /*XXX isn't uv_nbrmap going to be empty?*/
@@ -146,7 +143,7 @@ void delete_vif_from_routes(vifi_t vifi)
     struct uvif *uv;
 
     uv = find_uvif(vifi);
-    for (r = routing_table; r; r = r->rt_next) {
+    TAILQ_FOREACH(r, &rtable, rt_link) {
 	if (r->rt_metric != UNREACHABLE) {
 	    if (vifi == r->rt_parent) {
 		del_table_entry(r, 0, DEL_ALL_ROUTES);
@@ -180,7 +177,7 @@ void add_neighbor_to_routes(vifi_t vifi, uint32_t index)
     if (uv->uv_flags & VIFF_NOFLOOD)
 	return;
 
-    for (r = routing_table; r; r = r->rt_next) {
+    TAILQ_FOREACH(r, &rtable, rt_link) {
 	if (r->rt_metric != UNREACHABLE && r->rt_parent != vifi && !AVOID_TRANSIT(vifi, uv, r)) {
 	    NBRM_SET(index, r->rt_subordinates);
 	    update_table_entry(r, r->rt_gateway);
@@ -201,7 +198,7 @@ void delete_neighbor_from_routes(uint32_t addr, vifi_t vifi, uint32_t index)
     struct uvif *uv;
 
     uv = find_uvif(vifi);
-    for (r = routing_table; r; r = r->rt_next) {
+    TAILQ_FOREACH(r, &rtable, rt_link) {
 	if (r->rt_metric != UNREACHABLE) {
 	    if (r->rt_parent == vifi && r->rt_gateway == addr) {
 		del_table_entry(r, 0, DEL_ALL_ROUTES);
@@ -258,24 +255,25 @@ static int find_route(uint32_t origin, uint32_t mask)
     struct rtentry *r;
 
     /*
-     * If rtp is NULL, we are preceding routing_table, so our first search
-     * candidate should be the routing_table.
+     * If rtp is NULL, we are preceding rtable, so our first search
+     * candidate should be the rtable.
      */
-    r = rtp ? rtp : routing_table;
+    r = rtp ? rtp : TAILQ_FIRST(&rtable);
     while (r != NULL) {
 	if (origin == r->rt_origin && mask == r->rt_originmask) {
 	    rtp = r;
 	    return TRUE;
 	}
+
 	if (ntohl(mask) < ntohl(r->rt_originmask) ||
 	    (mask == r->rt_originmask &&
 	     ntohl(origin) < ntohl(r->rt_origin))) {
 	    rtp = r;
-	    r = r->rt_next;
-	} else {
+	    r = TAILQ_NEXT(r, rt_link);
+	} else
 	    break;
-	}
     }
+
     return FALSE;
 }
 
@@ -318,27 +316,10 @@ static void create_route(uint32_t origin, uint32_t mask)
     NBRM_CLRALL(rt->rt_subordinates);
     NBRM_CLRALL(rt->rt_subordadv);
 
-    /* Link in 'rt', where rtp points */
-    if (rtp) {
-	rt->rt_prev = rtp;
-	rt->rt_next = rtp->rt_next;
-	if (rt->rt_next)
-	    (rt->rt_next)->rt_prev = rt;
-	else
-	    rt_end = rt;
-	rtp->rt_next = rt;
-    } else {
-	if (routing_table) {
-	    /* Change existing head to rt */
-	    rt->rt_next = routing_table;
-	    routing_table->rt_prev = rt;
-	}
-	else {
-	    /* rt is the first route entry that exists */
-	    rt_end = rt;
-	}
-	routing_table = rt;
-    }
+    if (rtp)
+	TAILQ_INSERT_AFTER(&rtable, rtp, rt, rt_link);
+    else
+	TAILQ_INSERT_HEAD(&rtable, rt, rt_link);
 
     rtp = rt;
     ++nroutes;
@@ -351,35 +332,22 @@ static void create_route(uint32_t origin, uint32_t mask)
  */
 static void discard_route(struct rtentry *rt)
 {
-    struct rtentry *prev, *next;
     struct uvif *uv;
 
     if (!rt)
 	return;
 
-    /* Find previous and next link */
-    prev = rt->rt_prev;
-    next = rt->rt_next;
+    /* Update meta pointers */
+    if (rtp == rt)
+	rtp = TAILQ_NEXT(rt, rt_link);
 
-    /* Unlink 'rt' */
-    if (prev)
-	prev->rt_next = next;	/* Handles case when 'rt' is last link. */
-    else
-	routing_table = next;	/* 'rt' is first link. */
-    if (next)
-	next->rt_prev = prev;
+    TAILQ_REMOVE(&rtable, rt, rt_link);
 
     /* Update the books */
     uv = find_uvif(rt->rt_parent);
     uv->uv_nroutes--;
     /*???nbr???.al_nroutes--;*/
     --nroutes;
-
-    /* Update meta pointers */
-    if (rtp == rt)
-	rtp = next;
-    if (rt_end == rt)
-	rt_end = next;
 
     free(rt->rt_dominants);
     free(rt);
@@ -684,13 +652,10 @@ void update_route(uint32_t origin, uint32_t mask, uint32_t metric, uint32_t src,
  */
 void age_routes(void)
 {
-    struct rtentry *r, *next;
     extern uint32_t virtual_time;		/* from main.c */
+    struct rtentry *r, *tmp;
 
-    r = routing_table;
-    while (r) {
-	next = r->rt_next;
-
+    TAILQ_FOREACH_SAFE(r, &rtable, rt_link, tmp) {
 	if ((r->rt_timer += TIMER_INTERVAL) >= ROUTE_DISCARD_TIME) {
 	    /*
 	     * Time to garbage-collect the route entry.
@@ -729,8 +694,6 @@ void age_routes(void)
 	    }
 	    NBRM_CLRALL(r->rt_subordadv);
 	}
-
-	r = next;
     }
 }
 
@@ -747,7 +710,7 @@ void expire_all_routes(void)
 {
     struct rtentry *r;
 
-    for (r = routing_table; r; r = r->rt_next) {
+    TAILQ_FOREACH(r, &rtable, rt_link) {
 	r->rt_metric   = UNREACHABLE;
 	r->rt_flags   |= RTF_CHANGED;
 	routes_changed = TRUE;
@@ -760,14 +723,10 @@ void expire_all_routes(void)
  */
 void free_all_routes(void)
 {
-    struct rtentry *r, *next;
+    struct rtentry *r, *tmp;
 
-    r = routing_table;
-    while (r) {
-	next = r->rt_next;
+    TAILQ_FOREACH_SAFE(r, &rtable, rt_link, tmp)
 	discard_route(r);
-	r = next;
-    }
 }
 
 
@@ -1060,28 +1019,23 @@ void accept_report(uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t
 
 /*
  * Send a route report message to destination 'dst', via virtual interface
- * 'vifi'.  'which_routes' specifies ALL_ROUTES or CHANGED_ROUTES.
+ * 'vifi'.  'type' specifies ALL_ROUTES or CHANGED_ROUTES.
  */
-void report(int which_routes, vifi_t vifi, uint32_t dst)
+void report(int type, vifi_t vifi, uint32_t dst)
 {
-    struct rtentry *rt;
+    struct rtentry *rt = TAILQ_LAST(&rtable, rthead);
+    int dummy;
 
-    rt = rt_end;
-    while (rt) {
-	int i;
-
-	i = report_chunk(which_routes, rt, vifi, dst);
-	while (i-- > 0)
-	    rt = rt->rt_prev;
-    }
+    while (rt)
+	rt = report_chunk(type, rt, vifi, dst, &dummy);
 }
 
 
 /*
  * Send a route report message to all neighboring routers.
- * 'which_routes' specifies ALL_ROUTES or CHANGED_ROUTES.
+ * 'type' specifies ALL_ROUTES or CHANGED_ROUTES.
  */
-void report_to_all_neighbors(int which_routes)
+void report_to_all_neighbors(int type)
 {
     int routes_changed_before;
     struct rtentry *r;
@@ -1097,7 +1051,7 @@ void report_to_all_neighbors(int which_routes)
 
     UVIF_FOREACH(vifi, uv) {
 	if (!NBRM_ISEMPTY(uv->uv_nbrmap))
-	    report(which_routes, vifi, uv->uv_dst_addr);
+	    report(type, vifi, uv->uv_dst_addr);
     }
 
     /*
@@ -1108,7 +1062,7 @@ void report_to_all_neighbors(int which_routes)
      * generated at the next timer interrupt.
      */
     if (routes_changed_before && !routes_changed) {
-	for (r = routing_table; r; r = r->rt_next)
+	TAILQ_FOREACH(r, &rtable, rt_link)
 	    r->rt_flags &= ~RTF_CHANGED;
     }
 
@@ -1121,31 +1075,31 @@ void report_to_all_neighbors(int which_routes)
 
 /*
  * Send a route report message to destination 'dst', via virtual interface
- * 'vifi'.  'which_routes' specifies ALL_ROUTES or CHANGED_ROUTES.
+ * 'vifi'.  'type' specifies ALL_ROUTES or CHANGED_ROUTES.
  */
-static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi, uint32_t dst)
+static struct rtentry *report_chunk(int type, struct rtentry *rt, vifi_t vifi, uint32_t dst, int *nrt)
 {
     struct rtentry *r;
     struct uvif *uv;
     uint32_t mask = 0;
     int datalen = 0;
-    size_t nrt = 0;
     int width = 0;
     int admetric;
     uint8_t *p;
     int metric;
     int i;
 
+    *nrt = 0;
     uv = find_uvif(vifi);
     if (!uv)
-	return 0;
+	return NULL;
     admetric = uv->uv_admetric;
 
     p = send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN;
 
-    for (r = start_rt; r; r = r->rt_prev) {
-	if (which_routes == CHANGED_ROUTES && !(r->rt_flags & RTF_CHANGED)) {
-	    nrt++;
+    for (r = rt; r != TAILQ_END(&rtable); r = TAILQ_PREV(r, rthead, rt_link)) {
+	if (type == CHANGED_ROUTES && !(r->rt_flags & RTF_CHANGED)) {
+	    (*nrt)++;
 	    continue;
 	}
 
@@ -1155,7 +1109,7 @@ static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi,
 	 * some router on the subnetwork is misconfigured.
 	 */
 	if (r->rt_gateway == 0 && r->rt_parent == vifi) {
-	    nrt++;
+	    (*nrt)++;
 	    continue;
 	}
 
@@ -1192,7 +1146,7 @@ static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi,
 			   ? inet_fmts(vfe->vfe_addr, vfe->vfe_mask, s2, sizeof(s2))
 			   : "the filter"));
 		}
-		nrt++;
+		(*nrt)++;
 		continue;
 	    }
 	}
@@ -1207,7 +1161,7 @@ static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi,
 	    *(p-1) |= 0x80;
 	    send_on_vif(uv, 0, DVMRP_REPORT, datalen);
 
-	    return nrt;
+	    return r;
 	}
 
 	if (r->rt_originmask != mask || datalen == 0) {
@@ -1235,7 +1189,7 @@ static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi,
 	*p++ = (r->rt_parent == vifi && metric != UNREACHABLE)
 	    ? (char)(metric + UNREACHABLE) /* "poisoned reverse" */
 	    : (char)(metric);
-	++nrt;
+	(*nrt)++;
 	datalen += width + 1;
     }
 
@@ -1244,7 +1198,7 @@ static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi,
 	send_on_vif(uv, 0, DVMRP_REPORT, datalen);
     }
 
-    return nrt;
+    return r;
 }
 
 /*
@@ -1253,7 +1207,7 @@ static int report_chunk(int which_routes, struct rtentry *start_rt, vifi_t vifi,
  */
 int report_next_chunk(void)
 {
-    static int start_rt;
+    static int start_rt = 0;
     struct rtentry *sr;
     struct uvif *uv;
     int min = 20000;
@@ -1267,10 +1221,10 @@ int report_next_chunk(void)
     /*
      * find this round's starting route.
      */
-    for (sr = rt_end, i = start_rt; sr && --i >= 0; ) {
-	sr = sr->rt_prev;
-	if (sr == routing_table)
-	    sr = rt_end;
+    i = start_rt;
+    TAILQ_FOREACH_REVERSE(sr, &rtable, rthead, rt_link) {
+	if (--i < 0)
+	    break;
     }
 
     /*
@@ -1280,7 +1234,7 @@ int report_next_chunk(void)
     UVIF_FOREACH(vifi, uv) {
 	/* sr might turn up NULL above ... */
 	if (sr && !NBRM_ISEMPTY(uv->uv_nbrmap)) {
-	    n = report_chunk(ALL_ROUTES, sr, vifi, uv->uv_dst_addr);
+	    report_chunk(ALL_ROUTES, sr, vifi, uv->uv_dst_addr, &n);
 	    if (n < min)
 		min = n;
 	}
@@ -1313,7 +1267,7 @@ void dump_routes(FILE *fp, int detail)
 	fprintf(fp, "Multicast Routing Table (%u entr%s)\n", nroutes, nroutes == 1 ? "y" : "ies");
     fputs(" Origin-Subnet      From-Gateway    Metric Tmr Fl In-Vif  Out-Vifs=\n", fp);
 
-    for (r = routing_table; r; r = r->rt_next) {
+    TAILQ_FOREACH(r, &rtable, rt_link) {
 	fprintf(fp, " %-18s %-15s ",
 		inet_fmts(r->rt_origin, r->rt_originmask, s1, sizeof(s1)),
 		(r->rt_gateway == 0) ? "" : inet_fmt(r->rt_gateway, s2, sizeof(s2)));
@@ -1362,13 +1316,23 @@ struct rtentry *determine_route(uint32_t src)
 {
     struct rtentry *rt;
 
-    for (rt = routing_table; rt; rt = rt->rt_next) {
+    TAILQ_FOREACH(rt, &rtable, rt_link) {
 	if (rt->rt_origin == (src & rt->rt_originmask) &&
 	    rt->rt_metric != UNREACHABLE) 
 	    break;
     }
 
     return rt;
+}
+
+struct rtentry *route_iter(struct rtentry **rt)
+{
+    if (!*rt)
+	*rt = TAILQ_FIRST(&rtable);
+    else
+	*rt = TAILQ_NEXT(*rt, rt_link);
+
+    return *rt;
 }
 
 /**

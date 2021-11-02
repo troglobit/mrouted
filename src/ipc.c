@@ -35,7 +35,6 @@
 #include <sys/un.h>
 
 #include "defs.h"
-extern struct rtentry *routing_table;
 
 static struct sockaddr_un sun;
 static int ipc_socket = -1;
@@ -218,14 +217,10 @@ static void show_routes_header(FILE *fp, int detail)
 
 static void show_routes(FILE *fp, int detail)
 {
-	struct rtentry *r;
-	vifi_t i;
+	struct rtentry *r = NULL;
 	int once = 1;
 
-	if (!routing_table)
-		return;
-
-	for (r = routing_table; r; r = r->rt_next) {
+	while (route_iter(&r)) {
 		if (once) {
 			show_routes_header(fp, detail);
 			once = 0;

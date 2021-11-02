@@ -11,7 +11,6 @@
 
 extern int cache_lifetime;
 extern int prune_lifetime;
-extern struct rtentry *routing_table;
 
 extern int phys_vif;
 extern int allow_black_holes;
@@ -1476,12 +1475,12 @@ void accept_g_ack(uint32_t src, uint32_t dst, char *p, size_t datalen)
  */
 void free_all_prunes(void)
 {
-    struct rtentry *r;
     struct gtable *g, *prev_g;
     struct stable *s, *prev_s;
     struct ptable *p, *prev_p;
+    struct rtentry *r = NULL;
 
-    for (r = routing_table; r; r = r->rt_next) {
+    while (route_iter(&r)) {
 	g = r->rt_groups;
 	while (g) {
 	    s = g->gt_srctbl;
@@ -1533,11 +1532,11 @@ void free_all_prunes(void)
  */
 void steal_sources(struct rtentry *rt)
 {
-    struct rtentry *rp;
     struct gtable *gt, **gtnp;
     struct stable *st, **stnp;
+    struct rtentry *rp = rt;
 
-    for (rp = rt->rt_next; rp; rp = rp->rt_next) {
+    while (route_iter(&rp)) {
 	if (rp->rt_groups == NULL)
 	    continue;
 	if ((rt->rt_origin & rp->rt_originmask) == rp->rt_origin) {

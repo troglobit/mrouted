@@ -6,6 +6,11 @@
  * The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
  * Leland Stanford Junior University.
  */
+#ifndef MROUTED_ROUTE_H_
+#define MROUTED_ROUTE_H_
+
+#include "defs.h"
+#include "queue.h"
 
 /*
  * Routing Table Entry, one per subnet from which a multicast could originate.
@@ -23,7 +28,7 @@
  * faster access to arbitrary route entries.
  */
 struct rtentry {
-    struct rtentry  *rt_next;		/* link to next entry MUST BE FIRST */
+    TAILQ_ENTRY(rtentry) rt_link;	/* link to next/prev vif            */
     uint32_t	     rt_origin;		/* subnet origin of multicasts      */
     uint32_t	     rt_originmask;	/* subnet mask for origin           */
     uint16_t	     rt_originwidth;	/* # bytes of origin subnet number  */
@@ -36,7 +41,6 @@ struct rtentry {
     nbrbitmap_t	     rt_subordinates;   /* bitmap of subordinate gateways   */
     nbrbitmap_t	     rt_subordadv;      /* recently advertised subordinates */
     uint32_t	     rt_timer;		/* for timing out the route entry   */
-    struct rtentry  *rt_prev;		/* link to previous entry           */
     struct gtable   *rt_groups;		/* link to active groups 	    */
 };
 
@@ -47,3 +51,5 @@ struct rtentry {
 #define CHANGED_ROUTES	1		/*  and report_to_all_neighbors()   */
 
 #define	RT_FMT(r, s)	inet_fmts((r)->rt_origin, (r)->rt_originmask, s, sizeof(s))
+
+#endif /* MROUTED_ROUTE_H_ */
