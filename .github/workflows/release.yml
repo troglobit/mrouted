@@ -46,7 +46,7 @@ jobs:
       - name: Creating Makefiles ...
         run: |
           ./autogen.sh
-          ./configure --prefix= --enable-rsrr
+          ./configure --prefix=
       - name: Build release ...
         run: |
           make release
