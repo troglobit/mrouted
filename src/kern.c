@@ -241,7 +241,7 @@ void k_add_vif(vifi_t vifi, struct uvif *v)
 	int olderrno = errno;
 
 	if ((v->uv_flags & VIFF_TUNNEL) && errno == ENOBUFS)
-	    logit(LOG_WARNING, 0, "IPIP tunnel, possibly missing ipip.ko module?", vifi, v->uv_name);
+	    logit(LOG_WARNING, 0, "Failed installing tunnel VIF.  Missing ipip.ko module?");
 	errno = olderrno;
 #endif
 	logit(LOG_ERR, errno, "Failed MRT_ADD_VIF(%d) for %s", vifi, v->uv_name);
