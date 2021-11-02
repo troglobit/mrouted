@@ -267,11 +267,9 @@ static void show_mfc(FILE *fp, int detail)
 	struct rtentry *r;
 	struct gtable *gt;
 	struct stable *st;
-	struct ptable *pt;
 	time_t thyme = time(NULL);
 	vifi_t i;
 	char flags[5];
-	char c;
 	int once = 1;
 
 	for (gt = kernel_no_route; gt; gt = gt->gt_next) {
