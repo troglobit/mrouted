@@ -2,10 +2,14 @@ mrouted (4.4) unstable; urgency=medium
 
   * Issue #52: fix IPIP tunnels, both configuration and an off-by-one
     problem in unicast route distribution.
+  * Fix 10 year old regression causing off-by-one (loss of one) in unicast
+    route distribution (built-in RIP)  -- root cause for issue #52
   * Warn if installing tunnel vifs fail, probably missing ipip.ko
   * Logging to stdout now always prefix messages with daemon identity
+  * Renamed tunnel vifs to match kernel names -> dvmrpN
+  * Dropped RSRR feature (never enabled in Debian packages)
 
- -- Joachim Wiberg <troglobit@gmail.com>  Wed, 27 Oct 2021 18:00:10 +0200
+ -- Joachim Wiberg <troglobit@gmail.com>  Tue, 02 Nov 2021 17:42:53 +0100
 
 mrouted (4.3) stable; urgency=low
   * Add support for -i,--ident=NAME` to change identity of an instance

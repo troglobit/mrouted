@@ -15,6 +15,9 @@ All notable changes to the project are documented in this file.
 - If adding a tunnel VIF and Linux does not have `ipip.ko` loaded, 
   mrouted logs this as a warning message
 - Add test for IPIP tunnels
+- Add Docker container image, see https://ghcr.io/troglobit/mrouted
+- Update mping testing tool to v1.6 (internal)
+- Refactored linked-list handling in unicast route engine (internal)
 - Drop experimental RSRR feature.  It is very likely unused these days,
   seeing as the draft memo never made it into widespread use.  It is
   also not working properly with multiple instances of mrouted
