@@ -25,3 +25,6 @@ its Route Reply.  When the routing entry for the source-group pair
 changes, mrouted sends an unsolicited Route Reply containing the new
 routing information.
 
+For more information, see "RSRR: A Routing Interface For RSVP"[1][]
+
+[1]: https://datatracker.ietf.org/doc/html/draft-ietf-rsvp-routing-02
