@@ -57,7 +57,7 @@ jobs:
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix= --enable-rsrr
+          ./configure --prefix=
       - name: Build
         run: |
           export PATH=`pwd`/coverity/bin:$PATH
