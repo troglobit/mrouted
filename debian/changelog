@@ -1,4 +1,4 @@
-mrouted (4.4) unstable; urgency=medium
+mrouted (4.4) stable; urgency=low
 
   * Issue #52: fix IPIP tunnels, both configuration and an off-by-one
     problem in unicast route distribution.
@@ -9,7 +9,7 @@ mrouted (4.4) unstable; urgency=medium
   * Renamed tunnel vifs to match kernel names -> dvmrpN
   * Dropped RSRR feature (never enabled in Debian packages)
 
- -- Joachim Wiberg <troglobit@gmail.com>  Tue, 02 Nov 2021 17:42:53 +0100
+ -- Joachim Wiberg <troglobit@gmail.com>  Wed, 03 Nov 2021 11:54:42 +0100
 
 mrouted (4.3) stable; urgency=low
   * Add support for -i,--ident=NAME` to change identity of an instance

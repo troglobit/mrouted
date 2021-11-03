@@ -3,7 +3,7 @@ Change Log
 
 All notable changes to the project are documented in this file.
 
-[v4.4][UNRELEASED]
+[v4.4][] - 2021-11-03
 ---------------------
 
 ### Changes
@@ -650,7 +650,7 @@ v3.5 - 1995-05-08
 - Multicast traceroute could send a reply on a disabled interface.
 
 
-[UNRELEASED]: https://github.com/troglobit/mrouted/compare/4.3...HEAD
+[UNRELEASED]: https://github.com/troglobit/mrouted/compare/4.4...HEAD
 [v4.4]:       https://github.com/troglobit/mrouted/compare/4.3...4.4
 [v4.3]:       https://github.com/troglobit/mrouted/compare/4.2...4.3
 [v4.2]:       https://github.com/troglobit/mrouted/compare/4.1...4.2
