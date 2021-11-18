@@ -6,10 +6,12 @@
  * The mrouted program is COPYRIGHT 1989 by The Board of Trustees of
  * Leland Stanford Junior University.
  */
+
 #ifndef MROUTED_DEFS_H_
 #define MROUTED_DEFS_H_
 
-#include <config.h>
+#include "config.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
