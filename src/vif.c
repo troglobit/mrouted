@@ -799,14 +799,22 @@ void accept_membership_query(int ifi, uint32_t src, uint32_t dst, uint32_t group
     }
 
     if (uv->uv_querier == NULL || uv->uv_querier->al_addr != src) {
+	uint32_t cur = uv->uv_querier ? uv->uv_querier->al_addr : uv->uv_lcl_addr;
+
 	/*
 	 * This might be:
 	 * - A query from a new querier, with a lower source address
 	 *   than the current querier (who might be me)
 	 * - A query from a new router that just started up and doesn't
 	 *   know who the querier is.
+	 * - A proxy query (source address 0.0.0.0), never wins elections
 	 */
-	if (ntohl(src) < (uv->uv_querier ? ntohl(uv->uv_querier->al_addr) : ntohl(uv->uv_lcl_addr))) {
+	if (!ntohl(src)) {
+	    logit(LOG_DEBUG, 0, "Ignoring proxy query on %s", uv->uv_name);
+	    return;
+	}
+
+	if (ntohl(src) < ntohl(cur)) {
 	    IF_DEBUG(DEBUG_IGMP) {
 		logit(LOG_DEBUG, 0, "New querier %s (was %s) on vif %u", inet_fmt(src, s1, sizeof(s1)),
 		      uv->uv_querier ? inet_fmt(uv->uv_querier->al_addr, s2, sizeof(s2)) : "me", vifi);
