@@ -100,8 +100,10 @@ void init_vifs(void)
     enabled_phyints = 0;
     phys_vif	    = -1;
     UVIF_FOREACH(vifi, uv) {
-	if (uv->uv_flags & VIFF_DISABLED)
+	if (uv->uv_flags & VIFF_DISABLED) {
+	    logit(LOG_INFO, 0, "%s is disabled; skipping", uv->uv_name);
 	    continue;
+	}
 
 	++enabled_vifs;
 
