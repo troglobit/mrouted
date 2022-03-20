@@ -102,8 +102,21 @@ always calculates the IP payload offset based on the IP header length
 value of ingressing DVMRP and IGMP frames.
 .It Cm igmp-query-interval Ar <1-1024>
 This setting controls the IGMP query interval in seconds, used when this
-router is elected querier on a LAN.  It is not recommended to go below
-10 sec.  Default: 125.
+router is elected querier on a LAN.  The query interval on all eligable
+IGMP queriers on a LAN must be the same.  Default: 125.
+.Pp
+.Sy Note:
+this value must be greater than the
+.Cm igmp-query-response-interval .
+.It Cm igmp-query-response-interval Ar <1-1024>
+Controls the Max Resp Code in IGMP queries, which encodes the maximum
+time allowed before responding to a query.  Can be used to control the
+burstiness of IGMP/MLD traffic, a lower value causes burstier traffic.
+Default 10 sec.
+.Pp
+.Sy Note:
+this value must always be less than the
+.Cm igmp-query-interval .
 .It Cm igmp-query-last-member-interval Ar <1-1024>
 This setting controls the maximum time in seconds between group specific
 IGMP queries.  These are sent as response to a host on a LAN requesting
@@ -114,19 +127,18 @@ See also
 .Cm igmp-robustness
 (below), which controls how many group-specific queries are sent.
 .It Cm igmp-robustness Ar <2-10>
-This setting controls many aspects of IGMP timers, for end devices and
-routers alike.  The
-.Cm query-response-interval
-used below is hard-coded to 10 sec in
-.Nm mrouted :
+The robustness setting controls many aspects of IGMP timers, for end
+devices and routers alike.  Default 2.
 .Pp
 .Bl -tag -indent
 .It Group Membership Timeout
 Number of seconds before
 .Nm mrouted
 determines that there are no more members of a group on a LAN.  Formula:
-(igmp-robustness x igmp-query-interval) + (1 x query-response-interval)
-.It Other Querier Timeout
+.Bd -literal -offset indent
+robustness x query-interval + query-response-interval
+.Ed
+.It Other Querier Present Interval
 Number of seconds before
 .Nm mrouted
 determines there is no longer an elected querier on the LAN.  Formula:

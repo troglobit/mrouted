@@ -512,7 +512,7 @@ static void start_vif2(vifi_t vifi)
 	IF_DEBUG(DEBUG_IGMP) {
 	    logit(LOG_DEBUG, 0, "Assuming querier duties on vif %u", vifi);
 	}
-	send_query(uv, allhosts_group, IGMP_QUERY_RESPONSE_INTERVAL * IGMP_TIMER_SCALE, 0);
+	send_query(uv, allhosts_group, igmp_response_interval * IGMP_TIMER_SCALE, 0);
     }
 
     uv->uv_leaf_timer = LEAF_CONFIRMATION_TIME;
@@ -739,8 +739,7 @@ void query_groups(void *arg)
 	    continue;
 
 	if (uv->uv_flags & VIFF_QUERIER)
-	    send_query(uv, allhosts_group, IGMP_QUERY_RESPONSE_INTERVAL *
-		       IGMP_TIMER_SCALE, 0);
+	    send_query(uv, allhosts_group, igmp_response_interval * IGMP_TIMER_SCALE, 0);
     }
 }
 
@@ -1958,8 +1957,7 @@ void age_vifs(void)
 		free(uv->uv_querier);
 		uv->uv_querier = NULL;
 		uv->uv_flags |= VIFF_QUERIER;
-		send_query(uv, allhosts_group, IGMP_QUERY_RESPONSE_INTERVAL *
-			   IGMP_TIMER_SCALE, 0);
+		send_query(uv, allhosts_group, igmp_response_interval * IGMP_TIMER_SCALE, 0);
 	    }
 	}
     }

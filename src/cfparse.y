@@ -62,7 +62,7 @@ int numbounds = 0;			/* Number of named boundaries */
 };
 
 %token CACHE_LIFETIME PRUNE_LIFETIME PRUNING BLACK_HOLE NOFLOOD
-%token QUERY_INTERVAL QUERY_LAST_MEMBER_INTERVAL IGMP_ROBUSTNESS
+%token QUERY_INTERVAL QUERY_LAST_MEMBER_INTERVAL QUERY_RESPONSE_INTERVAL IGMP_ROBUSTNESS
 %token NO PHYINT TUNNEL NAME
 %token DISABLE ENABLE IGMPV1 IGMPV2 IGMPV3 STATIC_GROUP SRCRT BESIDE
 %token METRIC THRESHOLD RATE_LIMIT BOUNDARY NETMASK ALTNET ADVERT_METRIC
@@ -239,6 +239,12 @@ stmt	: error
 	    if ($2 < 1 || $2 > 1024)
 		fatal("Invalid IGMP query interval [1,1024]: %d", $2);
 	    igmp_query_interval = $2;
+	}
+	| QUERY_RESPONSE_INTERVAL NUMBER
+	{
+	    if ($2 < 1 || $2 > 1024)
+		fatal("Invalid IGMP query response interval [1,1024]: %d", $2);
+	    igmp_response_interval = $2;
 	}
 	| QUERY_LAST_MEMBER_INTERVAL NUMBER
 	{
@@ -735,6 +741,7 @@ static struct keyword {
 	{ "prune_lifetime",	PRUNE_LIFETIME,	PRUNE_LIFETIME2 },
 	{ "prune-lifetime",	PRUNE_LIFETIME,	PRUNE_LIFETIME2 },
 	{ "igmp-query-interval", QUERY_INTERVAL, 0 },
+	{ "igmp-query-reponse-interval", QUERY_RESPONSE_INTERVAL, 0 },
 	{ "igmp-query-last-member-interval", QUERY_LAST_MEMBER_INTERVAL, 0 },
 	{ "igmp-robustness",    IGMP_ROBUSTNESS, 0 },
 	{ "no",                 NO, 0 },
