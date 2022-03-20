@@ -484,7 +484,7 @@ static void show_igmp_iface(FILE *fp, int detail)
 		} else {
 			inet_fmt(uv->uv_querier->al_addr, s1, sizeof(s1));
 			snprintf(timeout, sizeof(timeout), "%5us",
-				 IGMP_OTHER_QUERIER_PRESENT_INTERVAL - uv->uv_querier->al_timer);
+				 router_timeout - uv->uv_querier->al_timer);
 		}
 
 		TAILQ_FOREACH(group, &uv->uv_groups, al_link)

@@ -1945,7 +1945,7 @@ void age_vifs(void)
 
 	if (uv->uv_querier) {
 	    uv->uv_querier->al_timer += TIMER_INTERVAL;
-	    if (uv->uv_querier->al_timer > IGMP_OTHER_QUERIER_PRESENT_INTERVAL) {
+	    if (uv->uv_querier->al_timer > router_timeout) {
 		/*
 		 * The current querier has timed out.  We must become the
 		 * querier.

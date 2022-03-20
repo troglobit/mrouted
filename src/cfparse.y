@@ -68,7 +68,7 @@ int numbounds = 0;			/* Number of named boundaries */
 %token METRIC THRESHOLD RATE_LIMIT BOUNDARY NETMASK ALTNET ADVERT_METRIC
 %token FILTER ACCEPT DENY EXACT BIDIR REXMIT_PRUNES REXMIT_PRUNES2
 %token PASSIVE ALLOW_NONPRUNERS
-%token NOTRANSIT BLASTER FORCE_LEAF ROUTER_ALERT
+%token NOTRANSIT BLASTER FORCE_LEAF ROUTER_ALERT ROUTER_TIMEOUT
 %token PRUNE_LIFETIME2 NOFLOOD2
 %token SYSNAM SYSCONTACT SYSVERSION SYSLOCATION
 %token <num> BOOLEAN
@@ -169,6 +169,12 @@ stmt	: error
 	| ROUTER_ALERT BOOLEAN
 	{
 	    router_alert = $2;
+	}
+	| ROUTER_TIMEOUT NUMBER
+	{
+	    if ($2 < 1 || $2 > 1024)
+		fatal("Invalid multicast router timeout [1,1024]: %d", $2);
+	    router_timeout = $2;
 	}
 	| BLACK_HOLE
 	{
@@ -759,6 +765,7 @@ static struct keyword {
 	{ "force_leaf",		FORCE_LEAF, 0 },
 	{ "force-leaf",		FORCE_LEAF, 0 },
 	{ "router-alert",	ROUTER_ALERT, 0 },
+	{ "router-timeout",	ROUTER_TIMEOUT, 0 },
 	{ "srcrt",		SRCRT, 0 },
 	{ "sourceroute",	SRCRT, 0 },
 	{ "boundary",		BOUNDARY, 0 },

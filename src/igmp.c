@@ -25,6 +25,7 @@ uint8_t		*recv_buf; 		     /* input packet buffer         */
 uint8_t		*send_buf; 		     /* output packet buffer        */
 int		igmp_socket;		     /* socket for all network I/O  */
 int             router_alert;		     /* IP option Router Alert      */
+uint32_t	router_timeout;		     /* Other querier present intv. */
 uint32_t	igmp_query_interval;	     /* Default: 125 sec            */
 uint32_t	igmp_response_interval;	     /* Default: 10 sec		    */
 uint32_t	igmp_last_member_interval;   /* Default: 1                  */
@@ -101,6 +102,7 @@ void igmp_init(void)
     igmp_last_member_interval = IGMP_LAST_MEMBER_INTERVAL_DEFAULT;
     igmp_robustness           = IGMP_ROBUSTNESS_DEFAULT;
     router_alert              = 1;
+    router_timeout            = IGMP_OTHER_QUERIER_PRESENT_INTERVAL;
 
 #ifdef REGISTER_HANDLER
     if (register_input_handler(igmp_socket, igmp_read) < 0)

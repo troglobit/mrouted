@@ -100,6 +100,20 @@ setting,
 .Nm mrouted
 always calculates the IP payload offset based on the IP header length
 value of ingressing DVMRP and IGMP frames.
+.It Cm router-timeout Ar <1-1024>
+Known in the RFC as Other Querier Present Interval, controls the timer
+used to detect when an elected IGMP querier stops sending queries.  When
+the timer expires,
+.Nm mrouted
+will assume the role as querier.  The default is calculated based on the
+.Cm igmp-robustness
+value, see below.  Setting this to any value overrides the RFC
+algorithm, which may be necessary in some scenarios.
+.Pp
+.Sy Note:
+it is strongly recommended to leave this setting commented out.  Use the
+.Cm igmp-robustness
+setting to tweak behavior instead.
 .It Cm igmp-query-interval Ar <1-1024>
 This setting controls the IGMP query interval in seconds, used when this
 router is elected querier on a LAN.  The query interval on all eligable
@@ -141,8 +155,12 @@ robustness x query-interval + query-response-interval
 .It Other Querier Present Interval
 Number of seconds before
 .Nm mrouted
-determines there is no longer an elected querier on the LAN.  Formula:
-(igmp-robustness x igmp-query-interval) + (0.5 x query-response-interval)
+determines there is no longer an elected querier on the LAN.  See also
+.Cm router-timeout .
+Formula:
+.Bd -literal -offset indent
+robustness x query-interval + query-response-interval / 2
+.Ed
 .It Last Member Query Count
 Number of group-specific queries sent before
 .Nm mrouted
