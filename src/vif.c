@@ -509,9 +509,7 @@ static void start_vif2(vifi_t vifi)
 	 * query.
 	 */
 	uv->uv_flags |= VIFF_QUERIER;
-	IF_DEBUG(DEBUG_IGMP) {
-	    logit(LOG_DEBUG, 0, "Assuming querier duties on vif %u", vifi);
-	}
+	logit(LOG_INFO, 0, "Assuming querier duties on %s", uv->uv_name);
 	send_query(uv, allhosts_group, igmp_response_interval * IGMP_TIMER_SCALE, 0);
     }
 
@@ -1950,10 +1948,8 @@ void age_vifs(void)
 		 * The current querier has timed out.  We must become the
 		 * querier.
 		 */
-		IF_DEBUG(DEBUG_IGMP) {
-		    logit(LOG_DEBUG, 0, "Querier %s timed out",
-			  inet_fmt(uv->uv_querier->al_addr, s1, sizeof(s1)));
-		}
+		logit(LOG_INFO, 0, "Querier %s timed out, assuming role on %s",
+		      inet_fmt(uv->uv_querier->al_addr, s1, sizeof(s1)), uv->uv_name);
 		free(uv->uv_querier);
 		uv->uv_querier = NULL;
 		uv->uv_flags |= VIFF_QUERIER;
