@@ -265,7 +265,7 @@ extern void             log_init(char *);
 extern int		log_str2lvl(char *);
 extern const char *	log_lvl2str(int);
 extern int		log_list(char *, size_t);
-extern void		logit(int, int, const char *, ...);
+extern void		logit(int, int, const char *, ...) __attribute__ ((format (printf, 3, 4)));
 extern void             resetlogging(void *);
 
 /* igmp.c */
