@@ -64,7 +64,7 @@ int numbounds = 0;			/* Number of named boundaries */
 %token CACHE_LIFETIME PRUNE_LIFETIME PRUNING BLACK_HOLE NOFLOOD
 %token QUERY_INTERVAL QUERY_LAST_MEMBER_INTERVAL QUERY_RESPONSE_INTERVAL IGMP_ROBUSTNESS
 %token NO PHYINT TUNNEL NAME
-%token DISABLE ENABLE IGMPV1 IGMPV2 IGMPV3 STATIC_GROUP SRCRT BESIDE
+%token DISABLE ENABLE IGMPV1 IGMPV2 IGMPV3 STATIC_GROUP JOIN_GROUP SRCRT BESIDE
 %token METRIC THRESHOLD RATE_LIMIT BOUNDARY NETMASK ALTNET ADVERT_METRIC
 %token FILTER ACCEPT DENY EXACT BIDIR REXMIT_PRUNES REXMIT_PRUNES2
 %token PASSIVE ALLOW_NONPRUNERS
@@ -314,6 +314,23 @@ ifmod	: mod
 	    time(&a->al_ctime);
 
 	    TAILQ_INSERT_TAIL(&v->uv_static, a, al_link);
+	}
+	| JOIN_GROUP GROUP
+	{
+	    struct listaddr *a;
+
+	    a = calloc(1, sizeof(struct listaddr));
+	    if (!a) {
+		fatal("Failed allocating memory for 'struct listaddr'");
+		return 0;
+	    }
+
+	    a->al_addr  = $2;
+	    a->al_pv    = 2;	/* IGMPv2 only, no SSM */
+	    a->al_flags = NBRF_JOIN_GROUP;
+	    time(&a->al_ctime);
+
+	    TAILQ_INSERT_TAIL(&v->uv_join, a, al_link);
 	}
 	| NETMASK addrname
 	{
@@ -774,6 +791,7 @@ static struct keyword {
 	{ "igmpv2",		IGMPV2, 0 },
 	{ "igmpv3",		IGMPV3, 0 },
 	{ "static-group",	STATIC_GROUP, 0 },
+	{ "join-group",		JOIN_GROUP, 0 },
 	{ "altnet",		ALTNET, 0 },
 	{ "name",		NAME, 0 },
 	{ "accept",		ACCEPT, 0 },
@@ -876,6 +894,7 @@ static int yylex(void)
 void config_vifs_from_file(void)
 {
     TAILQ_INIT(&scrap.uv_static);
+    TAILQ_INIT(&scrap.uv_join);
     TAILQ_INIT(&scrap.uv_groups);
     TAILQ_INIT(&scrap.uv_neighbors);
 

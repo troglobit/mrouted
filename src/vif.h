@@ -119,6 +119,7 @@ struct uvif {
     uint32_t	     uv_subnetbcast;    /* subnet broadcast addr (phyints)   */
     char	     uv_name[IFNAMSIZ]; /* interface name                    */
     TAILQ_HEAD(,listaddr) uv_static;    /* list of static groups (phyints)   */
+    TAILQ_HEAD(,listaddr) uv_join;      /* list of joined groups (phyints)   */
     TAILQ_HEAD(,listaddr) uv_groups;    /* list of local groups  (phyints)   */
     TAILQ_HEAD(,listaddr) uv_neighbors;	/* list of neighboring routers       */
     nbrbitmap_t	     uv_nbrmap;	        /* bitmap of active neigh. routers   */
@@ -237,6 +238,7 @@ struct listaddr {
 #define	NBRF_TOOMANYROUTES	0x1000	/* Neighbor is spouting routes 	    */
 #define	NBRF_NOTPRUNING		0x2000	/* Neighbor doesn't appear to prune */
 #define	NBRF_STATIC_GROUP	0x4000	/* Static group entry		    */
+#define	NBRF_JOIN_GROUP		0x8000	/* Join group entry		    */
 
 /*
  * Don't peer with neighbors with any of these flags set

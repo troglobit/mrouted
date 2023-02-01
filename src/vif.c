@@ -182,6 +182,7 @@ void zero_vif(struct uvif *uv, int t)
     uv->uv_subnetbcast	= 0;
     uv->uv_name[0]	= '\0';
     TAILQ_INIT(&uv->uv_static);
+    TAILQ_INIT(&uv->uv_join);
     TAILQ_INIT(&uv->uv_groups);
     TAILQ_INIT(&uv->uv_neighbors);
     NBRM_CLRALL(uv->uv_nbrmap);
@@ -491,6 +492,20 @@ static void start_vif2(vifi_t vifi)
 
 	/* Join INADDR_ALLRPTS_GROUP to support IGMPv3 membership reports */
 	k_join(allreports_group, src);
+
+	/*
+	 * Some switches with IGMP snooping enabled do not properly
+         * recognize mrouted as a dynamic multicast router port, so they
+	 * will block traffic from the sender to the mrouted router.
+	 * In such a case, we might want to explicitely join a multicast
+	 * group on this interface.
+	 */
+	TAILQ_FOREACH(a, &uv->uv_join, al_link) {
+	    uint32_t group = a->al_addr;
+	    logit(LOG_INFO, 0, "Joining group %s on %s because it was explicitely requested",
+		inet_fmt(group, s1, sizeof(s1)), uv->uv_name);
+	    k_join(group, src);
+	}
 
 	/*
 	 * Install an entry in the routing table for the subnet to which

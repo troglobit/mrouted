@@ -235,6 +235,16 @@ input interface.
 .Pp
 This is also very useful for testing routing without having the set up
 IGMP capable receivers.
+.It Cm join-group Ar group
+Useful when some there are switches with IGMP snooping on the LAN
+that do not detect that
+.Nm mrouted
+is operating and cut the flooding on the corresponding port.
+It makes
+.Nm mrouted
+join the desired
+.Ar group
+so that the snooping switch will open that port.
 .It Cm altnet Ar network Ns / Ns Ar mask-len
 If an interface is attached to multiple IP subnets, describe each
 additional subnet with this keyword.
