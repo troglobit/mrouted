@@ -635,6 +635,15 @@ void stop_all_vifs(void)
 	}
 	uv->uv_querier = NULL;
 
+	TAILQ_FOREACH_SAFE(a, &uv->uv_join, al_link, tmp) {
+	    uint32_t group = a->al_addr;
+	    logit(LOG_INFO, 0, "Removing joined group %s from %s",
+		inet_fmt(group, s1, sizeof(s1)), uv->uv_name);
+	    k_leave(group, uv->uv_lcl_addr);
+	    TAILQ_REMOVE(&uv->uv_join, a, al_link);
+	    free(a);
+	}
+
 	TAILQ_FOREACH_SAFE(a, &uv->uv_groups, al_link, tmp) {
 	    TAILQ_REMOVE(&uv->uv_groups, a, al_link);
 	    free(a);
