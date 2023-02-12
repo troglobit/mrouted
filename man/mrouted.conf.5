@@ -215,12 +215,14 @@ supports all IGMP versions.  Use these flags to force compatibility
 modes on the given interface.  Default:
 .Cm igmpv3
 .It Cm static-group Ar group
-Useful when there is no IGMP capable hosts on the LAN, or when a group
-should always be routed.  It behaves as if an IGMPv2 join for
+This setting makes
+.Nm mrouted
+behave as if an IGMPv2 join for
 .Ar group
 was received on the
 .Cm phyint .
-It is listed as
+Useful when there is no IGMP capable hosts on the LAN, or when a group
+should always be routed.  The group is listed as
 .Cm static
 in the
 .Nm mroutectl
@@ -233,8 +235,8 @@ this works just as a (*,G) route in
 With the added exception for better handling of dynamic changes to the
 input interface.
 .Pp
-This is also very useful for testing routing without having the set up
-IGMP capable receivers.
+This can also be sued for testing routing without having to set up IGMP
+capable receivers.
 .It Cm join-group Ar group
 This setting makes
 .Nm mrouted
