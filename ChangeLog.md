@@ -3,6 +3,15 @@ Change Log
 
 All notable changes to the project are documented in this file.
 
+[v4.5][] - development version
+------------------------------
+
+### Changes
+- New `join-group <group>` option for the cases where a IGMP
+  snooping switch cuts the flooding to a port where mrouted
+  is operating
+
+
 [v4.4][] - 2021-11-03
 ---------------------
 
