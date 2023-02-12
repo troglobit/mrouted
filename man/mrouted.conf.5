@@ -236,15 +236,19 @@ input interface.
 This is also very useful for testing routing without having the set up
 IGMP capable receivers.
 .It Cm join-group Ar group
-Useful when some there are switches with IGMP snooping on the LAN
-that do not detect that
-.Nm mrouted
-is operating and cut the flooding on the corresponding port.
-It makes
+This setting makes
 .Nm mrouted
 join the desired
 .Ar group
-so that the snooping switch will open that port.
+on the
+.Cm phyint
+connected to the LAN which is source of the multicast to be forwarded.
+Useful when there are switches with IGMP snooping that do not detect
+.Nm mrouted
+as a multicast router, and thus prevent flooding multicast on the
+corresponding port.  Most managed switches support configuring a
+static multicast router port, but sometimes that is not available,
+or access to the switch is restricted.
 .It Cm altnet Ar network Ns / Ns Ar mask-len
 If an interface is attached to multiple IP subnets, describe each
 additional subnet with this keyword.

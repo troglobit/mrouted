@@ -496,14 +496,15 @@ static void start_vif2(vifi_t vifi)
 	/*
 	 * Some switches with IGMP snooping enabled do not properly
          * recognize mrouted as a dynamic multicast router port, so they
-	 * will block traffic from the sender to the mrouted router.
-	 * In such a case, we might want to explicitely join a multicast
-	 * group on this interface.
+         * will block traffic from the sender to the mrouted router.  In
+         * such a case, we might want to explicitely join a multicast
+         * group on this interface.
 	 */
 	TAILQ_FOREACH(a, &uv->uv_join, al_link) {
 	    uint32_t group = a->al_addr;
-	    logit(LOG_INFO, 0, "Joining group %s on %s because it was explicitely requested",
-		inet_fmt(group, s1, sizeof(s1)), uv->uv_name);
+
+	    logit(LOG_INFO, 0, "Joining static group %s on %s from %s",
+		  inet_fmt(group, s1, sizeof(s1)), uv->uv_name, config_file);
 	    k_join(group, src);
 	}
 
@@ -637,8 +638,9 @@ void stop_all_vifs(void)
 
 	TAILQ_FOREACH_SAFE(a, &uv->uv_join, al_link, tmp) {
 	    uint32_t group = a->al_addr;
-	    logit(LOG_INFO, 0, "Removing joined group %s from %s",
-		inet_fmt(group, s1, sizeof(s1)), uv->uv_name);
+
+	    logit(LOG_INFO, 0, "Leaving static group %s on %s from %s",
+		  inet_fmt(group, s1, sizeof(s1)), uv->uv_name, config_file);
 	    k_leave(group, uv->uv_lcl_addr);
 	    TAILQ_REMOVE(&uv->uv_join, a, al_link);
 	    free(a);
