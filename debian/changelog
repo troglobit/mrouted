@@ -9,8 +9,10 @@ mrouted (4.5) stable; urgency=low
     on the given interface.  Never expires
   * On startup and reconf, log why we skip disabled interfaces
   * Change to always log when assuming the IGMP querier role
+  * Fix compat read location and new location for `mrouted.genid`
+  * Fix "non-decreasing" generation id, must increment on each restart
 
- -- Joachim Wiberg <troglobit@gmail.com>  Sun, 04 Jun 2023 14:30:40 +0200
+ -- Joachim Wiberg <troglobit@gmail.com>  Sun, 04 Jun 2023 17:05:48 +0200
 
 mrouted (4.4) stable; urgency=low
 

@@ -9,6 +9,8 @@ All notable changes to the project are documented in this file.
 ### Fixes
 - Ignore IGMP proxy querys (src ip: 0.0.0.0), they must never win a
   querier election.
+- Fix compat read location and new location for `mrouted.genid`
+- Fix "non-decreasing" generation id, must increment on each restart
 
 ### Changes
 - Add support for configurable IGMP query response interval
