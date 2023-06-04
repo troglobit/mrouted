@@ -3,13 +3,21 @@ Change Log
 
 All notable changes to the project are documented in this file.
 
-[v4.5][UNRELEASED] - development version
-------------------------------
+[v4.5][] - 2023-06-04
+---------------------
+
+### Fixes
+- Ignore IGMP proxy querys (src ip: 0.0.0.0), they must never win a
+  querier election.
 
 ### Changes
+- Add support for configurable IGMP query response interval
+- Add support for configurable IGMP querier timeout
 - New `join-group <group>` phyint option for cases where an IGMP
   snooping switch blocks flooding of multicast to the port where
   mrouted is connected
+- On startup and reconf, log why we skip disabled interfaces
+- Change to always log when assuming the IGMP querier role
 
 
 [v4.4][] - 2021-11-03
@@ -659,7 +667,8 @@ v3.5 - 1995-05-08
 - Multicast traceroute could send a reply on a disabled interface.
 
 
-[UNRELEASED]: https://github.com/troglobit/mrouted/compare/4.4...HEAD
+[UNRELEASED]: https://github.com/troglobit/mrouted/compare/4.5...HEAD
+[v4.5]:       https://github.com/troglobit/mrouted/compare/4.4...4.5
 [v4.4]:       https://github.com/troglobit/mrouted/compare/4.3...4.4
 [v4.3]:       https://github.com/troglobit/mrouted/compare/4.2...4.3
 [v4.2]:       https://github.com/troglobit/mrouted/compare/4.1...4.2
