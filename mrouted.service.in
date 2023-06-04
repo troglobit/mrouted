@@ -12,7 +12,7 @@ Requires=network-online.target
 [Service]
 Type=simple
 ExecStartPre=-/sbin/modprobe ipip
-ExecStart=@SBINDIR@/mrouted -ns
+ExecStart=@SBINDIR@/mrouted --foreground --syslog
 
 [Install]
 WantedBy=multi-user.target
