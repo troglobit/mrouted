@@ -126,24 +126,32 @@ static void do_randomize(void)
 
 /*
  * _PATH_MROUTED_GENID is the configurable fallback and old default used
- * by mrouted, which does not comply with FHS.  We only read that, if it
+ * by mrouted, which does not comply with FHS.  We only read that if it
  * exists, otherwise we use the system _PATH_VARDB, which works on all
  * *BSD and GLIBC based Linux systems.  Some Linux systms don't have the
  * correct FHS /var/lib/misc for that define, so we check for that too.
  */
 static FILE *fopen_genid(char *mode)
 {
+    const char *path = _PATH_VARDB;
     char fn[80];
 
+    /* If old /var/lib/mrouted.genid exists, use that for compat. */
     snprintf(fn, sizeof(fn), _PATH_MROUTED_GENID, ident);
-    if (access(fn, R_OK | W_OK)) {
-	if (strcmp(ident, PACKAGE_NAME))
-	    return NULL;
-
-	if (!access(_PATH_VARDB, W_OK))
-	    snprintf(fn, sizeof(fn), "%s/mrouted.genid", _PATH_VARDB);
+    if (access(fn, F_OK)) {
+#ifdef __linux__
+	/*
+	 * Workaround for Linux systems where _PATH_VARDB is /var/db but
+	 * the rootfs doesn't have it.  Let's check for /var/lib/misc
+	 */
+	if (access(path, W_OK))
+	    path = PRESERVEDIR "/misc";
+#endif
+	if (!access(path, W_OK))
+	    snprintf(fn, sizeof(fn), "%s/%s.genid", path, ident);
     }
 
+    /* If all fails we fall back to try _PATH_MROUTED_GENID */
     return fopen(fn, mode);
 }
 
