@@ -127,7 +127,7 @@ int timer_next_delay(void)
 	return 0;
     }
 
-    return ptr->time;
+    return (int)ptr->time;
 }
 
 /*
@@ -209,7 +209,7 @@ int timer_get(int timer_id)
     TAILQ_FOREACH(ptr, &tl, link) {
 	left += ptr->time;
 	if (ptr->id == timer_id)
-	    return left;
+	    return (int)left;
     }
 
     return -1;
