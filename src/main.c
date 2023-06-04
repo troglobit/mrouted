@@ -176,8 +176,8 @@ static void init_genid(void)
 	ret = fscanf(fp, "%u", &prev_genid);
 	(void)fclose(fp);
 
-	if (ret == 1 && prev_genid == dvmrp_genid)
-	    dvmrp_genid++;
+	if (ret == 1)
+	    dvmrp_genid = prev_genid + 1;
 	else
 	    dvmrp_genid = rand_genid();
     } else
