@@ -6,7 +6,7 @@ AM_INIT_AUTOMAKE([1.11 foreign])
 AM_SILENT_RULES([yes])
 
 AC_CONFIG_SRCDIR([src/main.c])
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile man/Makefile src/Makefile test/Makefile mrouted.service])
 
 # Check for standard programs, headers, and functions
@@ -18,7 +18,6 @@ AC_PROG_YACC
 PKG_PROG_PKG_CONFIG
 
 # Check for linux/netlink.h is only to be able to define LINUX below
-AC_HEADER_STDC
 AC_CHECK_HEADERS([fcntl.h ifaddrs.h sys/ioctl.h sys/time.h linux/netlink.h termios.h])
 AC_CHECK_HEADERS([net/if.h netinet/igmp.h], [], [], [
 #include <stdio.h>
