@@ -12,6 +12,7 @@
 
 # Requires OSPF (bird) to build the unicast rpf tree
 print "Check deps ..."
+check_dep grep -q ipip /proc/modules
 check_dep ethtool
 check_dep tshark
 check_dep bird
