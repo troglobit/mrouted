@@ -542,8 +542,8 @@ static void start_vif2(vifi_t vifi)
  */
 static void stop_vif(vifi_t vifi)
 {
-    struct listaddr *a, *tmp;
-    struct phaddr *p;
+    struct listaddr *al, *tmp;
+    struct phaddr *pa;
     struct uvif *uv;
 
     uv = find_uvif(vifi);
@@ -573,22 +573,22 @@ static void stop_vif(vifi_t vifi)
 	 */
 	start_route_updates();
 	update_route(uv->uv_subnet, uv->uv_subnetmask, UNREACHABLE, 0, vifi, NULL);
-	for (p = uv->uv_addrs; p; p = p->pa_next) {
+	for (pa = uv->uv_addrs; pa; pa = pa->pa_next) {
 	    start_route_updates();
-	    update_route(p->pa_subnet, p->pa_subnetmask, UNREACHABLE, 0, vifi, NULL);
+	    update_route(pa->pa_subnet, pa->pa_subnetmask, UNREACHABLE, 0, vifi, NULL);
 	}
 
 	/*
 	 * Discard all group addresses.  (No need to tell kernel;
 	 * the k_del_vif() call, below, will clean up kernel state.)
 	 */
-	TAILQ_FOREACH_SAFE(a, &uv->uv_groups, al_link, tmp) {
-	    TAILQ_REMOVE(&uv->uv_groups, a, al_link);
-	    free(a);
+	TAILQ_FOREACH_SAFE(al, &uv->uv_groups, al_link, tmp) {
+	    TAILQ_REMOVE(&uv->uv_groups, al, al_link);
+	    free(al);
 	}
 
 	IF_DEBUG(DEBUG_IGMP) {
-	    logit(LOG_DEBUG, 0, "Releasing querier duties on vif %u", vifi);
+	    logit(LOG_DEBUG, 0, "Releasing querier duties on %s (vif %u)", uv->uv_name, vifi);
 	}
 	uv->uv_flags &= ~VIFF_QUERIER;
     }
@@ -609,10 +609,10 @@ static void stop_vif(vifi_t vifi)
     if (!NBRM_ISEMPTY(uv->uv_nbrmap))
 	neighbor_vifs--;
 
-    TAILQ_FOREACH_SAFE(a, &uv->uv_neighbors, al_link, tmp) {
-	TAILQ_REMOVE(&uv->uv_neighbors, a, al_link);
-	nbrs[a->al_index] = NULL;
-	free(a);
+    TAILQ_FOREACH_SAFE(al, &uv->uv_neighbors, al_link, tmp) {
+	TAILQ_REMOVE(&uv->uv_neighbors, al, al_link);
+	nbrs[al->al_index] = NULL;
+	free(al);
     }
     NBRM_CLRALL(uv->uv_nbrmap);
 }
@@ -623,9 +623,9 @@ static void stop_vif(vifi_t vifi)
  */
 void stop_all_vifs(void)
 {
-    struct listaddr *a, *tmp;
+    struct listaddr *al, *tmp;
     struct vif_acl *acl;
-    struct phaddr *ph;
+    struct phaddr *pa;
     struct uvif *uv;
     vifi_t vifi;
 
@@ -636,25 +636,25 @@ void stop_all_vifs(void)
 	}
 	uv->uv_querier = NULL;
 
-	TAILQ_FOREACH_SAFE(a, &uv->uv_join, al_link, tmp) {
-	    uint32_t group = a->al_addr;
+	TAILQ_FOREACH_SAFE(al, &uv->uv_join, al_link, tmp) {
+	    uint32_t group = al->al_addr;
 
 	    logit(LOG_INFO, 0, "Leaving static group %s on %s from %s",
 		  inet_fmt(group, s1, sizeof(s1)), uv->uv_name, config_file);
 	    k_leave(group, uv->uv_lcl_addr);
-	    TAILQ_REMOVE(&uv->uv_join, a, al_link);
-	    free(a);
+	    TAILQ_REMOVE(&uv->uv_join, al, al_link);
+	    free(al);
 	}
 
-	TAILQ_FOREACH_SAFE(a, &uv->uv_groups, al_link, tmp) {
-	    TAILQ_REMOVE(&uv->uv_groups, a, al_link);
-	    free(a);
+	TAILQ_FOREACH_SAFE(al, &uv->uv_groups, al_link, tmp) {
+	    TAILQ_REMOVE(&uv->uv_groups, al, al_link);
+	    free(al);
 	}
 
-	TAILQ_FOREACH_SAFE(a, &uv->uv_neighbors, al_link, tmp) {
-	    TAILQ_REMOVE(&uv->uv_neighbors, a, al_link);
-	    nbrs[a->al_index] = NULL;
-	    free(a);
+	TAILQ_FOREACH_SAFE(al, &uv->uv_neighbors, al_link, tmp) {
+	    TAILQ_REMOVE(&uv->uv_neighbors, al, al_link);
+	    nbrs[al->al_index] = NULL;
+	    free(al);
 	}
 
 	while (uv->uv_acl) {
@@ -665,9 +665,9 @@ void stop_all_vifs(void)
 	uv->uv_acl = NULL;
 
 	while (uv->uv_addrs) {
-	    ph = uv->uv_addrs;
-	    uv->uv_addrs = ph->pa_next;
-	    free(ph);
+	    pa = uv->uv_addrs;
+	    uv->uv_addrs = pa->pa_next;
+	    free(pa);
 	}
 	uv->uv_addrs = NULL;
 
@@ -909,9 +909,10 @@ void accept_membership_query(int ifi, uint32_t src, uint32_t dst, uint32_t group
 
 static void group_debug(struct listaddr *g, char *s, int is_change)
 {
-    IF_DEBUG(DEBUG_IGMP)
+    IF_DEBUG(DEBUG_IGMP) {
 	logit(LOG_DEBUG, 0, "%sIGMP v%d compatibility mode for group %s",
 	      is_change ? "Change to " : "", g->al_pv, s);
+    }
 }
 
 /*
