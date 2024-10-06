@@ -584,6 +584,16 @@ static void stop_vif(vifi_t vifi)
 	 */
 	TAILQ_FOREACH_SAFE(al, &uv->uv_groups, al_link, tmp) {
 	    TAILQ_REMOVE(&uv->uv_groups, al, al_link);
+
+	    if (al->al_query > 0)
+		al->al_query = timer_clear(al->al_query);
+
+	    if (al->al_timerid > 0)
+		al->al_timerid = timer_clear(al->al_timerid);
+
+	    if (al->al_pv_timerid > 0)
+		al->al_pv_timerid = timer_clear(al->al_pv_timerid);
+
 	    free(al);
 	}
 
@@ -648,6 +658,16 @@ void stop_all_vifs(void)
 
 	TAILQ_FOREACH_SAFE(al, &uv->uv_groups, al_link, tmp) {
 	    TAILQ_REMOVE(&uv->uv_groups, al, al_link);
+
+	    if (al->al_query > 0)
+		al->al_query = timer_clear(al->al_query);
+
+	    if (al->al_timerid > 0)
+		al->al_timerid = timer_clear(al->al_timerid);
+
+	    if (al->al_pv_timerid > 0)
+		al->al_pv_timerid = timer_clear(al->al_pv_timerid);
+
 	    free(al);
 	}
 
