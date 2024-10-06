@@ -244,9 +244,6 @@ int timer_clear(int timer_id)
 	return -1;
     }
 
-    /* Found it, now unlink it from the queue */
-    TAILQ_REMOVE(&tl, ptr, link);
-
     /* protect against stopping timers in callbacks */
     ptr->act = 0;
 
@@ -254,6 +251,9 @@ int timer_clear(int timer_id)
     next = TAILQ_NEXT(ptr, link);
     if (next)
 	next->time += ptr->time;
+
+    /* Done manip. next entry, now safe to unlink from active queue */
+    TAILQ_REMOVE(&tl, ptr, link);
 
     if (ptr->data) {
 	free(ptr->data);
