@@ -114,11 +114,16 @@ void send_ipip(uint32_t src, uint32_t dst, int type, int code, uint32_t group, i
     msg.msg_iov = iov;
     msg.msg_iovlen = 2;
     if (sendmsg(raw_socket, &msg, 0) < 0) {
-	if (errno == ENETDOWN)
+	switch (errno) {
+	case ENETUNREACH:
+	case ENETDOWN:
 	    check_vif_state();
-	else
+	    break;
+	default:
 	    logit(LOG_WARNING, errno, "sendmsg to %s on %s",
 		inet_fmt(sdst.sin_addr.s_addr, s1, sizeof(s1)), inet_fmt(src, s2, sizeof(s2)));
+	    break;
+	}
     }
 
     IF_DEBUG(DEBUG_PKT|igmp_debug_kind(type, code))

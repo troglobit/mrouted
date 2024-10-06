@@ -643,11 +643,16 @@ void send_igmp(uint32_t src, uint32_t dst, int type, int code, uint32_t group, i
 
     rc = sendto(igmp_socket, send_buf, len, 0, (struct sockaddr *)&sin, sizeof(sin));
     if (rc < 0) {
-	if (errno == ENETDOWN)
+	switch (errno) {
+	case ENETUNREACH:
+	case ENETDOWN:
 	    check_vif_state();
-	else
+	    break;
+	default:
 	    logit(igmp_log_level(type, code), errno, "sendto to %s on %s",
 		  inet_fmt(dst, s1, sizeof(s1)), inet_fmt(src, s2, sizeof(s2)));
+	    break;
+	}
     }
 
     if (setloop)
