@@ -803,6 +803,51 @@ void restart(void)
     timer_set(TIMER_INTERVAL, timer, NULL);
 }
 
+/*
+ * Reload ifaces
+ */
+void reload_iface(void)
+{
+    FILE *fp = NULL;
+    char *s = NULL;
+
+    s = strdup (" reload");
+    if (s == NULL)
+	logit(LOG_ERR, 0, "out of memory");
+
+    /*
+     * reset all the entries, except routes and prunes
+     */
+    timer_stop_all();
+    stop_all_vifs();
+    k_stop_dvmrp();
+    igmp_exit();
+#ifndef IOCTL_OK_ON_RAW_SOCKET
+    close(udp_socket);
+#endif
+    did_final_init = 0;
+
+    /*
+     * start processing again
+     */
+    init_genid();
+
+    igmp_init();
+    init_routes();
+    init_ktable();
+    init_vifs();
+    /*XXX Schedule final_init() as main does? */
+    final_init(s);
+
+    /* Touch PID file to acknowledge SIGHUP */
+    pidfile(pid_file);
+
+    /* schedule timer interrupts */
+    timer_set(1, fasttimer, NULL);
+    timer_set(TIMER_INTERVAL, timer, NULL);
+}
+
+
 #define SCALETIMEBUFLEN 27
 char *scaletime(time_t t)
 {

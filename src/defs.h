@@ -256,6 +256,7 @@ extern int		mrt_table_id;
 extern int              debug_list(int, char *, size_t);
 extern int              debug_parse(char *);
 extern void             restart(void);
+extern void             reload_iface(void);
 extern char *		scaletime(time_t);
 extern int		register_input_handler(int, ihfunc_t);
 extern void		deregister_input_handler(int);
@@ -452,6 +453,7 @@ extern int		pidfile(const char *basename);
 #define IPC_SHOW_MFC_CMD          21
 #define IPC_SHOW_NEIGH_CMD        22
 #define IPC_SHOW_ROUTES_CMD       23
+#define IPC_RELOAD_IFACE_CMD      30
 #define IPC_SHOW_COMPAT_CMD       250
 #define IPC_EOF_CMD               254
 #define IPC_ERR_CMD               255
