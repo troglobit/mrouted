@@ -100,7 +100,7 @@ typedef void (*ihfunc_t) (int);
 #define EQUAL(s1, s2)	(strcmp((s1), (s2)) == 0)
 #define ARRAY_LEN(a)    (sizeof((a)) / sizeof((a)[0]))
 
-#define TIMER_INTERVAL	2
+#define TIMER_INTERVAL	ROUTE_MAX_REPORT_DELAY
 
 #define PROTOCOL_VERSION 3  /* increment when packet format/content changes */
 #define MROUTED_VERSION	 9  /* not in DVMRP packets at all */
