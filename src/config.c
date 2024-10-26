@@ -10,6 +10,7 @@
 #include <ifaddrs.h>
 #include "defs.h"
 
+static TAILQ_HEAD(, uvif) cvifs = TAILQ_HEAD_INITIALIZER(cvifs);
 static TAILQ_HEAD(, uvif) vifs = TAILQ_HEAD_INITIALIZER(vifs);
 
 void config_set_ifflag(uint32_t flag)
@@ -128,6 +129,22 @@ struct uvif *config_init_tunnel(in_addr_t lcl_addr, in_addr_t rmt_addr, uint32_t
 }
 
 /*
+ * Find index of an already installed vif.
+ */
+static vifi_t find_vifi(struct uvif *v)
+{
+    struct uvif *uv;
+    vifi_t vifi;
+
+    UVIF_FOREACH(vifi, uv) {
+        if (strcmp(v->uv_name, uv->uv_name) == 0) {
+            return vifi;
+        }
+    }
+    return NO_VIF;
+}
+
+/*
  * Ignore any kernel interface that is disabled, or connected to the
  * same subnet as one already installed in the uvifs[] array.
  */
@@ -183,6 +200,54 @@ static vifi_t check_vif(struct uvif *v)
     return vifi;
 }
 
+static void reload_gone_vifs(void)
+{
+    struct uvif *uv;
+    struct uvif *nuv;
+
+    int found;
+    TAILQ_FOREACH(uv, &cvifs, uv_link) {
+        found = 0;
+        TAILQ_FOREACH(nuv, &vifs, uv_link) {	
+            if (uv->uv_ifindex == nuv->uv_ifindex) {
+                found = 1;
+                break;
+            }
+        }
+        if (!found) {
+            stop_vif(find_vifi(uv));
+            uninstall_uvif(uv);
+        }
+    }
+}
+
+static void reload_new_vifs(void)
+{
+    struct uvif *uv;
+    struct uvif *nuv;
+
+    int found;
+    TAILQ_FOREACH(nuv, &vifs, uv_link) {
+        found = 0;
+        TAILQ_FOREACH(uv, &cvifs, uv_link) {	
+            if (uv->uv_ifindex == nuv->uv_ifindex) {
+                found = 1;
+                break;
+            }
+        }
+        if (!found) {
+            vifi_t vifi = check_vif(nuv);
+            if (vifi == NO_VIF || install_uvif(nuv)) {
+                TAILQ_REMOVE(&vifs, nuv, uv_link);
+                free(nuv);
+                continue;
+            }
+            start_vif(find_vifi(nuv));
+        }
+    }
+}
+
+
 void config_vifs_correlate(void)
 {
     struct listaddr *al, *al_tmp;
@@ -209,11 +274,19 @@ void config_vifs_correlate(void)
 		  vifi, v->uv_rate_limit);
     }
 
-    /*
-     * XXX: one future extension may be to keep this for adding/removing
-     *      dynamic interfaces at runtime.  Now we re-init and let SIGHUP
-     *      rebuild it to recheck since we tear down all vifs anyway.
-     */
+    TAILQ_FIRST(&cvifs) = TAILQ_FIRST(&vifs);
+    TAILQ_INIT(&vifs);
+}
+
+
+void config_vifs_from_reload()
+{
+    config_vifs_from_kernel();
+    reload_gone_vifs();
+    reload_new_vifs();
+
+    TAILQ_INIT(&cvifs);
+    TAILQ_FIRST(&cvifs) = TAILQ_FIRST(&vifs);
     TAILQ_INIT(&vifs);
 }
 

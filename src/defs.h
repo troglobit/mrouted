@@ -257,6 +257,7 @@ extern int              debug_list(int, char *, size_t);
 extern int              debug_parse(char *);
 extern void             restart(void);
 extern void             reload_iface(void);
+extern void             reload_vifs(void);
 extern char *		scaletime(time_t);
 extern int		register_input_handler(int, ihfunc_t);
 extern void		deregister_input_handler(int);
@@ -318,11 +319,14 @@ extern void		dump_routes(FILE *, int);
 
 /* vif.c */
 extern void		init_vifs(void);
+extern void     start_vif(vifi_t);
+extern void     stop_vif(vifi_t);
 extern void		blaster_alloc(struct uvif *);
 extern void		blaster_free(struct uvif *);
 extern void		zero_vif(struct uvif *, int);
 extern void		init_installvifs(void);
 extern int		install_uvif(struct uvif *);
+extern int      uninstall_uvif(struct uvif *);
 extern void		check_vif_state(void);
 extern void		send_on_vif(struct uvif *, uint32_t, int, size_t);
 extern struct uvif     *find_uvif(vifi_t);
@@ -358,6 +362,7 @@ extern struct uvif     *config_find_ifaddr(in_addr_t addr);
 extern struct uvif     *config_init_tunnel(in_addr_t lcl_addr, in_addr_t rmt_addr, uint32_t flags);
 extern void		config_vifs_correlate(void);
 extern void		config_vifs_from_kernel(void);
+extern void     config_vifs_from_reload(void);
 
 /* cfparse.y */
 extern void		config_vifs_from_file(void);

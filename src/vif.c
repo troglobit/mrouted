@@ -38,9 +38,9 @@ static int dvmrp_timerid = -1;
 /*
  * Forward declarations.
  */
-static void start_vif          (vifi_t vifi);
-static void start_vif2         (vifi_t vifi);
-static void stop_vif           (vifi_t vifi);
+void start_vif          (vifi_t vifi);
+static void start_vif2  (vifi_t vifi);
+void stop_vif           (vifi_t vifi);
 
 static void send_probe_on_vif  (struct uvif *v);
 
@@ -159,6 +159,14 @@ void init_vifs(void)
     if (dvmrp_timerid > 0)
 	timer_clear(dvmrp_timerid);
     dvmrp_timerid = timer_set(NEIGHBOR_PROBE_INTERVAL, query_dvmrp, NULL);
+}
+
+/*
+ * Reload the virtual interfaces, removing gone vifs and add new vifs.
+ */
+void reload_vifs(void)
+{
+    config_vifs_from_reload();
 }
 
 /*
@@ -288,6 +296,31 @@ int install_uvif(struct uvif *uv)
     }
 
     uvifs[numvifs++] = uv;
+
+    return 0;
+}
+
+int uninstall_uvif(struct uvif *uv)
+{
+    if (numvifs == 0) {
+        logit(LOG_WARNING, 0, "No vifs, ignoring %s", uv->uv_name);
+        return 1;
+    }
+
+    int i;
+    for (i = 0; i < numvifs; i++) {
+        if (uv->uv_ifindex == uvifs[i]->uv_ifindex) {
+            break;
+        }
+    }
+
+    if (i == numvifs)
+        return 1;
+
+    for (; i < numvifs - 1; i++) {
+        uvifs[i] = uvifs[i + 1];
+    }
+    numvifs--;
 
     return 0;
 }
@@ -437,7 +470,7 @@ static void send_query(struct uvif *v, uint32_t dst, int code, uint32_t group)
 /*
  * Add a vifi to the kernel and start routing on it.
  */
-static void start_vif(vifi_t vifi)
+void start_vif(vifi_t vifi)
 {
     struct uvif *uv;
 
@@ -540,7 +573,7 @@ static void start_vif2(vifi_t vifi)
 /*
  * Stop routing on the specified virtual interface.
  */
-static void stop_vif(vifi_t vifi)
+void stop_vif(vifi_t vifi)
 {
     struct listaddr *a, *tmp;
     struct phaddr *p;
