@@ -252,7 +252,7 @@ static void igmp_read(int sd, void *arg)
 
     for (cmsg = CMSG_FIRSTHDR(&msgh); cmsg; cmsg = CMSG_NXTHDR(&msgh, cmsg)) {
 #ifdef IP_PKTINFO
-	struct in_pktinfo *ipi = (struct in_pktinfo *)CMSG_DATA(cmsg);
+	const struct in_pktinfo *ipi = (struct in_pktinfo *)CMSG_DATA(cmsg);
 	char tmp[IF_NAMESIZE + 1] = { 0 };
 
 	if (cmsg->cmsg_level != SOL_IP || cmsg->cmsg_type != IP_PKTINFO)

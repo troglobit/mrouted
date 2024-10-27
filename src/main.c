@@ -81,7 +81,7 @@ static void do_randomize(void)
  * *BSD and GLIBC based Linux systems.  Some Linux systms don't have the
  * correct FHS /var/lib/misc for that define, so we check for that too.
  */
-static FILE *fopen_genid(char *mode)
+static FILE *fopen_genid(const char *mode)
 {
     const char *path = _PATH_VARDB;
     char fn[80];
@@ -217,7 +217,9 @@ int main(int argc, char *argv[])
     int vers, ch;
 
     while ((ch = getopt_long(argc, argv, "d:f:hi:l:np:st:u:vw:", long_options, NULL)) != EOF) {
+#ifdef __linux__
 	const char *errstr = NULL;
+#endif
 
 	switch (ch) {
 	    case 'd':
