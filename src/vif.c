@@ -1844,8 +1844,12 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 
 	if ((n->al_flags & NBRF_ONEWAY) && msgtype == DVMRP_PROBE) {
 	    if (in_router_list) {
-		if (NBRM_ISEMPTY(uv->uv_nbrmap))
+		if (NBRM_ISEMPTY(uv->uv_nbrmap)) {
+		    send_tables = uv->uv_dst_addr;
 		    neighbor_vifs++;
+		} else {
+		    send_tables = addr;
+		}
 		NBRM_SET(n->al_index, uv->uv_nbrmap);
 		add_neighbor_to_routes(vifi, n->al_index);
 		logit(LOG_NOTICE, 0, "Peering with %s on vif %u is no longer one-way",
@@ -1924,7 +1928,10 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 	if (!send_tables)
 	    send_tables = addr;
     }
+
     if (send_tables) {
+	logit(LOG_NOTICE, 0, "Sending DVMRP probe on %s and route report to %s",
+	      uv->uv_name, inet_fmt(send_tables, s1, sizeof(s1)));
 	send_probe_on_vif(uv);
 	report(ALL_ROUTES, vifi, send_tables);
     }
