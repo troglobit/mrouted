@@ -680,7 +680,7 @@ void age_routes(void)
 		r->rt_flags   |= RTF_CHANGED;
 		routes_changed = TRUE;
 	    }
-	} else if (virtual_time % (ROUTE_REPORT_INTERVAL * 2) == 0) {
+	} else if (virtual_time > 0 && (virtual_time % (ROUTE_REPORT_INTERVAL * 2) == 0)) {
 	    /*
 	     * Time out subordinateness that hasn't been reported in
 	     * the last 2 intervals.
