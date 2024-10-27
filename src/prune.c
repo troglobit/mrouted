@@ -256,7 +256,7 @@ static void remove_sources(struct gtable *gt)
 	    continue;
 
 	IF_DEBUG(DEBUG_PRUNE) {
-	    logit(LOG_DEBUG, 0, "remove_sources() deleting (%s %s) (next is %d sec)",
+	    logit(LOG_DEBUG, 0, "remove_sources() deleting (%s, %s) (next is %d sec)",
 		  inet_fmt(st->st_origin, s1, sizeof(s1)),
 		  inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)),
 		  gt->gt_prune_rexmit);
@@ -1543,7 +1543,7 @@ void steal_sources(struct rtentry *rt)
 
 	    if (gt->gt_srctbl->st_ctime != 0) {
 		if (k_del_rg(gt->gt_srctbl->st_origin, gt) < 0) {
-		    logit(LOG_WARNING, errno, "steal_sources() trying to delete (%s %s)",
+		    logit(LOG_WARNING, errno, "steal_sources() trying to delete (%s, %s)",
 			  inet_fmt(gt->gt_srctbl->st_origin, s1, sizeof(s1)),
 			  inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)));
 		}
@@ -1744,7 +1744,7 @@ void age_table_entry(void)
 		    }
 		    if (st->st_ctime != 0) {
 			if (k_del_rg(st->st_origin, gt) < 0) {
-			    logit(LOG_WARNING, errno, "%s() trying to delete (%s %s)",
+			    logit(LOG_WARNING, errno, "%s() trying to delete (%s, %s)",
 				  __func__, inet_fmt(st->st_origin, s1, sizeof(s1)),
 				  inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)));
 			}
@@ -1846,7 +1846,7 @@ void age_table_entry(void)
 	    if (gt->gt_srctbl) {
 		if (gt->gt_srctbl->st_ctime != 0) {
 		    if (k_del_rg(gt->gt_srctbl->st_origin, gt) < 0) {
-			logit(LOG_WARNING, errno, "age_table_entry() trying to delete no-route (%s %s)",
+			logit(LOG_WARNING, errno, "age_table_entry() trying to delete no-route (%s, %s)",
 			      inet_fmt(gt->gt_srctbl->st_origin, s1, sizeof(s1)),
 			      inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)));
 		    }
