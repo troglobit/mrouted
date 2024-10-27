@@ -583,7 +583,12 @@ static void stop_vif(vifi_t vifi)
 	 * the k_del_vif() call, below, will clean up kernel state.)
 	 */
 	TAILQ_FOREACH_SAFE(al, &uv->uv_groups, al_link, tmp) {
+	    uint32_t group = al->al_addr;
+
 	    TAILQ_REMOVE(&uv->uv_groups, al, al_link);
+
+	    logit(LOG_INFO, 0, "Discarding group %s on %s (stopping)",
+		  inet_fmt(group, s1, sizeof(s1)), uv->uv_name);
 
 	    if (al->al_query > 0)
 		al->al_query = pev_timer_del(al->al_query);
@@ -2338,7 +2343,15 @@ static void delete_group_cb(int id, void *arg)
  */
 static int delete_group_timer(vifi_t vifi, struct listaddr *g)
 {
+    uint32_t group = g->al_addr;
+    struct uvif *uv;
     cbk_t *cbk;
+
+    uv = find_uvif(vifi);
+    if (!uv) {
+	logit(LOG_ERR, 0, "%s(): Failed, invalid VIFI %d", __func__, vifi);
+	return -1;
+    }
 
     cbk = calloc(1, sizeof(cbk_t));
     if (!cbk) {
@@ -2351,6 +2364,9 @@ static int delete_group_timer(vifi_t vifi, struct listaddr *g)
 
     /* Record mtime for IPC "show igmp" */
     g->al_mtime = virtual_time;
+
+    logit(LOG_INFO, 0, "Setting timeout %d for group %s on %s (vif %d)",
+	  g->al_timer, inet_fmt(group, s1, sizeof(s1)), uv->uv_name, vifi);
 
     return pev_timer_add(g->al_timer * 1000000, 0, delete_group_cb, cbk);
 }

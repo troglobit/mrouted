@@ -400,8 +400,10 @@ void update_route(uint32_t origin, uint32_t mask, uint32_t metric, uint32_t src,
 	}
 
 	IF_DEBUG(DEBUG_RTDETAIL) {
-	    logit(LOG_DEBUG, 0, "%s advertises new route %s",
-		  inet_fmt(src, s1, sizeof(s1)), inet_fmts(origin, mask, s2, sizeof(s2)));
+	    logit(LOG_DEBUG, 0, "%s (origin %s) advertising new route %s",
+		  src ? inet_fmt(src, s1, sizeof(s1)) : "we are",
+		  inet_fmt(origin, s2, sizeof(s2)),
+		  inet_fmts(origin, mask, s2, sizeof(s2)));
 	}
 
 	/*
