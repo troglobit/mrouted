@@ -225,12 +225,12 @@ uint32_t inet_parse(char *s, int n)
  * Checksum routine for Internet Protocol family headers (C Version)
  *
  */
-int inet_cksum(uint16_t *addr, uint32_t len)
+uint16_t inet_cksum(uint16_t *addr, uint32_t len)
 {
     int nleft = (int)len;
     uint16_t *w = addr;
     uint16_t answer = 0;
-    int32_t sum = 0;
+    uint32_t sum = 0;
 
     /*
      *  Our algorithm is simple, using a 32 bit accumulator (sum),
@@ -254,9 +254,7 @@ int inet_cksum(uint16_t *addr, uint32_t len)
      */
     sum = (sum >> 16) + (sum & 0xffff);	/* add hi 16 to low 16 */
     sum += (sum >> 16);			/* add carry */
-    answer = ~sum;			/* truncate to 16 bits */
-
-    return answer;
+    return (uint16_t)~sum;		/* truncate to 16 bits */
 }
 
 /**
