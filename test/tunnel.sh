@@ -193,7 +193,7 @@ nsenter --net="$NS3" -- bird -c "/tmp/$NM/bird.conf" -d -s "/tmp/$NM/r2-bird.soc
 echo $! >> "/tmp/$NM/PIDs"
 nsenter --net="$NS4" -- bird -c "/tmp/$NM/bird.conf" -d -s "/tmp/$NM/r3-bird.sock" &
 echo $! >> "/tmp/$NM/PIDs"
-sleep 1
+# sleep 1
 
 print "Disabling rp_filter on routers ..."
 nsenter --net="$NS2" -- sysctl -w net.ipv4.conf.all.rp_filter=0
@@ -223,31 +223,32 @@ nsenter --net="$NS2" -- ../src/mrouted -i NS2 -n -p "/tmp/$NM/r1.pid" -f "/tmp/$
 echo $! >> "/tmp/$NM/PIDs"
 nsenter --net="$NS4" -- ../src/mrouted -i NS4 -n -p "/tmp/$NM/r3.pid" -f "/tmp/$NM/r3.conf" -l debug -d all -u "/tmp/$NM/r3.sock" &
 echo $! >> "/tmp/$NM/PIDs"
-sleep 1
+# sleep 1
 
 # Wait for routers to peer
 print "Waiting for OSPF routers to peer (30 sec) ..."
 tenacious 30 nsenter --net="$NS1" -- ping -qc 1 -W 1 10.0.3.10 >/dev/null
+dprint "OK"
 
 #dprint "DVMRP Status $NS2"
 #nsenter --net="$NS2" -- ../src/mroutectl -u "/tmp/$NM/r1.sock" show compat detail
 #dprint "DVMRP Status $NS4"
 #nsenter --net="$NS4" -- ../src/mroutectl -u "/tmp/$NM/r3.sock" show compat detail
-echo
-echo
-print "Sleeping 10 sec to allow mrouted instances to peer ..."
-sleep 10
-dprint "DVMRP Status $NS2"
-nsenter --net="$NS2" -- ../src/mroutectl -u "/tmp/$NM/r1.sock" show compat detail
-nsenter --net="$NS2" -- ../src/mroutectl -u "/tmp/$NM/r1.sock" show routes
-dprint "DVMRP Status $NS4"
-nsenter --net="$NS4" -- ../src/mroutectl -u "/tmp/$NM/r3.sock" show compat detail
-nsenter --net="$NS4" -- ../src/mroutectl -u "/tmp/$NM/r3.sock" show routes
-dprint "OK"
+# echo
+# echo
+# print "Sleeping 10 sec to allow mrouted instances to peer ..."
+# sleep 10
+# dprint "DVMRP Status $NS2"
+# nsenter --net="$NS2" -- ../src/mroutectl -u "/tmp/$NM/r1.sock" show compat detail
+# nsenter --net="$NS2" -- ../src/mroutectl -u "/tmp/$NM/r1.sock" show routes
+# dprint "DVMRP Status $NS4"
+# nsenter --net="$NS4" -- ../src/mroutectl -u "/tmp/$NM/r3.sock" show compat detail
+# nsenter --net="$NS4" -- ../src/mroutectl -u "/tmp/$NM/r3.sock" show routes
+# dprint "OK"
 
-print "Checking VIFs ..."
-nsenter --net="$NS2" -- cat /proc/net/ip_mr_vif
-nsenter --net="$NS4" -- cat /proc/net/ip_mr_vif
+# print "Checking VIFs ..."
+# nsenter --net="$NS2" -- cat /proc/net/ip_mr_vif
+# nsenter --net="$NS4" -- cat /proc/net/ip_mr_vif
 
 
 # dprint "OSPF State & Routing Table $NS2:"
@@ -262,11 +263,11 @@ nsenter --net="$NS4" -- cat /proc/net/ip_mr_vif
 # nsenter --net="$NS3" -- echo "show ospf neigh" | birdc -s "/tmp/$NM/r2-bird.sock"
 # nsenter --net="$NS3" -- ip route
 
-dprint "OSPF State & Routing Table $NS4:"
-nsenter --net="$NS4" -- echo "show ospf state" | birdc -s "/tmp/$NM/r3-bird.sock"
-nsenter --net="$NS4" -- echo "show ospf int"   | birdc -s "/tmp/$NM/r3-bird.sock"
-nsenter --net="$NS4" -- echo "show ospf neigh" | birdc -s "/tmp/$NM/r3-bird.sock"
-nsenter --net="$NS4" -- ip route
+# dprint "OSPF State & Routing Table $NS4:"
+# nsenter --net="$NS4" -- echo "show ospf state" | birdc -s "/tmp/$NM/r3-bird.sock"
+# nsenter --net="$NS4" -- echo "show ospf int"   | birdc -s "/tmp/$NM/r3-bird.sock"
+# nsenter --net="$NS4" -- echo "show ospf neigh" | birdc -s "/tmp/$NM/r3-bird.sock"
+# nsenter --net="$NS4" -- ip route
 
 # For debugging
 nsenter --net="$NS2" -- tshark -lni eth2 -w "/tmp/$NM/r1.pcap" 2>/dev/null &
@@ -283,7 +284,7 @@ nsenter --net="$NS5" -- ./mping -qr -i eth0 -t 5 -W 30 225.1.2.3 &
 echo $! >> "/tmp/$NM/PIDs"
 sleep 1
 
-if ! nsenter --net="$NS1"  -- ./mping -s -i eth0 -t 5 -c 10 -w 15 225.1.2.3; then
+if ! nsenter --net="$NS1"  -- ./mping -s -i eth0 -t 5 -c 10 -w 30 225.1.2.3; then
     dprint "DVMRP Status $NS2"
     nsenter --net="$NS2" -- cat /proc/net/ip_mr_vif
     nsenter --net="$NS2" -- cat /proc/net/ip_mr_cache

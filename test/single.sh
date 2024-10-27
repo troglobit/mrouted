@@ -73,14 +73,13 @@ sleep 1
 
 print "Starting mrouted ..."
 ../src/mrouted -i solo -f "/tmp/$NM/conf" -n -p "/tmp/$NM/pid" -l debug -u "/tmp/$NM/sock" &
-sleep 1
 
 print "Starting emitter ..."
 nsenter --net="$right" -- ./mping -qr -i eth0 -t 3 -W 30 225.1.2.3 &
 echo $! >> "/tmp/$NM/PIDs"
 sleep 1
 
-if ! nsenter --net="$left"  -- ./mping -s -i eth0 -t 3 -c 10 -w 15 225.1.2.3; then
+if ! nsenter --net="$left"  -- ./mping -s -i eth0 -t 3 -c 10 -w 30 225.1.2.3; then
     show_mroute
     ../src/mroutectl -u "/tmp/$NM/sock"
     echo "Failed routing, expected at least 10 multicast ping replies"

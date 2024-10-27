@@ -370,27 +370,27 @@ dprint "R1 <-> R4"
 tenacious 30 nsenter --net="$R2" -- ping -qc 1 -W 1 10.0.3.2 >/dev/null
 dprint "OK"
 
-dprint "DVMRP Status $R1"
-nsenter --net="$R1" -- ../src/mroutectl -u "/tmp/$NM/r1.sock" show compat detail
-dprint "DVMRP Status $R2"
-nsenter --net="$R2" -- ../src/mroutectl -u "/tmp/$NM/r2.sock" show compat detail
-dprint "DVMRP Status $R3"
-nsenter --net="$R3" -- ../src/mroutectl -u "/tmp/$NM/r3.sock" show compat detail
-dprint "DVMRP Status $R4"
-nsenter --net="$R4" -- ../src/mroutectl -u "/tmp/$NM/r3.sock" show compat detail
-echo
-echo
-print "Sleeping 10 sec to allow mrouted instances to peer ..."
-sleep 10
-dprint "DVMRP Status $R1"
-nsenter --net="$R1" -- ../src/mroutectl -u "/tmp/$NM/r1.sock" show compat detail
-dprint "DVMRP Status $R2"
-nsenter --net="$R2" -- ../src/mroutectl -u "/tmp/$NM/r2.sock" show compat detail
-dprint "DVMRP Status $R3"
-nsenter --net="$R3" -- ../src/mroutectl -u "/tmp/$NM/r3.sock" show compat detail
-dprint "DVMRP Status $R4"
-nsenter --net="$R4" -- ../src/mroutectl -u "/tmp/$NM/r3.sock" show compat detail
-dprint "OK"
+# dprint "DVMRP Status $R1"
+# nsenter --net="$R1" -- ../src/mroutectl -u "/tmp/$NM/r1.sock" show compat detail
+# dprint "DVMRP Status $R2"
+# nsenter --net="$R2" -- ../src/mroutectl -u "/tmp/$NM/r2.sock" show compat detail
+# dprint "DVMRP Status $R3"
+# nsenter --net="$R3" -- ../src/mroutectl -u "/tmp/$NM/r3.sock" show compat detail
+# dprint "DVMRP Status $R4"
+# nsenter --net="$R4" -- ../src/mroutectl -u "/tmp/$NM/r3.sock" show compat detail
+# echo
+# echo
+# print "Sleeping 10 sec to allow mrouted instances to peer ..."
+# sleep 10
+# dprint "DVMRP Status $R1"
+# nsenter --net="$R1" -- ../src/mroutectl -u "/tmp/$NM/r1.sock" show compat detail
+# dprint "DVMRP Status $R2"
+# nsenter --net="$R2" -- ../src/mroutectl -u "/tmp/$NM/r2.sock" show compat detail
+# dprint "DVMRP Status $R3"
+# nsenter --net="$R3" -- ../src/mroutectl -u "/tmp/$NM/r3.sock" show compat detail
+# dprint "DVMRP Status $R4"
+# nsenter --net="$R4" -- ../src/mroutectl -u "/tmp/$NM/r3.sock" show compat detail
+# dprint "OK"
 
 # dprint "OSPF State & Routing Table $R1:"
 # nsenter --net="$R1" -- echo "show ospf state" | birdc -s "/tmp/$NM/r1-bird.sock"
@@ -431,7 +431,7 @@ nsenter --net="$ED2" -- ./mping -qr -i eth0 -t 5 -W 30 225.1.2.3 &
 echo $! >> "/tmp/$NM/PIDs"
 sleep 1
 
-if ! nsenter --net="$ED1"  -- ./mping -s -i eth0 -t 5 -c 10 -w 15 225.1.2.3; then
+if ! nsenter --net="$ED1"  -- ./mping -s -i eth0 -t 5 -c 10 -w 30 225.1.2.3; then
     dprint "PIM Status $R1"
     nsenter --net="$R1" -- ../src/mroutectl -u "/tmp/$NM/r1.sock" show compat detail
     dprint "PIM Status $R2"

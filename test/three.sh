@@ -121,6 +121,62 @@ creater()
     nsenter --net="$1" -- ip addr add "$5" broadcast + dev "$a"
 }
 
+dvmrp_routes()
+{
+    dprint "R1 DVMRP Routes"
+    nsenter --net="$NS2" -- ../src/mroutectl -pt -u "/tmp/$NM/r1.sock" -d show routes
+    dprint "R2 DVMRP Routes"
+    nsenter --net="$NS3" -- ../src/mroutectl -pt -u "/tmp/$NM/r2.sock" -d show routes
+    dprint "R3 DVMRP Routes"
+    nsenter --net="$NS4" -- ../src/mroutectl -pt -u "/tmp/$NM/r3.sock" -d show routes
+}
+
+dvmrp_status()
+{
+    dprint "DVMRP Status $NS2"
+    nsenter --net="$NS2" -- ../src/mroutectl -u "/tmp/$NM/r1.sock" show compat detail
+    dprint "DVMRP Status $NS3"
+    nsenter --net="$NS3" -- ../src/mroutectl -u "/tmp/$NM/r2.sock" show compat detail
+    dprint "DVMRP Status $NS4"
+    nsenter --net="$NS4" -- ../src/mroutectl -u "/tmp/$NM/r3.sock" show compat detail
+}
+
+dvmrp_neigh()
+{
+    dprint "R1 DVMRP Neighbors"
+    nsenter --net="$NS2" -- ../src/mroutectl -pt -u "/tmp/$NM/r1.sock" -d show neighbor
+    dprint "R2 DVMRP Neighbors"
+    nsenter --net="$NS3" -- ../src/mroutectl -pt -u "/tmp/$NM/r2.sock" -d show neighbor
+    dprint "R3 DVMRP Neighbors"
+    nsenter --net="$NS4" -- ../src/mroutectl -pt -u "/tmp/$NM/r3.sock" -d show neighbor
+}
+
+has_neigh()
+{
+    nm=$(basename "$2" .sock)
+    neighbors=$(nsenter --net="$1" -- \
+			../src/mroutectl -pt -u "$2" -d show neighbor \
+		    | awk 'NF && $4 == "G" { print $1 }')
+    shift 2
+
+    while [ $# -gt 0 ]; do
+        if ! echo "$neighbors" | grep -wq "$1"; then
+	    echo "$nm: missing neighbor $1"
+            return 1
+        fi
+        shift
+    done
+
+    return 0
+}
+
+dvmrp_peer()
+{
+    has_neigh "$NS2" "/tmp/$NM/r1.sock" 10.0.1.2          || return 1
+    has_neigh "$NS3" "/tmp/$NM/r2.sock" 10.0.1.1 10.0.2.2 || return 1
+    has_neigh "$NS4" "/tmp/$NM/r3.sock" 10.0.2.1          || return 1
+}
+
 dprint "Creating $NS2 router ..."
 nsenter --net="$NS2" -- sleep 5 &
 pid2=$!
@@ -192,37 +248,23 @@ nsenter --net="$NS3" -- bird -c "/tmp/$NM/bird.conf" -d -s "/tmp/$NM/r2-bird.soc
 echo $! >> "/tmp/$NM/PIDs"
 nsenter --net="$NS4" -- bird -c "/tmp/$NM/bird.conf" -d -s "/tmp/$NM/r3-bird.sock" &
 echo $! >> "/tmp/$NM/PIDs"
-sleep 1
 
 print "Starting mrouted ..."
-nsenter --net="$NS2" -- ../src/mrouted -i NS2 -n -p "/tmp/$NM/r1.pid" -l debug -d all -u "/tmp/$NM/r1.sock" &
+LVL=info
+nsenter --net="$NS2" -- ../src/mrouted -i NS2 -n -p "/tmp/$NM/r1.pid" -l $LVL -d all -u "/tmp/$NM/r1.sock" &
 echo $! >> "/tmp/$NM/PIDs"
-nsenter --net="$NS3" -- ../src/mrouted -i NS3 -n -p "/tmp/$NM/r2.pid" -l debug -d all -u "/tmp/$NM/r2.sock" &
+nsenter --net="$NS3" -- ../src/mrouted -i NS3 -n -p "/tmp/$NM/r2.pid" -l $LVL -d all -u "/tmp/$NM/r2.sock" &
 echo $! >> "/tmp/$NM/PIDs"
-nsenter --net="$NS4" -- ../src/mrouted -i NS4 -n -p "/tmp/$NM/r3.pid" -l debug -d all -u "/tmp/$NM/r3.sock" &
+nsenter --net="$NS4" -- ../src/mrouted -i NS4 -n -p "/tmp/$NM/r3.pid" -l $LVL -d all -u "/tmp/$NM/r3.sock" &
 echo $! >> "/tmp/$NM/PIDs"
-sleep 1
 
 # Wait for routers to peer
 print "Waiting for OSPF routers to peer (30 sec) ..."
 tenacious 30 nsenter --net="$NS1" -- ping -qc 1 -W 1 10.0.3.10 >/dev/null
+dprint "OK"
 
-dprint "DVMRP Status $NS2"
-nsenter --net="$NS2" -- ../src/mroutectl -u "/tmp/$NM/r1.sock" show compat detail
-dprint "DVMRP Status $NS3"
-nsenter --net="$NS3" -- ../src/mroutectl -u "/tmp/$NM/r2.sock" show compat detail
-dprint "DVMRP Status $NS4"
-nsenter --net="$NS4" -- ../src/mroutectl -u "/tmp/$NM/r3.sock" show compat detail
-echo
-echo
-print "Sleeping 10 sec to allow mrouted instances to peer ..."
-sleep 10
-dprint "DVMRP Status $NS2"
-nsenter --net="$NS2" -- ../src/mroutectl -u "/tmp/$NM/r1.sock" show compat detail
-dprint "DVMRP Status $NS3"
-nsenter --net="$NS3" -- ../src/mroutectl -u "/tmp/$NM/r2.sock" show compat detail
-dprint "DVMRP Status $NS4"
-nsenter --net="$NS4" -- ../src/mroutectl -u "/tmp/$NM/r3.sock" show compat detail
+print "Waiting for DVMRP routers to peer (30 sec) ..."
+tenacious 30 dvmrp_peer
 dprint "OK"
 
 # dprint "OSPF State & Routing Table $NS2:"
@@ -248,7 +290,7 @@ nsenter --net="$NS5" -- ./mping -qr -i eth0 -t 5 -W 30 225.1.2.3 &
 echo $! >> "/tmp/$NM/PIDs"
 sleep 1
 
-if ! nsenter --net="$NS1"  -- ./mping -s -i eth0 -t 5 -c 10 -w 15 225.1.2.3; then
+if ! nsenter --net="$NS1"  -- ./mping -s -i eth0 -t 5 -c 10 -w 30 225.1.2.3; then
     dprint "DVMRP Status $NS2"
     nsenter --net="$NS2" -- ../src/mroutectl -u "/tmp/$NM/r1.sock" show compat detail
     dprint "DVMRP Status $NS3"

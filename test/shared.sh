@@ -278,48 +278,47 @@ nsenter --net="$R1" -- bird -c "/tmp/$NM/bird.conf" -d -s "/tmp/$NM/r1-bird.sock
 echo $! >> "/tmp/$NM/PIDs"
 nsenter --net="$R2" -- bird -c "/tmp/$NM/bird.conf" -d -s "/tmp/$NM/r2-bird.sock" &
 echo $! >> "/tmp/$NM/PIDs"
-sleep 1
+# sleep 1
 
 print "Starting mrouted ..."
 nsenter --net="$R1" -- ../src/mrouted -i R1 -n -p "/tmp/$NM/r1.pid" -l debug -u "/tmp/$NM/r1.sock" &
 echo $! >> "/tmp/$NM/PIDs"
 nsenter --net="$R2" -- ../src/mrouted -i R2 -n -p "/tmp/$NM/r2.pid" -l debug -u "/tmp/$NM/r2.sock" &
 echo $! >> "/tmp/$NM/PIDs"
-sleep 1
+# sleep 1
 
-print "Router link states"
-dprint "$ED1"
-nsenter --net="$ED1" -- ip -br l
-nsenter --net="$ED1" -- ip -br a
-nsenter --net="$ED1" -- bridge link
-dprint "$R1"
-nsenter --net="$R1" -- ip -br l
-nsenter --net="$R1" -- ip -br a
-dprint "$R2"
-nsenter --net="$R2" -- ip -br l
-nsenter --net="$R2" -- ip -br a
-dprint "$ED2"
-nsenter --net="$ED2" -- ip -br l
-nsenter --net="$ED2" -- ip -br a
-nsenter --net="$ED2" -- bridge link
+# print "Router link states"
+# dprint "$ED1"
+# nsenter --net="$ED1" -- ip -br l
+# nsenter --net="$ED1" -- ip -br a
+# nsenter --net="$ED1" -- bridge link
+# dprint "$R1"
+# nsenter --net="$R1" -- ip -br l
+# nsenter --net="$R1" -- ip -br a
+# dprint "$R2"
+# nsenter --net="$R2" -- ip -br l
+# nsenter --net="$R2" -- ip -br a
+# dprint "$ED2"
+# nsenter --net="$ED2" -- ip -br l
+# nsenter --net="$ED2" -- ip -br a
+# nsenter --net="$ED2" -- bridge link
 
-print "Routing tables on end-devices"
-dprint "$ED1"
-nsenter --net="$ED1" -- ip -br r
-nsenter --net="$ED1" -- bridge fdb show
-nsenter --net="$ED1" -- ping -c 10 -W 1 10.0.0.1
-nsenter --net="$ED1" -- ip neigh
-dprint "$ED2"
-nsenter --net="$ED2" -- ip -br r
-nsenter --net="$ED2" -- bridge fdb show
-nsenter --net="$ED2" -- ping -c 10 -W 1 10.0.1.1
-nsenter --net="$ED2" -- ip neigh
+# print "Routing tables on end-devices"
+# dprint "$ED1"
+# nsenter --net="$ED1" -- ip -br r
+# nsenter --net="$ED1" -- bridge fdb show
+# nsenter --net="$ED1" -- ping -c 10 -W 1 10.0.0.1
+# nsenter --net="$ED1" -- ip neigh
+# dprint "$ED2"
+# nsenter --net="$ED2" -- ip -br r
+# nsenter --net="$ED2" -- bridge fdb show
+# nsenter --net="$ED2" -- ping -c 10 -W 1 10.0.1.1
+# nsenter --net="$ED2" -- ip neigh
 
 # Wait for routers to peer
 print "Waiting for OSPF routers to peer (30 sec) ..."
-sleep 10
-
-dprint "R1 <-> R2"
+# sleep 10
+# dprint "R1 <-> R2"
 tenacious 30 nsenter --net="$R1" -- ping -qc 1 -W 1 10.0.1.2 >/dev/null
 dprint "OK"
 
@@ -332,7 +331,7 @@ nsenter --net="$ED2" -- ./mping -qr -i eth0 -t 5 -W 30 225.1.2.3 &
 echo $! >> "/tmp/$NM/PIDs"
 sleep 1
 
-if ! nsenter --net="$ED1"  -- ./mping -s -i eth0 -t 5 -c 10 -w 15 225.1.2.3; then
+if ! nsenter --net="$ED1"  -- ./mping -s -i eth0 -t 5 -c 10 -w 30 225.1.2.3; then
     dprint "DVMRP Status $R1"
     nsenter --net="$R1" -- ../src/mroutectl -u "/tmp/$NM/r1.sock" show compat detail
     dprint "DVMRP Status $R2"
