@@ -338,7 +338,7 @@ int k_del_rg(uint32_t origin, struct gtable *g)
     mc.mfcc_mcastgrp.s_addr = g->gt_mcastgrp;
 
     /* write to kernel space */
-    if (setsockopt(igmp_socket, IPPROTO_IP, MRT_DEL_MFC, &mc, sizeof(mc)) < 0) {
+    if (setsockopt(igmp_socket, IPPROTO_IP, MRT_DEL_MFC, &mc, sizeof(mc)) < 0 && errno != ENOENT) {
 	logit(LOG_WARNING, errno, "Failed MRT_DEL_MFC(%s %s)",
 	      inet_fmt(origin, s1, sizeof(s1)), inet_fmt(g->gt_mcastgrp, s2, sizeof(s2)));
 
