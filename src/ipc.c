@@ -241,7 +241,7 @@ static void show_routes(FILE *fp, int detail)
 		else
 			fprintf(fp, "  %4u ", r->rt_metric);
 
-		if (r->rt_timer == 0)
+		if (r->rt_gateway == 0)
 			fprintf(fp, "%8s", "Never");
 		else
 			fprintf(fp, "%7us", r->rt_timer);
