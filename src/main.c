@@ -26,12 +26,6 @@
 int haveterminal = 1;
 int did_final_init = 0;
 
-static int sighandled = 0;
-#define	GOT_SIGINT	0x01
-#define	GOT_SIGHUP	0x02
-#define	GOT_SIGUSR1	0x04
-#define	GOT_SIGUSR2	0x08
-
 int cache_lifetime 	= DEFAULT_CACHE_LIFETIME;
 int prune_lifetime	= AVERAGE_PRUNE_LIFETIME;
 
@@ -49,60 +43,16 @@ char *sock_file   = NULL;
 
 static char *ident = PACKAGE_NAME;
 
-#define NHANDLERS	5
-static struct ihandler {
-    int fd;			/* File descriptor	*/
-    ihfunc_t func;		/* Function to call	*/
-} ihandlers[NHANDLERS];
-static int nhandlers = 0;
-
 /*
  * Forward declarations.
  */
-static void final_init(void *);
-static void fasttimer(void*);
-static void timer(void*);
-static void handle_signals(int);
-static int  check_signals(void);
-static int  timeout(int);
-static void cleanup(void);
+static void final_init     (int, void *);
+static void fasttimer      (int, void *);
+static void timer          (int, void *);
+static void handle_signals (int, void *);
+static int  timeout        (int);
+static void cleanup        (void);
 
-int register_input_handler(int fd, ihfunc_t func)
-{
-    int i;
-
-    if (nhandlers >= NHANDLERS)
-	return -1;
-
-    for (i = 0; i < NHANDLERS; i++) {
-	if (ihandlers[i].func)
-	    continue;
-
-	ihandlers[i].fd   = fd;
-	ihandlers[i].func = func;
-	nhandlers++;
-
-	return 0;
-    }
-
-    return -1;
-}
-
-void deregister_input_handler(int fd)
-{
-    int i;
-
-    for (i = 0; i < NHANDLERS; i++) {
-	if (ihandlers[i].fd != fd)
-	    continue;
-
-	ihandlers[i].fd   = 0;
-	ihandlers[i].func = NULL;
-	nhandlers--;
-
-	return;
-    }
-}
 
 static void do_randomize(void)
 {
@@ -246,11 +196,6 @@ static int usage(int code)
 
 int main(int argc, char *argv[])
 {
-    FILE *fp;
-    int foreground = 0;
-    int vers, n = -1, i, ch;
-    struct pollfd *pfd;
-    struct sigaction sa;
     struct option long_options[] = {
 	{ "debug",         2, 0, 'd' },
 	{ "config",        1, 0, 'f' },
@@ -268,6 +213,8 @@ int main(int argc, char *argv[])
 	{ "startup-delay", 1, 0, 'w' },
 	{ NULL, 0, 0, 0 }
     };
+    int foreground = 0;
+    int vers, ch;
 
     while ((ch = getopt_long(argc, argv, "d:f:hi:l:np:st:u:vw:", long_options, NULL)) != EOF) {
 	const char *errstr = NULL;
@@ -410,8 +357,9 @@ int main(int argc, char *argv[])
      */
     init_genid();
 
-    timer_init();
+    pev_init();
     igmp_init();
+
     init_icmp();
     init_ipip();
     init_routes();
@@ -438,24 +386,14 @@ int main(int argc, char *argv[])
     init_vifs();
     ipc_init(sock_file, ident);
 
-    sa.sa_handler = handle_signals;
-    sa.sa_flags = 0;	/* Interrupt system calls */
-    sigemptyset(&sa.sa_mask);
-    sigaction(SIGHUP, &sa, NULL);
-    sigaction(SIGTERM, &sa, NULL);
-    sigaction(SIGINT, &sa, NULL);
-    sigaction(SIGUSR1, &sa, NULL);
-    sigaction(SIGUSR2, &sa, NULL);
+    pev_timer_add(0, 1000000, fasttimer, NULL);
+    pev_timer_add(0, TIMER_INTERVAL * 1000000, timer, NULL);
 
-    pfd = calloc(NHANDLERS, sizeof(struct pollfd));
-    if (!pfd) {
-	logit(LOG_ERR, errno, "Failed allocating struct pollfd");
-	return 1;	/* NOTREACHED */
-    }
-
-    /* schedule first timer interrupt */
-    timer_set(1, fasttimer, NULL);
-    timer_set(TIMER_INTERVAL, timer, NULL);
+    pev_sig_add(SIGHUP,  handle_signals, NULL);
+    pev_sig_add(SIGINT,  handle_signals, NULL);
+    pev_sig_add(SIGTERM, handle_signals, NULL);
+    pev_sig_add(SIGUSR1, handle_signals, NULL);
+    pev_sig_add(SIGUSR2, handle_signals, NULL);
 
     /* XXX HACK
      * This will cause black holes for the first few seconds after startup,
@@ -468,55 +406,31 @@ int main(int argc, char *argv[])
      * turning on DVMRP.
      */
     if (startupdelay > 0)
-	timer_set(startupdelay, final_init, NULL);
+	pev_timer_add(startupdelay * 1000000, 0, final_init, NULL);
     else
-	final_init(NULL);
+	final_init(0, NULL);
 
     /* Signal world we are now ready to start taking calls */
     if (pidfile(pid_file))
 	logit(LOG_WARNING, errno, "Cannot create pidfile");
 
-    /*
-     * Main receive loop.
-     */
-    while (running) {
-	for (i = 0; i < nhandlers; i++) {
-	    pfd[i].fd = ihandlers[i].fd;
-	    pfd[i].events = POLLIN;
-	}
-
-	if (check_signals())
-	    break;
-
-	n = poll(pfd, nhandlers, timeout(n) * 1000);
-	if (n < 0) {
-	    if (errno != EINTR)
-		logit(LOG_WARNING, errno, "poll failed");
-	    continue;
-	}
-
-	if (n > 0) {
-	    for (i = 0; i < nhandlers; i++) {
-		if (pfd[i].revents & POLLIN)
-		    (*ihandlers[i].func)(ihandlers[i].fd);
-	    }
-	}
-    }
+    pev_run();
 
     logit(LOG_NOTICE, 0, "%s exiting", versionstring);
-    free(pfd);
     cleanup();
 
     return 0;
 }
 
-static void final_init(void *i)
+static void final_init(int id, void *arg)
 {
-    char *s = (char *)i;
+    char *s = (char *)arg;
 
     logit(LOG_NOTICE, 0, "%s%s", versionstring, s ? s : "");
     if (s)
 	free(s);
+    if (id > 0)
+	pev_timer_del(id);
 
     k_init_dvmrp();		/* enable DVMRP routing in kernel */
 
@@ -537,7 +451,7 @@ static void final_init(void *i)
  * seconds.  Also, every TIMER_INTERVAL seconds it calls timer() to
  * do all the other time-based processing.
  */
-static void fasttimer(void *arg)
+static void fasttimer(int id, void *arg)
 {
     static unsigned int tlast;
     static unsigned int nsent;
@@ -570,8 +484,6 @@ static void fasttimer(void *arg)
 
 	tlast = t;
     }
-
-    timer_set(1, fasttimer, NULL);
 }
 
 /*
@@ -598,12 +510,10 @@ uint32_t virtual_time = 0;
  * group querying duties, and drives various timers in routing entries and
  * virtual interface data structures.
  */
-static void timer(void *arg)
+static void timer(int id, void *arg)
 {
-    timer_set(TIMER_INTERVAL, timer, NULL);
-
-    age_routes();	/* Advance the timers in the route entries     */
-    age_vifs();		/* Advance the timers for neighbors */
+    age_routes();	/* Advance the timers in the route entries  */
+    age_vifs();	/* Advance the timers for neighbors         */
     age_table_entry();	/* Advance the timers for the cache entries */
 
     delay_change_reports = FALSE;
@@ -619,66 +529,7 @@ static void timer(void *arg)
     /*
      * Advance virtual time
      */
-    virtual_time += TIMER_INTERVAL;
-}
-
-/*
- * Handle timeout queue.
- *
- * If poll() + packet processing took more than 1 second, or if there is
- * a timeout pending, age the timeout queue.  If not, collect usec in
- * difftime to make sure that the time doesn't drift too badly.
- *
- * XXX: If the timeout handlers took more than 1 second, age the timeout
- * queue again.  Note, this introduces the potential for infinite loops!
- */
-static int timeout(int n)
-{
-    static struct timespec difftime, curtime, lasttime;
-    static int init = 1, secs = 0;
-
-    /* Age queue */
-    do {
-	/*
-	 * If poll() timed out, then there's no other activity to
-	 * account for and we don't need to call clock_gettime().
-	 */
-	if (n == 0) {
-	    curtime.tv_sec = lasttime.tv_sec + secs;
-	    curtime.tv_nsec = lasttime.tv_nsec;
-	    n = -1; /* don't do this next time through the loop */
-	} else {
-	    clock_gettime(CLOCK_MONOTONIC, &curtime);
-	    if (init) {
-		init = 0;	/* First time only */
-		lasttime = curtime;
-		difftime.tv_nsec = 0;
-	    }
-	}
-
-	difftime.tv_sec = curtime.tv_sec - lasttime.tv_sec;
-	difftime.tv_nsec += curtime.tv_nsec - lasttime.tv_nsec;
-	while (difftime.tv_nsec > 1000000000) {
-	    difftime.tv_sec++;
-	    difftime.tv_nsec -= 1000000000;
-	}
-
-	if (difftime.tv_nsec < 0) {
-	    difftime.tv_sec--;
-	    difftime.tv_nsec += 1000000000;
-	}
-	lasttime = curtime;
-
-	if (secs == 0 || difftime.tv_sec > 0)
-	    timer_age_queue(difftime.tv_sec);
-
-	secs = -1;
-    } while (difftime.tv_sec > 0);
-
-    /* Next timer to wait for */
-    secs = timer_next_delay();
-
-    return secs;
+    virtual_time += pev_timer_get(id) / 1000000;
 }
 
 static void cleanup(void)
@@ -698,7 +549,6 @@ static void cleanup(void)
 	    k_stop_dvmrp();
 	close(udp_socket);
 
-	timer_exit();
 	igmp_exit();
     }
 }
@@ -707,54 +557,26 @@ static void cleanup(void)
  * Signal handler.  Take note of the fact that the signal arrived
  * so that the main loop can take care of it.
  */
-static void handle_signals(int sig)
+static void handle_signals(int sig, void *arg)
 {
     switch (sig) {
-	case SIGINT:
-	case SIGTERM:
-	    sighandled |= GOT_SIGINT;
-	    break;
+    case SIGINT:
+    case SIGTERM:
+	pev_exit(0);
+	break;
 
-	case SIGHUP:
-	    sighandled |= GOT_SIGHUP;
-	    break;
-
-	case SIGUSR1:
-	    sighandled |= GOT_SIGUSR1;
-	    break;
-
-	case SIGUSR2:
-	    sighandled |= GOT_SIGUSR2;
-	    break;
-    }
-}
-
-static int check_signals(void)
-{
-    if (!sighandled)
-	return 0;
-
-    if (sighandled & GOT_SIGINT) {
-	sighandled &= ~GOT_SIGINT;
-	return 1;
-    }
-
-    if (sighandled & GOT_SIGHUP) {
-	sighandled &= ~GOT_SIGHUP;
+    case SIGHUP:
 	restart();
-    }
+	break;
 
-    if (sighandled & GOT_SIGUSR1) {
-	sighandled &= ~GOT_SIGUSR1;
+    case SIGUSR1:
 	logit(LOG_INFO, 0, "SIGUSR1 is no longer supported, use mroutectl instead.");
-    }
+	break;
 
-    if (sighandled & GOT_SIGUSR2) {
-	sighandled &= ~GOT_SIGUSR2;
+    case SIGUSR2:
 	logit(LOG_INFO, 0, "SIGUSR2 is no longer supported, use mroutectl instead.");
+	break;
     }
-
-    return 0;
 }
 
 /*
@@ -762,7 +584,6 @@ static int check_signals(void)
  */
 void restart(void)
 {
-    FILE *fp;
     char *s;
 
     s = strdup (" restart");
@@ -774,7 +595,6 @@ void restart(void)
      */
     free_all_prunes();
     free_all_routes();
-    timer_stop_all();
     stop_all_vifs();
     k_stop_dvmrp();
     igmp_exit();
@@ -793,14 +613,10 @@ void restart(void)
     init_ktable();
     init_vifs();
     /*XXX Schedule final_init() as main does? */
-    final_init(s);
+    final_init(0, s);
 
     /* Touch PID file to acknowledge SIGHUP */
     pidfile(pid_file);
-
-    /* schedule timer interrupts */
-    timer_set(1, fasttimer, NULL);
-    timer_set(TIMER_INTERVAL, timer, NULL);
 }
 
 #define SCALETIMEBUFLEN 27

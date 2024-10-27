@@ -38,6 +38,7 @@
 
 static struct sockaddr_un sun;
 static int ipc_socket = -1;
+static int sock_id;
 
 static int ipc_write(int sd, struct ipc *msg)
 {
@@ -587,7 +588,7 @@ static int do_loglevel(void *arg)
 	return 0;
 }
 
-static void ipc_handle(int sd)
+static void ipc_handle(int sd, void *arg)
 {
 	socklen_t socklen = 0;
 	struct ipc msg;
@@ -699,7 +700,8 @@ void ipc_init(char *sockfile, char *ident)
 		return;
 	}
 
-	if (register_input_handler(sd, ipc_handle) < 0)
+	sock_id = pev_sock_add(sd, ipc_handle, NULL);
+	if (sock_id < 0)
 		logit(LOG_ERR, 0, "Failed registering IPC handler");
 
 	ipc_socket = sd;
@@ -707,6 +709,8 @@ void ipc_init(char *sockfile, char *ident)
 
 void ipc_exit(void)
 {
+	if (sock_id > 0)
+		pev_sock_del(sock_id);
 	if (ipc_socket > -1)
 		close(ipc_socket);
 

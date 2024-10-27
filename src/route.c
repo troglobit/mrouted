@@ -54,7 +54,7 @@ static void discard_route            (struct rtentry *rt);
 static int  compare_rts              (const void *rt1, const void *rt2);
 static struct rtentry *report_chunk  (int, struct rtentry *, vifi_t, uint32_t, int *);
 static void queue_blaster_report     (vifi_t vifi, uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t level);
-static void process_blaster_report   (void *vifip);
+static void process_blaster_report   (int id, void *vifip);
 
 
 /*
@@ -818,7 +818,7 @@ static void queue_blaster_report(vifi_t vifi, uint32_t src, uint32_t dst, char *
 	}
 
 	*i = vifi;
-	uv->uv_blastertimer = timer_set(5, process_blaster_report, i);
+	uv->uv_blastertimer = pev_timer_add(5000000, 0, process_blaster_report, i);
     }
 }
 
@@ -827,7 +827,7 @@ static void queue_blaster_report(vifi_t vifi, uint32_t src, uint32_t dst, char *
  * queue.  If there are more routes remaining, reschedule myself to run
  * in 1 second.
  */
-static void process_blaster_report(void *vifip)
+static void process_blaster_report(int id, void *vifip)
 {
     vifi_t vifi = *(int *)vifip;
     struct blaster_hdr *bh;
@@ -859,11 +859,14 @@ static void process_blaster_report(void *vifip)
 	IF_DEBUG(DEBUG_ROUTE) {
 	    logit(LOG_DEBUG, 0, "Finish processing vif %d blaster", vifi);
 	}
+
+	pev_timer_del(id);
     } else {
 	IF_DEBUG(DEBUG_ROUTE) {
 	    logit(LOG_DEBUG, 0, "More blasted routes to come on vif %d", vifi);
 	}
-	uv->uv_blastertimer = timer_set(1, process_blaster_report, vifip);
+
+	pev_timer_set(id, 1000000);
     }
 }
 

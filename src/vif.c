@@ -47,13 +47,13 @@ static void send_probe_on_vif  (struct uvif *v);
 static void send_query         (struct uvif *v, uint32_t dst, int code, uint32_t group);
 static int  info_version       (uint8_t *p, size_t plen);
 
-static void delete_group_cb    (void *arg);
+static void delete_group_cb    (int id, void *arg);
 static int  delete_group_timer (vifi_t vifi, struct listaddr *g);
 
-static void send_query_cb      (void *arg);
+static void send_query_cb      (int id, void *arg);
 static int  send_query_timer   (vifi_t vifi, struct listaddr *g, int delay, int num);
 
-static void group_version_cb   (void *arg);
+static void group_version_cb   (int id, void *arg);
 static int  group_version_timer(vifi_t vifi, struct listaddr *g);
 
 /*
@@ -150,15 +150,15 @@ void init_vifs(void)
      * which this router is the elected querier.
      */
     if (query_timerid > 0)
-	timer_clear(query_timerid);
-    query_timerid = timer_set(igmp_query_interval, query_groups, NULL);
+	pev_timer_del(query_timerid);
+    query_timerid = pev_timer_add(1, igmp_query_interval * 1000000, query_groups, NULL);
 
     /*
      * Periodically probe all VIFs for DVMRP neighbors
      */
     if (dvmrp_timerid > 0)
-	timer_clear(dvmrp_timerid);
-    dvmrp_timerid = timer_set(NEIGHBOR_PROBE_INTERVAL, query_dvmrp, NULL);
+	pev_timer_del(dvmrp_timerid);
+    dvmrp_timerid = pev_timer_add(1, NEIGHBOR_PROBE_INTERVAL * 1000000, query_dvmrp, NULL);
 }
 
 /*
@@ -227,7 +227,7 @@ void blaster_free(struct uvif *uv)
     uv->uv_blasterbuf = NULL;
 
     if (uv->uv_blastertimer)
-	uv->uv_blastertimer = timer_clear(uv->uv_blastertimer);
+	uv->uv_blastertimer = pev_timer_del(uv->uv_blastertimer);
 }
 
 /*
@@ -586,13 +586,13 @@ static void stop_vif(vifi_t vifi)
 	    TAILQ_REMOVE(&uv->uv_groups, al, al_link);
 
 	    if (al->al_query > 0)
-		al->al_query = timer_clear(al->al_query);
+		al->al_query = pev_timer_del(al->al_query);
 
 	    if (al->al_timerid > 0)
-		al->al_timerid = timer_clear(al->al_timerid);
+		al->al_timerid = pev_timer_del(al->al_timerid);
 
 	    if (al->al_pv_timerid > 0)
-		al->al_pv_timerid = timer_clear(al->al_pv_timerid);
+		al->al_pv_timerid = pev_timer_del(al->al_pv_timerid);
 
 	    free(al);
 	}
@@ -660,13 +660,13 @@ void stop_all_vifs(void)
 	    TAILQ_REMOVE(&uv->uv_groups, al, al_link);
 
 	    if (al->al_query > 0)
-		al->al_query = timer_clear(al->al_query);
+		al->al_query = pev_timer_del(al->al_query);
 
 	    if (al->al_timerid > 0)
-		al->al_timerid = timer_clear(al->al_timerid);
+		al->al_timerid = pev_timer_del(al->al_timerid);
 
 	    if (al->al_pv_timerid > 0)
-		al->al_pv_timerid = timer_clear(al->al_pv_timerid);
+		al->al_pv_timerid = pev_timer_del(al->al_pv_timerid);
 
 	    free(al);
 	}
@@ -771,12 +771,10 @@ vifi_t find_vif_direct(uint32_t src, uint32_t dst)
  * so can not cause loss of membership (but can send more packets than
  * necessary)
  */
-void query_groups(void *arg)
+void query_groups(int id, void *arg)
 {
     struct uvif *uv;
     vifi_t vifi;
-
-    timer_set(igmp_query_interval, query_groups, arg);
 
     UVIF_FOREACH(vifi, uv) {
 	if (uv->uv_flags & (VIFF_DOWN | VIFF_DISABLED))
@@ -793,10 +791,8 @@ void query_groups(void *arg)
  * come up.  (If they have, they will also be probed as part of
  * their initialization.)
  */
-void query_dvmrp(void *arg)
+void query_dvmrp(int id, void *arg)
 {
-    timer_set(NEIGHBOR_PROBE_INTERVAL, query_dvmrp, arg);
-
     probe_for_neighbors();
 
     if (vifs_down)
@@ -908,10 +904,10 @@ void accept_membership_query(int ifi, uint32_t src, uint32_t dst, uint32_t group
 	TAILQ_FOREACH(g, &uv->uv_groups, al_link) {
 	    if (group == g->al_addr && g->al_query == 0) {
 		if (g->al_timerid > 0)
-		    g->al_timerid = timer_clear(g->al_timerid);
+		    g->al_timerid = pev_timer_del(g->al_timerid);
 
 		if (g->al_query > 0)
-		    g->al_query = timer_clear(g->al_query);
+		    g->al_query = pev_timer_del(g->al_query);
 
 		/* setup a timeout to remove the group membership */
 		g->al_timer = IGMP_LAST_MEMBER_QUERY_COUNT * tmo / IGMP_TIMER_SCALE;
@@ -1008,10 +1004,10 @@ void accept_group_report(int ifi, uint32_t src, uint32_t dst, uint32_t group, in
 	    g->al_timer = IGMP_GROUP_MEMBERSHIP_INTERVAL;
 
 	    if (g->al_query > 0)
-		g->al_query = timer_clear(g->al_query);
+		g->al_query = pev_timer_del(g->al_query);
 
 	    if (g->al_timerid > 0)
-		g->al_timerid = timer_clear(g->al_timerid);
+		g->al_timerid = pev_timer_del(g->al_timerid);
 
 	    g->al_timerid = delete_group_timer(vifi, g);
 
@@ -1021,7 +1017,7 @@ void accept_group_report(int ifi, uint32_t src, uint32_t dst, uint32_t group, in
 	     */
 	    if (g->al_pv < 3 && old_report) {
 		if (g->al_pv_timerid)
-		    g->al_pv_timerid = timer_clear(g->al_pv_timerid);
+		    g->al_pv_timerid = pev_timer_del(g->al_pv_timerid);
 
 		g->al_pv_timerid = group_version_timer(vifi, g);
 	    }
@@ -1150,7 +1146,7 @@ void accept_leave_message(int ifi, uint32_t src, uint32_t dst, uint32_t group)
 
 	/** delete old timer set a timer for expiration **/
 	if (g->al_timerid > 0)
-	    g->al_timerid = timer_clear(g->al_timerid);
+	    g->al_timerid = pev_timer_del(g->al_timerid);
 
 	/** send a group specific query **/
 	g->al_query = send_query_timer(vifi, g, igmp_last_member_interval,
@@ -1810,7 +1806,6 @@ struct listaddr *update_neighbor(vifi_t vifi, uint32_t addr, int msgtype, char *
 	    send_tables = addr;
 	}
 
-
 	NBRM_SET(i, uv->uv_nbrmap);
 	add_neighbor_to_routes(vifi, i);
     } else {
@@ -2201,7 +2196,7 @@ void dump_vifs(FILE *fp, int detail)
 		    label,
 		    inet_fmt(a->al_addr, s1, sizeof(s1)),
 		    inet_fmt(a->al_reporter, s2, sizeof(s2)),
-		    scaletime(timer_get(a->al_timerid)));
+		    scaletime(pev_timer_get(a->al_timerid) / 1000000));
 	    label = "";
 	}
 	label = "boundaries:";
@@ -2267,7 +2262,7 @@ void dump_vifs(FILE *fp, int detail)
 /*
  * Time out old version compatibility mode
  */
-static void group_version_cb(void *arg)
+static void group_version_cb(int id, void *arg)
 {
     cbk_t *cbk = (cbk_t *)arg;
     vifi_t vifi = cbk->vifi;
@@ -2284,7 +2279,7 @@ static void group_version_cb(void *arg)
 	  cbk->g->al_pv - 1, cbk->g->al_pv, inet_fmt(cbk->g->al_addr, s1, sizeof(s1)), uv->uv_name);
 
     if (cbk->g->al_pv < 3)
-	timer_set(IGMP_GROUP_MEMBERSHIP_INTERVAL, group_version_cb, cbk);
+	pev_timer_set(id, IGMP_GROUP_MEMBERSHIP_INTERVAL * 1000000);
     else
 	free(cbk);
 }
@@ -2305,13 +2300,13 @@ static int group_version_timer(vifi_t vifi, struct listaddr *g)
     cbk->vifi = vifi;
     cbk->g = g;
 
-    return timer_set(IGMP_GROUP_MEMBERSHIP_INTERVAL, group_version_cb, cbk);
+    return pev_timer_add(IGMP_GROUP_MEMBERSHIP_INTERVAL * 1000000, 0, group_version_cb, cbk);
 }
 
 /*
  * Time out record of a group membership on a vif
  */
-static void delete_group_cb(void *arg)
+static void delete_group_cb(int id, void *arg)
 {
     cbk_t *cbk = (cbk_t *)arg;
     struct listaddr *g = cbk->g;
@@ -2326,10 +2321,10 @@ static void delete_group_cb(void *arg)
 	  inet_fmt(cbk->g->al_addr, s1, sizeof(s1)), uv->uv_name);
 
     if (g->al_query > 0)
-	g->al_query = timer_clear(g->al_query);
+	g->al_query = pev_timer_del(g->al_query);
 
     if (g->al_pv_timerid > 0)
-	g->al_pv_timerid = timer_clear(g->al_pv_timerid);
+	g->al_pv_timerid = pev_timer_del(g->al_pv_timerid);
 
     delete_lclgrp(vifi, g->al_addr);
     TAILQ_REMOVE(&uv->uv_groups, g, al_link);
@@ -2357,33 +2352,30 @@ static int delete_group_timer(vifi_t vifi, struct listaddr *g)
     /* Record mtime for IPC "show igmp" */
     g->al_mtime = virtual_time;
 
-    return timer_set(g->al_timer, delete_group_cb, cbk);
+    return pev_timer_add(g->al_timer * 1000000, 0, delete_group_cb, cbk);
 }
 
 /*
  * Send a group-specific query.
  */
-static int do_send_gsq(cbk_t *cbk)
+static void send_query_cb(int id, void *arg)
 {
+    cbk_t *cbk = (cbk_t *)arg;
     struct uvif *uv;
 
     uv = find_uvif(cbk->vifi);
     if (!uv)
-	return -1;
+	goto done;
 
     send_query(uv, cbk->g->al_addr, cbk->delay * IGMP_TIMER_SCALE, cbk->g->al_addr);
-    if (--cbk->num == 0) {
-	cbk->g->al_query = 0;	/* we're done, clear us from group */
-	free(cbk);
-	return 0;
+    if (--cbk->num) {
+	pev_timer_set(id, cbk->delay * 1000000);
+	return;
     }
 
-    return timer_set(cbk->delay, send_query_cb, cbk);
-}
-
-static void send_query_cb(void *arg)
-{
-    do_send_gsq((cbk_t *)arg);
+  done:
+    cbk->g->al_query = pev_timer_del(cbk->g->al_query);
+    free(cbk);
 }
 
 /*
@@ -2404,7 +2396,7 @@ static int send_query_timer(vifi_t vifi, struct listaddr *g, int delay, int num)
     cbk->delay = delay;
     cbk->num   = num;
 
-    return do_send_gsq(cbk);
+    return pev_timer_add(1, 0, send_query_cb, cbk);
 }
 
 /**

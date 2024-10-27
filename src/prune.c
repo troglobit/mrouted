@@ -36,7 +36,7 @@ static int		pruning_neighbor(vifi_t vifi, uint32_t addr);
 static int		can_mtrace(vifi_t vifi, uint32_t addr);
 static struct ptable *	find_prune_entry(uint32_t vr, struct ptable *pt);
 static void		remove_sources(struct gtable *gt);
-static void		rexmit_prune(void *arg);
+static void		rexmit_prune(int id, void *arg);
 static void		expire_prune(vifi_t vifi, struct gtable *gt);
 static void		send_prune(struct gtable *gt);
 static void		send_graft(struct gtable *gt);
@@ -280,13 +280,9 @@ static void remove_sources(struct gtable *gt)
 /*
  * Prepare for possible prune retransmission
  */
-static void rexmit_prune(void *arg)
+static void rexmit_prune(int id, void *arg)
 {
     struct gtable *gt = *(struct gtable **)arg;
-
-    free(arg);
-
-    gt->gt_rexmit_timer = 0;
 
     /* Make sure we're still not forwarding traffic */
     if (!VIFM_ISEMPTY(gt->gt_grpmems)) {
@@ -294,10 +290,11 @@ static void rexmit_prune(void *arg)
 	    logit(LOG_DEBUG, 0, "rexmit_prune() (%s %s): gm:%lx", RT_FMT(gt->gt_route, s1),
 		  inet_fmt(gt->gt_mcastgrp, s2, sizeof(s2)), gt->gt_grpmems);
 	}
-	return;
-    }
+    } else
+	remove_sources(gt);
 
-    remove_sources(gt);
+    gt->gt_rexmit_timer = pev_timer_del(id);
+    free(arg);
 }
 
 /*
@@ -423,7 +420,8 @@ static void send_prune(struct gtable *gt)
 	}
 
 	*arg = gt;
-	gt->gt_rexmit_timer = timer_set(JITTERED_VALUE(gt->gt_prune_rexmit), rexmit_prune, arg);
+	gt->gt_rexmit_timer = pev_timer_add(JITTERED_VALUE(gt->gt_prune_rexmit) * 1000000,
+					    0, rexmit_prune, arg);
 	gt->gt_prune_rexmit *= 2;
     }
 }
@@ -452,8 +450,8 @@ static void send_graft(struct gtable *gt)
 
     gt->gt_prsent_timer = 0;
     gt->gt_prune_rexmit = PRUNE_REXMIT_VAL;
-    if (gt->gt_rexmit_timer)
-	timer_clear(gt->gt_rexmit_timer);
+    if (gt->gt_rexmit_timer > 0)
+	gt->gt_rexmit_timer = pev_timer_del(gt->gt_rexmit_timer);
 
     if (gt->gt_grftsnt == 0)
 	gt->gt_grftsnt = 1;
@@ -836,8 +834,8 @@ void del_table_entry(struct rtentry *r, uint32_t mcastgrp, uint32_t del_flag)
 	    else
 		kernel_table = g->gt_gnext;
 
-	    if (g->gt_rexmit_timer)
-		timer_clear(g->gt_rexmit_timer);
+	    if (g->gt_rexmit_timer > 0)
+		g->gt_rexmit_timer = pev_timer_del(g->gt_rexmit_timer);
 
 	    prev_g = g;
 	    g = g->gt_next;
@@ -895,8 +893,8 @@ void del_table_entry(struct rtentry *r, uint32_t mcastgrp, uint32_t del_flag)
 		    g->gt_next->gt_prev = NULL;
 		prev_g->gt_next = g->gt_next;
 
-		if (g->gt_rexmit_timer)
-		    timer_clear(g->gt_rexmit_timer);
+		if (g->gt_rexmit_timer > 0)
+		    g->gt_rexmit_timer = pev_timer_del(g->gt_rexmit_timer);
 
 		free(g);
 		g = prev_g;
@@ -1459,8 +1457,8 @@ void free_all_prunes(void)
 
 	    prev_g = g;
 	    g = g->gt_next;
-	    if (prev_g->gt_rexmit_timer)
-		timer_clear(prev_g->gt_rexmit_timer);
+	    if (prev_g->gt_rexmit_timer > 0)
+		prev_g->gt_rexmit_timer = pev_timer_del(prev_g->gt_rexmit_timer);
 	    free(prev_g);
 	}
 	r->rt_groups = NULL;
@@ -1474,8 +1472,8 @@ void free_all_prunes(void)
 
 	prev_g = g;
 	g = g->gt_next;
-	if (prev_g->gt_rexmit_timer)
-	    timer_clear(prev_g->gt_rexmit_timer);
+	if (prev_g->gt_rexmit_timer > 0)
+	    prev_g->gt_rexmit_timer = pev_timer_del(prev_g->gt_rexmit_timer);
 	free(prev_g);
     }
     kernel_no_route = NULL;
@@ -1555,8 +1553,8 @@ void steal_sources(struct rtentry *rt)
 	    *gtnp = gt->gt_next;
 	    if (gt->gt_next)
 		gt->gt_next->gt_prev = gt->gt_prev;
-	    if (gt->gt_rexmit_timer)
-		timer_clear(gt->gt_rexmit_timer);
+	    if (gt->gt_rexmit_timer > 0)
+		gt->gt_rexmit_timer = pev_timer_del(gt->gt_rexmit_timer);
 	    free(gt);
 	} else {
 	    gtnp = &gt->gt_next;
@@ -1814,8 +1812,8 @@ void age_table_entry(void)
 	    if (gt->gt_gnext)
 		gt->gt_gnext->gt_gprev = gt->gt_gprev;
 
-	    if (gt->gt_rexmit_timer)
-		timer_clear(gt->gt_rexmit_timer);
+	    if (gt->gt_rexmit_timer > 0)
+		gt->gt_rexmit_timer = pev_timer_del(gt->gt_rexmit_timer);
 
 	    free(gt);
 	} else {
@@ -1860,8 +1858,8 @@ void age_table_entry(void)
 	    if (gt->gt_next)
 		gt->gt_next->gt_prev = gt->gt_prev;
 
-	    if (gt->gt_rexmit_timer)
-		timer_clear(gt->gt_rexmit_timer);
+	    if (gt->gt_rexmit_timer > 0)
+		gt->gt_rexmit_timer = pev_timer_del(gt->gt_rexmit_timer);
 
 	    free(gt);
 	} else {

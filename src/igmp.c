@@ -37,9 +37,16 @@ uint32_t	dvmrp_group;		     /* DVMRP grp addr in net order */
 uint32_t	dvmrp_genid;		     /* IGMP generation id          */
 
 /*
+ * Local variables.
+ */
+#ifdef REGISTER_HANDLER
+static int	sock_id = -1;
+#endif
+
+/*
  * Local function definitions.
  */
-static void	igmp_read(int sd);
+static void	igmp_read(int sd, void *arg);
 static int	igmp_log_level(uint32_t type, uint32_t code);
 
 /*
@@ -105,7 +112,8 @@ void igmp_init(void)
     router_timeout            = IGMP_OTHER_QUERIER_PRESENT_INTERVAL;
 
 #ifdef REGISTER_HANDLER
-    if (register_input_handler(igmp_socket, igmp_read) < 0)
+    sock_id = pev_sock_add(igmp_socket, igmp_read, NULL);
+    if (sock_id < 0)
 	logit(LOG_ERR, 0, "Failed registering IGMP handler");
 #endif
 }
@@ -113,7 +121,8 @@ void igmp_init(void)
 void igmp_exit(void)
 {
 #ifdef REGISTER_HANDLER
-    deregister_input_handler(igmp_socket);
+    if (sock_id >= 0)
+	pev_sock_del(sock_id);
 #endif
     close(igmp_socket);
     free(recv_buf);
@@ -215,7 +224,7 @@ int igmp_debug_kind(uint32_t type, uint32_t code)
 /*
  * Read an IGMP message from igmp_socket
  */
-static void igmp_read(int sd)
+static void igmp_read(int sd, void *arg)
 {
     struct cmsghdr *cmsg;
     struct msghdr msgh;

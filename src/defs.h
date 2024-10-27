@@ -77,6 +77,7 @@ typedef void (*ihfunc_t) (int);
 #include "route.h"
 #include "prune.h"
 #include "pathnames.h"
+#include "pev.h"
 
 /*
  * Miscellaneous constants and macros.
@@ -257,8 +258,6 @@ extern int              debug_list(int, char *, size_t);
 extern int              debug_parse(char *);
 extern void             restart(void);
 extern char *		scaletime(time_t);
-extern int		register_input_handler(int, ihfunc_t);
-extern void		deregister_input_handler(int);
 
 /* log.c */
 extern void             log_init(char *);
@@ -283,16 +282,6 @@ extern void		init_icmp(void);
 extern void		init_ipip(void);
 extern void		init_ipip_on_vif(struct uvif *);
 extern void		send_ipip(uint32_t, uint32_t, int, int, uint32_t, int, struct uvif *);
-
-/* timer.c */
-extern void		timer_init(void);
-extern void		timer_exit(void);
-extern void		timer_stop_all(void);
-extern void		timer_age_queue(time_t);
-extern int		timer_next_delay(void);
-extern int		timer_set(time_t, cfunc_t, void *);
-extern int		timer_get(int);
-extern int		timer_clear(int);
 
 /* route.c */
 extern void		init_routes(void);
@@ -335,8 +324,8 @@ extern void		dump_vifs(FILE *, int);
 extern void		stop_all_vifs(void);
 extern struct listaddr *neighbor_info(vifi_t, uint32_t);
 extern void		accept_group_report(int, uint32_t, uint32_t, uint32_t, int);
-extern void		query_groups(void *);
-extern void		query_dvmrp(void *);
+extern void		query_groups(int, void *);
+extern void		query_dvmrp(int, void *);
 extern void		probe_for_neighbors(void);
 extern struct listaddr *update_neighbor(vifi_t, uint32_t, int, char *, size_t, uint32_t);
 extern void		accept_neighbor_request(uint32_t, uint32_t);
