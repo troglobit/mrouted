@@ -54,8 +54,9 @@ tenacious()
     timeout=$1
     shift
 
-    while [ $timeout -gt 0 ]; do
+    while [ "$timeout" -gt 0 ]; do
 	$@ && return
+	sleep 1
 	timeout=$((timeout - 1))
     done
 
