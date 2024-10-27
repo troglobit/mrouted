@@ -135,11 +135,11 @@ void init_vifs(void)
 	}
 
 	if (uv->uv_flags & VIFF_TUNNEL)
-	    logit(LOG_INFO, 0, "vif #%d, tunnel %s -> %s", vifi,
+	    logit(LOG_INFO, 0, "%s: vif #%d, tunnel %s -> %s", uv->uv_name, vifi,
 		  inet_fmt(uv->uv_lcl_addr, s1, sizeof(s1)),
 		  inet_fmt(uv->uv_rmt_addr, s2, sizeof(s2)));
 	else
-	    logit(LOG_INFO, 0, "vif #%d, phyint %s", vifi,
+	    logit(LOG_INFO, 0, "%s: vif #%d, phyint %s", uv->uv_name, vifi,
 		  inet_fmt(uv->uv_lcl_addr, s1, sizeof(s1)));
 
 	start_vif2(vifi);
@@ -254,14 +254,14 @@ void init_installvifs(void)
 	}
 
 	if (uv->uv_flags & VIFF_TUNNEL) {
-	    logit(LOG_INFO, 0, "vif #%d, tunnel %s -> %s", vifi,
+	    logit(LOG_INFO, 0, "%s: vif #%d, tunnel %s -> %s", uv->uv_name, vifi,
 		  inet_fmt(uv->uv_lcl_addr, s1, sizeof(s1)),
 		  inet_fmt(uv->uv_rmt_addr, s2, sizeof(s2)));
 
 	    /* Set tunnel vif name, Linux use dvmrpN */
 	    snprintf(uv->uv_name, sizeof(uv->uv_name), "dvmrp%d", vifi);
 	} else {
-	    logit(LOG_INFO, 0, "vif #%d, phyint %s", vifi,
+	    logit(LOG_INFO, 0, "%s: vif #%d, phyint %s", uv->uv_name, vifi,
 		  inet_fmt(uv->uv_lcl_addr, s1, sizeof(s1)));
 	}
 	k_add_vif(vifi, uv);
