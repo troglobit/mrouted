@@ -38,9 +38,9 @@ static int dvmrp_timerid = -1;
 /*
  * Forward declarations.
  */
-static void start_vif          (vifi_t vifi);
-static void start_vif2         (vifi_t vifi);
-static void stop_vif           (vifi_t vifi);
+void start_vif          (vifi_t vifi);
+static void start_vif2  (vifi_t vifi);
+void stop_vif           (vifi_t vifi);
 
 static void send_probe_on_vif  (struct uvif *v);
 
@@ -162,6 +162,14 @@ void init_vifs(void)
 }
 
 /*
+ * Reload the virtual interfaces, removing gone vifs and add new vifs.
+ */
+void reload_vifs(void)
+{
+    config_vifs_from_reload();
+}
+
+/*
  * Initialize the passed vif with all appropriate default values.
  * "t" is true if a tunnel, or false if a phyint.
  *
@@ -230,27 +238,20 @@ void blaster_free(struct uvif *uv)
 	uv->uv_blastertimer = pev_timer_del(uv->uv_blastertimer);
 }
 
-/*
- * Start routing on all virtual interfaces that are not down or
- * administratively disabled.
- */
-void init_installvifs(void)
-{
-    struct listaddr *al, *tmp;
-    struct uvif *uv;
-    vifi_t vifi;
 
-    logit(LOG_INFO, 0, "Installing vifs in kernel ...");
-    UVIF_FOREACH(vifi, uv) {
+void init_installvif(struct uvif *uv, vifi_t vifi)
+{
+	struct listaddr *al, *tmp;
+
 	if (uv->uv_flags & VIFF_DISABLED) {
 	    logit(LOG_DEBUG, 0, "%s is disabled", uv->uv_name);
-	    continue;
+	    return;
 	}
 
 	if (uv->uv_flags & VIFF_DOWN) {
 	    logit(LOG_INFO, 0, "%s is not yet up; vif #%u not in service",
 		  uv->uv_name, vifi);
-	    continue;
+	    return;
 	}
 
 	if (uv->uv_flags & VIFF_TUNNEL) {
@@ -277,6 +278,20 @@ void init_installvifs(void)
 	    update_lclgrp(vifi, group);
 	    chkgrp_graft(vifi, group);
 	}
+}
+
+/*
+ * Start routing on all virtual interfaces that are not down or
+ * administratively disabled.
+ */
+void init_installvifs(void)
+{
+    struct uvif *uv;
+    vifi_t vifi;
+
+    logit(LOG_INFO, 0, "Installing vifs in kernel ...");
+    UVIF_FOREACH(vifi, uv) {
+        init_installvif(uv, vifi);
     }
 }
 
@@ -288,6 +303,31 @@ int install_uvif(struct uvif *uv)
     }
 
     uvifs[numvifs++] = uv;
+
+    return 0;
+}
+
+int uninstall_uvif(struct uvif *uv)
+{
+    if (numvifs == 0) {
+        logit(LOG_WARNING, 0, "No vifs, ignoring %s", uv->uv_name);
+        return 1;
+    }
+
+    int i;
+    for (i = 0; i < numvifs; i++) {
+        if (uv->uv_ifindex == uvifs[i]->uv_ifindex) {
+            break;
+        }
+    }
+
+    if (i == numvifs)
+        return 1;
+
+    for (; i < numvifs - 1; i++) {
+        uvifs[i] = uvifs[i + 1];
+    }
+    numvifs--;
 
     return 0;
 }
@@ -437,7 +477,7 @@ static void send_query(struct uvif *v, uint32_t dst, int code, uint32_t group)
 /*
  * Add a vifi to the kernel and start routing on it.
  */
-static void start_vif(vifi_t vifi)
+void start_vif(vifi_t vifi)
 {
     struct uvif *uv;
 
@@ -540,7 +580,7 @@ static void start_vif2(vifi_t vifi)
 /*
  * Stop routing on the specified virtual interface.
  */
-static void stop_vif(vifi_t vifi)
+void stop_vif(vifi_t vifi)
 {
     struct listaddr *al, *tmp;
     struct phaddr *pa;

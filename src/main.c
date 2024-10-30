@@ -621,6 +621,22 @@ void restart(void)
     pidfile(pid_file);
 }
 
+/*
+ * Reload ifaces
+ */
+void reload_iface(void)
+{
+    FILE *fp = NULL;
+    char *s = NULL;
+
+    s = strdup (" reload ifaces");
+    if (s == NULL)
+	logit(LOG_ERR, 0, "out of memory");
+
+    reload_vifs();
+}
+
+
 #define SCALETIMEBUFLEN 27
 char *scaletime(time_t t)
 {
