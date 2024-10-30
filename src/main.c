@@ -515,7 +515,7 @@ uint32_t virtual_time = 0;
 static void timer(int id, void *arg)
 {
     age_routes();	/* Advance the timers in the route entries  */
-    age_vifs();	/* Advance the timers for neighbors         */
+    age_vifs();		/* Advance the timers for neighbors         */
     age_table_entry();	/* Advance the timers for the cache entries */
 
     delay_change_reports = FALSE;
