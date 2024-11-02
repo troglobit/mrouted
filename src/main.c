@@ -635,7 +635,8 @@ char *scaletime(time_t t)
     else
 	buf = buf1;
 
-    snprintf(p, SCALETIMEBUFLEN, "%2ld:%02ld:%02ld", t / 3600, (t % 3600) / 60, t % 60);
+    snprintf(p, SCALETIMEBUFLEN, "%2d:%02d:%02d", (int)(t / 3600),
+	     (int)((t % 3600) / 60), (int)(t % 60));
 
     return p;
 }
