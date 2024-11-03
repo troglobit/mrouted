@@ -38,8 +38,8 @@ static int dvmrp_timerid = -1;
 /*
  * Forward declarations.
  */
-void start_vif          (vifi_t vifi);
-static void start_vif2  (vifi_t vifi);
+static void start_vif   (vifi_t vifi);
+void start_vif2         (vifi_t vifi);
 void stop_vif           (vifi_t vifi);
 
 static void send_probe_on_vif  (struct uvif *v);
@@ -477,7 +477,7 @@ static void send_query(struct uvif *v, uint32_t dst, int code, uint32_t group)
 /*
  * Add a vifi to the kernel and start routing on it.
  */
-void start_vif(vifi_t vifi)
+static void start_vif(vifi_t vifi)
 {
     struct uvif *uv;
 
@@ -496,7 +496,7 @@ void start_vif(vifi_t vifi)
  * Add a vifi to all the user-level data structures but don't add
  * it to the kernel yet.
  */
-static void start_vif2(vifi_t vifi)
+void start_vif2(vifi_t vifi)
 {
     struct listaddr *a;
     struct phaddr *p;
@@ -637,6 +637,7 @@ void stop_vif(vifi_t vifi)
      * Update the existing route entries to take into account the vif failure.
      */
     delete_vif_from_routes(vifi);
+    discard_vif_from_routes(vifi);
 
     /*
      * Delete the interface from the kernel's vif structure.

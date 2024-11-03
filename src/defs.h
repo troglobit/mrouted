@@ -313,13 +313,14 @@ extern void		report_to_all_neighbors(int);
 extern int		report_next_chunk(void);
 extern void		add_vif_to_routes(vifi_t);
 extern void		delete_vif_from_routes(vifi_t);
+extern void		discard_vif_from_routes(vifi_t);
 extern void		add_neighbor_to_routes(vifi_t, uint32_t);
 extern void		delete_neighbor_from_routes(uint32_t, vifi_t, uint32_t);
 extern void		dump_routes(FILE *, int);
 
 /* vif.c */
 extern void		init_vifs(void);
-extern void     start_vif(vifi_t);
+extern void     start_vif2(vifi_t);
 extern void     stop_vif(vifi_t);
 extern void		blaster_alloc(struct uvif *);
 extern void		blaster_free(struct uvif *);

@@ -215,7 +215,13 @@ static void reload_gone_vifs(void)
             }
         }
         if (!found) {
-            stop_vif(find_vifi(uv));
+			vifi_t vifi = find_vifi(uv);
+			if (vifi == NO_VIF) {
+                TAILQ_REMOVE(&vifs, uv, uv_link);
+                free(uv);
+                continue;
+            }
+            stop_vif(vifi);
             uninstall_uvif(uv);
         }
     }
@@ -242,7 +248,8 @@ static void reload_new_vifs(void)
                 free(nuv);
                 continue;
             }
-            start_vif(find_vifi(nuv));
+			init_installvif(nuv, vifi);
+			start_vif2(vifi);
         }
     }
 }
