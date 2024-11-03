@@ -504,8 +504,8 @@ int main(int argc, char *argv[])
     }
 
     logit(LOG_NOTICE, 0, "%s exiting", versionstring);
-    free(pfd);
     cleanup();
+	free(pfd);
 
     return 0;
 }
