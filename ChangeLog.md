@@ -3,6 +3,43 @@ Change Log
 
 All notable changes to the project are documented in this file.
 
+
+[v4.6][] - 2024-11-10
+---------------------
+
+This release is a major refactor of the internal timer and socket
+handling, it also contains a major speedup of the peering of DVMRP
+routers at startup.
+
+### Fixes
+- Issue #56: ensure group timers are stopped when stopping interfaces
+- Issue #56: replace homegrown timer and socket handling with pev v2.0.
+  The existing timer implementation was too imprecise and jittered
+  several seconds between query intervals
+- Issue #64: fix compiler warnings when building with 64-bit `time_t`
+  targeting 32-bit platforms (only affects logging and status output)
+- Fix `mroutectl show routes`, locally connected routes never expire
+- Skip timeout of subordinates at startup
+- Minor compiler warnings on non-Linux systems
+
+
+### Changes
+- Check interface status and update internal state on more error
+  codes instead of logging `sendto()` or `sendmsg()` failure
+- Revert change in `TIMER_INTERVAL` from v4.0, update interval is
+  now 5 seconds instead of 2
+- Removed internal log rate limiter, demystifies behavior and greatly
+  simplifies the code
+- Log interface names with their assigned VIF number to ease debugging
+- Speed up peering by sending route reports as soon as one-way peering
+  has been established
+- Updates to logging, clarifying source 0.0.0.0 of routes as "us", and
+  add logging when adding and discarding groups to/from interfaces
+- Use (S, G) format for all logging
+- Silence bogus `Failed MRT_DEL_MFC` warnings for routes never added to
+  the MRIB due to missing reverse path
+
+
 [v4.5][] - 2023-06-04
 ---------------------
 
@@ -669,7 +706,8 @@ v3.5 - 1995-05-08
 - Multicast traceroute could send a reply on a disabled interface.
 
 
-[UNRELEASED]: https://github.com/troglobit/mrouted/compare/4.5...HEAD
+[UNRELEASED]: https://github.com/troglobit/mrouted/compare/4.6...HEAD
+[v4.6]:       https://github.com/troglobit/mrouted/compare/4.5...4.6
 [v4.5]:       https://github.com/troglobit/mrouted/compare/4.4...4.5
 [v4.4]:       https://github.com/troglobit/mrouted/compare/4.3...4.4
 [v4.3]:       https://github.com/troglobit/mrouted/compare/4.2...4.3
