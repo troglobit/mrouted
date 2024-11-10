@@ -23,6 +23,8 @@ mrouted (4.6) stable; urgency=low
   * Use (S, G) format for all logging
   * Silence bogus 'Failed MRT_DEL_MFC' warnings for routes never added to
     the MRIB due to missing reverse path
+  * Drop lsb-base dependency for mrouted package.  To use init script on
+    non-systemd setups, install sysvinit-utils
 
  -- Joachim Wiberg <troglobit@gmail.com>  Sun, 10 Nov 2024 09:01:00 +0100
 
