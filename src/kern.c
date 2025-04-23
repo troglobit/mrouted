@@ -104,11 +104,11 @@ void k_set_rcvbuf(int bufsize, int minsize)
  * in the kernel and "panic". The kernel patch for netinet/ip_raw.c
  * coming with this distribution fixes it.
  */
-void k_hdr_include(int bool)
+void k_hdr_include(int flag)
 {
 #ifdef IP_HDRINCL
-    if (setsockopt(igmp_socket, IPPROTO_IP, IP_HDRINCL, &bool, sizeof(bool)) < 0)
-        logit(LOG_ERR, errno, "Failed setting socket IP_HDRINCL %u", bool);
+    if (setsockopt(igmp_socket, IPPROTO_IP, IP_HDRINCL, &flag, sizeof(flag)) < 0)
+        logit(LOG_ERR, errno, "Failed setting socket IP_HDRINCL %u", flag);
 #endif
 }
 
