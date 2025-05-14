@@ -54,7 +54,10 @@ jobs:
           sudo ~/tmp/sbin/mroutectl -u ~/tmp/foo.sock -h
           sudo ~/tmp/sbin/mroutectl -u ~/tmp/foo.sock
           sudo ~/tmp/sbin/mroutectl -u ~/tmp/foo.sock kill
-      - name: Test
+      - name: Enable unprivileged userns (unshare)
+        run: |
+          sudo sysctl kernel.apparmor_restrict_unprivileged_userns=0
+      - name: Run unit tests
         run: |
           make check || (cat test/test-suite.log; false)
       - name: Upload Test Results
