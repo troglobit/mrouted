@@ -1515,8 +1515,8 @@ void accept_neighbor_request2(uint32_t src, uint32_t dst)
 
 void accept_info_request(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
 {
+    size_t vlen = strlen(versionstring);
     uint8_t *q;
-    int len;
     int outlen = 0;
 
     q = (uint8_t *)(send_buf + IP_HEADER_RAOPT_LEN + IGMP_MINLEN);
@@ -1527,12 +1527,25 @@ void accept_info_request(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
      * we're only implementing the one thing we are positive will fit into
      * a single packet, so we wimp out.
      */
-    while (datalen > 0) {
-	len = 0;
+    while (datalen >= 4) {
+	size_t reqlen;
+	int len = 0;
+
+	/* A request is a four byte header; type, length, and two reserved
+	 * bytes, where length counts trailing data in units of four bytes.
+	 * It may not claim more than the packet actually holds. */
+	reqlen = ((size_t)*(p + 1) + 1) * 4;
+	if (reqlen > datalen)
+	    break;
+
+	/* Stop when the reply is full, we do not split replies, see above. */
+	if ((size_t)outlen + 4 + vlen > MAX_DVMRP_DATA_LEN)
+	    break;
+
 	switch (*p) {
 	    case DVMRP_INFO_VERSION:
 		/* Never let version be more than 100 bytes, see below for more. */
-		len = info_version(q, strlen(versionstring));
+		len = info_version(q, vlen);
 		break;
 
 	    case DVMRP_INFO_NEIGHBORS:
@@ -1541,12 +1554,15 @@ void accept_info_request(uint32_t src, uint32_t dst, uint8_t *p, size_t datalen)
 		break;
 	}
 
-	*(q + 1) = len++;
-	outlen += len * 4;
-	q += len * 4;
-	len = (*(p+1) + 1) * 4;
-	p += len;
-	datalen -= len;
+	/* Skip unknown types, send_buf still holds the previous packet. */
+	if (len > 0) {
+	    *(q + 1) = len++;
+	    outlen += len * 4;
+	    q += len * 4;
+	}
+
+	p       += reqlen;
+	datalen -= reqlen;
     }
 
     if (outlen != 0)
