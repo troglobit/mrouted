@@ -55,6 +55,7 @@ static int  compare_rts              (const void *rt1, const void *rt2);
 static struct rtentry *report_chunk  (int, struct rtentry *, vifi_t, uint32_t, int *);
 static void queue_blaster_report     (vifi_t vifi, uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t level);
 static void process_blaster_report   (int id, void *vifip);
+static void process_report           (vifi_t vifi, uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t level);
 
 
 /*
@@ -781,10 +782,10 @@ static void queue_blaster_report(vifi_t vifi, uint32_t src, uint32_t dst, char *
 {
     struct blaster_hdr *bh;
     struct uvif *uv;
-    int bblen = sizeof(*bh) + ((datalen + 3) & ~3);
+    size_t bblen = sizeof(*bh) + ((datalen + 3) & ~3);
 
     uv = find_uvif(vifi);
-    if (uv->uv_blasterend - uv->uv_blasterbuf + bblen > uv->uv_blasterlen) {
+    if ((size_t)(uv->uv_blasterend - uv->uv_blasterbuf) + bblen > (size_t)uv->uv_blasterlen) {
 	int end = uv->uv_blasterend - uv->uv_blasterbuf;
 	int cur = uv->uv_blastercur - uv->uv_blasterbuf;
 
@@ -849,7 +850,7 @@ static void process_blaster_report(int id, void *vifip)
 	bh = (struct blaster_hdr *)uv->uv_blastercur;
 	uv->uv_blastercur += sizeof(*bh) + ((bh->bh_datalen + 3) & ~3);
 
-	accept_report(bh->bh_src, bh->bh_dst, (char *)(bh + 1), -bh->bh_datalen, bh->bh_level);
+	process_report(vifi, bh->bh_src, bh->bh_dst, (char *)(bh + 1), bh->bh_datalen, bh->bh_level);
     }
 
     if (uv->uv_blastercur >= uv->uv_blasterend) {
@@ -874,29 +875,14 @@ static void process_blaster_report(int id, void *vifip)
 
 /*
  * Process an incoming route report message.
- * If the report arrived on a vif marked as a "blaster", then just
- * queue it and return; queue_blaster_report() will schedule it for
- * processing later.  If datalen is negative, then this is actually
- * a queued report so actually process it instead of queueing it.
+ * If the report arrived on a vif marked as a "blaster", then just queue
+ * it and return; process_blaster_report() picks it off the queue later
+ * and hands it to process_report().
  */
 void accept_report(uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t level)
 {
-    static struct newrt rt[MAX_NUM_RT]; /* Use heap instead of stack */ /* XXX: fixme */
-    struct listaddr *nbr;
     struct uvif *uv;
-    uint32_t origin;
-    uint32_t mask;
-    size_t width, i;
-    size_t nrt = 0;
     vifi_t vifi;
-    int metric;
-
-    /*
-     * Emulate a stack variable.  We use the heap insted of the stack
-     * to prevent stack overflow on systems that cannot do stack realloc
-     * at runtime, e.g., non-MMU Linux systems.
-     */
-    memset(rt, 0, MAX_NUM_RT * sizeof(rt[0]));
 
     if ((vifi = find_vif_direct(src, dst)) == NO_VIF) {
 	logit(LOG_INFO, 0, "Ignoring route report from non-neighbor %s",
@@ -906,13 +892,38 @@ void accept_report(uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t
 
     uv = find_uvif(vifi);
     if (uv->uv_flags & VIFF_BLASTER) {
-	if (datalen > 0) {
-	    queue_blaster_report(vifi, src, dst, p, datalen, level);
-	    return;
-	} else {
-	    datalen = -datalen;
-	}
+	queue_blaster_report(vifi, src, dst, p, datalen, level);
+	return;
     }
+
+    process_report(vifi, src, dst, p, datalen, level);
+}
+
+/*
+ * Process the routes in a report from a neighbor on vif 'vifi'.
+ */
+static void process_report(vifi_t vifi, uint32_t src, uint32_t dst, char *p, size_t datalen, uint32_t level)
+{
+    static struct newrt rt[MAX_NUM_RT]; /* Use heap instead of stack */ /* XXX: fixme */
+    struct listaddr *nbr;
+    struct uvif *uv;
+    uint32_t origin;
+    uint32_t mask;
+    size_t width, i;
+    size_t nrt = 0;
+    int metric;
+
+    /*
+     * Emulate a stack variable.  We use the heap insted of the stack
+     * to prevent stack overflow on systems that cannot do stack realloc
+     * at runtime, e.g., non-MMU Linux systems.
+     */
+    memset(rt, 0, MAX_NUM_RT * sizeof(rt[0]));
+
+    /* A blasted report is replayed later, the vif may be gone by then */
+    uv = find_uvif(vifi);
+    if (!uv)
+	return;
 
     nbr = update_neighbor(vifi, src, DVMRP_REPORT, NULL, 0, level);
     if (!nbr)
