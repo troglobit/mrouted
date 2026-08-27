@@ -28,8 +28,8 @@ jobs:
         run: |
           sudo modprobe ipip
           sudo apt-get -y update
-          sudo apt-get -y install pkg-config libsystemd-dev bird2 ethtool keepalived tshark tree
-      - uses: actions/checkout@v4
+          sudo apt-get -y install pkg-config systemd-dev bird2 ethtool keepalived tshark tree
+      - uses: actions/checkout@v6
       - name: Configure
         # Build in a sub-directory so we can safely set a+w on all
         # directories.  Needed for `make check` since it runs with
@@ -61,7 +61,7 @@ jobs:
         run: |
           make check || (cat test/test-suite.log; false)
       - name: Upload Test Results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mrouted-test-${{ matrix.compiler }}
           path: test/*
@@ -71,12 +71,12 @@ jobs:
     runs-on: ubuntu-latest
     container: debian:stable
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Installing dependencies
         run: |
           apt-get update
           apt-get install -y build-essential bison flex autoconf automake pkg-config \
-                             libsystemd-dev systemd dpkg-dev debhelper devscripts
+                             dpkg-dev debhelper devscripts
       - name: Building Debian package
         run: |
           ./autogen.sh

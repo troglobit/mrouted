@@ -14,7 +14,7 @@ AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_YACC
 
-# Required to check for libsystemd-dev
+# Required to query systemdsystemunitdir from systemd.pc
 PKG_PROG_PKG_CONFIG
 
 # Check for linux/netlink.h is only to be able to define LINUX below
