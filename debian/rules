@@ -8,5 +8,9 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 %:
 	dh $@ --with autoreconf,systemd
 
+# Pin the unit dir, debian/mrouted.install names it explicitly
+override_dh_auto_configure:
+	dh_auto_configure -- --with-systemd=/usr/lib/systemd/system
+
 override_dh_installchangelogs:
 	dh_installchangelogs ChangeLog.md
