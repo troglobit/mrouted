@@ -3,6 +3,21 @@ Change Log
 
 All notable changes to the project are documented in this file.
 
+[v4.7][UNRELEASED]
+------------------
+
+### Fixes
+
+- Validate the length fields when parsing DVMRP `INFO_REQUEST`.  A request
+  claiming more data than the packet holds, and a full size packet of well
+  formed requests, both made the parser and the reply it builds run past the
+  buffers they work on.  Reported by Tristan Madani
+- Fix route reports received on a `blaster` interface, which never survived the
+  replay.  Queued reports were replayed with a negated length in a `size_t`
+  argument, wrapping it.  Blaster support has not worked since v3.9.1.  Reported
+  by Tristan Madani
+- Fix `mroutectl` reading one byte before the start of its line buffer on a line
+  that holds nothing but newlines
 
 [v4.6][] - 2024-11-10
 ---------------------
@@ -707,6 +722,7 @@ v3.5 - 1995-05-08
 
 
 [UNRELEASED]: https://github.com/troglobit/mrouted/compare/4.6...HEAD
+[v4.7]:       https://github.com/troglobit/mrouted/compare/4.6...4.7
 [v4.6]:       https://github.com/troglobit/mrouted/compare/4.5...4.6
 [v4.5]:       https://github.com/troglobit/mrouted/compare/4.4...4.5
 [v4.4]:       https://github.com/troglobit/mrouted/compare/4.3...4.4
