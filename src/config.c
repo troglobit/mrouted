@@ -243,11 +243,11 @@ void config_vifs_from_kernel(void)
 	    continue;
 
 	/*
-	 * Ignore loopback interfaces and interfaces that do not support
-	 * multicast.
+	 * Ignore interfaces that do not support multicast.  Loopback is
+	 * fine, Linux leaves IFF_MULTICAST off there until asked.
 	 */
 	flags = ifa->ifa_flags;
-	if ((flags & (IFF_LOOPBACK|IFF_MULTICAST)) != IFF_MULTICAST)
+	if (!(flags & IFF_MULTICAST))
 	    continue;
 
 	/*
@@ -258,8 +258,11 @@ void config_vifs_from_kernel(void)
 	mask = ((struct sockaddr_in *)ifa->ifa_netmask)->sin_addr.s_addr;
 	subnet = addr & mask;
 	if (!inet_valid_subnet(subnet, mask) || (addr != subnet && addr == (subnet & ~mask))) {
-	    logit(LOG_WARNING, 0, "ignoring %s, has invalid address (%s) and/or mask (%s)",
-		  ifa->ifa_name, inet_fmt(addr, s1, sizeof(s1)), inet_fmt(mask, s2, sizeof(s2)));
+	    /* Loopback always has 127.0.0.1, we want the routable
+	     * addresses someone has added on top of it. */
+	    if (!(flags & IFF_LOOPBACK))
+		logit(LOG_WARNING, 0, "ignoring %s, has invalid address (%s) and/or mask (%s)",
+		      ifa->ifa_name, inet_fmt(addr, s1, sizeof(s1)), inet_fmt(mask, s2, sizeof(s2)));
 	    continue;
 	}
 
@@ -277,8 +280,13 @@ void config_vifs_from_kernel(void)
 	uv->uv_subnetmask  = mask;
 	uv->uv_subnetbcast = subnet | ~mask;
 
-	if (ifa->ifa_flags & IFF_POINTOPOINT)
+	if (flags & IFF_POINTOPOINT)
 	    uv->uv_flags |= VIFF_REXMIT_PRUNES;
+
+	/* A probe sent on loopback comes straight back at us, and no
+	 * neighbor can ever be there to answer it anyway. */
+	if (flags & IFF_LOOPBACK)
+	    uv->uv_flags |= VIFF_PASSIVE;
 
 	/*
 	 * On Linux we can enumerate vifs using ifindex,

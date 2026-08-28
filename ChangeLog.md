@@ -19,6 +19,13 @@ All notable changes to the project are documented in this file.
 - Fix `mroutectl` reading one byte before the start of its line buffer on a line
   that holds nothing but newlines
 
+### Changes
+
+- Issue #39: allow the loopback interface to be used for routing.  It has to be
+  multicast capable and carry a routable address, Linux sets up neither on `lo`
+  by default.  The 127.0.0.0/8 address is skipped, and a loopback VIF is always
+  `passive`, no neighbor can be reached over it
+
 [v4.6][] - 2024-11-10
 ---------------------
 

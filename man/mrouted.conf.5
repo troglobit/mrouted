@@ -19,8 +19,25 @@ In many cases you do not need to configure
 It configures itself automatically to forward multicast on all
 multicast-capable interfaces, i.e., interfaces that have the
 .Cm IFF_MULTICAST
-flag set, excluding the loopback interface.  It locates other DVMRP
-capable routers directly reachable via those interfaces.
+flag set.  It locates other DVMRP capable routers directly reachable via
+those interfaces.
+.Pp
+The loopback interface is included, provided it is multicast capable and
+carries a routable address.  Linux leaves
+.Cm IFF_MULTICAST
+off on
+.Cm lo ,
+so both have to be arranged first:
+.Bd -literal -offset indent
+ip link set multicast on dev lo
+ip addr add 10.0.0.1/32 dev lo
+.Ed
+.Pp
+The 127.0.0.0/8 address is skipped, it must never be advertised to a
+neighbor.  A loopback VIF is always
+.Cm passive ,
+no neighbor can be reached over it and our own probes would come back at
+us.
 .Pp
 .Bl -tag -width TERM -compact -offset indent
 .It Nm mrouted
