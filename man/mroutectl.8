@@ -173,6 +173,19 @@ Informational
 .It Cm debug
 Debug-level messages
 .El
+.It Nm Ar reload ifaces
+Rescan the kernel interface list and adjust the set of VIFs to match.
+Interfaces that have appeared since startup, or since the last reload,
+are brought into service, and interfaces that are gone are taken out of
+it.  Unlike
+.Ar restart
+this keeps the routes and prunes already learned, and leaves the VIFs
+that did not change alone.
+.Pp
+.Pa /etc/mrouted.conf
+is not re-read, so an interface that needs settings from the
+configuration file still calls for a
+.Ar restart .
 .It Nm Ar restart
 Restart daemon and reload
 .Pa /etc/mrouted.conf ,

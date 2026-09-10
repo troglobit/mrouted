@@ -621,6 +621,14 @@ void restart(void)
     pidfile(pid_file);
 }
 
+/*
+ * Reload ifaces
+ */
+void reload_iface(void)
+{
+    reload_vifs();
+}
+
 #define SCALETIMEBUFLEN 27
 char *scaletime(time_t t)
 {

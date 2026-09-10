@@ -619,6 +619,10 @@ static void ipc_handle(int sd, void *arg)
 		restart();
 		break;
 
+	case IPC_RELOAD_IFACE_CMD:
+		reload_iface();
+		break;
+
 	case IPC_DEBUG_CMD:
 		ipc_generic(client, &msg, do_debug, &msg);
 		break;

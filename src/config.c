@@ -10,7 +10,12 @@
 #include <ifaddrs.h>
 #include "defs.h"
 
-static TAILQ_HEAD(, uvif) vifs = TAILQ_HEAD_INITIALIZER(vifs);
+TAILQ_HEAD(uvif_head, uvif);
+
+/* Interfaces installed in uvifs[], mirrored here so a reload can diff
+ * what the kernel has now against what we already know about. */
+static struct uvif_head cvifs = TAILQ_HEAD_INITIALIZER(cvifs);
+static struct uvif_head vifs  = TAILQ_HEAD_INITIALIZER(vifs);
 
 void config_set_ifflag(uint32_t flag)
 {
@@ -128,6 +133,22 @@ struct uvif *config_init_tunnel(in_addr_t lcl_addr, in_addr_t rmt_addr, uint32_t
 }
 
 /*
+ * Find the index an already installed vif was given.
+ */
+static vifi_t find_vifi(struct uvif *v)
+{
+    struct uvif *uv;
+    vifi_t vifi;
+
+    UVIF_FOREACH(vifi, uv) {
+	if (uv == v)
+	    return vifi;
+    }
+
+    return NO_VIF;
+}
+
+/*
  * Ignore any kernel interface that is disabled, or connected to the
  * same subnet as one already installed in the uvifs[] array.
  */
@@ -183,6 +204,81 @@ static vifi_t check_vif(struct uvif *v)
     return vifi;
 }
 
+/*
+ * Is an interface with this ifindex on the given list?
+ */
+static struct uvif *find_ifindex(struct uvif_head *head, int ifindex)
+{
+    struct uvif *uv;
+
+    TAILQ_FOREACH(uv, head, uv_link) {
+	if (uv->uv_ifindex == ifindex)
+	    return uv;
+    }
+
+    return NULL;
+}
+
+/*
+ * Take down and remove every vif that is no longer in the kernel.
+ */
+static void reload_gone_vifs(void)
+{
+    struct uvif *uv, *tmp;
+    vifi_t vifi;
+
+    TAILQ_FOREACH_SAFE(uv, &cvifs, uv_link, tmp) {
+	if (find_ifindex(&vifs, uv->uv_ifindex))
+	    continue;
+
+	TAILQ_REMOVE(&cvifs, uv, uv_link);
+
+	vifi = find_vifi(uv);
+	if (vifi == NO_VIF) {
+	    free_uvif(uv);
+	    continue;
+	}
+
+	logit(LOG_NOTICE, 0, "%s has gone away, removing vif #%u", uv->uv_name, vifi);
+	if (!(uv->uv_flags & VIFF_DOWN))
+	    stop_vif(vifi);
+	uninstall_uvif(uv);
+    }
+}
+
+/*
+ * Install every interface the kernel has that we do not.
+ */
+static void reload_new_vifs(void)
+{
+    struct uvif *uv, *tmp;
+    vifi_t vifi;
+
+    TAILQ_FOREACH_SAFE(uv, &vifs, uv_link, tmp) {
+	if (find_ifindex(&cvifs, uv->uv_ifindex))
+	    continue;
+
+	TAILQ_REMOVE(&vifs, uv, uv_link);
+
+	if (check_vif(uv) == NO_VIF) {
+	    free(uv);
+	    continue;
+	}
+
+	vifi = install_uvif(uv);
+	if (vifi == NO_VIF) {
+	    free(uv);
+	    continue;
+	}
+
+	logit(LOG_NOTICE, 0, "%s has appeared, installing as vif #%u", uv->uv_name, vifi);
+	init_installvif(uv, vifi);
+	start_vif2(vifi);
+
+	TAILQ_INSERT_TAIL(&cvifs, uv, uv_link);
+    }
+}
+
 void config_vifs_correlate(void)
 {
     struct listaddr *al, *al_tmp;
@@ -215,12 +311,31 @@ void config_vifs_correlate(void)
 		  vifi, v->uv_rate_limit);
     }
 
-    /*
-     * XXX: one future extension may be to keep this for adding/removing
-     *      dynamic interfaces at runtime.  Now we re-init and let SIGHUP
-     *      rebuild it to recheck since we tear down all vifs anyway.
-     */
+    TAILQ_CONCAT(&cvifs, &vifs, uv_link);
+}
+
+/*
+ * Drop the snapshot, the uvifs it points to are freed by stop_all_vifs()
+ */
+void config_vifs_reset(void)
+{
+    TAILQ_INIT(&cvifs);
     TAILQ_INIT(&vifs);
+}
+
+void config_vifs_from_reload(void)
+{
+    struct uvif *uv, *tmp;
+
+    config_vifs_from_kernel();
+    reload_gone_vifs();
+    reload_new_vifs();
+
+    /* What is left is a second copy of an interface we already run on */
+    TAILQ_FOREACH_SAFE(uv, &vifs, uv_link, tmp) {
+	TAILQ_REMOVE(&vifs, uv, uv_link);
+	free(uv);
+    }
 }
 
 /*

@@ -319,6 +319,7 @@ static int usage(int rc)
 	       "  help                    This help text\n"
 	       "  kill                    Kill running mrouted, like SIGTERM\n"
 	       "  log [? | none | LEVEL]  Set log level: none, err, notice*, info, debug\n"
+	       "  reload ifaces           Rescan interfaces, pick up hotplugged ones\n"
 	       "  restart                 Restart mrouted and reload .conf file, like SIGHUP\n"
 	       "  show version            Show version, and uptime (-d), of running mrouted\n"
 	       "  show status             Show status summary, default\n"
@@ -416,13 +417,18 @@ int main(int argc, char *argv[])
 		{ "version",    NULL, NULL,         IPC_VERSION_CMD         },
 		{ NULL, NULL, NULL, 0 }
 	};
+	struct cmd reload[] = {
+		{ "ifaces",     NULL, NULL,         IPC_RELOAD_IFACE_CMD    },
+		{ NULL, NULL, NULL, 0 }
+	};
 	struct cmd command[] = {
-		{ "debug",      NULL, set_debug,    0                       },
-		{ "help",       NULL, help,         0                       },
-		{ "kill",       NULL, NULL,         IPC_KILL_CMD            },
-		{ "log",        NULL, set_loglevel, 0                       },
-		{ "restart",    NULL, NULL,         IPC_RESTART_CMD         },
-		{ "show",       show, show_status,  0                       },
+		{ "debug",      NULL,   set_debug,    0                     },
+		{ "help",       NULL,   help,         0                     },
+		{ "kill",       NULL,   NULL,         IPC_KILL_CMD          },
+		{ "log",        NULL,   set_loglevel, 0                     },
+		{ "reload",     reload, NULL,         0                     },
+		{ "restart",    NULL,   NULL,         IPC_RESTART_CMD       },
+		{ "show",       show,   show_status,  0                     },
 		{ NULL, NULL, NULL, 0 }
 	};
 	int c;

@@ -164,6 +164,17 @@ void delete_vif_from_routes(vifi_t vifi)
 }
 
 
+void discard_vif_from_routes(vifi_t vifi)
+{
+    struct rtentry *r, *tmp;
+
+    TAILQ_FOREACH_SAFE(r, &rtable, rt_link, tmp) {
+		if (r->rt_parent == vifi || VIFM_ISSET(vifi, r->rt_children))
+            discard_route(r);
+    }
+}
+
+
 /*
  * A new neighbor has come up.  If we're flooding on the neighbor's
  * vif, mark that neighbor as subordinate for all routes whose parent
@@ -326,7 +337,6 @@ static void create_route(uint32_t origin, uint32_t mask)
     rtp = rt;
     ++nroutes;
 }
-
 
 /*
  * Discard the routing table entry following the one to which 'rt' points.

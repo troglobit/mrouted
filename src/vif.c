@@ -38,9 +38,9 @@ static int dvmrp_timerid = -1;
 /*
  * Forward declarations.
  */
-static void start_vif          (vifi_t vifi);
-static void start_vif2         (vifi_t vifi);
-static void stop_vif           (vifi_t vifi);
+static void start_vif   (vifi_t vifi);
+void start_vif2         (vifi_t vifi);
+void stop_vif           (vifi_t vifi);
 
 static void send_probe_on_vif  (struct uvif *v);
 
@@ -70,6 +70,7 @@ void init_vifs(void)
     numvifs = 0;
     neighbor_vifs = 0;
     vifs_down = FALSE;
+    config_vifs_reset();
 
     /*
      * Configure the vifs based on the interface configuration of the
@@ -162,6 +163,14 @@ void init_vifs(void)
 }
 
 /*
+ * Reload the virtual interfaces, removing gone vifs and add new vifs.
+ */
+void reload_vifs(void)
+{
+    config_vifs_from_reload();
+}
+
+/*
  * Initialize the passed vif with all appropriate default values.
  * "t" is true if a tunnel, or false if a phyint.
  *
@@ -230,53 +239,60 @@ void blaster_free(struct uvif *uv)
 	uv->uv_blastertimer = pev_timer_del(uv->uv_blastertimer);
 }
 
+
+void init_installvif(struct uvif *uv, vifi_t vifi)
+{
+    struct listaddr *al, *tmp;
+
+    if (uv->uv_flags & VIFF_DISABLED) {
+	logit(LOG_DEBUG, 0, "%s is disabled", uv->uv_name);
+	return;
+    }
+
+    if (uv->uv_flags & VIFF_DOWN) {
+	logit(LOG_INFO, 0, "%s is not yet up; vif #%u not in service",
+	      uv->uv_name, vifi);
+	return;
+    }
+
+    if (uv->uv_flags & VIFF_TUNNEL) {
+	logit(LOG_INFO, 0, "%s: vif #%d, tunnel %s -> %s", uv->uv_name, vifi,
+	      inet_fmt(uv->uv_lcl_addr, s1, sizeof(s1)),
+	      inet_fmt(uv->uv_rmt_addr, s2, sizeof(s2)));
+
+	/* Set tunnel vif name, Linux use dvmrpN */
+	snprintf(uv->uv_name, sizeof(uv->uv_name), "dvmrp%d", vifi);
+    } else {
+	logit(LOG_INFO, 0, "%s: vif #%d, phyint %s", uv->uv_name, vifi,
+	      inet_fmt(uv->uv_lcl_addr, s1, sizeof(s1)));
+    }
+    k_add_vif(vifi, uv);
+
+    /* Install static routes/groups from mrouted.conf */
+    TAILQ_FOREACH_SAFE(al, &uv->uv_static, al_link, tmp) {
+	in_addr_t group = al->al_addr;
+
+	TAILQ_REMOVE(&uv->uv_static, al, al_link);
+	TAILQ_INSERT_TAIL(&uv->uv_groups, al, al_link);
+
+	logit(LOG_INFO, 0, "    static group %s", inet_fmt(group, s3, sizeof(s3)));
+	update_lclgrp(vifi, group);
+	chkgrp_graft(vifi, group);
+    }
+}
+
 /*
  * Start routing on all virtual interfaces that are not down or
  * administratively disabled.
  */
 void init_installvifs(void)
 {
-    struct listaddr *al, *tmp;
     struct uvif *uv;
     vifi_t vifi;
 
     logit(LOG_INFO, 0, "Installing vifs in kernel ...");
     UVIF_FOREACH(vifi, uv) {
-	if (uv->uv_flags & VIFF_DISABLED) {
-	    logit(LOG_DEBUG, 0, "%s is disabled", uv->uv_name);
-	    continue;
-	}
-
-	if (uv->uv_flags & VIFF_DOWN) {
-	    logit(LOG_INFO, 0, "%s is not yet up; vif #%u not in service",
-		  uv->uv_name, vifi);
-	    continue;
-	}
-
-	if (uv->uv_flags & VIFF_TUNNEL) {
-	    logit(LOG_INFO, 0, "%s: vif #%d, tunnel %s -> %s", uv->uv_name, vifi,
-		  inet_fmt(uv->uv_lcl_addr, s1, sizeof(s1)),
-		  inet_fmt(uv->uv_rmt_addr, s2, sizeof(s2)));
-
-	    /* Set tunnel vif name, Linux use dvmrpN */
-	    snprintf(uv->uv_name, sizeof(uv->uv_name), "dvmrp%d", vifi);
-	} else {
-	    logit(LOG_INFO, 0, "%s: vif #%d, phyint %s", uv->uv_name, vifi,
-		  inet_fmt(uv->uv_lcl_addr, s1, sizeof(s1)));
-	}
-	k_add_vif(vifi, uv);
-
-	/* Install static routes/groups from mrouted.conf */
-	TAILQ_FOREACH_SAFE(al, &uv->uv_static, al_link, tmp) {
-	    in_addr_t group = al->al_addr;
-
-	    TAILQ_REMOVE(&uv->uv_static, al, al_link);
-	    TAILQ_INSERT_TAIL(&uv->uv_groups, al, al_link);
-
-	    logit(LOG_INFO, 0, "    static group %s", inet_fmt(group, s3, sizeof(s3)));
-	    update_lclgrp(vifi, group);
-	    chkgrp_graft(vifi, group);
-	}
+	init_installvif(uv, vifi);
     }
 }
 
@@ -300,6 +316,32 @@ vifi_t install_uvif(struct uvif *uv)
 	numvifs = vifi + 1;
 
     return vifi;
+}
+
+int uninstall_uvif(struct uvif *uv)
+{
+    vifi_t vifi;
+
+    for (vifi = 0; vifi < numvifs; vifi++) {
+	if (uvifs[vifi] == uv)
+	    break;
+    }
+
+    if (vifi == numvifs)
+	return 1;
+
+    /*
+     * Leave the slot empty.  A vif index is a kernel VIF number too,
+     * and is stored in routes, prunes and MFC entries, so every vif
+     * above this one has to keep the number it was installed with.
+     */
+    uvifs[vifi] = NULL;
+    free_uvif(uv);
+
+    while (numvifs > 0 && !uvifs[numvifs - 1])
+	numvifs--;
+
+    return 0;
 }
 
 /*
@@ -332,7 +374,7 @@ void check_vif_state(void)
 	memset(&ifr, 0, sizeof(ifr));
 	memcpy(ifr.ifr_name, uv->uv_name, sizeof(ifr.ifr_name));
 	if (ioctl(udp_socket, SIOCGIFFLAGS, &ifr) < 0) {
-	    /* Gone, not just down */
+	    /* Gone, not just down.  Reaped on the next reload. */
 	    if (!(uv->uv_flags & VIFF_DOWN)) {
 		logit(LOG_NOTICE, 0, "%s has disappeared; vif #%u taken out of service",
 		      uv->uv_name, vifi);
@@ -475,7 +517,7 @@ static void start_vif(vifi_t vifi)
  * Add a vifi to all the user-level data structures but don't add
  * it to the kernel yet.
  */
-static void start_vif2(vifi_t vifi)
+void start_vif2(vifi_t vifi)
 {
     struct listaddr *a;
     struct phaddr *p;
@@ -559,7 +601,7 @@ static void start_vif2(vifi_t vifi)
 /*
  * Stop routing on the specified virtual interface.
  */
-static void stop_vif(vifi_t vifi)
+void stop_vif(vifi_t vifi)
 {
     struct listaddr *al, *tmp;
     struct phaddr *pa;
@@ -631,6 +673,7 @@ static void stop_vif(vifi_t vifi)
      * Update the existing route entries to take into account the vif failure.
      */
     delete_vif_from_routes(vifi);
+    discard_vif_from_routes(vifi);
 
     /*
      * Delete the interface from the kernel's vif structure.

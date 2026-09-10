@@ -257,6 +257,8 @@ extern int		mrt_table_id;
 extern int              debug_list(int, char *, size_t);
 extern int              debug_parse(char *);
 extern void             restart(void);
+extern void		reload_iface(void);
+extern void		reload_vifs(void);
 extern char *		scaletime(time_t);
 
 /* log.c */
@@ -299,17 +301,22 @@ extern void		report_to_all_neighbors(int);
 extern int		report_next_chunk(void);
 extern void		add_vif_to_routes(vifi_t);
 extern void		delete_vif_from_routes(vifi_t);
+extern void		discard_vif_from_routes(vifi_t);
 extern void		add_neighbor_to_routes(vifi_t, uint32_t);
 extern void		delete_neighbor_from_routes(uint32_t, vifi_t, uint32_t);
 extern void		dump_routes(FILE *, int);
 
 /* vif.c */
 extern void		init_vifs(void);
+extern void		start_vif2(vifi_t);
+extern void		stop_vif(vifi_t);
 extern void		blaster_alloc(struct uvif *);
 extern void		blaster_free(struct uvif *);
 extern void		zero_vif(struct uvif *, int);
+extern void		init_installvif(struct uvif *, vifi_t);
 extern void		init_installvifs(void);
 extern vifi_t		install_uvif(struct uvif *);
+extern int		uninstall_uvif(struct uvif *);
 extern void		free_uvif(struct uvif *);
 extern void		check_vif_state(void);
 extern void		send_on_vif(struct uvif *, uint32_t, int, size_t);
@@ -347,6 +354,8 @@ extern struct uvif     *config_find_ifaddr(in_addr_t addr);
 extern struct uvif     *config_init_tunnel(in_addr_t lcl_addr, in_addr_t rmt_addr, uint32_t flags);
 extern void		config_vifs_correlate(void);
 extern void		config_vifs_from_kernel(void);
+extern void		config_vifs_from_reload(void);
+extern void		config_vifs_reset(void);
 
 /* cfparse.y */
 extern void		config_vifs_from_file(void);
@@ -442,6 +451,7 @@ extern int		pidfile(const char *basename);
 #define IPC_SHOW_MFC_CMD          21
 #define IPC_SHOW_NEIGH_CMD        22
 #define IPC_SHOW_ROUTES_CMD       23
+#define IPC_RELOAD_IFACE_CMD      30
 #define IPC_SHOW_COMPAT_CMD       250
 #define IPC_EOF_CMD               254
 #define IPC_ERR_CMD               255
