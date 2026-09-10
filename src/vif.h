@@ -166,7 +166,8 @@ struct uvif {
      (uv->uv_flags & VIFF_NOTRANSIT) && (find_uvif((r)->rt_parent)->uv_flags & VIFF_NOTRANSIT))
 
 #define UVIF_FOREACH(v, uv)						\
-    for ((v) = 0, (uv) = find_uvif(v); (v) < numvifs && uv; (v)++, (uv) = find_uvif(v))
+    for ((v) = 0, (uv) = find_next_uvif(&(v)); (v) < numvifs;		\
+	 (v)++, (uv) = find_next_uvif(&(v)))
 
 struct phaddr {
     struct phaddr   *pa_next;

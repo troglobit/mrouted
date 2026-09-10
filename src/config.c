@@ -190,8 +190,14 @@ void config_vifs_correlate(void)
     vifi_t vifi;
 
     TAILQ_FOREACH_SAFE(v, &vifs, uv_link, tmp) {
-	vifi = check_vif(v);
-	if (vifi == NO_VIF || install_uvif(v)) {
+	if (check_vif(v) == NO_VIF) {
+	    TAILQ_REMOVE(&vifs, v, uv_link);
+	    free(v);
+	    continue;
+	}
+
+	vifi = install_uvif(v);
+	if (vifi == NO_VIF) {
 	    TAILQ_REMOVE(&vifs, v, uv_link);
 	    free(v);
 	    continue;

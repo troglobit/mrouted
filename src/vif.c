@@ -280,16 +280,26 @@ void init_installvifs(void)
     }
 }
 
-int install_uvif(struct uvif *uv)
+vifi_t install_uvif(struct uvif *uv)
 {
-    if (numvifs == MAXVIFS) {
-	logit(LOG_WARNING, 0, "Too many vifs, ignoring %s", uv->uv_name);
-	return 1;
+    vifi_t vifi;
+
+    /* Reuse a slot left empty by an interface removed at runtime */
+    for (vifi = 0; vifi < MAXVIFS; vifi++) {
+	if (!uvifs[vifi])
+	    break;
     }
 
-    uvifs[numvifs++] = uv;
+    if (vifi == MAXVIFS) {
+	logit(LOG_WARNING, 0, "Too many vifs, ignoring %s", uv->uv_name);
+	return NO_VIF;
+    }
 
-    return 0;
+    uvifs[vifi] = uv;
+    if (vifi >= numvifs)
+	numvifs = vifi + 1;
+
+    return vifi;
 }
 
 /*
@@ -645,69 +655,93 @@ static void stop_vif(vifi_t vifi)
 /*
  * stop routing on all vifs
  */
-void stop_all_vifs(void)
+void free_uvif(struct uvif *uv)
 {
     struct listaddr *al, *tmp;
     struct vif_acl *acl;
     struct phaddr *pa;
+
+    if (uv->uv_querier) {
+	free(uv->uv_querier);
+	uv->uv_querier = NULL;
+    }
+    uv->uv_querier = NULL;
+
+    TAILQ_FOREACH_SAFE(al, &uv->uv_join, al_link, tmp) {
+	uint32_t group = al->al_addr;
+
+	logit(LOG_INFO, 0, "Leaving static group %s on %s from %s",
+    	  inet_fmt(group, s1, sizeof(s1)), uv->uv_name, config_file);
+	k_leave(group, uv->uv_lcl_addr);
+	TAILQ_REMOVE(&uv->uv_join, al, al_link);
+	free(al);
+    }
+
+    TAILQ_FOREACH_SAFE(al, &uv->uv_groups, al_link, tmp) {
+	TAILQ_REMOVE(&uv->uv_groups, al, al_link);
+
+	if (al->al_query > 0)
+    	al->al_query = pev_timer_del(al->al_query);
+
+	if (al->al_timerid > 0)
+    	al->al_timerid = pev_timer_del(al->al_timerid);
+
+	if (al->al_pv_timerid > 0)
+    	al->al_pv_timerid = pev_timer_del(al->al_pv_timerid);
+
+	free(al);
+    }
+
+    TAILQ_FOREACH_SAFE(al, &uv->uv_neighbors, al_link, tmp) {
+	TAILQ_REMOVE(&uv->uv_neighbors, al, al_link);
+	nbrs[al->al_index] = NULL;
+	free(al);
+    }
+
+    while (uv->uv_acl) {
+	acl = uv->uv_acl;
+	uv->uv_acl = acl->acl_next;
+	free(acl);
+    }
+    uv->uv_acl = NULL;
+
+    while (uv->uv_addrs) {
+	pa = uv->uv_addrs;
+	uv->uv_addrs = pa->pa_next;
+	free(pa);
+    }
+    uv->uv_addrs = NULL;
+
+    blaster_free(uv);
+    free(uv);
+}
+
+void stop_all_vifs(void)
+{
     struct uvif *uv;
     vifi_t vifi;
 
     UVIF_FOREACH(vifi, uv) {
-	if (uv->uv_querier) {
-	    free(uv->uv_querier);
-	    uv->uv_querier = NULL;
-	}
-	uv->uv_querier = NULL;
-
-	TAILQ_FOREACH_SAFE(al, &uv->uv_join, al_link, tmp) {
-	    uint32_t group = al->al_addr;
-
-	    logit(LOG_INFO, 0, "Leaving static group %s on %s from %s",
-		  inet_fmt(group, s1, sizeof(s1)), uv->uv_name, config_file);
-	    k_leave(group, uv->uv_lcl_addr);
-	    TAILQ_REMOVE(&uv->uv_join, al, al_link);
-	    free(al);
-	}
-
-	TAILQ_FOREACH_SAFE(al, &uv->uv_groups, al_link, tmp) {
-	    TAILQ_REMOVE(&uv->uv_groups, al, al_link);
-
-	    if (al->al_query > 0)
-		al->al_query = pev_timer_del(al->al_query);
-
-	    if (al->al_timerid > 0)
-		al->al_timerid = pev_timer_del(al->al_timerid);
-
-	    if (al->al_pv_timerid > 0)
-		al->al_pv_timerid = pev_timer_del(al->al_pv_timerid);
-
-	    free(al);
-	}
-
-	TAILQ_FOREACH_SAFE(al, &uv->uv_neighbors, al_link, tmp) {
-	    TAILQ_REMOVE(&uv->uv_neighbors, al, al_link);
-	    nbrs[al->al_index] = NULL;
-	    free(al);
-	}
-
-	while (uv->uv_acl) {
-	    acl = uv->uv_acl;
-	    uv->uv_acl = acl->acl_next;
-	    free(acl);
-	}
-	uv->uv_acl = NULL;
-
-	while (uv->uv_addrs) {
-	    pa = uv->uv_addrs;
-	    uv->uv_addrs = pa->pa_next;
-	    free(pa);
-	}
-	uv->uv_addrs = NULL;
-
-	blaster_free(uv);
-	free(uv);
+	uvifs[vifi] = NULL;
+	free_uvif(uv);
     }
+
+    numvifs = 0;
+}
+
+/*
+ * Find the first vif installed at or after *vifi.  uvifs[] has holes
+ * when an interface has been removed at runtime.
+ */
+struct uvif *find_next_uvif(vifi_t *vifi)
+{
+    while (*vifi < numvifs && !uvifs[*vifi])
+	(*vifi)++;
+
+    if (*vifi >= numvifs)
+	return NULL;
+
+    return uvifs[*vifi];
 }
 
 /*
