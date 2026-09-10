@@ -297,7 +297,8 @@ static void create_route(uint32_t origin, uint32_t mask)
 	return;
     }
 
-    rt->rt_dominants = calloc(1, numvifs * sizeof(uint32_t));
+    /* Indexed by vif, and a vif may be added while this route lives */
+    rt->rt_dominants = calloc(MAXVIFS, sizeof(uint32_t));
     if (!rt->rt_dominants) {
 	free(rt);
 	logit(LOG_ERR, errno, "Failed allocating 'rt_dominants' in %s:%s()", __FILE__, __func__);
