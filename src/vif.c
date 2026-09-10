@@ -321,8 +321,17 @@ void check_vif_state(void)
 
 	memset(&ifr, 0, sizeof(ifr));
 	memcpy(ifr.ifr_name, uv->uv_name, sizeof(ifr.ifr_name));
-	if (ioctl(udp_socket, SIOCGIFFLAGS, &ifr) < 0)
-	    logit(LOG_ERR, errno, "Failed ioctl SIOCGIFFLAGS for %s", ifr.ifr_name);
+	if (ioctl(udp_socket, SIOCGIFFLAGS, &ifr) < 0) {
+	    /* Gone, not just down */
+	    if (!(uv->uv_flags & VIFF_DOWN)) {
+		logit(LOG_NOTICE, 0, "%s has disappeared; vif #%u taken out of service",
+		      uv->uv_name, vifi);
+		stop_vif(vifi);
+		uv->uv_flags |= VIFF_DOWN;
+	    }
+	    vifs_down = TRUE;
+	    continue;
+	}
 
 	if (uv->uv_flags & VIFF_DOWN) {
 	    if (ifr.ifr_flags & IFF_UP) {
