@@ -1,4 +1,4 @@
-EXTRA_DIST         = lib.sh mping.c pod.sh shared.sh single.sh three.sh
+EXTRA_DIST         = lib.sh mping.c pod.sh reload.sh shared.sh single.sh three.sh
 CLEANFILES         = *~ *.trs *.log
 
 noinst_PROGRAMS    = mping
@@ -8,6 +8,7 @@ TEST_EXTENSIONS    = .sh
 TESTS_ENVIRONMENT  = unshare -mrun --map-auto
 
 TESTS              = pod.sh
+TESTS             += reload.sh
 TESTS             += shared.sh
 TESTS             += single.sh
 TESTS             += three.sh
