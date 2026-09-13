@@ -69,18 +69,36 @@ jobs:
     # Verify that Debian packages can be built
     name: Debian Package
     runs-on: ubuntu-latest
-    container: debian:stable
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
       - name: Installing dependencies
         run: |
-          apt-get update
-          apt-get install -y build-essential bison flex autoconf automake pkg-config \
-                             dpkg-dev debhelper devscripts
+          # Fail fast when the apt mirror stalls
+          printf 'Acquire::Retries "3";\nAcquire::http::Timeout "15";\nAcquire::https::Timeout "15";\n' \
+              | sudo tee /etc/apt/apt.conf.d/99-timeout >/dev/null
+          sudo apt-get -y update
+          sudo apt-get -y install build-essential autoconf automake bison \
+                                  pkg-config systemd-dev debhelper dpkg-dev \
+                                  devscripts fakeroot lintian
       - name: Building Debian package
         run: |
           ./autogen.sh
           ./configure
+          # configure.ac is at X.Y-pre for most of a release cycle
+          ver=$(sed -n 's/^PACKAGE_VERSION = //p' Makefile)
+          case "$ver" in
+              *-pre)
+                  echo "Development version $ver, not checking debian/changelog"
+                  ;;
+              *)
+                  deb=$(dpkg-parsechangelog -S Version | tr '~' '-')
+                  if [ "$deb" != "$ver" ]; then
+                      echo "debian/changelog is at $deb, configure.ac says $ver"
+                      exit 1
+                  fi
+                  ;;
+          esac
           make distcheck
           make package
           cat ../mrouted*.changes

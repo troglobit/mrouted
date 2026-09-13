@@ -1,3 +1,25 @@
+mrouted (4.7) stable; urgency=high
+
+  * Validate the length fields when parsing DVMRP INFO_REQUEST.  A request
+    claiming more data than the packet holds, and a full size packet of
+    well formed requests, both made the parser and the reply it builds run
+    past the buffers they work on.  Reported by Tristan Madani
+  * Fix route reports received on a 'blaster' interface, which never
+    survived the replay.  Blaster support has not worked since 3.9.1.
+    Reported by Tristan Madani
+  * Fix mroutectl reading one byte before the start of its line buffer on
+    a line that holds nothing but newlines
+  * Fix mrouted exiting when an interface is deleted while another one is
+    down
+  * Issue #39: allow the loopback interface to be used for routing,
+    provided it is multicast capable and carries a routable address
+  * Issue #63: new 'mroutectl reload ifaces' command, rescans the kernel
+    interface list without dropping the routes and prunes already learned
+  * Drop the container image, ghcr.io/troglobit/mrouted is no longer
+    updated
+
+ -- Joachim Wiberg <troglobit@gmail.com>  Sun, 13 Sep 2026 09:00:00 +0200
+
 mrouted (4.6) stable; urgency=low
 
   * Issue #56: ensure group timers are stopped when stopping interfaces
