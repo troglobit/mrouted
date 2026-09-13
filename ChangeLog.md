@@ -34,6 +34,9 @@ All notable changes to the project are documented in this file.
   prunes already learned.  Interfaces that did not change keep the VIF number
   they had.  `mrouted.conf` is not re-read, an interface that needs settings
   from it still calls for a `restart`.  Original patch by Carlos Guimarães
+- Drop the container image, `ghcr.io/troglobit/mrouted` is no longer updated.
+  mrouted needs the interfaces it routes between in its own network namespace,
+  which takes them away from the host, so the image was of little use
 
 [v4.6][] - 2024-11-10
 ---------------------
