@@ -27,8 +27,13 @@ jobs:
       - name: Install dependencies
         run: |
           sudo modprobe ipip
+          # Fail fast when the apt mirror stalls
+          printf 'Acquire::Retries "3";\nAcquire::http::Timeout "15";\nAcquire::https::Timeout "15";\n' \
+              | sudo tee /etc/apt/apt.conf.d/99-timeout >/dev/null
           sudo apt-get -y update
-          sudo apt-get -y install pkg-config systemd-dev bird2 ethtool keepalived tshark tree
+          sudo apt-get -y install build-essential autoconf automake bison \
+                                  pkg-config systemd-dev ${{ matrix.compiler }} \
+                                  bird2 ethtool keepalived tshark tree
       - uses: actions/checkout@v6
       - name: Configure
         # Build in a sub-directory so we can safely set a+w on all

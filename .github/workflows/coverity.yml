@@ -50,8 +50,12 @@ jobs:
           tar xzf coverity-latest.tar.gz --strip 1 -C coverity
       - name: Install dependencies
         run: |
+          # Fail fast when the apt mirror stalls
+          printf 'Acquire::Retries "3";\nAcquire::http::Timeout "15";\nAcquire::https::Timeout "15";\n' \
+              | sudo tee /etc/apt/apt.conf.d/99-timeout >/dev/null
           sudo apt-get -y update
-          sudo apt-get -y install pkg-config systemd-dev
+          sudo apt-get -y install build-essential autoconf automake bison \
+                                  pkg-config systemd-dev
       - name: Configure
         run: |
           ./autogen.sh
