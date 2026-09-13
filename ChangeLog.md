@@ -3,8 +3,8 @@ Change Log
 
 All notable changes to the project are documented in this file.
 
-[v4.7][UNRELEASED]
-------------------
+[v4.7][] - 2026-09-13
+---------------------
 
 ### Fixes
 
@@ -18,6 +18,9 @@ All notable changes to the project are documented in this file.
   by Tristan Madani
 - Fix `mroutectl` reading one byte before the start of its line buffer on a line
   that holds nothing but newlines
+- Fix `mrouted` exiting when an interface is deleted while another one is down.
+  The periodic interface check treats a failed `SIOCGIFFLAGS` as fatal, and it
+  only runs while some interface is known to be down
 
 ### Changes
 
@@ -25,6 +28,12 @@ All notable changes to the project are documented in this file.
   multicast capable and carry a routable address, Linux sets up neither on `lo`
   by default.  The 127.0.0.0/8 address is skipped, and a loopback VIF is always
   `passive`, no neighbor can be reached over it
+- Issue #63: new `mroutectl reload ifaces` command.  It rescans the kernel
+  interface list, brings interfaces that have appeared since startup into
+  service, and takes the ones that are gone out of it, keeping the routes and
+  prunes already learned.  Interfaces that did not change keep the VIF number
+  they had.  `mrouted.conf` is not re-read, an interface that needs settings
+  from it still calls for a `restart`.  Original patch by Carlos Guimarães
 
 [v4.6][] - 2024-11-10
 ---------------------
@@ -728,7 +737,7 @@ v3.5 - 1995-05-08
 - Multicast traceroute could send a reply on a disabled interface.
 
 
-[UNRELEASED]: https://github.com/troglobit/mrouted/compare/4.6...HEAD
+[UNRELEASED]: https://github.com/troglobit/mrouted/compare/4.7...HEAD
 [v4.7]:       https://github.com/troglobit/mrouted/compare/4.6...4.7
 [v4.6]:       https://github.com/troglobit/mrouted/compare/4.5...4.6
 [v4.5]:       https://github.com/troglobit/mrouted/compare/4.4...4.5
